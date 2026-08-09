@@ -1344,7 +1344,7 @@ display:
           entity_type: taxonomy_term
           entity_field: name
           plugin_id: term_name
-          label: ' Material name X'
+          label: 'Material name'
           exclude: false
           alter:
             alter_text: true
@@ -2038,7 +2038,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: 'Unit of Purchase (UoP)'
+          label: 'Purchase UoM'
           exclude: false
           alter:
             alter_text: true
@@ -2356,7 +2356,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: views_conditional_field
-          label: UoS
+          label: 'Inventory UoM'
           exclude: false
           alter:
             alter_text: false
@@ -2413,7 +2413,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: UoU
+          label: 'Consumption UoM'
           exclude: false
           alter:
             alter_text: false
