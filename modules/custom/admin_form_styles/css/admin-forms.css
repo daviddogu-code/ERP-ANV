@@ -383,3 +383,141 @@ body .page-wrapper .costs-row {
   border-bottom: 3px solid #39ff14 !important;
   box-shadow: 0 3px 10px rgba(57, 255, 20, 0.5);
 }
+
+/* ==========================================================================
+   Add / Edit Material form: card layout
+   The rules above target the older #purchasing / .costs-row containers, which
+   no longer exist on this form. Everything below is scoped to the tec-card
+   classes so the two never fight over the same elements.
+   ========================================================================== */
+
+.tec-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* Two cards per row on wide screens, stacked once there is no room. */
+.tec-card-row > .tec-card {
+  flex: 1 1 460px;
+  min-width: 0;
+}
+
+.tec-card {
+  background: #fff;
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  box-sizing: border-box;
+  padding: 20px 24px 12px;
+}
+
+.tec-card > h3 {
+  margin: 0 0 18px;
+  color: #1a2332;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.tec-card--full {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.tec-card-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.tec-card-cols > .tec-card-col {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.tec-card .form-item,
+.tec-card .form-wrapper {
+  margin: 0 0 14px;
+}
+
+.tec-card .form-item__label,
+.tec-card label {
+  display: block;
+  margin-bottom: 6px;
+  color: #475467;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tec-card .form-element,
+.tec-card input[type="text"],
+.tec-card input[type="number"],
+.tec-card textarea,
+.tec-card .select2-container {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+.tec-card input[type="number"] {
+  text-align: right;
+}
+
+/* Cards whose fields sit side by side instead of stacking. */
+.tec-card--inline-fields > .field-group-format-wrapper,
+.tec-card--inline-fields {
+  --tec-inline-gap: 16px;
+}
+
+.tec-card--inline-fields .form-item,
+.tec-card--inline-fields .form-wrapper {
+  display: inline-block;
+  width: calc(33.333% - var(--tec-inline-gap));
+  margin-right: var(--tec-inline-gap);
+  vertical-align: top;
+}
+
+/* Reorder rules: three per row, wrapping to a second line. */
+.tec-card--grid .form-item,
+.tec-card--grid .form-wrapper {
+  display: inline-block;
+  width: calc(33.333% - 16px);
+  margin-right: 16px;
+  vertical-align: top;
+}
+
+/* Currency symbol comes from the field prefix; float it inside the input. */
+#costs-pricing .form-item {
+  position: relative;
+}
+
+#costs-pricing .form-item__prefix {
+  position: absolute;
+  bottom: 9px;
+  left: 12px;
+  color: #475467;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+}
+
+#costs-pricing input[type="number"] {
+  padding-left: 32px;
+}
+
+/* Stock history holds a table, so it needs the full width of the card. */
+#stock-history table {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .tec-card--inline-fields .form-item,
+  .tec-card--inline-fields .form-wrapper,
+  .tec-card--grid .form-item,
+  .tec-card--grid .form-wrapper {
+    display: block;
+    width: 100%;
+    margin-right: 0;
+  }
+}

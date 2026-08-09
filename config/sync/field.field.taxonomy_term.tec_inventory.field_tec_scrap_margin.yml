@@ -19,5 +19,5 @@ settings:
   min: 0.0
   max: 100.0
   prefix: ''
-  suffix: ' %'
+  suffix: ''
 field_type: decimal
