@@ -14,7 +14,7 @@ id: taxonomy_term.tec_inventory.field_tec_cost
 field_name: field_tec_cost
 entity_type: taxonomy_term
 bundle: tec_inventory
-label: 'Cost by UoP'
+label: 'Purchase Cost'
 description: ''
 required: true
 translatable: false

@@ -16,7 +16,7 @@ id: taxonomy_term.tec_inventory.field_tec_price
 field_name: field_tec_price
 entity_type: taxonomy_term
 bundle: tec_inventory
-label: 'Cost by UoU'
+label: 'Consumption Cost'
 description: ''
 required: false
 translatable: false
