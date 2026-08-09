@@ -65,6 +65,7 @@ third_party_settings:
       children:
         - name
         - description
+        - field_tec_inventory_image
       label: 'Left 1'
       region: content
       parent_name: ''
@@ -108,7 +109,6 @@ third_party_settings:
     group_tabs:
       children:
         - group_stock_movements
-        - group_photos
       label: Tabs
       region: content
       parent_name: ''
@@ -131,21 +131,6 @@ third_party_settings:
       format_settings:
         classes: ''
         show_empty_fields: false
-        id: ''
-        formatter: closed
-        description: ''
-        required_fields: true
-    group_photos:
-      children:
-        - field_tec_inventory_image
-      label: Photos
-      region: content
-      parent_name: group_tabs
-      weight: 26
-      format_type: tab
-      format_settings:
-        classes: ''
-        show_empty_fields: true
         id: ''
         formatter: closed
         description: ''
@@ -403,7 +388,7 @@ content:
     third_party_settings: {  }
   field_tec_inventory_image:
     type: file_uploader_uppy
-    weight: 6
+    weight: 7
     region: content
     settings:
       options:
