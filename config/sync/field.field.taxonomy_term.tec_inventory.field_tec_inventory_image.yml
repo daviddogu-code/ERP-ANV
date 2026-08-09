@@ -37,7 +37,7 @@ id: taxonomy_term.tec_inventory.field_tec_inventory_image
 field_name: field_tec_inventory_image
 entity_type: taxonomy_term
 bundle: tec_inventory
-label: 'Inventory image'
+label: 'Material image'
 description: ''
 required: false
 translatable: false
