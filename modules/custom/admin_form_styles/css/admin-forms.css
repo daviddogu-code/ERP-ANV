@@ -493,6 +493,18 @@ body .page-wrapper .costs-row {
   max-width: 260px;
 }
 
+/* Uppy hard-codes a 550px dashboard height as an inline style, so overriding
+   it needs !important. The fullscreen variant is left alone on purpose. */
+#general-information .uppy-Dashboard:not(.uppy-Dashboard--isFullScreen) .uppy-Dashboard-inner {
+  height: 140px !important;
+  min-height: 0 !important;
+}
+
+#general-information .uppy-Dashboard:not(.uppy-Dashboard--isFullScreen) .uppy-Dashboard-innerWrap,
+#general-information .uppy-Dashboard:not(.uppy-Dashboard--isFullScreen) .uppy-Dashboard-AddFiles {
+  min-height: 0 !important;
+}
+
 /* Currency symbol comes from the field prefix; float it inside the input. */
 #costs-pricing .form-item {
   position: relative;
