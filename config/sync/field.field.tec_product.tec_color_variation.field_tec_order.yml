@@ -1,0 +1,29 @@
+uuid: 301552ea-a877-40fe-914b-389208895f8e
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_sales_order
+    - eck.eck_type.tec_product.tec_color_variation
+    - field.storage.tec_product.field_tec_order
+id: tec_product.tec_color_variation.field_tec_order
+field_name: field_tec_order
+entity_type: tec_product
+bundle: tec_color_variation
+label: Order
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_order'
+  handler_settings:
+    target_bundles:
+      tec_sales_order: tec_sales_order
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

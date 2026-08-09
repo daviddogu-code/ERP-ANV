@@ -1,0 +1,84 @@
+uuid: 24925f85-8b0e-4ccb-953d-104f4dd79458
+langcode: en
+status: true
+dependencies: {  }
+id: tec_order_sales_order_tabs
+label: 'TEC Order: Sales order tabs'
+renderer: quick_tabs
+hide_empty_tabs: false
+default_tab: 9999
+options:
+  quick_tabs:
+    ajax: false
+    class: ''
+    style: on-the-gray
+configuration_data:
+  -
+    title: 'Line items'
+    weight: 0
+    type: block_content
+    content:
+      node_content:
+        options:
+          nid: ''
+          view_mode: full
+          hide_title: true
+      view_content:
+        options:
+          vid: block_content
+          display: default
+          args: ''
+      block_content:
+        options:
+          bid: 'views_block:tec_order_sales_order_line_items-block_1'
+          block_title: ''
+          display_title: false
+      qtabs_content:
+        options:
+          machine_name: tec_crm_contact_tabs
+  -
+    title: 'Material calculation'
+    weight: 0
+    type: block_content
+    content:
+      node_content:
+        options:
+          nid: ''
+          view_mode: full
+          hide_title: true
+      view_content:
+        options:
+          vid: block_content
+          display: default
+          args: ''
+      block_content:
+        options:
+          bid: 'views_block:tec_order_material_calculation_terms-block_1'
+          block_title: ''
+          display_title: false
+      qtabs_content:
+        options:
+          machine_name: tec_crm_contact_tabs
+  -
+    title: 'Material Summary'
+    weight: 0
+    type: view_content
+    content:
+      node_content:
+        options:
+          nid: ''
+          view_mode: full
+          hide_title: true
+      view_content:
+        options:
+          vid: tec_order_material_calculation_summary
+          display: block_1
+          args: ''
+      block_content:
+        options:
+          bid: 'views_block:tec_order_material_calculation_terms-block_1'
+          block_title: ''
+          display_title: false
+      qtabs_content:
+        options:
+          machine_name: tec_crm_contact_tabs

@@ -1,0 +1,1396 @@
+uuid: d68bd349-6a50-471c-957d-8eded8cd3176
+langcode: en
+status: false
+dependencies:
+  module:
+    - eca_base
+    - eca_content
+    - eca_log
+    - eca_tamper
+    - openai_eca
+id: process_aouv9bi
+modeller: bpmn_io
+label: 'TEC Inventory term: Calculate units (clone)'
+version: '0.4'
+weight: -19
+events:
+  Event_0o8c97n:
+    plugin: 'content_entity:update'
+    label: Update
+    configuration:
+      type: 'taxonomy_term tec_inventory'
+    successors:
+      -
+        id: Gateway_1vfl9y6
+        condition: ''
+  Event_0cu0nde:
+    plugin: 'content_entity:insert'
+    label: Insert
+    configuration:
+      type: 'taxonomy_term tec_inventory'
+    successors:
+      -
+        id: Gateway_1vfl9y6
+        condition: ''
+conditions:
+  Flow_0ha35om:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_unit_purchase
+      negate: true
+      entity: ''
+  Flow_04awh1w:
+    plugin: eca_entity_field_value
+    configuration:
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_stock_unit_check:value'
+      operator: equal
+      type: value
+      negate: true
+      entity: ''
+  Flow_1v7aubk:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_stock_unit_check:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_1p4wvfk:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: same_as_uos
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_0rro1xh:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: custom_uou
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_150kx3i:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: same_as_uop
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_12l1gn8:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: custom_uou
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_05zqjbf:
+    plugin: eca_entity_field_value
+    configuration:
+      case: false
+      expected_value: custom_uou
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      negate: true
+      entity: ''
+  Flow_06p0j0f:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_split_inventory:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_00k7zzx:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_package_units:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_0ss4372:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: same_as_uop
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_1e04fvp:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_package_units:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_0hzcwz5:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_price_by_package
+      negate: true
+      entity: ''
+  Flow_16llqny:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_stock_unit_check:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_02twzn2:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_price
+      negate: true
+      entity: ''
+  Flow_0yj1qhz:
+    plugin: eca_entity_field_value
+    configuration:
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_stock_unit_check:value'
+      operator: equal
+      type: value
+      negate: true
+      entity: ''
+  Flow_0dyze3w:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_price
+      negate: true
+      entity: ''
+  Flow_0ofcqii:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: same_as_uop
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_0ucz7nj:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_price
+      negate: true
+      entity: ''
+  Flow_1fn0zup:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: same_as_uos
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_0r97f4e:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_price_uos
+      negate: true
+      entity: ''
+  Flow_10fussc:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: same_as_uos
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_1ubi9dt:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: same_as_uos
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_1dq5v7o:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: custom_uou
+      field_name: 'field_tec_uou_control:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_11e16em:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_price
+      negate: true
+      entity: ''
+  Flow_1qi2o3z:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_package_units:value'
+      operator: equal
+      type: value
+      entity: ''
+gateways:
+  Gateway_1vfl9y6:
+    type: 0
+    successors:
+      -
+        id: Activity_1jhmd6c
+        condition: ''
+  Gateway_1sm6g49:
+    type: 0
+    successors:
+      -
+        id: Activity_0s4c5sv
+        condition: Flow_04awh1w
+      -
+        id: Gateway_18y6378
+        condition: Flow_1v7aubk
+  Gateway_1w3r55s:
+    type: 0
+    successors:
+      -
+        id: Activity_173o2vk
+        condition: ''
+  Gateway_18y6378:
+    type: 0
+    successors:
+      -
+        id: Activity_0maqude
+        condition: ''
+      -
+        id: Gateway_0np3d2b
+        condition: ''
+  Gateway_18o3pkf:
+    type: 0
+    successors:
+      -
+        id: Activity_1jvurkx
+        condition: Flow_0ha35om
+      -
+        id: Gateway_1ha5ipe
+        condition: ''
+  Gateway_12scm2p:
+    type: 0
+    successors:
+      -
+        id: Activity_0n6b44q
+        condition: ''
+  Gateway_0dchjnz:
+    type: 0
+    successors:
+      -
+        id: Gateway_12scm2p
+        condition: Flow_0rro1xh
+  Gateway_0z2xh2f:
+    type: 0
+    successors:
+      -
+        id: Activity_1fgz69e
+        condition: ''
+  Gateway_04cr8v8:
+    type: 0
+    successors:
+      -
+        id: Gateway_1u8az5m
+        condition: ''
+      -
+        id: Gateway_1tf37nw
+        condition: Flow_0ss4372
+  Gateway_1u8az5m:
+    type: 0
+    successors:
+      -
+        id: Activity_0pt2yzp
+        condition: Flow_150kx3i
+      -
+        id: Activity_12qrxkq
+        condition: Flow_1ubi9dt
+      -
+        id: Gateway_09830jy
+        condition: ''
+  Gateway_09830jy:
+    type: 0
+    successors:
+      -
+        id: Gateway_1w3r55s
+        condition: ''
+  Gateway_1w05mdk:
+    type: 0
+    successors:
+      -
+        id: Activity_0xv9rt4
+        condition: Flow_12l1gn8
+      -
+        id: Gateway_0p1xiux
+        condition: Flow_05zqjbf
+  Gateway_0np3d2b:
+    type: 0
+    successors:
+      -
+        id: Gateway_12scm2p
+        condition: Flow_1p4wvfk
+      -
+        id: Gateway_0dchjnz
+        condition: ''
+  Gateway_0p1xiux:
+    type: 0
+    successors:
+      -
+        id: Activity_1adyle5
+        condition: ''
+  Gateway_0p6ctdq:
+    type: 0
+    successors:
+      -
+        id: Gateway_0slsohj
+        condition: Flow_06p0j0f
+  Gateway_0slsohj:
+    type: 0
+    successors:
+      -
+        id: Activity_0kr8l7x
+        condition: Flow_00k7zzx
+  Gateway_1tf37nw:
+    type: 0
+    successors:
+      -
+        id: Activity_03q10hj
+        condition: ''
+  Gateway_1ha5ipe:
+    type: 0
+    successors:
+      -
+        id: Activity_0wgzlyg
+        condition: ''
+      -
+        id: Gateway_0fohf82
+        condition: ''
+  Gateway_1hahbgu:
+    type: 0
+    successors:
+      -
+        id: Activity_0wl7xfj
+        condition: Flow_0hzcwz5
+  Gateway_0fohf82:
+    type: 0
+    successors:
+      -
+        id: Gateway_1hahbgu
+        condition: Flow_1e04fvp
+      -
+        id: Gateway_1mydygn
+        condition: ''
+  Gateway_1mydygn:
+    type: 0
+    successors:
+      -
+        id: Gateway_10sck4p
+        condition: Flow_16llqny
+      -
+        id: Gateway_0tqwnxc
+        condition: ''
+  Gateway_10sck4p:
+    type: 0
+    successors:
+      -
+        id: Activity_1idn34h
+        condition: Flow_02twzn2
+  Gateway_0tqwnxc:
+    type: 0
+    successors:
+      -
+        id: Gateway_0i58tey
+        condition: Flow_0yj1qhz
+      -
+        id: Gateway_1x62eie
+        condition: ''
+  Gateway_0i58tey:
+    type: 0
+    successors:
+      -
+        id: Activity_081why3
+        condition: Flow_0dyze3w
+  Gateway_1x62eie:
+    type: 0
+    successors:
+      -
+        id: Gateway_1yvt621
+        condition: Flow_0ofcqii
+      -
+        id: Gateway_0pphh72
+        condition: ''
+  Gateway_1yvt621:
+    type: 0
+    successors:
+      -
+        id: Activity_1xi8h5u
+        condition: Flow_0ucz7nj
+  Gateway_0pphh72:
+    type: 0
+    successors:
+      -
+        id: Gateway_09iguey
+        condition: Flow_1fn0zup
+      -
+        id: Gateway_1d8doh2
+        condition: ''
+  Gateway_09iguey:
+    type: 0
+    successors:
+      -
+        id: Activity_1bm4wpo
+        condition: Flow_0r97f4e
+  Gateway_107kj2d:
+    type: 0
+    successors:
+      -
+        id: Gateway_04cr8v8
+        condition: ''
+      -
+        id: Activity_0wqn6c7
+        condition: Flow_10fussc
+  Gateway_1d8doh2:
+    type: 0
+    successors:
+      -
+        id: Gateway_09gh0x7
+        condition: Flow_1dq5v7o
+  Gateway_09gh0x7:
+    type: 0
+    successors:
+      -
+        id: Activity_14aub2k
+        condition: Flow_11e16em
+actions:
+  Activity_1jhmd6c:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: |-
+        Running: "TEC Inventory term: Calculate units"  ECA Model.<br>
+
+        UoU Control: [entity:field_tec_uou_control]<br>
+        UoU Control value: [entity:field_tec_uou_control:value]
+    successors:
+      -
+        id: Gateway_18o3pkf
+        condition: ''
+  Activity_0wgzlyg:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished: "TEC Inventory term: Calculate units"  ECA Model.'
+    successors: {  }
+  Activity_1jvurkx:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the UoP'
+    configuration:
+      field_name_entity_ref: field_tec_unit_purchase
+      token_name: uop
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Gateway_1sm6g49
+        condition: ''
+  Activity_0pt2yzp:
+    plugin: eca_set_field_value
+    label: 'Set the UoU & Save'
+    configuration:
+      field_name: field_tec_unit_use
+      field_value: '[uop]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Gateway_09830jy
+        condition: ''
+  Activity_102re0a:
+    plugin: openai_eca_execute_chat
+    label: 'AI: Convert UoU to UoP units'
+    configuration:
+      model: gpt-4o
+      prompt: '[prompt1]'
+      system: 'You are a math expert.'
+      temperature: '0.4'
+      max_tokens: '256'
+      token_input: prompt1
+      token_result: prompt1Result
+    successors:
+      -
+        id: Activity_0jyo64q
+        condition: ''
+  Activity_12fg5dz:
+    plugin: eca_token_set_value
+    label: 'Tokenize Prompt 1'
+    configuration:
+      token_name: prompt1
+      token_value: |-
+        Convert 1 [entity:field_tec_unit_use:entity:name] to [uop:name]. 
+        Return only the value, do not wrap it in quotation marks.
+      use_yaml: false
+    successors:
+      -
+        id: Activity_102re0a
+        condition: ''
+  Activity_0jyo64q:
+    plugin: eca_set_field_value
+    label: 'Set UoU UoP conversion value & save'
+    configuration:
+      field_name: field_tec_uou_uop
+      field_value: '[prompt1Result]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_1kcnfo5
+        condition: ''
+  Activity_0703vn6:
+    plugin: eca_set_field_value
+    label: 'Set UoP Packaging units & Save'
+    configuration:
+      field_name: field_tec_uou_uop_pu
+      field_value: '[pu1Formatted]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_1adyle5:
+    plugin: eca_set_field_value
+    label: 'Set the UoU & Save'
+    configuration:
+      field_name: field_tec_unit_use
+      field_value: '[uos]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_1agyoth
+        condition: ''
+  Activity_0n6b44q:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the UoS'
+    configuration:
+      field_name_entity_ref: field_tec_uos
+      token_name: uos
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Gateway_1w05mdk
+        condition: ''
+  Activity_1agyoth:
+    plugin: eca_set_field_value
+    label: 'Set UoU to UoS conversion'
+    configuration:
+      field_name: field_tec_uou_uos
+      field_value: '1'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_12fg5dz
+        condition: ''
+  Activity_0ldq8i1:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate UoU -> PU'
+    configuration:
+      operation: division
+      flip: false
+      value: '[entity:field_tec_units:value]'
+      eca_data: '[entity:field_tec_uou_uop:value]'
+      eca_token_name: pu1
+    successors:
+      -
+        id: Activity_0703vn6
+        condition: ''
+  Activity_1u7ei2w:
+    plugin: eca_set_field_value
+    label: 'Set UoP Packaging units & Save'
+    configuration:
+      field_name: field_tec_uou_uop_pu
+      field_value: '[pu2]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_0hbtmsh:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate UoS PU'
+    configuration:
+      operation: division
+      flip: false
+      value: '[entity:field_tec_units:value]'
+      eca_data: '[entity:field_tec_uou_uop:value]'
+      eca_token_name: pu2
+    successors:
+      -
+        id: Activity_1u7ei2w
+        condition: ''
+  Activity_01o69fe:
+    plugin: eca_set_field_value
+    label: 'Set UoP -> UoU & Save'
+    configuration:
+      field_name: field_tec_uop_uou
+      field_value: '[prompt2Result]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_1yeeu8a
+        condition: ''
+  Activity_1ajluce:
+    plugin: openai_eca_execute_chat
+    label: 'AI Convert UoP to UoU'
+    configuration:
+      model: gpt-4o
+      prompt: '[prompt2]'
+      system: 'You are an expert in content editing and an assistant to a user writing content for their website. Please return all answers without using first, second, or third person voice.'
+      temperature: '0.4'
+      max_tokens: '256'
+      token_input: prompt2
+      token_result: prompt2Result
+    successors:
+      -
+        id: Activity_01o69fe
+        condition: ''
+  Activity_1kcnfo5:
+    plugin: eca_token_set_value
+    label: 'Tokenize Prompt 2'
+    configuration:
+      token_name: prompt2
+      token_value: |-
+        Convert 1 [uop:name] to [entity:field_tec_unit_use:entity:name]. 
+        Return only the value, do not wrap it in quotation marks.
+      use_yaml: false
+    successors:
+      -
+        id: Activity_1ajluce
+        condition: ''
+  Activity_0kr8l7x:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate UoS -> UoS PU - Step 1'
+    configuration:
+      operation: division
+      flip: false
+      value: '[entity:field_tec_uou_split_qty:value]'
+      eca_data: '[entity:field_tec_units:value]'
+      eca_token_name: pu2Step1
+    successors:
+      -
+        id: Activity_0dfikij
+        condition: ''
+  Activity_0ajokaa:
+    plugin: eca_set_field_value
+    label: 'Set UoS PU & Save'
+    configuration:
+      field_name: field_1_uou_uos_pu
+      field_value: '[pu2]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_02l0770:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the UoS'
+    configuration:
+      field_name_entity_ref: field_tec_uos
+      token_name: uos
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_1x20hzo
+        condition: ''
+  Activity_1fgz69e:
+    plugin: eca_token_set_value
+    label: 'Tokenize Prompt 3'
+    configuration:
+      token_name: prompt3
+      token_value: |-
+        Convert 1 [entity:field_tec_unit_use:entity:name] to [uop:name]. 
+        Return only the value, do not wrap it in quotation marks.
+      use_yaml: false
+    successors:
+      -
+        id: Activity_0c54ca2
+        condition: ''
+  Activity_0c54ca2:
+    plugin: openai_eca_execute_chat
+    label: 'AI: Convert UoU to UoP'
+    configuration:
+      model: gpt-4o
+      prompt: '[prompt3]'
+      system: 'You are a math expert.'
+      temperature: '0.4'
+      max_tokens: '256'
+      token_input: prompt3
+      token_result: prompt3Result
+    successors:
+      -
+        id: Activity_0w9c5ld
+        condition: ''
+  Activity_0w9c5ld:
+    plugin: eca_set_field_value
+    label: 'Set UoU to UoP conversion'
+    configuration:
+      field_name: field_tec_uou_uop
+      field_value: '[prompt3]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: false
+      object: ''
+    successors:
+      -
+        id: Activity_02l0770
+        condition: ''
+  Activity_1x20hzo:
+    plugin: eca_token_set_value
+    label: 'Tokenize prompt 4'
+    configuration:
+      token_name: prompt4
+      token_value: |-
+        Convert 1 [entity:field_tec_unit_use:entity:name] to [uos:name]. 
+        Return only the value, do not wrap it in quotation marks.
+      use_yaml: false
+    successors:
+      -
+        id: Activity_1tzt99k
+        condition: ''
+  Activity_02ibfr5:
+    plugin: eca_set_field_value
+    label: 'Set UoU to UoS conversion & Save'
+    configuration:
+      field_name: field_tec_uou_uos
+      field_value: '[prompt4Result]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_1tzt99k:
+    plugin: openai_eca_execute_chat
+    label: 'AI: Convert UoU to UoP units'
+    configuration:
+      model: gpt-4o
+      prompt: '[prompt4]'
+      system: 'You are a math expert.'
+      temperature: '0.4'
+      max_tokens: '256'
+      token_input: prompt4
+      token_result: prompt4Result
+    successors:
+      -
+        id: Activity_02ibfr5
+        condition: ''
+  Activity_18k76ff:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Custom UoU detected'
+    successors:
+      -
+        id: Gateway_0z2xh2f
+        condition: ''
+  Activity_0xv9rt4:
+    plugin: eca_token_set_value
+    label: 'Tokenize prompt 3'
+    configuration:
+      token_name: prompt3
+      token_value: |-
+        Convert 1 [entity:field_tec_unit_use:entity:name] to [uos:name].
+        Return only the value, do not wrap it in quotation marks.
+      use_yaml: false
+    successors:
+      -
+        id: Activity_0nw20rr
+        condition: ''
+  Activity_0nw20rr:
+    plugin: openai_eca_execute_chat
+    label: 'AI: Convert UoU to UoS'
+    configuration:
+      model: gpt-4o
+      prompt: '[prompt3]'
+      system: 'You are an expert in content editing and an assistant to a user writing content for their website. Please return all answers without using first, second, or third person voice.'
+      temperature: '0.4'
+      max_tokens: '256'
+      token_input: prompt3
+      token_result: prompt3Result
+    successors:
+      -
+        id: Activity_06sbbbw
+        condition: ''
+  Activity_06sbbbw:
+    plugin: eca_set_field_value
+    label: 'Set UoU -> UoS & Save'
+    configuration:
+      field_name: field_tec_uou_uos
+      field_value: '[prompt3Result]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_12fg5dz
+        condition: ''
+  Activity_1yeeu8a:
+    plugin: eca_token_set_value
+    label: 'Tokenize Prompt 4'
+    configuration:
+      token_name: prompt4
+      token_value: |-
+        Convert 1 [uos:name] to [entity:field_tec_unit_use:entity:name].
+        Return only the value, do not wrap it in quotation marks.
+      use_yaml: false
+    successors:
+      -
+        id: Activity_1x38mfb
+        condition: ''
+  Activity_1x38mfb:
+    plugin: openai_eca_execute_chat
+    label: 'AI: Convert UoS to UoU'
+    configuration:
+      model: gpt-4o
+      prompt: '[prompt4]'
+      system: 'You are an expert in content editing and an assistant to a user writing content for their website. Please return all answers without using first, second, or third person voice.'
+      temperature: '0.4'
+      max_tokens: '256'
+      token_input: prompt4
+      token_result: prompt4Result
+    successors:
+      -
+        id: Activity_1bvj25r
+        condition: ''
+  Activity_1bvj25r:
+    plugin: eca_set_field_value
+    label: 'Set UoS -> UoU & Save'
+    configuration:
+      field_name: field_tec_uos_uou
+      field_value: '[prompt4Result]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Gateway_0p6ctdq
+        condition: ''
+  Activity_0r6sivt:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate UoS -> UoS PU - Step 3'
+    configuration:
+      operation: division
+      flip: 1
+      value: '1'
+      eca_data: '[pu2Step2Formatted]'
+      eca_token_name: pu2
+    successors:
+      -
+        id: Activity_0ajokaa
+        condition: ''
+  Activity_0dfikij:
+    plugin: eca_set_field_value
+    label: 'Set the UoP PU -> UoS PU & Save'
+    configuration:
+      field_name: field_tec_uos_pu_uop
+      field_value: '[pu2Step1]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_0l0d33s
+        condition: ''
+  Activity_0l0d33s:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate UoS -> UoS PU - Step 2'
+    configuration:
+      operation: multiplication
+      flip: false
+      value: '[entity:field_tec_uop_uou:value]'
+      eca_data: '[entity:field_tec_uos_pu_uop:value]'
+      eca_token_name: pu2Step2
+    successors:
+      -
+        id: Activity_18vtrsc
+        condition: ''
+  Activity_18vtrsc:
+    plugin: 'eca_tamper:number_format'
+    label: 'Format the number'
+    configuration:
+      decimals: '4'
+      dec_point: .
+      thousands_sep: ','
+      eca_data: '[pu2Step2]'
+      eca_token_name: pu2Step2Formatted
+    successors:
+      -
+        id: Activity_0r6sivt
+        condition: ''
+  Activity_173o2vk:
+    plugin: eca_token_set_value
+    label: 'Tokenize Prompt'
+    configuration:
+      token_name: prompt
+      token_value: |-
+        How many [uop:name] is 1 [entity:field_tec_unit_use:entity:name]?
+        Return only the value, do not wrap it in quotation marks.
+      use_yaml: false
+    successors:
+      -
+        id: Activity_1vyhmpi
+        condition: ''
+  Activity_1vyhmpi:
+    plugin: openai_eca_execute_chat
+    label: 'AI: convert UoU to UoP units'
+    configuration:
+      model: gpt-4o
+      prompt: '[prompt]'
+      system: 'You are a math expert'
+      temperature: '0.4'
+      max_tokens: '256'
+      token_input: prompt
+      token_result: promptResult
+    successors:
+      -
+        id: Activity_0im0y0u
+        condition: ''
+  Activity_0im0y0u:
+    plugin: eca_set_field_value
+    label: 'Set UoU UoP conversion value & save'
+    configuration:
+      field_name: field_tec_uou_uop
+      field_value: '[promptResult]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_0w8phmi
+        condition: ''
+  Activity_1dym76h:
+    plugin: eca_token_set_value
+    label: 'Tokenize Prompt 5'
+    configuration:
+      token_name: prompt5
+      token_value: |-
+        Convert 1 [entity:field_tec_unit_use:entity:name] to [uos:name].
+        Return only the value, do not wrap it in quotation marks.
+      use_yaml: false
+    successors:
+      -
+        id: Activity_02jab0k
+        condition: ''
+  Activity_0maqude:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the UoS'
+    configuration:
+      field_name_entity_ref: field_tec_uos
+      token_name: uos
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_1dym76h
+        condition: ''
+  Activity_02jab0k:
+    plugin: openai_eca_execute_chat
+    label: 'AI: Convert UoU to UoS'
+    configuration:
+      model: gpt-4o
+      prompt: '[prompt5]'
+      system: 'You are a math expert.'
+      temperature: '0.4'
+      max_tokens: '256'
+      token_input: prompt5
+      token_result: prompt5Result
+    successors:
+      -
+        id: Activity_0lvifbi
+        condition: ''
+  Activity_0lvifbi:
+    plugin: eca_set_field_value
+    label: 'Set UoU -> UoS & Save'
+    configuration:
+      field_name: field_tec_uou_uos
+      field_value: '[prompt5Result]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_16191kj
+        condition: ''
+  Activity_16191kj:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate UoS -> UoU'
+    configuration:
+      operation: division
+      flip: 1
+      value: '1'
+      eca_data: '[entity:field_tec_uou_uos:value]'
+      eca_token_name: uosuop
+    successors:
+      -
+        id: Activity_05f92wf
+        condition: ''
+  Activity_05f92wf:
+    plugin: eca_set_field_value
+    label: 'Set UoS -> UoU & Save'
+    configuration:
+      field_name: field_tec_uos_uou
+      field_value: '[uosuop]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_0gzvacx
+        condition: ''
+  Activity_0500xhy:
+    plugin: eca_set_field_value
+    label: 'Set UoP -> UoU value & Save'
+    configuration:
+      field_name: field_tec_uop_uou
+      field_value: '1'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_03q10hj:
+    plugin: eca_set_field_value
+    label: 'Set UoU -> UoP value'
+    configuration:
+      field_name: field_tec_uou_uop
+      field_value: '1'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_0500xhy
+        condition: ''
+  Activity_0wl7xfj:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate Price by UoP.'
+    configuration:
+      operation: division
+      flip: false
+      value: '[entity:field_tec_units:value]'
+      eca_data: '[entity:field_tec_price_by_package:value]'
+      eca_token_name: uopPrice
+    successors:
+      -
+        id: Activity_0vsbrdp
+        condition: ''
+  Activity_0vsbrdp:
+    plugin: eca_set_field_value
+    label: 'Set Price by UoP & Save'
+    configuration:
+      field_name: field_tec_price
+      field_value: '[uopPrice]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_0gzvacx:
+    plugin: eca_token_set_value
+    label: 'Tokenize Prompt 6'
+    configuration:
+      token_name: prompt6
+      token_value: |-
+        Convert 1 [uos:name] to [uop:name].
+        Return only the value, do not wrap it in quotation marks.
+      use_yaml: false
+    successors:
+      -
+        id: Activity_1i0bv4x
+        condition: ''
+  Activity_1i0bv4x:
+    plugin: openai_eca_execute_chat
+    label: 'AI: Convert UoS to UoP'
+    configuration:
+      model: gpt-4o
+      prompt: '[prompt6]'
+      system: 'You are a math expert.'
+      temperature: '0.4'
+      max_tokens: '256'
+      token_input: prompt6
+      token_result: prompt6Result
+    successors:
+      -
+        id: Activity_123seka
+        condition: ''
+  Activity_123seka:
+    plugin: eca_set_field_value
+    label: 'Set UoS -> UoP value & Save'
+    configuration:
+      field_name: field_tec_uos_uop
+      field_value: '[prompt6Result]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Gateway_04cr8v8
+        condition: ''
+  Activity_1idn34h:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate Price by UoS'
+    configuration:
+      operation: multiplication
+      flip: false
+      value: '[entity:field_tec_price:value]'
+      eca_data: '[entity:field_tec_uos_uop:value]'
+      eca_token_name: uosPrice
+    successors:
+      -
+        id: Activity_0jecj5j
+        condition: ''
+  Activity_0jecj5j:
+    plugin: eca_set_field_value
+    label: 'Set Price by UoS & Save'
+    configuration:
+      field_name: field_tec_price_uos
+      field_value: '[uosPrice]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_081why3:
+    plugin: eca_set_field_value
+    label: 'Set Price by UoS & Save'
+    configuration:
+      field_name: field_tec_price_uos
+      field_value: '[entity:field_tec_price]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_0s4c5sv:
+    plugin: eca_set_field_value
+    label: 'Set the UoS & Save'
+    configuration:
+      field_name: field_tec_uos
+      field_value: '[entity:field_tec_unit_purchase]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Gateway_107kj2d
+        condition: ''
+  Activity_1xi8h5u:
+    plugin: eca_set_field_value
+    label: 'Set Price by UoU & Save'
+    configuration:
+      field_name: field_tec_price_uou
+      field_value: '[entity:field_tec_price]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_1bm4wpo:
+    plugin: eca_set_field_value
+    label: 'Set Price by UoU & Save'
+    configuration:
+      field_name: field_tec_price_uou
+      field_value: '[entity:field_tec_price_uos]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_0wqn6c7:
+    plugin: eca_set_field_value
+    label: 'Set the UoU & Save'
+    configuration:
+      field_name: field_tec_unit_use
+      field_value: '[entity:field_tec_uos]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_12qrxkq:
+    plugin: eca_set_field_value
+    label: 'Set the UoU & Save'
+    configuration:
+      field_name: field_tec_unit_use
+      field_value: '[uos]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_1007ops:
+    plugin: eca_set_field_value
+    label: 'Set Price by UoU & Save'
+    configuration:
+      field_name: field_tec_price_uou
+      field_value: '[uouPrice]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_14aub2k:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate Price by UoU'
+    configuration:
+      operation: multiplication
+      flip: false
+      value: '[entity:field_tec_price:value]'
+      eca_data: '[entity:field_tec_uou_uop:value]'
+      eca_token_name: uouPrice
+    successors:
+      -
+        id: Activity_1007ops
+        condition: ''
+  Activity_0w8phmi:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: |-
+        Prompt: [prompt] <br>
+        Result: [promptResult]
+    successors:
+      -
+        id: Activity_0ldq8i1
+        condition: Flow_1qi2o3z
+  Activity_1x23w0d:
+    plugin: 'eca_tamper:number_format'
+    label: 'Format the number'
+    configuration:
+      decimals: '4'
+      dec_point: .
+      thousands_sep: ','
+      eca_data: '[pu1]'
+      eca_token_name: pu1Formatted
+    successors: {  }

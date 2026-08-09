@@ -1,0 +1,18 @@
+uuid: e103610d-044d-4377-b279-d73a66eb3a62
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_purchase_order
+id: tec_order.tec_purchase_order.created
+field_name: created
+entity_type: tec_order
+bundle: tec_purchase_order
+label: 'Created on'
+description: 'The time that the entity was created.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: created

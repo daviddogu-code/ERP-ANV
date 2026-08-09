@@ -1,0 +1,9 @@
+uuid: 1d110680-63ed-40c4-bdea-ab2d7d1da1b5
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_app_link
+name: Phone
+type: tec_phone
+description: 'Phone number links'

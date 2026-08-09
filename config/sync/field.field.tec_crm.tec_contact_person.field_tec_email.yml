@@ -1,0 +1,19 @@
+uuid: d1c7b6de-37a4-411d-8f40-4171a59daf34
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_person
+    - field.storage.tec_crm.field_tec_email
+id: tec_crm.tec_contact_person.field_tec_email
+field_name: field_tec_email
+entity_type: tec_crm
+bundle: tec_contact_person
+label: E-mail
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: email

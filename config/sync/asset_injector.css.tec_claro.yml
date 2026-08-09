@@ -1,0 +1,37 @@
+uuid: 29c60f5f-5895-4e8f-a62c-c4e1283a85f0
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+    - user
+id: tec_claro
+label: Claro
+code: |-
+  /* Claro resets */
+  /* @TODO: debug the core issue */
+  /* On ECK product entity edit, the fields mis-align */
+  .js-form-item.form-item.js-form-type-select.form-type--select.js-form-item-field-tec-product-type.form-item--field-tec-product-type {
+    margin-top: 0px;
+      padding-top: 2px;
+  }
+
+  .content-header.clearfix {
+      display: none;
+  }
+media: all
+preprocess: true
+conditions:
+  request_path:
+    id: request_path
+    negate: false
+    pages: "/admin/content/tec_product/*\r\n/tec_product/*/edit\r\n/tec_inventory/*/edit\r\n/admin/structure/taxonomy/manage/tec_inventory/*\r\n/taxonomy/term/*/edit\r\n/admin/content/tec_inventory/add/*\r\n/bom/*/magic\r\n/admin/content/tec_inventory/add/tec_inventory_transaction"
+  user_role:
+    id: user_role
+    negate: true
+    context_mapping:
+      user: '@user.current_user_context:current_user'
+    roles:
+      administrator: administrator
+contexts: {  }
+conditions_require_all: true

@@ -1,0 +1,40 @@
+uuid: d1dd8a91-3395-4c40-b337-b5824654d56c
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.tec_crm.p_o_button
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - field.field.tec_crm.tec_contact_organization.field_tec_address
+    - field.field.tec_crm.tec_contact_organization.field_tec_contact_type
+    - field.field.tec_crm.tec_contact_organization.field_tec_email
+    - field.field.tec_crm.tec_contact_organization.field_tec_phone
+    - field.field.tec_crm.tec_contact_organization.field_tec_tax_nr
+  module:
+    - layout_builder
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+id: tec_crm.tec_contact_organization.p_o_button
+targetEntityType: tec_crm
+bundle: tec_contact_organization
+mode: p_o_button
+content:
+  flag_tec_order_draft_po:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  changed: true
+  created: true
+  field_tec_address: true
+  field_tec_contact_type: true
+  field_tec_email: true
+  field_tec_phone: true
+  field_tec_tax_nr: true
+  flag_tec_draft_order_excel_lover: true
+  langcode: true
+  title: true
+  uid: true

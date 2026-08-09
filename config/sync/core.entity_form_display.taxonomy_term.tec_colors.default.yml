@@ -1,0 +1,76 @@
+uuid: ac3bd2cf-f4c6-46b9-88f2-d4c83e29e589
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.tec_colors.ai_interpolator_status
+    - field.field.taxonomy_term.tec_colors.field_tec_ai_color
+    - field.field.taxonomy_term.tec_colors.field_tec_color_code_html
+    - taxonomy.vocabulary.tec_colors
+  module:
+    - color_field
+    - field_group
+third_party_settings:
+  field_group:
+    group_excluded:
+      children:
+        - field_tec_color_code_html
+        - field_tec_ai_color
+      label: Excluded
+      region: content
+      parent_name: ''
+      weight: 2
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: excluded
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+id: taxonomy_term.tec_colors.default
+targetEntityType: taxonomy_term
+bundle: tec_colors
+mode: default
+content:
+  field_tec_ai_color:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_color_code_html:
+    type: color_field_widget_spectrum
+    weight: 1
+    region: content
+    settings:
+      show_input: '1'
+      show_palette: '0'
+      palette: ''
+      show_palette_only: '0'
+      show_buttons: '1'
+      cancel_text: Cancel
+      choose_text: Choose
+      allow_empty: '0'
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  ai_interpolator_status: true
+  description: true
+  langcode: true
+  path: true
+  status: true

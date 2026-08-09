@@ -1,0 +1,177 @@
+uuid: 1d643378-6cc9-4cd2-b357-acb2afce225f
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_color_variation
+    - field.field.tec_product.tec_color_variation.field_tec_colors
+    - field.field.tec_product.tec_color_variation.field_tec_create_size
+    - field.field.tec_product.tec_color_variation.field_tec_edit_product
+    - field.field.tec_product.tec_color_variation.field_tec_id_div
+    - field.field.tec_product.tec_color_variation.field_tec_images
+    - field.field.tec_product.tec_color_variation.field_tec_order
+    - field.field.tec_product.tec_color_variation.field_tec_product
+    - field.field.tec_product.tec_color_variation.field_tec_size_variations
+  module:
+    - entity_browser_entity_form
+    - field_group
+    - file_uploader_uppy
+    - ief_table_view_mode
+    - select2
+    - viewfield
+third_party_settings:
+  field_group:
+    group_left:
+      children:
+        - field_tec_images
+      label: Left
+      region: content
+      parent_name: ''
+      weight: 1
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_right:
+      children:
+        - field_tec_size_variations
+      label: Right
+      region: content
+      parent_name: ''
+      weight: 2
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_excluded:
+      children:
+        - field_tec_product
+      label: Excluded
+      region: content
+      parent_name: ''
+      weight: 4
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: excluded
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+id: tec_product.tec_color_variation.default
+targetEntityType: tec_product
+bundle: tec_color_variation
+mode: default
+content:
+  field_tec_colors:
+    type: select2_entity_reference
+    weight: 0
+    region: content
+    settings:
+      width: 90%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+  field_tec_create_size:
+    type: viewfield_select
+    weight: 4
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tec_id_div:
+    type: viewfield_select
+    weight: 3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tec_images:
+    type: file_uploader_uppy
+    weight: 1
+    region: content
+    settings:
+      options:
+        instance:
+          autoProceed: true
+        plugin:
+          showProgressDetails: false
+          hideCancelButton: false
+          hideProgressAfterFinish: false
+          singleFileFullScreen: true
+          disableStatusBar: false
+          disableInformer: false
+          disableThumbnailGenerator: false
+          waitForThumbnailsBeforeUpload: false
+          thumbnailWidth: 200
+          enableImageEditor: true
+          autoOpenFileEditor: false
+          imageEditor:
+            actions: {  }
+          thumbnailHeight: 200
+          theme: light
+        uploader:
+          method: xhr
+      progress_indicator: throbber
+    third_party_settings: {  }
+  field_tec_product:
+    type: entity_reference_autocomplete
+    weight: 12
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_size_variations:
+    type: inline_entity_form_complex_table_view_mode
+    weight: 1
+    region: content
+    settings:
+      form_mode: default
+      override_labels: true
+      label_singular: size
+      label_plural: sizes
+      allow_new: true
+      allow_existing: false
+      match_operator: CONTAINS
+      allow_duplicate: false
+      collapsible: false
+      collapsed: false
+      revision: false
+      removed_reference: delete
+    third_party_settings:
+      entity_browser_entity_form:
+        entity_browser_id: _none
+hidden:
+  created: true
+  field_tec_edit_product: true
+  field_tec_order: true
+  flag: true
+  langcode: true
+  status: true
+  title: true
+  uid: true

@@ -1,0 +1,28 @@
+uuid: ee50ca85-ed8e-40cc-a850-ae82cadfff78
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_icon_order
+    - node.type.tec_landing_page
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: node.tec_landing_page.field_icon_order
+field_name: field_icon_order
+entity_type: node
+bundle: tec_landing_page
+label: 'Icon order'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

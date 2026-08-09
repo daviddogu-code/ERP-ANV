@@ -1,0 +1,122 @@
+uuid: f533c657-046f-4260-9833-60eff009939b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.tec_patterns.field_tec_customer
+    - field.field.taxonomy_term.tec_patterns.field_tec_images
+    - field.field.taxonomy_term.tec_patterns.field_tec_pattern_boms
+    - taxonomy.vocabulary.tec_patterns
+  module:
+    - field_group
+    - file_uploader_uppy
+    - select2
+    - text
+third_party_settings:
+  field_group:
+    group_right:
+      children:
+        - field_tec_images
+      label: Right
+      region: content
+      parent_name: ''
+      weight: 3
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: true
+        id: right
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_left:
+      children:
+        - name
+        - field_tec_customer
+        - description
+      label: Left
+      region: content
+      parent_name: ''
+      weight: 1
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+id: taxonomy_term.tec_patterns.default
+targetEntityType: taxonomy_term
+bundle: tec_patterns
+mode: default
+content:
+  description:
+    type: text_textarea
+    weight: 2
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_customer:
+    type: select2_entity_reference
+    weight: 1
+    region: content
+    settings:
+      width: 100%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+  field_tec_images:
+    type: file_uploader_uppy
+    weight: 1
+    region: content
+    settings:
+      options:
+        instance:
+          autoProceed: true
+        plugin:
+          showProgressDetails: false
+          hideCancelButton: false
+          hideProgressAfterFinish: false
+          singleFileFullScreen: true
+          disableStatusBar: false
+          disableInformer: false
+          disableThumbnailGenerator: false
+          waitForThumbnailsBeforeUpload: false
+          thumbnailWidth: 200
+          enableImageEditor: true
+          autoOpenFileEditor: false
+          imageEditor:
+            actions: {  }
+          thumbnailHeight: 200
+          theme: light
+        uploader:
+          method: xhr
+      progress_indicator: throbber
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  field_tec_pattern_boms: true
+  langcode: true
+  path: true
+  status: true

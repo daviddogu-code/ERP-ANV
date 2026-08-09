@@ -1,0 +1,29 @@
+uuid: ad181906-95d8-438a-9731-caeee94869e4
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_eca_gui_lock
+label: 'ECA GUI lock'
+bundles: {  }
+entity_type: tec_gui
+global: true
+flag_short: 'Lock GUI entity'
+flag_long: ''
+flag_message: ''
+unflag_short: 'Unlock GUI entity'
+unflag_long: ''
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_gui'
+link_type: reload
+flagTypeConfig:
+  show_in_links: {  }
+  show_as_field: false
+  show_on_form: false
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig: {  }

@@ -1,0 +1,15 @@
+uuid: 96356860-71fb-412d-9c0c-a88c053eb62d
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_delete_order
+  module:
+    - flag
+id: flag_action.tec_delete_order_flag
+label: '<img src="/sites/default/files/000-delete-21.png" title="Delete">Delete'
+type: tec_order
+plugin: 'flag_action:tec_delete_order_flag'
+configuration:
+  flag_id: tec_delete_order
+  flag_action: flag

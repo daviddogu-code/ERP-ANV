@@ -1,0 +1,27 @@
+uuid: 5a7497ba-146c-4ced-af55-35a334f2f515
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+third_party_settings:
+  field_permissions:
+    permission_type: public
+_core:
+  default_config_hash: AnS0wDFzCU6Z40Zn7tpG6kHk_7AWw1miTBuDs5quWRs
+id: tec_inventory.field_tec_quantity_input
+field_name: field_tec_quantity_input
+entity_type: tec_inventory
+type: string
+settings:
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

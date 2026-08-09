@@ -1,0 +1,36 @@
+uuid: b2a97283-5cb9-4045-a224-d3191a201453
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_ai_color
+    - taxonomy.vocabulary.tec_colors
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: 1
+    interpolator_rule: ai_interpolator_openai_string
+    interpolator_mode: base
+    interpolator_base_field: name
+    interpolator_prompt: "Based on the context, return a html code representing the color. Do not use quotation marks, just return the code without the leading '#'.\r\n\r\nHere is the context:\r\n{{ context }}"
+    interpolator_token: ''
+    interpolator_edit_mode: 1
+    interpolator_weight: '100'
+    interpolator_worker_type: direct
+    interpolator_openai_model: gpt-4o
+    interpolator_openai_vision_images: ''
+    interpolator_openai_role: 'A data and ERP expert for a muay Thai equipment factory.'
+    interpolator_openai_moderation: 0
+id: taxonomy_term.tec_colors.field_tec_ai_color
+field_name: field_tec_ai_color
+entity_type: taxonomy_term
+bundle: tec_colors
+label: 'AI Color determination'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

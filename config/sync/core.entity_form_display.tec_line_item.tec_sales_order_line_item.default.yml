@@ -1,0 +1,82 @@
+uuid: 251f03d2-6162-4d37-9335-283eeb879555
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_color_variation
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_custom_sales_price
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_gui_product
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_bom
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_total
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_total_number
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_order
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_price
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_product
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_quantity
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_size_variation
+id: tec_line_item.tec_sales_order_line_item.default
+targetEntityType: tec_line_item
+bundle: tec_sales_order_line_item
+mode: default
+content:
+  field_tec_custom_sales_price:
+    type: boolean_checkbox
+    weight: 1
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_tec_price:
+    type: number
+    weight: 2
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings:
+      conditional_fields:
+        bc120762-63fa-45b6-bd26-c8588b03ef27:
+          entity_type: tec_line_item
+          bundle: tec_sales_order_line_item
+          dependee: field_tec_custom_sales_price
+          settings:
+            state: visible
+            reset: false
+            condition: checked
+            grouping: AND
+            values_set: 1
+            value: ''
+            values: {  }
+            value_form:
+              value: false
+            effect: fade
+            effect_options:
+              fade:
+                speed: '400'
+              slide:
+                speed: '400'
+            selector: ''
+  field_tec_quantity:
+    type: number
+    weight: 0
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  flag:
+    weight: 3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  created: true
+  field_tec_color_variation: true
+  field_tec_gui_product: true
+  field_tec_line_item_bom: true
+  field_tec_line_item_total: true
+  field_tec_line_item_total_number: true
+  field_tec_order: true
+  field_tec_product: true
+  field_tec_size_variation: true
+  langcode: true
+  title: true

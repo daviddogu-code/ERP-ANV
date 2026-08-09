@@ -1,0 +1,18 @@
+uuid: 094914c3-b3ed-4adf-9579-29c35327d260
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+id: tec_crm.tec_contact_organization.created
+field_name: created
+entity_type: tec_crm
+bundle: tec_contact_organization
+label: 'Created by'
+description: 'The time that the entity was created.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: created

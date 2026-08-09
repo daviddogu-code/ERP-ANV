@@ -1,0 +1,11 @@
+uuid: b534ab2a-4767-4cbf-9180-18028e9a363b
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_inventory
+_core:
+  default_config_hash: e6edE9S0bcF_Ib2lldleUIh1LTxbHiYVfHst9KIjcyk
+type: tec_inventory_item
+name: 'Inventory item'
+description: 'Acquired inventory item'

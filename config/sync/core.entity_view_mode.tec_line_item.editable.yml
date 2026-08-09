@@ -1,0 +1,11 @@
+uuid: 37cb3660-245f-4261-b80a-730a06472eab
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_line_item.editable
+label: Editable
+description: 'Render where fields need to be editable.'
+targetEntityType: tec_line_item
+cache: true

@@ -1,0 +1,10 @@
+uuid: d9f35a0f-eb36-4931-ba4b-e300bddb54c6
+langcode: en
+status: false
+dependencies: {  }
+id: tec_line_item
+label: 'Line item'
+uid: false
+created: true
+changed: true
+title: true

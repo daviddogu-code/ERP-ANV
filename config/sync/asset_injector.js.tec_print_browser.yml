@@ -1,0 +1,21 @@
+uuid: d3ce0cab-c3ed-4a73-b784-689c148b42fa
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: tec_print_browser
+label: 'Launch browser print dialog'
+code: print()
+noscript: ''
+noscriptRegion: {  }
+jquery: false
+header: true
+preprocess: true
+conditions:
+  request_path:
+    id: request_path
+    negate: false
+    pages: "/o/pf/*/print\r\n/po/*print"
+contexts: {  }
+conditions_require_all: true

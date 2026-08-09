@@ -1,0 +1,22 @@
+uuid: 74d822e5-e1d4-44e1-ad92-73796140d155
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - taxonomy
+_core:
+  default_config_hash: 3iw2veCffbELrdfQ-yFRc3QX9YlClmhXQ0htUSrPLhc
+id: tec_inventory.field_tec_inventory
+field_name: field_tec_inventory
+entity_type: tec_inventory
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

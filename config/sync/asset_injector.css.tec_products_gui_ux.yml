@@ -1,0 +1,25 @@
+uuid: 2e2be510-3c4d-46da-8e99-8db2a9bdc019
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: tec_products_gui_ux
+label: 'TEC Products - Product - GUI UX'
+code: |-
+  /* Overrides where we override back-end form elements that are intended to
+  be set elsewhere */
+
+  /* Disable fields */
+  #edit-field-tec-color-variations {
+  	display: none;
+  }
+media: all
+preprocess: true
+conditions:
+  request_path:
+    id: request_path
+    negate: false
+    pages: /admin/content/tec_product/add/tec_product
+contexts: {  }
+conditions_require_all: true

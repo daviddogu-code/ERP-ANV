@@ -1,0 +1,15 @@
+uuid: af224a9d-afe7-41f3-984a-e3b39ad36399
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_product_duplicate
+  module:
+    - flag
+id: flag_action.tec_product_duplicate_unflag
+label: 'Unset duplicate button'
+type: tec_product
+plugin: 'flag_action:tec_product_duplicate_unflag'
+configuration:
+  flag_id: tec_product_duplicate
+  flag_action: unflag

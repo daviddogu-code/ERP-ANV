@@ -1,0 +1,9 @@
+uuid: 3ad524ff-0f3f-457c-a387-697441fb6c01
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_inventory
+name: 'Line item BoM item'
+type: tec_line_item_bom_item
+description: 'An item in a Bill of Materials (BoM) specifically for Line items.'

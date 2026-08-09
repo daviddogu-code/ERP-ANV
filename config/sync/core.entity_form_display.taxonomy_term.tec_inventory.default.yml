@@ -1,0 +1,589 @@
+uuid: 63e0aa7d-9b55-4e52-bf9f-0c47c66fb61f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.tec_inventory.feeds_item
+    - field.field.taxonomy_term.tec_inventory.field_1_uou_uos_pu
+    - field.field.taxonomy_term.tec_inventory.field_tec_ai_color
+    - field.field.taxonomy_term.tec_inventory.field_tec_colors
+    - field.field.taxonomy_term.tec_inventory.field_tec_cost
+    - field.field.taxonomy_term.tec_inventory.field_tec_importer_item_id
+    - field.field.taxonomy_term.tec_inventory.field_tec_inventory_image
+    - field.field.taxonomy_term.tec_inventory.field_tec_material_type
+    - field.field.taxonomy_term.tec_inventory.field_tec_moq_package
+    - field.field.taxonomy_term.tec_inventory.field_tec_moq_quantity
+    - field.field.taxonomy_term.tec_inventory.field_tec_moq_unit
+    - field.field.taxonomy_term.tec_inventory.field_tec_package_units
+    - field.field.taxonomy_term.tec_inventory.field_tec_packaging
+    - field.field.taxonomy_term.tec_inventory.field_tec_placeholder_1
+    - field.field.taxonomy_term.tec_inventory.field_tec_placeholder_2
+    - field.field.taxonomy_term.tec_inventory.field_tec_placeholder_3
+    - field.field.taxonomy_term.tec_inventory.field_tec_placeholder_4
+    - field.field.taxonomy_term.tec_inventory.field_tec_placeholder_5
+    - field.field.taxonomy_term.tec_inventory.field_tec_price
+    - field.field.taxonomy_term.tec_inventory.field_tec_price_by_package
+    - field.field.taxonomy_term.tec_inventory.field_tec_price_uos
+    - field.field.taxonomy_term.tec_inventory.field_tec_price_uou
+    - field.field.taxonomy_term.tec_inventory.field_tec_purchasing_moq
+    - field.field.taxonomy_term.tec_inventory.field_tec_split_into
+    - field.field.taxonomy_term.tec_inventory.field_tec_split_inventory
+    - field.field.taxonomy_term.tec_inventory.field_tec_split_unit
+    - field.field.taxonomy_term.tec_inventory.field_tec_stock_level
+    - field.field.taxonomy_term.tec_inventory.field_tec_stock_mutations
+    - field.field.taxonomy_term.tec_inventory.field_tec_stock_unit_check
+    - field.field.taxonomy_term.tec_inventory.field_tec_suppliers
+    - field.field.taxonomy_term.tec_inventory.field_tec_traceability
+    - field.field.taxonomy_term.tec_inventory.field_tec_unit_purchase
+    - field.field.taxonomy_term.tec_inventory.field_tec_unit_use
+    - field.field.taxonomy_term.tec_inventory.field_tec_units
+    - field.field.taxonomy_term.tec_inventory.field_tec_uop_pu_uou
+    - field.field.taxonomy_term.tec_inventory.field_tec_uop_uou
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos_pu_uop
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos_pu_uou
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos_uop
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos_uou
+    - field.field.taxonomy_term.tec_inventory.field_tec_uou_control
+    - field.field.taxonomy_term.tec_inventory.field_tec_uou_split_qty
+    - field.field.taxonomy_term.tec_inventory.field_tec_uou_uop
+    - field.field.taxonomy_term.tec_inventory.field_tec_uou_uop_pu
+    - field.field.taxonomy_term.tec_inventory.field_tec_uou_uos
+    - field.field.taxonomy_term.tec_inventory.field_tec_vendor
+    - field.field.taxonomy_term.tec_inventory.field_uop_to_uos
+    - field.field.taxonomy_term.tec_inventory.layout_builder__layout
+    - taxonomy.vocabulary.tec_inventory
+  module:
+    - field_group
+    - file_uploader_uppy
+    - ief_table_view_mode
+    - select2
+    - text
+third_party_settings:
+  field_group:
+    group_left_1:
+      children:
+        - name
+        - description
+      label: 'Left 1'
+      region: content
+      parent_name: ''
+      weight: 0
+      format_type: html_element
+      format_settings:
+        classes: tec-gui-column
+        show_empty_fields: false
+        id: left-1
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_right_1:
+      children:
+        - field_tec_material_type
+        - field_tec_colors
+        - field_tec_vendor
+        - field_tec_traceability
+      label: 'Right 1'
+      region: content
+      parent_name: ''
+      weight: 1
+      format_type: html_element
+      format_settings:
+        classes: tec-gui-column
+        show_empty_fields: false
+        id: right-1
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_tabs:
+      children:
+        - group_stock_movements
+        - group_photos
+      label: Tabs
+      region: content
+      parent_name: ''
+      weight: 3
+      format_type: tabs
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        direction: horizontal
+        width_breakpoint: null
+    group_details:
+      children:
+        - group_usage
+      label: 'Material calculation'
+      region: hidden
+      parent_name: ''
+      weight: 33
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        formatter: closed
+        description: ''
+        required_fields: true
+    group_photos:
+      children:
+        - field_tec_inventory_image
+      label: Photos
+      region: content
+      parent_name: group_tabs
+      weight: 26
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: true
+        id: ''
+        formatter: closed
+        description: ''
+        required_fields: true
+    group_stock_movements:
+      children:
+        - field_tec_stock_mutations
+      label: 'Inventory movements'
+      region: content
+      parent_name: group_tabs
+      weight: 23
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        formatter: open
+        description: ''
+        required_fields: true
+    group_purchasing:
+      children:
+        - field_tec_unit_purchase
+        - field_tec_units
+        - field_tec_uos
+        - field_tec_split_into
+        - field_tec_unit_use
+      label: 'Unit of Purchase'
+      region: content
+      parent_name: group_units_row
+      weight: 13
+      format_type: html_element
+      format_settings:
+        classes: tec-gui-column
+        show_empty_fields: false
+        id: purchasing
+        element: div
+        show_label: false
+        label_element: h5
+        label_element_classes: ''
+        attributes: 'width="100%"'
+        effect: none
+        speed: fast
+        required_fields: true
+    group_processing:
+      children:
+        - field_tec_placeholder_1
+        - field_tec_uos_uop
+        - field_tec_uos_uou
+      label: 'Unit of Stock & Unit of Use'
+      region: hidden
+      parent_name: ''
+      weight: 34
+      format_type: html_element
+      format_settings:
+        classes: tec-gui-column
+        show_empty_fields: false
+        id: processing
+        element: div
+        show_label: true
+        label_element: h5
+        label_element_classes: ''
+        attributes: 'width="100%"'
+        effect: none
+        speed: fast
+        required_fields: true
+    group_usage:
+      children: {  }
+      label: 'Unit of Use'
+      region: hidden
+      parent_name: group_details
+      weight: 33
+      format_type: html_element
+      format_settings:
+        classes: tec-gui-column
+        show_empty_fields: false
+        id: usage
+        element: div
+        show_label: true
+        label_element: h5
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_ai:
+      children:
+        - field_tec_ai_color
+      label: AI
+      region: hidden
+      parent_name: ''
+      weight: 36
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        formatter: closed
+        description: 'Data in this tab is controlled by AI and presented for review.'
+        required_fields: true
+    group_excluded:
+      children:
+        - field_tec_moq_package
+        - field_tec_moq_quantity
+        - field_tec_placeholder_3
+        - field_tec_placeholder_5
+        - field_tec_stock_level
+        - group_unit_purchase_wrapper
+      label: Excluded
+      region: hidden
+      parent_name: ''
+      weight: 32
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: excluded
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: false
+    group_left_2_unities:
+      children:
+        - group_units_row
+        - group_costs_row
+      label: 'Left 2 - Unities'
+      region: content
+      parent_name: ''
+      weight: 2
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_units_row:
+      children:
+        - group_purchasing
+      label: 'Units Row'
+      region: content
+      parent_name: group_left_2_unities
+      weight: 13
+      format_type: html_element
+      format_settings:
+        classes: units-row
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: units-row
+        effect: none
+        speed: fast
+        required_fields: true
+    group_costs_row:
+      children:
+        - field_tec_cost
+        - field_tec_price_uos
+        - field_tec_price
+      label: 'Costs Row'
+      region: content
+      parent_name: group_left_2_unities
+      weight: 14
+      format_type: html_element
+      format_settings:
+        classes: costs-row
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_left_2:
+      children: {  }
+      label: 'Left 2'
+      region: hidden
+      parent_name: ''
+      weight: 35
+      format_type: html_element
+      format_settings:
+        classes: inventory-formulas
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_unit_purchase_wrapper:
+      children: {  }
+      label: unit_purchase_wrapper
+      region: hidden
+      parent_name: group_excluded
+      weight: 8
+      format_type: html_element
+      format_settings:
+        classes: unit_purchase_wrapper
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+id: taxonomy_term.tec_inventory.default
+targetEntityType: taxonomy_term
+bundle: tec_inventory
+mode: default
+content:
+  description:
+    type: text_textarea
+    weight: 6
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_colors:
+    type: select2_entity_reference
+    weight: 8
+    region: content
+    settings:
+      width: 100%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+  field_tec_cost:
+    type: number
+    weight: 5
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_inventory_image:
+    type: file_uploader_uppy
+    weight: 6
+    region: content
+    settings:
+      options:
+        instance:
+          autoProceed: true
+        plugin:
+          showProgressDetails: true
+          hideCancelButton: false
+          hideProgressAfterFinish: false
+          singleFileFullScreen: true
+          disableStatusBar: false
+          disableInformer: false
+          disableThumbnailGenerator: false
+          waitForThumbnailsBeforeUpload: false
+          thumbnailWidth: 200
+          enableImageEditor: false
+          autoOpenFileEditor: false
+          imageEditor:
+            actions: {  }
+          thumbnailHeight: 200
+          theme: light
+        uploader:
+          method: xhr
+      progress_indicator: throbber
+    third_party_settings: {  }
+  field_tec_material_type:
+    type: select2_entity_reference
+    weight: 7
+    region: content
+    settings:
+      width: 100%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+  field_tec_price:
+    type: number
+    weight: 8
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings:
+      conditional_fields: {  }
+  field_tec_price_uos:
+    type: number
+    weight: 7
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_split_into:
+    type: number
+    weight: 17
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_stock_mutations:
+    type: inline_entity_form_complex_table_view_mode
+    weight: 8
+    region: content
+    settings:
+      form_mode: default
+      override_labels: true
+      label_singular: 'stock mutation'
+      label_plural: 'stock mutations'
+      allow_new: true
+      allow_existing: false
+      match_operator: CONTAINS
+      allow_duplicate: false
+      collapsible: false
+      collapsed: false
+      revision: false
+      removed_reference: optional
+    third_party_settings: {  }
+  field_tec_traceability:
+    type: boolean_checkbox
+    weight: 10
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_tec_unit_purchase:
+    type: select2_entity_reference
+    weight: 14
+    region: content
+    settings:
+      width: 100%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+  field_tec_unit_use:
+    type: select2_entity_reference
+    weight: 18
+    region: content
+    settings:
+      width: 100%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+  field_tec_units:
+    type: number
+    weight: 15
+    region: content
+    settings:
+      placeholder: 'Nr of units'
+    third_party_settings: {  }
+  field_tec_uos:
+    type: select2_entity_reference
+    weight: 16
+    region: content
+    settings:
+      width: 100%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+  field_tec_vendor:
+    type: select2_entity_reference
+    weight: 9
+    region: content
+    settings:
+      width: 100%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+  group_usage:
+    weight: 48
+    region: content
+    settings: {  }
+    third_party_settings:
+      conditional_fields: {  }
+  name:
+    type: string_textfield
+    weight: 4
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  feeds_item: true
+  field_1_uou_uos_pu: true
+  field_tec_ai_color: true
+  field_tec_importer_item_id: true
+  field_tec_moq_package: true
+  field_tec_moq_quantity: true
+  field_tec_moq_unit: true
+  field_tec_package_units: true
+  field_tec_packaging: true
+  field_tec_placeholder_1: true
+  field_tec_placeholder_2: true
+  field_tec_placeholder_3: true
+  field_tec_placeholder_4: true
+  field_tec_placeholder_5: true
+  field_tec_price_by_package: true
+  field_tec_price_uou: true
+  field_tec_purchasing_moq: true
+  field_tec_split_inventory: true
+  field_tec_split_unit: true
+  field_tec_stock_level: true
+  field_tec_stock_unit_check: true
+  field_tec_suppliers: true
+  field_tec_uop_pu_uou: true
+  field_tec_uop_uou: true
+  field_tec_uos_pu_uop: true
+  field_tec_uos_pu_uou: true
+  field_tec_uos_uop: true
+  field_tec_uos_uou: true
+  field_tec_uou_control: true
+  field_tec_uou_split_qty: true
+  field_tec_uou_uop: true
+  field_tec_uou_uop_pu: true
+  field_tec_uou_uos: true
+  field_uop_to_uos: true
+  langcode: true
+  layout_builder__layout: true
+  menu: true
+  path: true
+  status: true

@@ -1,0 +1,9 @@
+uuid: f987a0d3-1d15-47eb-849a-6319838b1b03
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_crm
+name: 'Contact: Organization'
+type: tec_contact_organization
+description: ''

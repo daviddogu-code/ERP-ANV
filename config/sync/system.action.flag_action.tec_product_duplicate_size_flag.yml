@@ -1,0 +1,15 @@
+uuid: 717229fd-618d-43d7-80bf-908bdb2c96e7
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_product_duplicate_size
+  module:
+    - flag
+id: flag_action.tec_product_duplicate_size_flag
+label: '<img src="/sites/default/files/999-copy-16.png" title="Duplicate color"> Duplicate size'
+type: tec_product
+plugin: 'flag_action:tec_product_duplicate_size_flag'
+configuration:
+  flag_id: tec_product_duplicate_size
+  flag_action: flag

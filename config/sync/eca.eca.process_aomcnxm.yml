@@ -1,0 +1,86 @@
+uuid: b0f07250-84aa-4fd2-b671-9899f685536d
+langcode: en
+status: true
+dependencies:
+  module:
+    - eca_base
+    - eca_content
+    - eca_flag
+id: process_aomcnxm
+modeller: bpmn_io
+label: 'TEC Order: Update order status'
+version: '0.1'
+weight: 4
+events:
+  Event_1y2gwcn:
+    plugin: 'flag:flag'
+    label: |
+      Flag
+    configuration: {  }
+    successors:
+      -
+        id: Activity_02ih4p8
+        condition: Flow_0m4vf76
+conditions:
+  Flow_0m4vf76:
+    plugin: eca_scalar
+    configuration:
+      negate: false
+      case: false
+      left: '[flag]'
+      right: tec_order_accounting_verified
+      operator: equal
+      type: value
+gateways: {  }
+actions:
+  Activity_03gim3q:
+    plugin: action_goto_action
+    label: Redirect
+    configuration:
+      url: '[contact:url]'
+      replace_tokens: true
+    successors:
+      -
+        id: Activity_09dlzcb
+        condition: ''
+  Activity_02ih4p8:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the CRM entity'
+    configuration:
+      field_name_entity_ref: field_tec_customer
+      token_name: contact
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_1j8e2ow
+        condition: ''
+  Activity_09dlzcb:
+    plugin: action_message_action
+    label: 'Show a message'
+    configuration:
+      replace_tokens: false
+      message: '<strong>Order status updated to Accounting Verified.</strong>'
+    successors: {  }
+  Activity_1j8e2ow:
+    plugin: eca_set_field_value
+    label: 'Update order status'
+    configuration:
+      field_name: field_tec_order_status
+      field_value: accounting_verified
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_03gim3q
+        condition: ''

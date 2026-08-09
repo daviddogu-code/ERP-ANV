@@ -1,0 +1,61 @@
+uuid: 188212c3-c4cc-413b-b8b0-3417b6f4ab1a
+langcode: en
+status: true
+dependencies: {  }
+id: tec_products
+label: 'TEC Products'
+renderer: quick_tabs
+hide_empty_tabs: false
+default_tab: 9999
+options:
+  quick_tabs:
+    ajax: false
+    class: ''
+    style: on-the-gray
+configuration_data:
+  -
+    title: Products
+    weight: -10
+    type: block_content
+    content:
+      node_content:
+        options:
+          nid: ''
+          view_mode: full
+          hide_title: true
+      view_content:
+        options:
+          vid: block_content
+          display: default
+          args: ''
+      block_content:
+        options:
+          bid: 'views_block:tec_products-block_1'
+          block_title: ''
+          display_title: false
+      qtabs_content:
+        options:
+          machine_name: tec_crm_contact_tabs
+  -
+    title: 'Size variations'
+    weight: -9
+    type: block_content
+    content:
+      node_content:
+        options:
+          nid: ''
+          view_mode: full
+          hide_title: true
+      view_content:
+        options:
+          vid: block_content
+          display: default
+          args: ''
+      block_content:
+        options:
+          bid: 'views_block:tec_products-block_8'
+          block_title: ''
+          display_title: false
+      qtabs_content:
+        options:
+          machine_name: tec_crm_contact_tabs

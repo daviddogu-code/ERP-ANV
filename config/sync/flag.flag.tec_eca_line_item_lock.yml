@@ -1,0 +1,29 @@
+uuid: d3340803-a468-42d3-9df3-9e1ac2989ebf
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_eca_line_item_lock
+label: 'ECA Line item lock'
+bundles: {  }
+entity_type: tec_line_item
+global: true
+flag_short: 'Lock Line item '
+flag_long: ''
+flag_message: ''
+unflag_short: 'Unlock Line item '
+unflag_long: ''
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_line_item'
+link_type: reload
+flagTypeConfig:
+  show_in_links: {  }
+  show_as_field: true
+  show_on_form: true
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig: {  }

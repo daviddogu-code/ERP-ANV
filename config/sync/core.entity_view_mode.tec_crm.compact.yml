@@ -1,0 +1,11 @@
+uuid: f5a6d6f0-3e43-42d0-91f6-56f0a5f4f5a8
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.compact
+label: Compact
+description: 'Compact view'
+targetEntityType: tec_crm
+cache: true

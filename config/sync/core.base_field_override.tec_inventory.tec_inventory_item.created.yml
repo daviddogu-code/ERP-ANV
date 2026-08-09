@@ -1,0 +1,18 @@
+uuid: e6d27d52-fe5f-440f-9faf-9facb165b815
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_inventory_item
+id: tec_inventory.tec_inventory_item.created
+field_name: created
+entity_type: tec_inventory
+bundle: tec_inventory_item
+label: 'Created on'
+description: 'The time that the entity was created.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: created

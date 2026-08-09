@@ -1,0 +1,829 @@
+uuid: 47e15310-ffe9-4aff-90f9-3f2169f1ddbf
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_line_item_bom_item
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - field.field.tec_inventory.tec_bom_item.field_tec_inventory
+    - field.field.tec_inventory.tec_bom_item.field_tec_quantity
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_inventory
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_quantity
+    - field.field.tec_inventory.tec_line_item_bom_item.field_tec_bom_item
+    - field.field.tec_inventory.tec_line_item_bom_item.field_tec_inventory
+    - field.field.tec_inventory.tec_line_item_bom_item.field_tec_quantity
+    - field.field.tec_line_item.tec_po_line_item.field_tec_inventory
+    - field.field.tec_line_item.tec_po_line_item.field_tec_line_item_total_number
+    - field.field.tec_line_item.tec_po_line_item.field_tec_price
+    - field.field.tec_line_item.tec_po_line_item.field_tec_quantity
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_bom
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_total_number
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_price
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_quantity
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_size_variation
+    - field.storage.tec_inventory.field_tec_bom_item
+    - field.storage.tec_inventory.field_tec_inventory
+    - field.storage.tec_inventory.field_tec_quantity
+    - field.storage.tec_line_item.field_tec_inventory
+    - field.storage.tec_line_item.field_tec_line_item_bom
+    - field.storage.tec_line_item.field_tec_line_item_total_number
+    - field.storage.tec_line_item.field_tec_price
+    - field.storage.tec_line_item.field_tec_quantity
+    - field.storage.tec_line_item.field_tec_size_variation
+    - flag.flag.tec_eca_line_item_lock
+  module:
+    - eca_base
+    - eca_content
+    - eca_flag
+    - eca_log
+    - eca_tamper
+    - flag
+id: process_lvy385w
+modeller: bpmn_io
+label: 'TEC Line item: Set line item data'
+version: '1.8'
+weight: 13
+events:
+  Event_1u4dhan:
+    plugin: 'content_entity:update'
+    label: Update
+    configuration:
+      type: 'tec_line_item tec_sales_order_line_item'
+    successors:
+      -
+        id: Gateway_0f9ff4g
+        condition: Flow_1qth9uu
+conditions:
+  Flow_0qyud9f:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: title
+      entity: ''
+  Flow_1kgsmx5:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_price
+      negate: true
+      entity: ''
+  Flow_10q2ohe:
+    plugin: eca_entity_field_value
+    configuration:
+      case: false
+      expected_value: '[lineitemTotalFormatted]'
+      field_name: field_tec_line_item_total_number
+      operator: equal
+      type: value
+      negate: true
+      entity: ''
+  Flow_1x9gacd:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_line_item_bom
+      entity: ''
+  Flow_0gr355w:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: itemDropped
+  Flow_1gln49c:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_quantity
+      negate: true
+      entity: itemDropped
+  Flow_0cak0a2:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_quantity
+      entity: itemDropped
+  Flow_17vpk7k:
+    plugin: eca_entity_field_value_changed
+    configuration:
+      negate: false
+      field_name: field_tec_quantity
+      entity: ''
+  Flow_015zx43:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_line_item_bom
+      negate: true
+      entity: ''
+  Flow_1kwewsa:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: itemDropped
+  Flow_1210vb2:
+    plugin: eca_entity_field_value_changed
+    configuration:
+      negate: false
+      field_name: field_tec_size_variation
+      entity: ''
+  Flow_01i98c2:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: bomitemDropped
+  Flow_15br584:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_quantity
+      negate: true
+      entity: bomitemDropped
+  Flow_0f9dl7k:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_quantity
+      entity: bomitemDropped
+  Flow_0xu2609:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_line_item_bom
+      negate: true
+      entity: ''
+  Flow_0ccetb5:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_bom
+      negate: true
+      entity: productLoaded
+  Flow_1r36323:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_bom
+      entity: productLoaded
+  Flow_1i7yu76:
+    plugin: eca_token_exists
+    configuration:
+      token_name: itemDropped
+      negate: true
+  Flow_0ireoja:
+    plugin: eca_token_exists
+    configuration:
+      token_name: bomitemDropped
+      negate: true
+  Flow_1nv62c5:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_quantity
+      negate: true
+      entity: ''
+  Flow_1vqsdqm:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_quantity
+      entity: ''
+  Flow_0ow34a5:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_quantity
+      negate: true
+      entity: ''
+  Flow_0ifn2n7:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_quantity
+      entity: ''
+  Flow_1q639op:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_line_item_total_number
+      negate: true
+      entity: ''
+  Flow_0zwojsk:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '0.1'
+      field_name: field_tec_quantity
+      operator: greaterthan
+      type: value
+      entity: ''
+  Flow_0wcd1kc:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: field_tec_quantity
+      operator: lessthan
+      type: value
+      entity: ''
+  Flow_1bbf7dx:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_line_item_total_number
+      negate: true
+      entity: ''
+  Flow_0vokjl5:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '[lineitemTotalFormatted]'
+      field_name: field_tec_line_item_total_number
+      operator: equal
+      type: value
+      entity: ''
+  Flow_1qth9uu:
+    plugin: eca_flag_entity_is_flagged
+    configuration:
+      flag_name: tec_eca_line_item_lock
+      negate: true
+      entity: ''
+gateways:
+  Gateway_08mh5x7:
+    type: 0
+    successors:
+      -
+        id: Activity_1kfpox7
+        condition: Flow_0qyud9f
+      -
+        id: Gateway_0dupqyy
+        condition: ''
+  Gateway_0f9ff4g:
+    type: 0
+    successors:
+      -
+        id: Activity_1thfepr
+        condition: ''
+  Gateway_0dupqyy:
+    type: 0
+    successors:
+      -
+        id: Gateway_1d59009
+        condition: ''
+      -
+        id: Gateway_1qwb3me
+        condition: ''
+  Gateway_1qwb3me:
+    type: 0
+    successors:
+      -
+        id: Gateway_15pz5yp
+        condition: Flow_1x9gacd
+      -
+        id: Activity_16izt9c
+        condition: ''
+      -
+        id: Gateway_0hahhxw
+        condition: Flow_0xu2609
+  Gateway_11jrzin:
+    type: 0
+    successors:
+      -
+        id: Gateway_0fszxn3
+        condition: Flow_1gln49c
+      -
+        id: Activity_1nnprxr
+        condition: Flow_0cak0a2
+  Gateway_0clrznw:
+    type: 0
+    successors:
+      -
+        id: Gateway_04r5fis
+        condition: ''
+      -
+        id: Activity_0gctgbw
+        condition: Flow_17vpk7k
+  Gateway_1pua544:
+    type: 0
+    successors:
+      -
+        id: Activity_0gfiapo
+        condition: Flow_015zx43
+  Gateway_04r5fis:
+    type: 0
+    successors:
+      -
+        id: Activity_1mu00y4
+        condition: Flow_1210vb2
+  Gateway_0hahhxw:
+    type: 0
+    successors:
+      -
+        id: Activity_12q0zre
+        condition: ''
+  Gateway_1smok0e:
+    type: 0
+    successors:
+      -
+        id: Activity_1vsiftt
+        condition: Flow_15br584
+      -
+        id: Gateway_1g3q745
+        condition: Flow_0f9dl7k
+  Gateway_1g3q745:
+    type: 0
+    successors:
+      -
+        id: Activity_027mmzo
+        condition: ''
+  Gateway_15pz5yp:
+    type: 0
+    successors:
+      -
+        id: Activity_028wcq8
+        condition: Flow_0ccetb5
+      -
+        id: Activity_16izt9c
+        condition: Flow_1r36323
+  Gateway_0ffacag:
+    type: 0
+    successors:
+      -
+        id: Activity_1aykwqw
+        condition: Flow_0gr355w
+      -
+        id: Activity_16izt9c
+        condition: Flow_1i7yu76
+  Gateway_1yiru16:
+    type: 0
+    successors:
+      -
+        id: Gateway_1smok0e
+        condition: Flow_01i98c2
+      -
+        id: Activity_16izt9c
+        condition: Flow_0ireoja
+  Gateway_0fszxn3:
+    type: 0
+    successors:
+      -
+        id: Activity_15ua7v4
+        condition: Flow_1nv62c5
+      -
+        id: Activity_1nnprxr
+        condition: Flow_1vqsdqm
+  Gateway_17k7pz9:
+    type: 0
+    successors:
+      -
+        id: Gateway_02wcv7l
+        condition: Flow_0ow34a5
+      -
+        id: Gateway_12do8qw
+        condition: Flow_0ifn2n7
+  Gateway_1d59009:
+    type: 0
+    successors:
+      -
+        id: Gateway_17k7pz9
+        condition: Flow_1kgsmx5
+  Gateway_12do8qw:
+    type: 0
+    successors:
+      -
+        id: Activity_19lza6u
+        condition: Flow_1q639op
+  Gateway_02wcv7l:
+    type: 0
+    successors:
+      -
+        id: Activity_15or5sx
+        condition: Flow_0zwojsk
+      -
+        id: Gateway_0uesxu4
+        condition: Flow_0wcd1kc
+  Gateway_0uesxu4:
+    type: 0
+    successors:
+      -
+        id: Activity_19lza6u
+        condition: Flow_1bbf7dx
+  Gateway_1u9dhwx:
+    type: 0
+    successors:
+      -
+        id: Activity_0ohyivj
+        condition: Flow_10q2ohe
+      -
+        id: Activity_00orgr2
+        condition: Flow_0vokjl5
+  Gateway_00pomu5:
+    type: 0
+    successors: {  }
+  Gateway_131k23a:
+    type: 0
+    successors: {  }
+actions:
+  Activity_1kfpox7:
+    plugin: eca_set_field_value
+    label: 'Set the title field'
+    configuration:
+      field_name: title
+      field_value: '[productLoaded:title]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: false
+      object: ''
+    successors: {  }
+  Activity_1jsq6vp:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the Size variation'
+    configuration:
+      field_name_entity_ref: field_tec_size_variation
+      token_name: productLoaded
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Gateway_08mh5x7
+        condition: ''
+  Activity_020nm9h:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate line item total'
+    configuration:
+      operation: multiplication
+      flip: false
+      value: '[entity:field_tec_price:value]'
+      eca_data: '[entity:field_tec_quantity:value]'
+      eca_token_name: lineitemTotal
+    successors:
+      -
+        id: Activity_1nf5hlm
+        condition: ''
+  Activity_174s2w8:
+    plugin: eca_set_field_value
+    label: 'Set line item total numer field & Save'
+    configuration:
+      field_name: field_tec_line_item_total_number
+      field_value: '[lineitemTotalFormatted]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_1nf5hlm:
+    plugin: 'eca_tamper:number_format'
+    label: 'Format the number'
+    configuration:
+      decimals: '2'
+      dec_point: .
+      thousands_sep: ''
+      eca_data: '[lineitemTotal]'
+      eca_token_name: lineitemTotalFormatted
+    successors:
+      -
+        id: Gateway_1u9dhwx
+        condition: ''
+  Activity_028wcq8:
+    plugin: eca_get_field_value
+    label: 'Get field value and build list'
+    configuration:
+      field_name: field_tec_bom
+      token_name: productBom
+      object: productLoaded
+    successors:
+      -
+        id: Activity_1i4httl
+        condition: ''
+  Activity_1i4httl:
+    plugin: eca_list_remove
+    label: 'Drop the first BoM item'
+    configuration:
+      value: ''
+      token_name: itemDropped
+      method: first
+      index: ''
+      list_token: productBom
+    successors:
+      -
+        id: Gateway_0ffacag
+        condition: ''
+  Activity_1aykwqw:
+    plugin: eca_new_entity
+    label: 'Create Line item BoM item'
+    configuration:
+      token_name: itemCreated
+      type: 'tec_inventory tec_line_item_bom_item'
+      langcode: ''
+      label: '[itemDropped:title]'
+      published: true
+      owner: '[session_user:uid]'
+    successors:
+      -
+        id: Activity_1mki4cs
+        condition: ''
+  Activity_1mki4cs:
+    plugin: eca_save_entity
+    label: 'Save the Line item BoM item'
+    configuration:
+      object: itemCreated
+    successors:
+      -
+        id: Activity_1e8astr
+        condition: ''
+  Activity_1e8astr:
+    plugin: eca_set_field_value
+    label: 'Set Material on the Line item BoM item'
+    configuration:
+      field_name: field_tec_inventory
+      field_value: '[itemDropped:field_tec_inventory]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: itemCreated
+    successors:
+      -
+        id: Activity_1aviovp
+        condition: ''
+  Activity_1nnprxr:
+    plugin: eca_set_field_value
+    label: 'Add the Line item BoM item to the Line item BoM'
+    configuration:
+      field_name: field_tec_line_item_bom
+      field_value: '[itemCreated]'
+      method: 'append:not_full'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_1i4httl
+        condition: ''
+  Activity_15ua7v4:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate the Quantity Total (Production requires)'
+    configuration:
+      operation: multiplication
+      flip: false
+      value: '[entity:field_tec_quantity:value]'
+      eca_data: '[itemDropped:field_tec_quantity:value]'
+      eca_token_name: quantityCalculated
+    successors:
+      -
+        id: Activity_0o8g0cp
+        condition: ''
+  Activity_0o8g0cp:
+    plugin: eca_set_field_value
+    label: 'Set the total quantity required for Line item production'
+    configuration:
+      field_name: field_tec_quantity
+      field_value: '[quantityCalculated]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: itemCreated
+    successors:
+      -
+        id: Activity_1nnprxr
+        condition: ''
+  Activity_0gfiapo:
+    plugin: eca_get_field_value
+    label: 'Get field value and build list'
+    configuration:
+      field_name: field_tec_line_item_bom
+      token_name: bomList
+      object: ''
+    successors:
+      -
+        id: Activity_1qqzgg3
+        condition: ''
+  Activity_1qqzgg3:
+    plugin: eca_list_remove
+    label: 'Drop the first item'
+    configuration:
+      value: ''
+      token_name: itemDropped
+      method: first
+      index: ''
+      list_token: bomList
+    successors:
+      -
+        id: Activity_0ssw0dd
+        condition: Flow_1kwewsa
+  Activity_0ssw0dd:
+    plugin: eca_delete_entity
+    label: 'Delete the Line item BoM item'
+    configuration:
+      object: itemDropped
+    successors:
+      -
+        id: Activity_1ec7s7u
+        condition: ''
+  Activity_1ec7s7u:
+    plugin: eca_save_entity
+    label: 'Save the Line item'
+    configuration:
+      object: ''
+    successors:
+      -
+        id: Activity_1qqzgg3
+        condition: ''
+  Activity_12q0zre:
+    plugin: eca_get_field_value
+    label: 'Get field value and build list'
+    configuration:
+      field_name: field_tec_line_item_bom
+      token_name: itemBom
+      object: ''
+    successors:
+      -
+        id: Activity_027mmzo
+        condition: ''
+  Activity_027mmzo:
+    plugin: eca_list_remove
+    label: 'Drop the first BoM item'
+    configuration:
+      value: ''
+      token_name: bomitemDropped
+      method: first
+      index: ''
+      list_token: itemBom
+    successors:
+      -
+        id: Gateway_1yiru16
+        condition: ''
+  Activity_0zu9kjg:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate the Quantity (Production requires)'
+    configuration:
+      operation: multiplication
+      flip: false
+      value: '[entity:field_tec_quantity:value]'
+      eca_data: '[bomitemLoaded:field_tec_quantity:value]'
+      eca_token_name: itemquantityCalculated
+    successors:
+      -
+        id: Activity_0x71aue
+        condition: ''
+  Activity_0x71aue:
+    plugin: eca_set_field_value
+    label: 'Set the total quantity required for Line item production'
+    configuration:
+      field_name: field_tec_quantity
+      field_value: '[itemquantityCalculated]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: bomitemDropped
+    successors:
+      -
+        id: Gateway_1g3q745
+        condition: ''
+  Activity_16izt9c:
+    plugin: 'flag_action:tec_eca_line_item_lock_unflag'
+    label: 'Unlock the line item'
+    configuration:
+      object: ''
+    successors:
+      -
+        id: Activity_1paxigr
+        condition: ''
+  Activity_1vsiftt:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the BoM Item'
+    configuration:
+      field_name_entity_ref: field_tec_bom_item
+      token_name: bomitemLoaded
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: bomitemDropped
+    successors:
+      -
+        id: Activity_0zu9kjg
+        condition: ''
+  Activity_1aviovp:
+    plugin: eca_set_field_value
+    label: 'Reference the BoM item on the Line item BoM item'
+    configuration:
+      field_name: field_tec_bom_item
+      field_value: '[itemDropped]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: itemCreated
+    successors:
+      -
+        id: Gateway_11jrzin
+        condition: ''
+  Activity_19lza6u:
+    plugin: eca_set_field_value
+    label: 'Clear Line item total & Save'
+    configuration:
+      field_name: field_tec_line_item_total_number
+      field_value: ''
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_15or5sx:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Line item has a quantity > 0'
+    successors:
+      -
+        id: Activity_020nm9h
+        condition: ''
+  Activity_0ohyivj:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Line item total is not yet set to [entity:field_tec_line_item_total_number]'
+    successors:
+      -
+        id: Activity_1glkphl
+        condition: ''
+  Activity_00orgr2:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: "Total is what's calculated. Returning to process."
+    successors: {  }
+  Activity_1mu00y4:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Product has changed'
+    successors:
+      -
+        id: Gateway_1pua544
+        condition: ''
+  Activity_1thfepr:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Line item: Set line item data" ECA Model.'
+    successors:
+      -
+        id: Activity_05ftlty
+        condition: ''
+  Activity_1paxigr:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished: "TEC Line item: Set line item data" ECA Model.'
+    successors: {  }
+  Activity_05ftlty:
+    plugin: 'flag_action:tec_eca_line_item_lock_flag'
+    label: 'Lock the Line item'
+    configuration:
+      object: ''
+    successors:
+      -
+        id: Activity_1jsq6vp
+        condition: ''
+  Activity_1glkphl:
+    plugin: 'flag_action:tec_eca_line_item_lock_flag'
+    label: 'Lock the Line item'
+    configuration:
+      object: ''
+    successors:
+      -
+        id: Activity_174s2w8
+        condition: ''
+  Activity_0gctgbw:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Quantity has changed'
+    successors:
+      -
+        id: Gateway_1pua544
+        condition: ''

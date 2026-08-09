@@ -1,0 +1,27 @@
+uuid: 0a3e6048-f74a-44b7-a87b-453249f2610c
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - field.storage.tec_line_item.field_tec_gui_product
+id: tec_line_item.tec_sales_order_line_item.field_tec_gui_product
+field_name: field_tec_gui_product
+entity_type: tec_line_item
+bundle: tec_sales_order_line_item
+label: 'Product - DEPRECATING'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_gui'
+  handler_settings:
+    target_bundles: {  }
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

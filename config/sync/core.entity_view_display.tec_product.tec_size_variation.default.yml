@@ -1,0 +1,109 @@
+uuid: fc729383-6984-41e7-b736-9d2dc3f86c8c
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.field.tec_product.tec_size_variation.field_tec_barcode_nr
+    - field.field.tec_product.tec_size_variation.field_tec_bom
+    - field.field.tec_product.tec_size_variation.field_tec_color_variation
+    - field.field.tec_product.tec_size_variation.field_tec_controls
+    - field.field.tec_product.tec_size_variation.field_tec_import_bom
+    - field.field.tec_product.tec_size_variation.field_tec_price
+    - field.field.tec_product.tec_size_variation.field_tec_product
+    - field.field.tec_product.tec_size_variation.field_tec_size
+    - field.field.tec_product.tec_size_variation.field_tec_view_bill_of_materials
+  module:
+    - ds
+    - field_formatter_class
+    - layout_builder
+    - viewfield
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+  ds:
+    layout:
+      id: layout_twocol_bricks
+      library: layout_discovery/twocol_bricks
+      disable_css: false
+      entity_classes: all_classes
+      settings:
+        label: ''
+    regions:
+      top:
+        - field_tec_controls
+      first_above:
+        - field_tec_size
+      second_above:
+        - field_tec_price
+      middle:
+        - field_tec_view_bill_of_materials
+id: tec_product.tec_size_variation.default
+targetEntityType: tec_product
+bundle: tec_size_variation
+mode: default
+content:
+  field_tec_controls:
+    type: viewfield_default
+    label: hidden
+    settings:
+      view_title: hidden
+      always_build_output: false
+      empty_view_title: hidden
+    third_party_settings: {  }
+    weight: 0
+    region: top
+  field_tec_import_bom:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_tec_price:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings:
+      field_formatter_class:
+        class: text-align-right
+    weight: 2
+    region: second_above
+  field_tec_size:
+    type: entity_reference_label
+    label: hidden
+    settings:
+      link: false
+    third_party_settings:
+      field_formatter_class:
+        class: 'h5 strong'
+    weight: 1
+    region: first_above
+  field_tec_view_bill_of_materials:
+    type: viewfield_default
+    label: above
+    settings:
+      view_title: hidden
+      always_build_output: false
+      empty_view_title: hidden
+    third_party_settings: {  }
+    weight: 3
+    region: middle
+hidden:
+  changed: true
+  created: true
+  field_tec_barcode_nr: true
+  field_tec_bom: true
+  field_tec_color_variation: true
+  field_tec_product: true
+  flag_tec_eca_product_lock: true
+  flag_tec_product_duplicate_size: true
+  langcode: true
+  title: true
+  uid: true

@@ -1,0 +1,11 @@
+uuid: a6cdd3eb-e830-475b-b9c9-3207721c363b
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.p_o_button
+label: 'P.O. button'
+description: ''
+targetEntityType: tec_crm
+cache: true

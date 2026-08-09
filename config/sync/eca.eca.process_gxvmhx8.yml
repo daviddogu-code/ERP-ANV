@@ -1,0 +1,105 @@
+uuid: 29d657aa-3cd4-4413-8449-88031da62db4
+langcode: en
+status: true
+dependencies:
+  module:
+    - eca_base
+    - eca_content
+    - eca_flag
+    - eca_log
+    - flag
+id: process_gxvmhx8
+modeller: bpmn_io
+label: 'TEC Order: Cancel purchase order'
+version: '1.0'
+weight: -19
+events:
+  Event_1heswvq:
+    plugin: 'flag:flag'
+    label: Flag
+    configuration: {  }
+    successors:
+      -
+        id: Gateway_0j9rmlc
+        condition: Flow_025m475
+conditions:
+  Flow_025m475:
+    plugin: eca_scalar
+    configuration:
+      negate: false
+      case: false
+      left: '[flag]'
+      right: tec_order_cancel_sales_order
+      operator: equal
+      type: value
+  Flow_0y8k953:
+    plugin: eca_entity_type_bundle
+    configuration:
+      negate: false
+      type: 'tec_order tec_purchase_order'
+      entity: ''
+gateways:
+  Gateway_0j9rmlc:
+    type: 0
+    successors:
+      -
+        id: Activity_1paucfe
+        condition: Flow_0y8k953
+actions:
+  Activity_1paucfe:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Order: Cancel purchase order" ECA Model.'
+    successors:
+      -
+        id: Activity_1sttac6
+        condition: ''
+  Activity_0ixuavt:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished: "TEC Order: Cancel purchase order" ECA Model.'
+    successors: {  }
+  Activity_0o53no8:
+    plugin: action_goto_action
+    label: 'Redirect the user'
+    configuration:
+      url: '[contact:url]'
+      replace_tokens: true
+    successors:
+      -
+        id: Activity_0ixuavt
+        condition: ''
+  Activity_1rbkbn1:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the CRM contact'
+    configuration:
+      field_name_entity_ref: field_tec_vendor
+      token_name: contact
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_0o53no8
+        condition: ''
+  Activity_1sttac6:
+    plugin: flag_delete_flagging
+    label: Unflag
+    configuration:
+      object: flagging
+    successors:
+      -
+        id: Activity_1rbkbn1
+        condition: ''

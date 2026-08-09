@@ -1,0 +1,56 @@
+uuid: 8bc31342-6891-4c6c-9405-d0c8fd590dc2
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.tec_product.ief_table
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.field.tec_product.tec_size_variation.field_tec_barcode_nr
+    - field.field.tec_product.tec_size_variation.field_tec_bom
+    - field.field.tec_product.tec_size_variation.field_tec_color_variation
+    - field.field.tec_product.tec_size_variation.field_tec_controls
+    - field.field.tec_product.tec_size_variation.field_tec_import_bom
+    - field.field.tec_product.tec_size_variation.field_tec_price
+    - field.field.tec_product.tec_size_variation.field_tec_product
+    - field.field.tec_product.tec_size_variation.field_tec_size
+    - field.field.tec_product.tec_size_variation.field_tec_view_bill_of_materials
+  module:
+    - field_formatter_class
+    - layout_builder
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+id: tec_product.tec_size_variation.ief_table
+targetEntityType: tec_product
+bundle: tec_size_variation
+mode: ief_table
+content:
+  field_tec_size:
+    type: entity_reference_label
+    label: hidden
+    settings:
+      link: false
+    third_party_settings:
+      field_formatter_class:
+        class: ''
+    weight: 0
+    region: content
+hidden:
+  changed: true
+  created: true
+  field_tec_barcode_nr: true
+  field_tec_bom: true
+  field_tec_color_variation: true
+  field_tec_controls: true
+  field_tec_import_bom: true
+  field_tec_price: true
+  field_tec_product: true
+  field_tec_view_bill_of_materials: true
+  flag_tec_eca_product_lock: true
+  flag_tec_product_duplicate_size: true
+  flag_tec_product_import_size_bom: true
+  label: true
+  langcode: true
+  title: true
+  uid: true

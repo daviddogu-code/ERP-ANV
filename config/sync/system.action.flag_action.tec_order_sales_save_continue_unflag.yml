@@ -1,0 +1,15 @@
+uuid: db20daae-d030-4b86-b502-eeb50a433a56
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_order_sales_save_continue
+  module:
+    - flag
+id: flag_action.tec_order_sales_save_continue_unflag
+label: 'Unset save & continue'
+type: tec_order
+plugin: 'flag_action:tec_order_sales_save_continue_unflag'
+configuration:
+  flag_id: tec_order_sales_save_continue
+  flag_action: unflag

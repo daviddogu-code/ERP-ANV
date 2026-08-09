@@ -1,0 +1,18 @@
+uuid: 0877067f-6a06-48ab-b3c3-a19e62547ba6
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+id: tec_inventory.tec_bom_item.title
+field_name: title
+entity_type: tec_inventory
+bundle: tec_bom_item
+label: Item
+description: 'The title of the entity.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

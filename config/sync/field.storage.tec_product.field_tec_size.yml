@@ -1,0 +1,20 @@
+uuid: 143f4d7a-8b8c-4fa8-b6f5-791fd9194282
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - taxonomy
+id: tec_product.field_tec_size
+field_name: field_tec_size
+entity_type: tec_product
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

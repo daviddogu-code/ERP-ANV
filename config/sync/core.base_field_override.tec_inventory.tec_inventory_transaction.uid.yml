@@ -1,0 +1,20 @@
+uuid: e23f006e-db31-4f9c-b606-1f8035529ee0
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_inventory_transaction
+id: tec_inventory.tec_inventory_transaction.uid
+field_name: uid
+entity_type: tec_inventory
+bundle: tec_inventory_transaction
+label: 'Created by'
+description: 'The username of the entity author.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: default
+  handler_settings: {  }
+field_type: entity_reference

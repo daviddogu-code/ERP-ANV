@@ -1,0 +1,11 @@
+uuid: 3524ec06-2b87-418a-b284-037249ff308a
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_gui.ief_table
+label: 'Inline Entity Form Table'
+description: ''
+targetEntityType: tec_gui
+cache: true

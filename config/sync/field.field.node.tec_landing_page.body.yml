@@ -1,0 +1,24 @@
+uuid: 81f41788-f0ad-4f70-b4e0-8dc771a37129
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - node.type.tec_landing_page
+  module:
+    - text
+id: node.tec_landing_page.body
+field_name: body
+entity_type: node
+bundle: tec_landing_page
+label: Body
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: true
+  required_summary: false
+  allowed_formats: {  }
+field_type: text_with_summary

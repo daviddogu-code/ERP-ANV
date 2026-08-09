@@ -1,0 +1,296 @@
+uuid: 94fcd804-ce44-40dc-9966-128515be3d62
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - eck.eck_type.tec_crm.tec_contact_person
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - eck.eck_type.tec_inventory.tec_inventory_item
+    - eck.eck_type.tec_inventory.tec_inventory_transaction
+    - eck.eck_type.tec_inventory.tec_line_item_bom_item
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - eck.eck_type.tec_order.tec_draft_order
+    - eck.eck_type.tec_order.tec_sales_order
+    - eck.eck_type.tec_product.tec_color_variation
+    - eck.eck_type.tec_product.tec_product
+    - eck.eck_type.tec_product.tec_size_variation
+    - feeds.feed_type.tec_bom_items_importer
+    - feeds.feed_type.tec_inventory_csv_importer
+    - filter.format.full_html
+    - filter.format.restricted_html
+    - media.type.audio
+    - media.type.document
+    - media.type.image
+    - media.type.remote_video
+    - media.type.video
+    - taxonomy.vocabulary.tags
+    - taxonomy.vocabulary.tec_brands
+    - taxonomy.vocabulary.tec_colors
+    - taxonomy.vocabulary.tec_inventory
+    - taxonomy.vocabulary.tec_materials
+    - taxonomy.vocabulary.tec_patterns
+    - taxonomy.vocabulary.tec_product_types
+    - taxonomy.vocabulary.tec_sizes
+    - taxonomy.vocabulary.tec_units
+    - user.role.authenticated
+    - user.role.tec_customer
+    - user.role.tec_manager
+    - user.role.tec_supervisor
+  module:
+    - coffee
+    - comment
+    - draggableviews
+    - eck
+    - eck_bundle_permissions
+    - editablefields
+    - entity_browser
+    - feeds
+    - feeds_log
+    - file
+    - filter
+    - flag
+    - masquerade
+    - media
+    - node
+    - shortcut
+    - system
+    - taxonomy
+    - views_bulk_edit
+id: tec_executive
+label: Executive
+weight: -5
+is_admin: null
+permissions:
+  - 'access coffee'
+  - 'access content'
+  - 'access draggableviews'
+  - 'access feed overview'
+  - 'access files overview'
+  - 'access media overview'
+  - 'access shortcuts'
+  - 'access tec_gui_products entity browser pages'
+  - 'access tec_products entity browser pages'
+  - 'access user profiles'
+  - 'administer users'
+  - 'cancel account'
+  - 'change own username'
+  - 'clear own tec_bom_items_importer feeds'
+  - 'clear own tec_inventory_csv_importer feeds'
+  - 'clear tec_bom_items_importer feeds'
+  - 'clear tec_inventory_csv_importer feeds'
+  - 'create audio media'
+  - 'create document media'
+  - 'create image media'
+  - 'create media'
+  - 'create remote_video media'
+  - 'create tec_app_link entities'
+  - 'create tec_crm entities'
+  - 'create tec_crm entities of bundle tec_contact_person'
+  - 'create tec_gui entities'
+  - 'create tec_inventory entities'
+  - 'create tec_inventory entities of bundle tec_bom_item'
+  - 'create tec_inventory entities of bundle tec_inventory_item'
+  - 'create tec_inventory entities of bundle tec_inventory_transaction'
+  - 'create tec_inventory entities of bundle tec_line_item_bom_item'
+  - 'create tec_inventory_csv_importer feeds'
+  - 'create tec_line_item entities'
+  - 'create tec_line_item entities of bundle tec_sales_order_line_item'
+  - 'create tec_order entities'
+  - 'create tec_order entities of bundle tec_draft_order'
+  - 'create tec_order entities of bundle tec_sales_order'
+  - 'create tec_product entities'
+  - 'create tec_product entities of bundle tec_color_variation'
+  - 'create tec_product entities of bundle tec_product'
+  - 'create tec_product entities of bundle tec_size_variation'
+  - 'create terms in tags'
+  - 'create terms in tec_brands'
+  - 'create terms in tec_colors'
+  - 'create terms in tec_inventory'
+  - 'create terms in tec_materials'
+  - 'create terms in tec_patterns'
+  - 'create terms in tec_product_types'
+  - 'create terms in tec_sizes'
+  - 'create terms in tec_units'
+  - 'create video media'
+  - 'delete any audio media'
+  - 'delete any document media'
+  - 'delete any file'
+  - 'delete any image media'
+  - 'delete any media'
+  - 'delete any remote_video media'
+  - 'delete any tec_app_link entities'
+  - 'delete any tec_crm entities'
+  - 'delete any tec_gui entities'
+  - 'delete any tec_inventory entities'
+  - 'delete any tec_line_item entities'
+  - 'delete any tec_order entities'
+  - 'delete any tec_order entities of bundle tec_draft_order'
+  - 'delete any tec_product entities'
+  - 'delete any video media'
+  - 'delete media'
+  - 'delete own audio media'
+  - 'delete own document media'
+  - 'delete own image media'
+  - 'delete own remote_video media'
+  - 'delete own tec_bom_items_importer feeds'
+  - 'delete own tec_crm entities'
+  - 'delete own tec_gui entities'
+  - 'delete own tec_inventory entities'
+  - 'delete own tec_inventory_csv_importer feeds'
+  - 'delete own tec_order entities'
+  - 'delete own tec_order entities of bundle tec_draft_order'
+  - 'delete own tec_order entities of bundle tec_sales_order'
+  - 'delete own tec_product entities'
+  - 'delete own tec_product entities of bundle tec_color_variation'
+  - 'delete own tec_product entities of bundle tec_product'
+  - 'delete own tec_product entities of bundle tec_size_variation'
+  - 'delete own video media'
+  - 'delete tec_bom_items_importer feeds'
+  - 'delete tec_inventory_csv_importer feeds'
+  - 'delete terms in tags'
+  - 'delete terms in tec_brands'
+  - 'delete terms in tec_colors'
+  - 'delete terms in tec_inventory'
+  - 'delete terms in tec_materials'
+  - 'delete terms in tec_patterns'
+  - 'delete terms in tec_product_types'
+  - 'delete terms in tec_sizes'
+  - 'delete terms in tec_units'
+  - 'edit any audio media'
+  - 'edit any document media'
+  - 'edit any image media'
+  - 'edit any remote_video media'
+  - 'edit any tec_app_link entities'
+  - 'edit any tec_crm entities'
+  - 'edit any tec_crm entities of bundle tec_contact_person'
+  - 'edit any tec_gui entities'
+  - 'edit any tec_inventory entities'
+  - 'edit any tec_line_item entities'
+  - 'edit any tec_order entities'
+  - 'edit any tec_order entities of bundle tec_draft_order'
+  - 'edit any tec_order entities of bundle tec_sales_order'
+  - 'edit any tec_product entities'
+  - 'edit any tec_product entities of bundle tec_color_variation'
+  - 'edit any tec_product entities of bundle tec_product'
+  - 'edit any tec_product entities of bundle tec_size_variation'
+  - 'edit any video media'
+  - 'edit own audio media'
+  - 'edit own comments'
+  - 'edit own document media'
+  - 'edit own image media'
+  - 'edit own remote_video media'
+  - 'edit own tec_crm entities'
+  - 'edit own tec_crm entities of bundle tec_contact_organization'
+  - 'edit own tec_crm entities of bundle tec_contact_person'
+  - 'edit own tec_gui entities'
+  - 'edit own tec_inventory entities'
+  - 'edit own tec_inventory entities of bundle tec_bom_item'
+  - 'edit own tec_inventory entities of bundle tec_inventory_item'
+  - 'edit own tec_inventory entities of bundle tec_inventory_transaction'
+  - 'edit own tec_inventory entities of bundle tec_line_item_bom_item'
+  - 'edit own tec_order entities'
+  - 'edit own tec_order entities of bundle tec_draft_order'
+  - 'edit own tec_order entities of bundle tec_sales_order'
+  - 'edit own tec_product entities'
+  - 'edit own tec_product entities of bundle tec_color_variation'
+  - 'edit own tec_product entities of bundle tec_product'
+  - 'edit own tec_product entities of bundle tec_size_variation'
+  - 'edit own video media'
+  - 'edit terms in tags'
+  - 'edit terms in tec_brands'
+  - 'edit terms in tec_colors'
+  - 'edit terms in tec_inventory'
+  - 'edit terms in tec_materials'
+  - 'edit terms in tec_patterns'
+  - 'edit terms in tec_product_types'
+  - 'edit terms in tec_sizes'
+  - 'edit terms in tec_units'
+  - feeds_log.access
+  - 'flag tec_delete_order'
+  - 'flag tec_draft_order_excel_lover'
+  - 'flag tec_duplicate_gui'
+  - 'flag tec_eca_line_item_lock'
+  - 'flag tec_order_accounting_verified'
+  - 'flag tec_order_cancel_sales_order'
+  - 'flag tec_order_checkout_excel'
+  - 'flag tec_order_draft_po'
+  - 'flag tec_order_sales_save_continue'
+  - 'flag tec_product_duplicate'
+  - 'flag tec_product_duplicate_color'
+  - 'flag tec_product_duplicate_size'
+  - 'flag tec_product_import_size_bom'
+  - 'import own tec_inventory_csv_importer feeds'
+  - 'import tec_bom_items_importer feeds'
+  - 'import tec_inventory_csv_importer feeds'
+  - 'masquerade as authenticated'
+  - 'masquerade as tec_customer'
+  - 'masquerade as tec_manager'
+  - 'masquerade as tec_supervisor'
+  - 'revert any audio media revisions'
+  - 'revert any document media revisions'
+  - 'revert any image media revisions'
+  - 'revert any remote_video media revisions'
+  - 'revert any video media revisions'
+  - 'unflag tec_draft_order_excel_lover'
+  - 'unflag tec_duplicate_gui'
+  - 'unflag tec_eca_line_item_lock'
+  - 'unflag tec_product_duplicate'
+  - 'unflag tec_product_duplicate_color'
+  - 'unflag tec_product_duplicate_size'
+  - 'unlock own tec_bom_items_importer feeds'
+  - 'unlock own tec_inventory_csv_importer feeds'
+  - 'unlock tec_inventory_csv_importer feeds'
+  - 'update any media'
+  - 'update media'
+  - 'update own tec_bom_items_importer feeds'
+  - 'update own tec_inventory_csv_importer feeds'
+  - 'update tec_bom_items_importer feeds'
+  - 'update tec_inventory_csv_importer feeds'
+  - 'use editablefields'
+  - 'use text format full_html'
+  - 'use text format restricted_html'
+  - 'use views bulk edit'
+  - 'view all media revisions'
+  - 'view any audio media revisions'
+  - 'view any document media revisions'
+  - 'view any image media revisions'
+  - 'view any remote_video media revisions'
+  - 'view any tec_app_link entities'
+  - 'view any tec_crm entities'
+  - 'view any tec_gui entities'
+  - 'view any tec_inventory entities'
+  - 'view any tec_line_item entities'
+  - 'view any tec_order entities'
+  - 'view any tec_order entities of bundle tec_draft_order'
+  - 'view any tec_order entities of bundle tec_sales_order'
+  - 'view any tec_product entities'
+  - 'view any tec_product entities of bundle tec_color_variation'
+  - 'view any tec_product entities of bundle tec_product'
+  - 'view any tec_product entities of bundle tec_size_variation'
+  - 'view any video media revisions'
+  - 'view own tec_bom_items_importer feeds'
+  - 'view own tec_crm entities'
+  - 'view own tec_crm entities of bundle tec_contact_organization'
+  - 'view own tec_crm entities of bundle tec_contact_person'
+  - 'view own tec_gui entities'
+  - 'view own tec_inventory entities'
+  - 'view own tec_inventory entities of bundle tec_bom_item'
+  - 'view own tec_inventory entities of bundle tec_inventory_item'
+  - 'view own tec_inventory entities of bundle tec_inventory_transaction'
+  - 'view own tec_inventory entities of bundle tec_line_item_bom_item'
+  - 'view own tec_inventory_csv_importer feeds'
+  - 'view own tec_order entities'
+  - 'view own tec_order entities of bundle tec_draft_order'
+  - 'view own tec_order entities of bundle tec_sales_order'
+  - 'view own tec_product entities'
+  - 'view own tec_product entities of bundle tec_color_variation'
+  - 'view own tec_product entities of bundle tec_product'
+  - 'view own tec_product entities of bundle tec_size_variation'
+  - 'view own unpublished content'
+  - 'view own unpublished media'
+  - 'view tec_bom_items_importer feeds'
+  - 'view tec_inventory_csv_importer feeds'
+  - 'view the administration theme'
+  - 'view unpublished eck entities'
+  - 'view user email addresses'

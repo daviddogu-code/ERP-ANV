@@ -1,0 +1,24 @@
+uuid: b94ec73e-80b6-48ab-b5ed-e617d6a3434d
+langcode: en
+status: true
+dependencies:
+  module:
+    - color_field
+    - field_permissions
+    - taxonomy
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: taxonomy_term.field_tec_color_code_html
+field_name: field_tec_color_code_html
+entity_type: taxonomy_term
+type: color_field_type
+settings:
+  format: '#HEXHEX'
+module: color_field
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

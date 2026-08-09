@@ -1,0 +1,25 @@
+uuid: 3a2dd66f-722b-47f5-8bba-5f086b741ed0
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_inventory_transaction
+    - field.storage.tec_inventory.field_tec_mutation_complete
+_core:
+  default_config_hash: 9OWG-0sT-FNvSz7wNO-wXVxpYtzGnZogP8ILDv4O49Y
+id: tec_inventory.tec_inventory_transaction.field_tec_mutation_complete
+field_name: field_tec_mutation_complete
+entity_type: tec_inventory
+bundle: tec_inventory_transaction
+label: 'Mutation complete'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

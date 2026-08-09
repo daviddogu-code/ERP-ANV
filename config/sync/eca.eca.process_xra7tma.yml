@@ -1,0 +1,139 @@
+uuid: 024a6095-cb70-4192-9c8b-b052c5afdebf
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - field.field.tec_line_item.tec_po_line_item.field_tec_price
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_price
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_product
+    - field.storage.tec_line_item.field_tec_price
+    - field.storage.tec_line_item.field_tec_product
+  module:
+    - eca_base
+    - eca_content
+    - eca_log
+id: process_xra7tma
+modeller: bpmn_io
+label: 'TEC Line item: Set data values on Insert'
+version: '1.0'
+weight: 12
+events:
+  Event_0ikodly:
+    plugin: 'content_entity:insert'
+    label: 'Insert Sales order line item'
+    configuration:
+      type: 'tec_line_item tec_sales_order_line_item'
+    successors:
+      -
+        id: Activity_1uk2k7f
+        condition: ''
+conditions:
+  Flow_0cvh6xt:
+    plugin: eca_entity_field_value
+    configuration:
+      case: false
+      expected_value: '1'
+      field_name: field_tec_custom_sales_price
+      operator: equal
+      type: value
+      negate: true
+      entity: ''
+  Flow_11cbptd:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_sales_price
+      negate: true
+      entity: productLoaded
+  Flow_051r8wn:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_sales_price
+      entity: productLoaded
+gateways:
+  Gateway_1ylo55q:
+    type: 0
+    successors:
+      -
+        id: Activity_19pu3ms
+        condition: Flow_0cvh6xt
+  Gateway_1fdp3vq:
+    type: 0
+    successors:
+      -
+        id: Activity_181ht04
+        condition: Flow_11cbptd
+      -
+        id: Activity_1h0h897
+        condition: Flow_051r8wn
+  Gateway_05jwmus:
+    type: 0
+    successors:
+      -
+        id: Activity_19if21f
+        condition: ''
+actions:
+  Activity_19pu3ms:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the Product'
+    configuration:
+      field_name_entity_ref: field_tec_product
+      token_name: productLoaded
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Gateway_1fdp3vq
+        condition: ''
+  Activity_181ht04:
+    plugin: eca_set_field_value
+    label: 'Set the Sales price'
+    configuration:
+      field_name: field_tec_price
+      field_value: '[productLoaded:field_tec_price]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Gateway_05jwmus
+        condition: ''
+  Activity_1h0h897:
+    plugin: eca_warning_message
+    label: 'Do nothing and inform the user'
+    configuration:
+      replace_tokens: false
+      message: 'Could not determine a price for this line item. There is no sales price defined for the product.'
+    successors:
+      -
+        id: Gateway_05jwmus
+        condition: ''
+  Activity_1uk2k7f:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "EC Line item: Set data values on Insert" ECA Model.'
+    successors:
+      -
+        id: Gateway_1ylo55q
+        condition: ''
+  Activity_19if21f:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished running: "EC Line item: Set data values on Insert" ECA Model.'
+    successors: {  }

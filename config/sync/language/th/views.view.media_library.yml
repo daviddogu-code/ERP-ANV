@@ -1,0 +1,92 @@
+display:
+  default:
+    display_title: Default
+    display_options:
+      title: สื่อ
+      fields:
+        media_bulk_form:
+          action_title: แอคชั่น
+      pager:
+        options:
+          tags:
+            next: ››
+            previous: ‹‹
+          expose:
+            items_per_page_label: 'Items per page'
+            items_per_page_options_all_label: '- All -'
+            offset_label: Offset
+      exposed_form:
+        options:
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+      sorts:
+        created:
+          expose:
+            label: ใหม่ล่าสุดก่อน
+      filters:
+        status:
+          expose:
+            label: สถานะการเผยแพร่
+          group_info:
+            label: Published
+            group_items:
+              1:
+                title: Published
+              2:
+                title: Unpublished
+        name:
+          expose:
+            label: Name
+        langcode:
+          expose:
+            label: Language
+  page:
+    display_title: Page
+    display_options:
+      fields:
+        media_bulk_form:
+          action_title: แอคชั่น
+        edit_media:
+          text: แก้ไข
+        delete_media:
+          text: ลบ
+  widget:
+    display_title: วิดเจ็ต
+    display_options:
+      arguments:
+        bundle:
+          exception:
+            title: ทั้งหมด
+      filters:
+        name:
+          expose:
+            label: Name
+      header:
+        display_link_grid:
+          label: ตะแกรง
+        display_link_table:
+          label: ตาราง
+  widget_table:
+    display_options:
+      fields:
+        name:
+          label: Name
+        uid:
+          label: Author
+        changed:
+          label: Updated
+      arguments:
+        bundle:
+          exception:
+            title: ทั้งหมด
+      filters:
+        name:
+          expose:
+            label: Name
+      header:
+        display_link_grid:
+          label: ตะแกรง
+        display_link_table:
+          label: ตาราง

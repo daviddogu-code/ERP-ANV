@@ -1,0 +1,15 @@
+uuid: 2dc295fc-268e-4f1d-a10d-5b842dcd1017
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_eca_line_item_lock
+  module:
+    - flag
+id: flag_action.tec_eca_line_item_lock_flag
+label: Lock
+type: tec_line_item
+plugin: 'flag_action:tec_eca_line_item_lock_flag'
+configuration:
+  flag_id: tec_eca_line_item_lock
+  flag_action: flag

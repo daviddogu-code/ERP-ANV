@@ -1,0 +1,31 @@
+uuid: 49d7c56c-390d-476d-86ff-3cfb89c2ca6a
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - eck.eck_type.tec_inventory.tec_line_item_bom_item
+    - field.storage.tec_inventory.field_tec_bom_item
+_core:
+  default_config_hash: q5H6bo_2iYkCtiXEr9Rs0Z2AfDnMEogqLCzra9y8DWI
+id: tec_inventory.tec_line_item_bom_item.field_tec_bom_item
+field_name: field_tec_bom_item
+entity_type: tec_inventory
+bundle: tec_line_item_bom_item
+label: 'BoM Item'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_inventory'
+  handler_settings:
+    target_bundles:
+      tec_bom_item: tec_bom_item
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -1,0 +1,24 @@
+uuid: 2d04f443-3dce-47e3-842c-b53514b31464
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+    - taxonomy
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_product.field_tec_colors
+field_name: field_tec_colors
+entity_type: tec_product
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

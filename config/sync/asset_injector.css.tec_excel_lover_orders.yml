@@ -1,0 +1,55 @@
+uuid: 99883d58-98ac-4bdf-ae45-12c205fec689
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: tec_excel_lover_orders
+label: 'TEC Excel lover orders'
+code: |-
+  /* Excel lover orders */
+
+  /*.ajax-progress {
+    display: none;
+  }*/
+
+  .views-field-form-field-field-tec-quantity label {
+      display: none;
+  }
+
+  #edit-actions {
+      float: left;
+  }
+
+  #edit-actions-submit {
+      position: relative;
+      padding: 1px 10px 1px 25px;
+      font-weight: bold;
+  }
+
+  #edit-actions-submit::before {
+      content: url('/sites/default/files/000-save-16.png');
+      position: absolute;
+      left: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+  }
+
+  .view-id-tec_order_sales_order_line_items.view-display-id-attachment_3{
+      float: left;
+      margin-top: 26px
+  }
+
+  .view-tec-order-sales-order-line-items .view-id-tec_order_sales_order_line_items {
+      border-bottom: 0px solid #ccc;
+      padding-bottom: 0em;
+  }
+media: all
+preprocess: true
+conditions:
+  request_path:
+    id: request_path
+    negate: false
+    pages: "/o/draft/*\r\n/po/draft/*"
+contexts: {  }
+conditions_require_all: true

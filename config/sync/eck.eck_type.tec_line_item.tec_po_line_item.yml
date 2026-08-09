@@ -1,0 +1,9 @@
+uuid: 3fa8d8f3-81c3-4db6-a8bb-796de696067a
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_line_item
+name: 'Purchase order line item'
+type: tec_po_line_item
+description: ''

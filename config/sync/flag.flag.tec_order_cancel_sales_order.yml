@@ -1,0 +1,36 @@
+uuid: 2ce5c4db-f64e-4d4d-8653-7bf6f912b8ef
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_order_cancel_sales_order
+label: 'TEC Order: Cancel order'
+bundles:
+  - tec_purchase_order
+  - tec_sales_order
+entity_type: tec_order
+global: true
+flag_short: '<img src="/sites/default/files/000-cancel-21.png" title="Cancel">Cancel'
+flag_long: 'Cancel your changes.'
+flag_message: ''
+unflag_short: 'Unset cancel order'
+unflag_long: ''
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_order'
+link_type: reload
+flagTypeConfig:
+  show_in_links: {  }
+  show_as_field: true
+  show_on_form: false
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig:
+  flag_confirmation: 'Are you sure?'
+  unflag_confirmation: 'Unset?'
+  flag_create_button: 'Yes, continue'
+  flag_delete_button: Unset
+  form_behavior: modal

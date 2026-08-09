@@ -1,0 +1,96 @@
+uuid: 7a9fa733-4bea-4142-a4a0-f22c8cc53ffc
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: tec_link_spinner
+label: 'Link spinner'
+code: |
+  document.addEventListener('DOMContentLoaded', function() {
+      function handleClick(event) {
+          var element = event.target;
+
+          // Check if the clicked element or its parent matches the selectors
+          if (element.matches('.tec-control a, .tec-control img, .btn-default a, .btn-default img, .flag, .flag a, .form-actions .button, .specific-flag') || 
+              element.closest('.tec-control a, .tec-control img, .btn-default a, .btn-default img, .flag, .flag a, .form-actions .button, .specific-flag')) {
+              
+              // If the target element is a descendant of a matching element, use the closest matching element
+              element = element.closest('.tec-control a, .tec-control img, .btn-default a, .btn-default img, .flag, .flag a, .form-actions .button, .specific-flag') || element;
+
+              console.log('Element clicked:', element);
+
+              // Skip if target is _blank
+              if (element.tagName.toLowerCase() === 'a' && element.target === '_blank') {
+                  console.log('Skipping due to target _blank');
+                  return;
+              }
+
+              // Skip if second or third segment of URL is "x"
+              if (element.tagName.toLowerCase() === 'a') {
+                  try {
+                      var url = new URL(element.href);
+                      var pathSegments = url.pathname.split('/').filter(Boolean);
+                      if ((pathSegments.length > 1 && pathSegments[1] === 'x') || (pathSegments.length > 2 && pathSegments[2] === 'x')) {
+                          console.log('Skipping due to second or third segment of URL being "x"');
+                          return;
+                      }
+                  } catch (e) {
+                      console.log('Error parsing URL:', e);
+                      return;
+                  }
+              }
+
+              // Check if a spinner is already added to avoid duplicates
+              if (element.nextSibling && element.nextSibling.classList && element.nextSibling.classList.contains('spinner')) {
+                  console.log('Spinner already exists, skipping');
+                  return;
+              }
+
+              var spinner = document.createElement('div');
+              spinner.classList.add('spinner');
+
+              element.style.display = 'none';
+              element.parentNode.insertBefore(spinner, element.nextSibling);
+              console.log('Spinner added:', spinner);
+          }
+      }
+
+      // Function to handle popstate event (back button navigation)
+      function handlePopState(event) {
+          var spinners = document.querySelectorAll('.spinner');
+          spinners.forEach(function(spinner) {
+              spinner.parentNode.removeChild(spinner);
+
+              // Restore the button/link visibility
+              var button = spinner.previousSibling;
+              if (button) {
+                  button.style.display = '';
+              }
+          });
+      }
+
+      // Attach click event listener to a common ancestor element
+      document.body.addEventListener('click', handleClick);
+
+      // Attach popstate event listener to handle back button navigation
+      window.addEventListener('popstate', handlePopState);
+
+      // Handle the initial state when the page is loaded
+      history.replaceState({ page: 1 }, '');
+
+      // Listen for hash changes (for browsers like Safari)
+      window.addEventListener('hashchange', handlePopState);
+  });
+noscript: ''
+noscriptRegion: {  }
+jquery: false
+header: false
+preprocess: true
+conditions:
+  current_theme:
+    id: current_theme
+    negate: false
+    theme: dxpr_theme
+contexts: {  }
+conditions_require_all: true

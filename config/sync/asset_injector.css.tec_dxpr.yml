@@ -1,0 +1,481 @@
+uuid: f1659318-8bb0-4587-b3da-d0a002af53b8
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: tec_dxpr
+label: DXPR
+code: |-
+  /* THEME RESETS */
+  /* Blocks */
+  .block-title {
+    font-size: large;
+    color: #555;
+  }
+
+  /* The Actions dropdown widget has exorbitant margin and padding */
+  /* The BoM view */
+  .js td .dropbutton-multiple {
+      max-width: 100%;
+      margin-right: 0;
+      padding-right: 0;
+  }
+
+  /* Content top container / used for status messages */
+  .content-top-container {
+      padding-left: 0px;
+      padding-right: 0px;
+  }
+
+  /* Main Container */
+  @media (min-width: 768px) {
+      .main-container {
+          background-color: #fff;
+          box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;
+      }
+  }
+
+  /* On mobile devices we want a plain background */
+  @media (max-width: 767px) {
+      .wrap-containers,
+      .html {
+          background: #fff;
+      }
+  }
+
+  /* The hamburger button */
+  .body--dxpr-theme-nav-mobile .dxpr-theme-header #dxpr-theme-menu-toggle span,
+  .body--dxpr-theme-nav-mobile .dxpr-theme-header #dxpr-theme-menu-toggle span:before,
+  .body--dxpr-theme-nav-mobile .dxpr-theme-header #dxpr-theme-menu-toggle span:after {
+      background: #fff;
+  }
+
+  /* Form fields in DXPR */
+  .html .form-control,
+  .html input[type="date"],
+  .html input[type="datetime-local"],
+  .html input[type="email"],
+  .html input[type="file"],
+  .html input[type="month"],
+  .html input[type="number"],
+  .html input[type="password"],
+  .html input[type="search"],
+  .html input[type="tel"],
+  .html input[type="text"],
+  .html input[type="time"],
+  .html input[type="url"],
+  .html input[type="week"],
+  .html textarea,
+  .html select {
+      /* padding: 12px; */
+      padding: 6px;
+  }
+
+  /* Buttons */
+  /* .btn-default,
+  .btn-primary,
+  a.bg-primary {
+    display: inline-block;
+    padding: 3px 9px;
+    border: 0.5px solid #000;
+    border-radius: 0;
+    background-color: #fff;
+    color: #000;
+    text-decoration: none;
+    transition: all 0.1s ease;
+  }
+
+  .btn-default:hover,
+  .btn-default:hover a,
+  .btn-default:focus,
+  .btn-default.focus,
+  .btn-default:active,
+  .btn-default.active,
+  .btn-primary:hover,
+  .btn-primary:focus,
+  .btn-primary.focus,
+  .btn-primary:active,
+  .btn-primary.active,
+  a.bg-primary:hover,
+  a.bg-primary:focus {
+    background-color: #000;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  */
+  .btn-default,
+  .btn-primary,
+  .button--primary {
+      font-family: "Open Sans", sans-serif;
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: none;
+      display: inline-block;
+      color: #000;
+      cursor: pointer;
+      border: 1px solid;
+      border-radius: 0px;
+      padding: 0;
+      margin-right: 10px;
+      background-color: #fff;
+      box-shadow: 1px 1px 0px 0px, 2px 2px 0px 0px, 3px 3px 0px 0px, 4px 4px 0px 0px, 5px 5px 0px 0px;
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+  }
+
+  .btn-default:active,
+  .btn-primary:active,
+  .button--primary:active{
+      text-decoration: none;
+      box-shadow: 0px 0px 0px 0px;
+      top: 5px;
+      left: 5px;
+  }
+
+  .btn-default:hover,
+  .btn-primary:hover,
+  .button--primary:hover,
+  .btn-default:hover a,
+  .btn-primary:hover a,
+  .button--primary:hover a{
+      color: #fff;
+      background-color: #000;
+      text-decoration: none;
+  }
+
+
+  @media (min-width: 768px) {
+      .btn-default,
+      .btn-primary {
+          padding: 0;
+      }
+  }
+
+  .btn-default a,
+  .btn-primary a {
+      padding: 5px
+  }
+
+  /* DXPR seems to want to mess with the drupal dialog */
+  .html .ui-widget-content,
+  .html .ui-widget-header,
+  .html .ui-state-hover,
+  .html .ui-widget-content .ui-state-hover,
+  .html .ui-widget-header .ui-state-hover,
+  .html .ui-state-focus,
+  .html .ui-widget-content .ui-state-focus,
+  .html .ui-widget-header .ui-state-focus,
+  .html .ui-state-active,
+  .html .ui-widget-content .ui-state-active,
+  .html .ui-widget-header .ui-state-active,
+  .html .ui-state-highlight,
+  .html .ui-widget-content .ui-state-highlight,
+  .html .ui-widget-header .ui-state-highlight,
+  .html .ui-state-error,
+  .html .ui-widget-content .ui-state-error,
+  .html .ui-widget-header .ui-state-error {
+      background-image: none;
+      background-color: #fff;
+      color: #000;
+  }
+
+  .ui-dialog .ui-dialog-titlebar-close .ui-icon-closethick {
+      background: #8a2323 !important;
+      color: #000 !important;
+  }
+
+  /* If you want to remove the default anchor text underline */
+  a.bg-primary {
+      text-decoration: none;
+  }
+
+  /* Active menu links are colored wrong (DXPR) */
+  .parent_link.is-active {
+      color: #c6c6c6 !important;
+  }
+  .dxpr-theme-header .dxpr-theme-main-menu .menu a:hover,
+  .dxpr-theme-header .dxpr-theme-main-menu .menu a:focus {
+      background: rgba(0, 0, 0, 0);
+      color: #c6c6c6;
+  }
+
+  /* GENERAL STYLES */
+  /* Control icons */
+  /* Operation icons */
+  .tec-op-icon img {
+      min-width: 16px;
+      min-height: 16px;
+  }
+
+  .tec-op-icon img {
+      transition: filter 0.3s ease;
+  }
+
+  .tec-op-icon img:hover {
+      filter: invert(100%);
+  }
+
+  .tec-control img {
+    min-width: 16px;
+  }
+
+  .tec-control:hover img {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Controls in buttons */
+  .btn-default .tec-op-icon img,
+  .btn-primary .tec-op-icon img,
+  .button--primary .tec-op-icon img  {
+      transition: filter 0.3s ease;
+  }
+
+
+  .btn-default .tec-control img,
+  .btn-primary .tec-control img,
+  .button--primary .tec-control img  {
+      transition: filter 0.3s ease;
+  }
+
+  .btn-default .tec-op-icon img:hover ,
+  .btn-primary .tec-op-icon img:hover,
+  .button--primary .tec-op-icon img:hover  {
+      filter: invert(100%);
+  }
+
+  .btn-default .tec-control img:hover ,
+  .btn-primary .tec-control img:hover,
+  .button--primary .tec-control img:hover  {
+      filter: invert(100%);
+  }
+
+  /* Spinner */
+  /* This is used by the Link spinner JS file (Asset injector) */
+  .spinner {
+      border: 4px solid #f3f3f3; /* Light grey */
+      border-top: 4px solid #3498db; /* Blue */
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+  }
+
+  @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+  }
+
+  /* Chips */
+  .chip {
+      display: inline-block;
+      padding: 0.5em 1em;
+      margin: 0.5em;
+      background-color: #e0e0e0; /* Subtle grey background */
+      border-radius: 16px;
+      font-size: 14px;
+      color: #333; /* Darker text for contrast */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+      transition: background-color 0.3s, box-shadow 0.3s;
+      text-decoration: none; /* Ensure no text decoration */
+  }
+
+  .chip:hover {
+      background-color: #d5d5d5; /* Slightly darker grey on hover */
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+  }
+
+  .chip:active {
+      background-color: #c0c0c0; /* Darker grey on active */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Revert shadow on active */
+  }
+
+  .chip a {
+      color: inherit; /* Inherit text color from .chip */
+      text-decoration: none; /* Remove underline from links */
+  }
+
+  .chip .close-btn {
+      margin-left: 8px;
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      color: #666; /* Slightly lighter text for the close button */
+  }
+
+  .chip .close-btn:hover {
+      color: #333; /* Darker text on hover for the close button */
+  }
+
+  .strong {
+  	font-weight: bold;
+  }
+
+  /* Status messages */
+  /* Status messages */
+  .sr-only {
+      font-size: small;
+      color: #555;
+  }
+
+  /* Success messages */
+  .alert-success,
+  .messages--status {
+      background-color: #000;
+      color: #2081de;
+      font-weight: 600;
+      background-image: none;
+      border-radius: 0px;
+      border-left: 4px solid #2081de;
+      border-top: 0px;
+      border-bottom: 0px;
+      border-right: 0px;
+      box-shadow: none;
+  }
+
+  .alert-success a,
+  .messages--status a {
+      color: #2081de;
+  }
+
+  /* Error messages */
+  .alert-danger,
+  .messages--error {
+      background-color: #000;
+      color: #de2121;
+      font-weight: 600;
+      background-image: none;
+      border-radius: 0px;
+      border-left: 4px solid #de2121;
+      border-top: 0px;
+      border-bottom: 0px;
+      border-right: 0px;
+      box-shadow: none;
+  }
+
+  .alert-danger a,
+  .messages--error a {
+      color: #de2121;
+  }
+
+  /* Warning messages */
+  .alert-warning,
+  .messages--warning {
+      background-color: #000;
+      color: #ffcc00;
+      font-weight: 600;
+      background-image: none;
+      border-radius: 0px;
+      border-left: 4px solid #ffcc00;
+      border-top: 0px;
+      border-bottom: 0px;
+      border-right: 0px;
+      box-shadow: none;
+  }
+
+  .alert-warning a,
+  .messages--warning a {
+      color: #ffcc00;
+  }
+
+  /* Info messages */
+  .alert-info,
+  .messages--info {
+      background-color: #000;
+      color: #17a2b8;
+      font-weight: 600;
+      background-image: none;
+      border-radius: 0px;
+      border-left: 4px solid #17a2b8;
+      border-top: 0px;
+      border-bottom: 0px;
+      border-right: 0px;
+      box-shadow: none;
+  }
+
+  .alert-info a,
+  .messages--info a {
+      color: #17a2b8;
+  }
+
+  /* Neutral messages */
+  .alert-neutral,
+  .messages--neutral {
+      background-color: #000;
+      color: #6c757d;
+      font-weight: 600;
+      background-image: none;
+      border-radius: 0px;
+      border-left: 4px solid #6c757d;
+      border-top: 0px;
+      border-bottom: 0px;
+      border-right: 0px;
+      box-shadow: none;
+  }
+
+  .alert-neutral a,
+  .messages--neutral a {
+      color: #6c757d;
+  }
+
+
+  /* VIEWS */
+  [id^="edit-actions"] {
+    display: inline-block;
+    margin: 22px 0 0 0;
+  }
+
+  /* Don't do this on the following paths */
+  .path-o	[id^="edit-actions"],
+  .path-po	[id^="edit-actions"] {
+    margin: 2px 0 0 0;
+  }
+
+  /* CONTRIB */
+  /* Select 2 */
+  /* We add margin to select2 widget to compensate for missing description */
+  .select2 {
+      margin-bottom: 20px;
+  }
+
+  .select2-container--default .select2-search--inline .select2-search__field {
+    background:transparent;
+    border:none;
+    outline:0;
+    box-shadow:none;
+    -webkit-appearance:textfield;
+    height: 27px;
+  }
+
+  .select2-container .select2-selection--multiple {
+    box-sizing:border-box;
+    cursor:pointer;
+    display:block;
+    min-height:41px;
+    user-select:none;
+    -webkit-user-select:none
+  }
+
+  .select2-container--default .select2-search--inline .select2-search__field {
+    background:transparent;
+    border:none;
+    outline:0;
+    box-shadow:none;
+    -webkit-appearance:textfield;
+    height: 27px;
+  }
+media: all
+preprocess: true
+conditions:
+  current_theme:
+    id: current_theme
+    negate: false
+    theme: dxpr_theme
+contexts: {  }
+conditions_require_all: true

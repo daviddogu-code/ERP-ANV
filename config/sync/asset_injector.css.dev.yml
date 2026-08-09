@@ -1,0 +1,797 @@
+uuid: 4a9a9aea-c210-485e-91e6-7d6bf05e9ede
+langcode: en
+status: true
+dependencies: {  }
+id: dev
+label: dev
+code: |-
+  /* GENERAL STYLES */
+  .bold {
+      font-weight: 900;
+  }
+
+  .subtle {
+      color: #555;
+  }
+
+  .small {
+      font-size: small;
+  }
+
+  .display-inline-block {
+      display: inline-block;
+      vertical-align: top;
+      width: auto;
+  }
+
+  .text-align-right {
+      text-align: right;
+  }
+
+  .text-align-center {
+      text-align: center;
+  }
+
+  /* FORMS */
+  /* Sometimes fields need to be loaded in the GUI, i.e., to use prepopulate.
+  We exclude them from view through the following rule */
+  [id^="excluded"] {
+      display: none;
+  }
+
+  /* MODAL DIALOG */
+  .ui-widget-overlay {
+      opacity: .9;
+      background: #2e2f2f;
+  }
+
+  #drupal-modal {
+      background: #fff;
+  }
+
+  .ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix {
+      background: #fff;
+  }
+
+  .ui-dialog:not(.ui-dialog-off-canvas) {
+      max-width: 1080px;
+  }
+
+  @media (min-width: 767px) {
+      .ui-dialog:not(.ui-dialog-off-canvas) {
+          min-width: 800px;
+      }
+  }
+
+  .ui-dialog {
+      box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;
+  }
+
+  .ui-dialog .ui-dialog-titlebar {
+      background: #fff;
+      color: #000;
+  }
+
+  .ui-dialog .ui-dialog-title {
+      color: #000;
+  }
+
+  .ui-dialog .ui-dialog-titlebar-close .ui-icon-closethick {
+      background: #555;
+  }
+
+  /* UI Dialog in DXPR */
+  .ui-widget-content {
+      background: #fff;
+  }
+
+  /* The submit buttons on the Modal */
+  .ief-popup-actions {
+      background-color: #fff;
+  }
+
+  /* Form rules */
+  /* We leverage HTML field groups to create columns */
+  /* Default styles */
+  [data-drupal-selector="edit-group-left"],
+  [data-drupal-selector="edit-group-right"],
+  [data-drupal-selector="edit-group-left2"],
+  [data-drupal-selector="edit-group-right2"],
+  [data-drupal-selector="edit-field-tec-customer-widget-form-inline-entity-form-group-left"],
+  [data-drupal-selector="edit-field-tec-customer-widget-form-inline-entity-form-group-right"] {
+      display: inline-block;
+      vertical-align: top;
+      width: 48%;
+      padding: 0.5%;
+  }
+
+  /* Responsive styles for screens smaller than 1200px (e.g., smaller desktops) */
+  @media screen and (max-width: 1200px) {
+      [data-drupal-selector="edit-group-left"],
+      [data-drupal-selector="edit-group-right"],
+      [data-drupal-selector="edit-group-left2"],
+      [data-drupal-selector="edit-group-right2"],
+      [data-drupal-selector="edit-field-tec-customer-widget-form-inline-entity-form-group-left"],
+      [data-drupal-selector="edit-field-tec-customer-widget-form-inline-entity-form-group-right"] {
+          width: 48%;
+          padding: 0.75%;
+      }
+  }
+
+  /* Responsive styles for screens smaller than 992px (e.g., tablets in landscape) */
+  @media screen and (max-width: 992px) {
+      [data-drupal-selector="edit-group-left"],
+      [data-drupal-selector="edit-group-right"],
+      [data-drupal-selector="edit-group-left2"],
+      [data-drupal-selector="edit-group-right2"],
+      [data-drupal-selector="edit-field-tec-customer-widget-form-inline-entity-form-group-left"],
+      [data-drupal-selector="edit-field-tec-customer-widget-form-inline-entity-form-group-right"] {
+          width: 48%;
+          padding: 1%;
+      }
+  }
+
+  /* Responsive styles for screens smaller than 768px (e.g., tablets) */
+  @media screen and (max-width: 768px) {
+      [data-drupal-selector="edit-group-left"],
+      [data-drupal-selector="edit-group-right"],
+      [data-drupal-selector="edit-group-left2"],
+      [data-drupal-selector="edit-group-right2"],
+      [data-drupal-selector="edit-field-tec-customer-widget-form-inline-entity-form-group-left"],
+      [data-drupal-selector="edit-field-tec-customer-widget-form-inline-entity-form-group-right"] {
+          width: 100%;
+          padding: 1%;
+      }
+  }
+
+  /* Responsive styles for screens smaller than 576px (e.g., phones) */
+  @media screen and (max-width: 576px) {
+      [data-drupal-selector="edit-group-left"],
+      [data-drupal-selector="edit-group-right"],
+      [data-drupal-selector="edit-group-left2"],
+      [data-drupal-selector="edit-group-right2"],
+      [data-drupal-selector="edit-field-tec-customer-widget-form-inline-entity-form-group-left"],
+      [data-drupal-selector="edit-field-tec-customer-widget-form-inline-entity-form-group-right"] {
+          width: 100%;
+          padding: 1.5%;
+      }
+  }
+
+
+
+  /* Phone number fields need to have their widths controlled */
+  .phone-number-field div.form-item {
+      display: inline-block;
+      width: auto;
+      max-width: 227px;
+  }
+
+  /* Color field swatches need a shade to stand out against (white) backgrounds */
+  .color_field__swatch--circle {
+    box-shadow: 1px 1px 1px 1px #999;
+  }
+
+  /* PRODUCT UI */
+  /* Product entry UI */
+  #commerce-product-tec-glove-add-form,
+  #commerce-product-tec-shin-guard-add-form {
+      max-width: 960px;
+      margin: 6% auto;
+      box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;
+  }
+
+  /* We make the content region full width */
+  .layout-region-product-main,
+  .layout-region-product-footer {
+      width: 100%;
+  }
+
+  /* Boxing the content area */
+  .path-product .page-content.clearfix {
+      max-width: 1280px;
+      margin: auto;
+  }
+
+  /* Removing the right sidebar */
+  .layout-region.layout-region-product-secondary {
+      display: none;
+  }
+
+  /* The Form Wrapper gets color confused */
+  .form-wrapper {
+      background-color: transparent !important;
+  }
+
+  /* We need space below the Tabs */
+  .horizontal-tabs-list {
+      margin-bottom: 1em !important;
+  }
+
+  /* Form wrappers refuse to go all the way */
+  .horizontal-tabs .horizontal-tabs-pane {
+      width: 100%;
+  }
+
+  .button {
+      margin: 5px;
+  }
+
+  .drop-message {
+      height: 200px;
+  }
+
+  /* Variations IEF */
+  /* Tons of tokens are added to the IEF field, making styling a big pain */
+  [id^="edit-variations-form-inline-entity-form-entities-"][id$="-description"] {
+      display: none;
+  }
+
+  /* The "duplicate" and "cancel" buttons on variation duplication */
+  #edit-variations-form-inline-entity-form-entities-0-form-actions {
+      background-color: #fff !important;
+  }
+
+  /* The table of variations aligns wrong */
+  #edit-variations-wrapper .tabledrag-leaf td,
+  .tabledrag-cell {
+      vertical-align: middle;
+  }
+
+  /* Making the Variations form seamless */
+  #edit-variations .fieldset__label.js-form-required.form-required {
+      margin: 0;
+      padding: 2em 0 0 0;
+  }
+
+  #edit-variations {
+      border: none;
+      padding: 0;
+      margin: 0;
+  }
+
+  #edit-variations .fieldset__wrapper {
+      margin: 0em;
+  }
+
+  #edit-variations .ief-form.ief-form-bottom {
+      padding: 1em;
+  }
+
+  /* The bottom of the form has a line we don't want */
+  .layout-region-product-footer__content {
+      border-top: none;
+  }
+
+  /* PRODUCT FRONT END */
+  /* The Variations */
+  .commerce-product-variation {
+      background-color: #fff;
+      box-shadow: 0px 2px 3px #cecece;
+      border-radius: 20px;
+      padding: 10px;
+  }
+
+
+
+
+  /* PRODUCT VARIATIONS */
+  /* We adjust the width and style of the product GUI */
+  #commerce-product-variation-tec-glove-add-form,
+  #commerce-product-variation-tec-glove-edit-form,
+  #commerce-product-variation-tec-shin-guard-add-form,
+  #commerce-product-variation-tec-shin-guard-edit-form {
+      max-width: 960px;
+      margin: 6% auto;
+      box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;
+  }
+
+  /* Display form items inline */
+  #commerce-product-variation-tec-glove-add-form #edit-group-tec-details .form-wrapper,
+  #commerce-product-variation-tec-glove-edit-form #edit-group-tec-details .form-wrapper,
+  #commerce-product-variation-tec-shin-guard-add-form #edit-group-tec-sh-main .form-wrapper,
+  #commerce-product-variation-tec-shin-guard-edit-form #edit-group-tec-sh-main .form-wrapper {
+      display: inline-block;
+      width: auto;
+      vertical-align: top;
+  }
+
+  /* The Price and Currency */
+  #commerce-product-variation-tec-glove-add-form #edit-group-tec-details .js-form-item-price-0-currency-code.form-item--price-0-currency-code,
+  #commerce-product-variation-tec-glove-edit-form #edit-group-tec-details .js-form-item-price-0-currency-code.form-item--price-0-currency-code,
+  #commerce-product-variation-tec-shin-guard-add-form #edit-group-tec-sh-main .js-form-item-price-0-currency-code.form-item--price-0-currency-code,
+  #commerce-product-variation-tec-shin-guard-edit-form #edit-group-tec-sh-main .js-form-item-price-0-currency-code.form-item--price-0-currency-code {
+      display: inline-block;
+      vertical-align: top;
+      padding-top: 26px;
+  }
+
+  #commerce-product-variation-tec-glove-add-form #edit-group-tec-details .js-form-item-price-0-number.form-item--price-0-number,
+  #commerce-product-variation-tec-glove-edit-form #edit-group-tec-details .js-form-item-price-0-number.form-item--price-0-number,
+  #commerce-product-variation-tec-shin-guard-add-form #edit-group-tec-sh-main .js-form-item-price-0-number.form-item--price-0-number,
+  #commerce-product-variation-tec-shin-guard-edit-form #edit-group-tec-sh-main .js-form-item-price-0-number.form-item--price-0-number {
+      display: inline-block;
+  }
+
+  #commerce-product-variation-tec-shin-guard-add-form #edit-group-tec-sh-main #edit-attribute-tec-size-wrapper,
+  #commerce-product-variation-tec-shin-guard-edit-form #edit-group-tec-sh-main {
+      display: inline-block;
+      width: auto;
+      vertical-align: top;
+  }
+
+  #commerce-product-variation-tec-shin-guard-add-form #edit-group-tec-sh-main #edit-attribute-tec-color-wrapper,
+  #commerce-product-variation-tec-shin-guard-edit-form #edit-attribute-tec-color-wrapper {
+      display: inline-block;
+      width: auto;
+      vertical-align: top;
+      max-width: 300px;
+  }
+
+  .field--type-entity-reference .field--name-field-tec-inventory .form-wrapper {
+      display: inline-block;
+      width: auto;
+  }
+
+  /* The Bill of Materials (BoM) */
+  /* The BoM Item entry GUI */
+  #edit-group-tec-sh-main #edit-field-tec-bom-wrapper .form-wrapper {
+      display: block !important;
+      width: 100% !important;
+  }
+
+  /* In DXPR the modal dialog is a bit different. Styling te Quantity field is required */
+  [id^="edit-field-tec-quantity-"] {
+      max-width: 80%;
+      display: inline-block;
+      vertical-align: baseline;
+  }
+
+  #edit-field-tec-bom-wrapper {
+      display: block !important;
+  }
+
+  /* The text format description needs to go */
+  [id*="edit-field-tec-bom-form"][id*="-description"][id*="-format"] {
+      display: none !important;
+      visibility: hidden;
+  }
+
+  /* Inline variations */
+  .ief-row-form {
+      border: none !important;
+  }
+
+  #edit-variations .form-item__suffix {
+      margin-right: 10px;
+      margin-left: 0;
+  }
+
+  /* The Image tab */
+  #edit-field-tec-variation-image-wrapper .form-wrapper {
+      width: 100%;
+      display: block !important;
+  }
+
+  #edit-field-tec-variation-image-wrapper .form-item__description {
+      display: none;
+  }
+
+  /* Front end Variations (default viewmode) */
+  /* Fields need pading, we can't add padding to the regions without breaking display in Gin */
+  .field--name-variations .field__item {
+      padding: 10px;
+  }
+
+  /* VARIATIONS FRONT END */
+  .inline-block {
+      display: inline-block;
+      vertical-align: baseline;
+      width: auto;
+      margin-right: 3px;
+  }
+
+
+  [class*="product--variation-field--variation_attribute_tec_color"]._none.block.block-layout-builder.block-field-blockcommerce-product-variationtec-shin-guardattribute-tec-color {
+      display: inline-block;
+      width: auto;
+      vertical-align: top;
+  }
+
+  [class*="product--variation-field--variation_price"]._none.block.block-layout-builder.block-field-blockcommerce-product-variationtec-shin-guardprice {
+      display: inline-block;
+      vertical-align: top;
+      width: auto;
+  }
+
+  [class*="product--variation-field--variation_attribute_tec_size"]._none.block.block-layout-builder.block-field-blockcommerce-product-variationtec-shin-guardattribute-tec-size {
+      display: inline-block;
+      vertical-align: top;
+      width: auto;
+  }
+
+  /* MODULES */
+  /* Autocomplete Deluxe */
+  div.autocomplete-deluxe-container {
+      border-radius: 10px;
+  }
+
+  div.autocomplete-deluxe-container:not(.autocomplete-deluxe-multiple) input.autocomplete-deluxe-form {
+      min-height: 40px;
+      padding: 0 10px;
+  }
+
+  /* Gin Login */
+  /* We reset the logo on the Gin login page because we currently display it as background image already */
+  .gin-login a.toolbar-logo {
+      display: none !important;
+  }
+
+  /* Layout builder tabs */
+  /* Basic tab styles */
+  .tabs__tab {
+      display: inline-block !important;
+      font-size: large;
+      padding: 10px 20px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+      color: #333;
+  }
+
+  /* Select2 */
+  /* Making Select2 work with Gin */
+  .select2-container--gin .select2-selection--single {
+      min-height: calc(var(--input-padding-vertical) * 2 + var(--input-line-height));
+      padding: 8px;
+  }
+
+  .select2-container--gin .select2-selection {
+      border-radius: 0.5rem;
+  }
+
+  /* The arrow and x-close */
+  .select2-container--gin .select2-selection--single .select2-selection__arrow {
+      min-height: 36px;
+      width: 25px;
+  }
+
+  .select2-container .select2-selection--single .select2-selection__clear {
+      margin-right: 10px;
+  }
+
+
+  .select2-container .select2-selection--single .select2-selection__rendered {
+      box-shadow: none;
+      border-radius: 3px;
+      background: rgba(0, 0, 0, 0);
+      border: none;
+      ;
+      height: auto;
+      padding: 0px;
+      line-height: inherit;
+  }
+
+  .select2-container--default .select2-selection--single {
+      border: none;
+  }
+
+  /*#select2-edit-field-tec-pattern-boms-form-0-field-tec-size---qS2riDM7JY-container {
+  border: none;
+  margin: -5px;
+  }*/
+  /* VIEWS */
+  /* Inlining rows */
+  .row-inline {
+      display: inline-block;
+      width: auto;
+  }
+
+  /* Inlining exposed filters */
+  #edit-actions {
+      display: inline-block;
+      vertical-align: top;
+      padding: 24px 0 0 0;
+  }
+
+  .view-filters {
+      margin: 2em 0;
+      background-color: #f5f4f4;
+      padding: 10px;
+  }
+
+  div.view-header {
+      margin-bottom: 2em;
+  }
+
+  /* VIEWS RESPONSIVE GRID ITEMS / TILES */
+  .views-view-responsive-grid__item {
+      background-color: #fff;
+      border-radius: 10px;
+      border: 1px solid #e3e3e3;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+      padding: 10px;
+  }
+
+  /* Add hover effect */
+  .views-view-responsive-grid__item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Excel lover editable views */
+  /* Pronounced actions bar */
+  .block-views-blocktec-order-sales-order-line-items-block-1 #edit-actions {
+      display: block !important;
+      background-color: black !important;
+      position: fixed;
+      bottom: 20px;
+      left: 46%;
+      text-align: center;
+      padding: 10px !important;
+      border-radius: 6px;
+      opacity: .33;
+      z-index: 999;
+  }
+
+  .block-views-blocktec-order-sales-order-line-items-block-1 #edit-actions .form-submit {
+      opacity: 1;
+      margin-right: 0;
+  }
+
+  .block-views-blocktec-order-sales-order-line-items-block-1 #edit-actions:hover {
+      opacity: 0.66;
+  }
+
+  /* ECK ENTITY TYPES */
+  /* CRM */
+  /* Spacing all views blocks */
+  .path-tec-crm .block-views {
+      margin: 3em 0;
+      border-bottom: 1px solid #ccc;
+      padding: 3em 0;
+  }
+
+  /* The "+ Purchase order" flag needs aligning */
+  .flag.flag-tec-order-draft-po.js-flag-tec-order-draft-po-8.action-flag {
+      text-align: center;
+      padding-top: 20px;
+  }
+
+  /* GUI - PRODUCT ECK */
+  /*
+  ._none.block.block-layout-builder.block-field-blocktec-guitec-general-product-uifield-tec-product-type.clearfix {
+      display: inline-block;
+      vertical-align: top;
+      width: auto;
+      margin: 10px 30px;
+  }
+
+  ._none.block.block-layout-builder.block-field-blocktec-guitec-general-product-uifield-tec-size.clearfix {
+      display: inline-block;
+      vertical-align: top;
+      width: auto;
+      margin: 10px 30px;
+  }
+
+  .block-extra-field-blocktec-guitec-general-product-uiflag-tec-duplicate-gui a {
+      margin: 20px 30px 0 0;
+      color: #fff;
+      background-color: #444;
+      padding: 3px 10px;
+      border-radius: 10px;
+      text-align: right;
+  }
+  */
+
+  /* PRODUCT, COLOR VARIATION, SIZE VARIATION ECK */
+  /* Making the Color variation fieldset seamless */
+  #inline-entity-form-field_tec_color_variations-form .fieldset__wrapper {
+      margin: 10px;
+  }
+
+  #edit-field-tec-color-variations-form {
+      padding: 0 20px;
+  }
+
+  #inline-entity-form-field_tec_color_variations-form fieldset:not(.fieldgroup) {
+      border-radius: 0;
+  }
+
+  #edit-field-tec-color-variations-form,
+  [id^="edit-field-tec-color-variations-form-"][id$="-field-tec-size-variations--L7eP9u0i9pA"],
+  #edit-field-tec-color-variations-form .ief-form.ief-form-bottom,
+  [id*="edit-field-tec-color-variations-form-"][id*="-field-tec-size-variations--"],
+  [id*="edit-field-tec-color-variations-form-"][id*="field-tec-size-variations-form-"][id*="field-tec-bom--"],
+  [id^="edit-field-tec-color-variations-form-"][id*="-field-tec-images--"],
+  [id^="edit-field-tec-color-variations-form--"] {
+      border: 0px;
+  }
+
+  [id*="edit-field-tec-color-variations-form-"][id*="-field-tec-size-variations--"] .fieldset__label {
+      padding-left: 0px;
+  }
+
+  [id*="edit-field-tec-color-variations-form-"][id*="field-tec-size-variations-form-"][id*="field-tec-bom--"] .fieldset__label {
+      padding-left: 10px;
+  }
+
+  [id*="edit-field-tec-color-variations-form-"][id*="field-tec-size-variations-form-"][id*="field-tec-bom--"] {
+      padding: 10px;
+  }
+
+  /* Removing borders on Color variation UI */
+  .path-tec-product #edit-field-tec-images {
+      border: none;
+      padding: 0;
+      margin: 0;
+  }
+
+  /* Removing image field description */
+  .path-tec-product #edit-field-tec-images--description {
+      display: none;
+  }
+
+  /* ECK ORDER ECK */
+  /* Order statuses */
+  /* Open orders */
+  .Open {
+      background-color: #46889a;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+  }
+
+  .Accounting.Verified {
+      background-color: #2362a4;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+  }
+
+
+  /* Draft order views page */
+  /* The editable field rendered inside of the table as a viewmode */
+  .form-item-field-tec-quantity-0-value label {
+      display: none;
+  }
+
+  /*.ajax-progress {
+    display: none;
+  }*/
+  /* Customer rendered enttiy */
+  .path-tec-order .field--name-field-tec-customer {
+      text-align: right;
+  }
+
+  /* The Quicktabs */
+  .path-tec-order .on-the-gray .quicktabs-tabpage {
+      padding: .5em;
+      border: 1px solid #ddd;
+  }
+
+  /* Line items */
+  /* Rendered entity when empty */
+  .flag.flag-tec-draft-order-excel-lover {
+      text-align: center;
+      font-weight: bold;
+  }
+
+  .view-tec-order-sales-order-line-items .view-id-tec_order_sales_order_line_items {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 2em;
+  }
+
+  /* Form fields in Order ECK line items view */
+  .view-tec-order-sales-order-line-items .form-item,
+  .view-tec-order-sales-order-line-items .form-actions {
+      margin-top: 0;
+      margin-bottom: 0;
+  }
+
+  .view-tec-order-sales-order-line-items .views-field-form-field-field-tec-quantity {
+      width: 140px;
+  }
+
+  .view-tec-order-sales-order-line-items .line-item-header {
+      margin-top: 20px;
+      padding: 20px;
+  }
+
+  .view-tec-order-sales-order-line-items .view-grouping-header h4 {
+      padding-top: 20px;
+  }
+
+  /* Setting width on inline blocks */
+  .view-tec-order-sales-order-line-items .display-inline-block {
+      min-width: 110px;
+  }
+
+  /* Removing the throbber on Auto-submit order screen */
+  .path-o .ajax-progress {
+    display: none;
+  } 
+
+  /* LINE ITEM ECK */
+  /* Inline-ing fields */
+  [id^="edit-field-tec-line-items-form-"][id*="field-tec-quantity-wrapper"],
+  [id^="edit-field-tec-line-items-form-"][id*="field-tec-sales-price"],
+  [id*="edit-field-tec-line-items-form-"][id$="-field-tec-custom-sales-price-wrapper"] {
+      display: inline-block;
+      vertical-align: baseline;
+  }
+
+  /* Adding margins to the Custom price boolean */
+  [id*="edit-field-tec-line-items-form-"][id$="-field-tec-custom-sales-price-wrapper"] {
+      margin: 0 10px;
+  }
+
+  /* VIEWS PAGES */
+  /* Homepage */
+  .path-frontpage .main-container {
+      background-color: transparent;
+      box-shadow: none !important;
+      margin: 12% auto;
+  }
+
+
+  .view-tec-icons-launchpad .views-view-responsive-grid__item img {
+      filter: brightness(90%);
+      transition: filter 0.3s ease;
+  }
+
+  .view-tec-icons-launchpad .views-view-responsive-grid__item:hover img {
+      filter: brightness(100%);
+  }
+
+  [id^="edit-field-tec-gui-product"] p {
+      display: none;
+  }
+
+  /* PRODUCT ECK ENTITY */
+  /* The Color variations */
+  /* We have to hard code the column width */
+  .path-tec-product .field--name-field-tec-color-variations .col-lg-3 {
+      flex: 0 0 auto;
+      width: 15%;
+  }
+
+  /* Removing unwanted paddings */
+  .path-tec-product .field--name-field-tec-color-variations .layout-builder__layout.row {
+      padding: 10px 0;
+  }
+
+  /* The images */
+  .field.field--name-field-tec-images {
+      margin-top: 30px
+  }
+
+  /* The Size Variations */
+  .field--name-field-tec-size-variations .field__item {
+      display: inline-block;
+  }
+
+  .field--name-field-tec-size-variations .flag {
+      display: inline-block;
+      width: auto;
+  }
+
+  .field--name-field-tec-size-variations .layout--twocol-bricks {
+      border: 1px solid #a0a0a0;
+      padding: 10px;
+      margin-right: 20px;
+      margin-top: 10px;
+      width: 251px;
+  }
+
+  /* The top region holds the controls and should align them to the right */
+  .field--name-field-tec-size-variations .field__item .layout__region.layout__region--top {
+      text-align: right;
+      padding-bottom: 6px
+  }
+media: all
+preprocess: true
+conditions: {  }
+contexts: {  }
+conditions_require_all: true

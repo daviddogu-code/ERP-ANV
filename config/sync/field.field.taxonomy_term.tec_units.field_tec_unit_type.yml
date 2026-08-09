@@ -1,0 +1,37 @@
+uuid: 15ba1519-41c6-4a11-a862-c57baaad8a47
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_unit_type
+    - taxonomy.vocabulary.tec_units
+  module:
+    - ai_interpolator
+    - options
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: 1
+    interpolator_rule: ai_interpolator_openai_list_string
+    interpolator_mode: base
+    interpolator_base_field: name
+    interpolator_prompt: "Based on the context, select one of the following options that correctly identifies it. The purpose is to identify units entered into the ERP that during manufacturing, should be classified as a unit of measure (kg, liter, yard) and/or as a unit of purchasing. When both could apply, you must select both options.\r\n\r\nHere is the context: {{ context }}\r\n--------------------\r\n{{ context }}\r\n--------------------\r\n\r\nHere are your choices:\r\n--------------------\r\n{{ options_nl }} \r\n--------------------"
+    interpolator_token: ''
+    interpolator_edit_mode: 0
+    interpolator_weight: '100'
+    interpolator_worker_type: direct
+    interpolator_openai_model: gpt-4o
+    interpolator_openai_vision_images: ''
+    interpolator_openai_role: 'You are working with custom ERP software for a Muay Thai boxing equipment manufacturer.'
+    interpolator_openai_moderation: 0
+id: taxonomy_term.tec_units.field_tec_unit_type
+field_name: field_tec_unit_type
+entity_type: taxonomy_term
+bundle: tec_units
+label: 'AI Unit type'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

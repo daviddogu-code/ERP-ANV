@@ -1,0 +1,18 @@
+uuid: 95215523-39ca-404e-83d3-af786a25cf2c
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_sales_order
+id: tec_order.tec_sales_order.title
+field_name: title
+entity_type: tec_order
+bundle: tec_sales_order
+label: 'Order nr.'
+description: 'A unique order identifier'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

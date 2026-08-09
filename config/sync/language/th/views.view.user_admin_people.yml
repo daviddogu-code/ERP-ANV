@@ -1,0 +1,74 @@
+label: บุคคล
+description: 'Find and manage people interacting with your site.'
+display:
+  default:
+    display_title: Default
+    display_options:
+      title: บุคคล
+      fields:
+        user_bulk_form:
+          label: 'Bulk update'
+        name:
+          label: ชื่อผู้ใช้งาน
+        status:
+          label: สถานะ
+          settings:
+            format_custom_false: Blocked
+            format_custom_true: Active
+        roles_target_id:
+          label: Roles
+        created:
+          label: 'Member for'
+        access:
+          label: 'Last access'
+        operations:
+          label: Operations
+      pager:
+        options:
+          tags:
+            next: 'next ›'
+            previous: '‹ previous'
+            first: '« first'
+            last: 'last »'
+          expose:
+            items_per_page_label: 'Items per page'
+            items_per_page_options_all_label: '- All -'
+            offset_label: Offset
+      exposed_form:
+        options:
+          submit_button: Filter
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+      empty:
+        area_text_custom:
+          content: 'No people available.'
+      filters:
+        combine:
+          expose:
+            label: 'Name or email contains'
+        status:
+          group_info:
+            label: สถานะ
+            group_items:
+              1:
+                title: Active
+              2:
+                title: Blocked
+        roles_target_id:
+          expose:
+            label: Role
+        permission:
+          expose:
+            label: Permission
+      use_more_text: more
+  page_1:
+    display_title: Page
+    display_options:
+      menu:
+        title: ดูลิสต์
+        description: 'Find and manage people interacting with your site.'
+      tab_options:
+        title: บุคคล
+        description: 'Manage user accounts, roles, and permissions.'

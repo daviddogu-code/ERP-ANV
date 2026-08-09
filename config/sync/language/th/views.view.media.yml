@@ -1,0 +1,62 @@
+label: สื่อ
+display:
+  default:
+    display_title: Default
+    display_options:
+      title: สื่อ
+      fields:
+        media_bulk_form:
+          action_title: แอคชั่น
+        bundle:
+          label: ประเภท
+        uid:
+          label: Author
+        status:
+          label: สถานะ
+          settings:
+            format_custom_false: Unpublished
+            format_custom_true: Published
+        changed:
+          label: Updated
+        operations:
+          label: Operations
+      pager:
+        options:
+          tags:
+            next: 'next ›'
+            previous: '‹ previous'
+            first: '« first'
+            last: 'last »'
+          expose:
+            items_per_page_label: 'Items per page'
+            items_per_page_options_all_label: '- All -'
+            offset_label: Offset
+      exposed_form:
+        options:
+          submit_button: Filter
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+      filters:
+        bundle:
+          expose:
+            label: ประเภท
+        status:
+          expose:
+            label: 'True'
+          group_info:
+            label: 'Published status'
+            group_items:
+              1:
+                title: Published
+              2:
+                title: Unpublished
+        langcode:
+          expose:
+            label: Language
+  media_page_list:
+    display_title: สื่อ
+    display_options:
+      menu:
+        title: สื่อ

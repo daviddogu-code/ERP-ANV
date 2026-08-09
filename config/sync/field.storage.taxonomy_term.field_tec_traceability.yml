@@ -1,0 +1,18 @@
+uuid: a83159b5-b8e3-48a8-b50a-9b1f0fb673dc
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_tec_traceability
+field_name: field_tec_traceability
+entity_type: taxonomy_term
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

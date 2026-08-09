@@ -1,0 +1,14 @@
+uuid: a3e3b498-08b3-4f19-a58d-96de152c95b5
+langcode: en
+status: true
+dependencies:
+  module:
+    - pwa
+_core:
+  default_config_hash: 6WavjUYXIegP9AAg2zXGx54MWIVoomC3SZhNiqe-Dyk
+id: anonymous
+label: 'Anonymous user'
+weight: -10
+is_admin: false
+permissions:
+  - 'access pwa'

@@ -1,0 +1,9 @@
+uuid: 291970bf-2c80-4153-b576-64f4ec41d80d
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_app_link
+name: Line
+type: tec_line
+description: 'Naver Line contact link'

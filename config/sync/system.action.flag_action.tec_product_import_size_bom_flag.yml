@@ -1,0 +1,15 @@
+uuid: 0a9eeca3-e3ba-4e2c-958c-9235d8b12cbf
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_product_import_size_bom
+  module:
+    - flag
+id: flag_action.tec_product_import_size_bom_flag
+label: '<img src="/sites/default/files/000-import-csv-24.png" title="Import BoM">'
+type: tec_product
+plugin: 'flag_action:tec_product_import_size_bom_flag'
+configuration:
+  flag_id: tec_product_import_size_bom
+  flag_action: flag

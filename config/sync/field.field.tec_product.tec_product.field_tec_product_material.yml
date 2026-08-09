@@ -1,0 +1,25 @@
+uuid: a477ca04-d570-4fe5-bc39-4d45fb4a8acc
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+    - field.storage.tec_product.field_tec_product_material
+  module:
+    - ai_interpolator
+    - options
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: tec_product.tec_product.field_tec_product_material
+field_name: field_tec_product_material
+entity_type: tec_product
+bundle: tec_product
+label: 'Product material'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

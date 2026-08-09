@@ -1,0 +1,21 @@
+uuid: 1350d11a-16de-44ff-8ddb-213389cc13b2
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+_core:
+  default_config_hash: RTPdXb2culDLqAIkxMBCtBxStDzh0Ub7paw4N1s2QGc
+id: tec_inventory.field_tec_bom_item
+field_name: field_tec_bom_item
+entity_type: tec_inventory
+type: entity_reference
+settings:
+  target_type: tec_inventory
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

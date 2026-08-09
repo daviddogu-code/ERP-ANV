@@ -1,0 +1,83 @@
+uuid: d95c1c84-064b-4385-b4f3-16769738fe66
+langcode: en
+status: true
+dependencies:
+  module:
+    - eca_base
+    - eca_content
+    - eca_flag
+    - flag
+id: process_v0gguvo
+modeller: bpmn_io
+label: 'TEC Order: Excel lover checkout'
+version: '1.0'
+weight: 10
+events:
+  Event_1y2gwcn:
+    plugin: 'flag:flag'
+    label: |
+      Flag
+    configuration: {  }
+    successors:
+      -
+        id: Activity_10h819l
+        condition: Flow_0m4vf76
+conditions:
+  Flow_0m4vf76:
+    plugin: eca_scalar
+    configuration:
+      negate: false
+      case: false
+      left: '[flag]'
+      right: tec_order_checkout_excel
+      operator: equal
+      type: value
+gateways: {  }
+actions:
+  Activity_10h819l:
+    plugin: flag_delete_flagging
+    label: Unflag
+    configuration:
+      object: flagging
+    successors:
+      -
+        id: Activity_02ih4p8
+        condition: ''
+  Activity_03gim3q:
+    plugin: action_goto_action
+    label: Redirect
+    configuration:
+      url: '[contact:url]'
+      replace_tokens: true
+    successors:
+      -
+        id: Activity_09dlzcb
+        condition: ''
+  Activity_02ih4p8:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the CRM entity'
+    configuration:
+      field_name_entity_ref: field_tec_customer
+      token_name: contact
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_03gim3q
+        condition: ''
+  Activity_09dlzcb:
+    plugin: action_message_action
+    label: 'Show a message'
+    configuration:
+      replace_tokens: false
+      message: |-
+        <strong>Checkout successful.
+        Further magic will happen here in the next release.</strong>
+    successors: {  }

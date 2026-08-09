@@ -1,0 +1,96 @@
+uuid: 082f6dc2-40c0-42fe-bfae-00f61db5b362
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - field.storage.tec_inventory.field_tec_color_swatch_vf
+    - views.view.tec_gui_bom_item_viewfields
+  module:
+    - viewfield
+id: tec_inventory.tec_bom_item.field_tec_color_swatch_vf
+field_name: field_tec_color_swatch_vf
+entity_type: tec_inventory
+bundle: tec_bom_item
+label: Color
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    target_uuid: 752dbf1c-cc42-457d-a17f-301b5b625107
+    display_id: embed_2
+    arguments: '[tec_inventory:id]'
+    items_to_display: ''
+    token_help: ''
+default_value_callback: ''
+settings:
+  force_default: true
+  allowed_views:
+    tec_gui_bom_item_viewfields: tec_gui_bom_item_viewfields
+    comment: '0'
+    content: '0'
+    block_content: '0'
+    eca_log: '0'
+    tec_order_eca_create_draft_excel_lover: '0'
+    tec_order_eca_create_draft_po_excel_lover: '0'
+    feeds_feed: '0'
+    feeds_import_logs: '0'
+    files: '0'
+    frontpage: '0'
+    media: '0'
+    media_library: '0'
+    user_admin_people: '0'
+    profiles: '0'
+    comments_recent: '0'
+    content_recent: '0'
+    redirect: '0'
+    taxonomy_term: '0'
+    tec_entity_browser_taxonomy: '0'
+    tec_icons_launchpad: '0'
+    tec_inventory: '0'
+    tec_admin_inventory: '0'
+    tec_admin_inventory_entities: '0'
+    tec_admin_line_items: '0'
+    tec_admin_order_entities: '0'
+    tec_admin_product_entities: '0'
+    te: '0'
+    tec_brands: '0'
+    tec_colors: '0'
+    tec_controls_taxonomy: '0'
+    tec_crm_contact_details_tab: '0'
+    tec_crm_customers: '0'
+    tec_crm_references: '0'
+    tec_inventory_bom_inventory_entity_reference_select: '0'
+    tec_inventory_elements: '0'
+    tec_inventory_transactions: '0'
+    tec_inventory_unit_term_reference_select: '0'
+    tec_order_color_variations_and_line_items: '0'
+    tec_order_eca_count_orders: '0'
+    tec_order_material_calculation_terms: '0'
+    tec_order_po_pdf: '0'
+    tec_order_sales_order_line_items: '0'
+    tec_orders_orders: '0'
+    tec_pattern_elements: '0'
+    tec_patterns: '0'
+    tec_product_elements: '0'
+    tec_products: '0'
+    tec_products_entity_browser: '0'
+    tec_superbom: '0'
+    watchdog: '0'
+    who_s_new: '0'
+    who_s_online: '0'
+  allowed_display_types:
+    default: default
+    embed: embed
+    attachment: '0'
+    block: '0'
+    data_export: '0'
+    entity_browser: '0'
+    entity_reference: '0'
+    feed: '0'
+    page: '0'
+    rest_export: '0'
+  handler: 'default:view'
+  handler_settings: {  }
+field_type: viewfield

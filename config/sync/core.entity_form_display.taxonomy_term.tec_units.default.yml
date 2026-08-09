@@ -1,0 +1,62 @@
+uuid: a133bc93-716f-4413-b119-b855ff48e67a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.tec_units.ai_interpolator_status
+    - field.field.taxonomy_term.tec_units.field_tec_unit_plural
+    - field.field.taxonomy_term.tec_units.field_tec_unit_symbol
+    - field.field.taxonomy_term.tec_units.field_tec_unit_type
+    - taxonomy.vocabulary.tec_units
+id: taxonomy_term.tec_units.default
+targetEntityType: taxonomy_term
+bundle: tec_units
+mode: default
+content:
+  ai_interpolator_status:
+    type: options_select
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tec_unit_plural:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_unit_symbol:
+    type: string_textfield
+    weight: 5
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_unit_type:
+    type: options_select
+    weight: 3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 1
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 4
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+hidden:
+  description: true
+  langcode: true
+  path: true

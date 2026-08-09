@@ -1,0 +1,96 @@
+uuid: 1551033b-6548-44dc-a936-8bbdb59af90a
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.taxonomy_term.full
+    - field.field.taxonomy_term.tec_patterns.field_tec_customer
+    - field.field.taxonomy_term.tec_patterns.field_tec_images
+    - field.field.taxonomy_term.tec_patterns.field_tec_pattern_boms
+    - image.style.large
+    - taxonomy.vocabulary.tec_patterns
+  module:
+    - ds
+    - field_formatter_class
+    - field_label
+    - image
+    - layout_builder
+    - manage_display
+    - text
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+  ds:
+    layout:
+      id: ds_2col
+      library: ds/ds_2col
+      disable_css: false
+      entity_classes: all_classes
+      settings:
+        classes:
+          layout_class: {  }
+        wrappers:
+          left: div
+          right: div
+        outer_wrapper: div
+        attributes: ''
+        link_attribute: ''
+        link_custom: ''
+        label: ''
+    regions:
+      left:
+        - name
+        - field_tec_customer
+        - description
+      right:
+        - field_tec_images
+id: taxonomy_term.tec_patterns.full
+targetEntityType: taxonomy_term
+bundle: tec_patterns
+mode: full
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 2
+    region: left
+  field_tec_customer:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: left
+  field_tec_images:
+    type: image
+    label: above
+    settings:
+      image_link: ''
+      image_style: large
+      image_loading:
+        attribute: lazy
+    third_party_settings:
+      field_formatter_class:
+        class: ''
+      field_label:
+        label_class: ''
+        label_value: ''
+        label_tag: ''
+    weight: 3
+    region: right
+  name:
+    type: title
+    label: hidden
+    settings:
+      link_to_entity: true
+      tag: h2
+    third_party_settings: {  }
+    weight: 0
+    region: left
+hidden:
+  field_tec_pattern_boms: true
+  langcode: true

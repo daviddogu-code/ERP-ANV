@@ -1,0 +1,171 @@
+uuid: 2ec0fb8e-ead8-4ccf-ad67-a0f55dd267ce
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.tec_order.pdf
+    - eck.eck_type.tec_order.tec_purchase_order
+    - field.field.tec_order.tec_purchase_order.field_tec_customer
+    - field.field.tec_order.tec_purchase_order.field_tec_line_items
+    - field.field.tec_order.tec_purchase_order.field_tec_po_status
+    - field.field.tec_order.tec_purchase_order.field_tec_priority
+    - field.field.tec_order.tec_purchase_order.field_tec_vendor
+  module:
+    - ds
+    - editablefields
+    - layout_builder
+    - options
+    - user
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+  ds:
+    layout:
+      id: layout_twocol_bricks
+      library: layout_discovery/twocol_bricks
+      disable_css: false
+      entity_classes: all_classes
+      settings:
+        label: ''
+    regions:
+      top:
+        - langcode
+        - title
+        - field_tec_po_status
+        - field_tec_vendor
+        - field_tec_priority
+      first_above:
+        - created
+      second_above:
+        - changed
+      middle:
+        - field_tec_line_items
+      first_below:
+        - field_tec_customer
+      second_below:
+        - uid
+id: tec_order.tec_purchase_order.pdf
+targetEntityType: tec_order
+bundle: tec_purchase_order
+mode: pdf
+content:
+  changed:
+    type: timestamp
+    label: above
+    settings:
+      date_format: medium
+      custom_date_format: ''
+      timezone: ''
+      tooltip:
+        date_format: long
+        custom_date_format: ''
+      time_diff:
+        enabled: false
+        future_format: '@interval hence'
+        past_format: '@interval ago'
+        granularity: 2
+        refresh: 60
+    third_party_settings: {  }
+    weight: 6
+    region: second_above
+  created:
+    type: timestamp
+    label: hidden
+    settings:
+      date_format: medium
+      custom_date_format: ''
+      timezone: ''
+      tooltip:
+        date_format: long
+        custom_date_format: ''
+      time_diff:
+        enabled: false
+        future_format: '@interval hence'
+        past_format: '@interval ago'
+        granularity: 2
+        refresh: 60
+    third_party_settings: {  }
+    weight: 5
+    region: first_above
+  field_tec_customer:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 8
+    region: first_below
+  field_tec_line_items:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 7
+    region: middle
+  field_tec_po_status:
+    type: editablefields_formatter
+    label: above
+    settings:
+      form_mode: default
+      behaviour: inline
+      bypass_access: false
+      fallback_access: false
+      display_mode_access: ''
+      fallback_edit: false
+      display_mode_edit: ''
+      fields_ajax_trigger: ''
+      fields_ajax_trigger_event: change
+    third_party_settings: {  }
+    weight: 2
+    region: top
+  field_tec_priority:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 4
+    region: top
+  field_tec_vendor:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 3
+    region: top
+  langcode:
+    type: editablefields_formatter
+    label: above
+    settings:
+      form_mode: default
+      behaviour: inline
+      bypass_access: false
+      fallback_access: false
+      display_mode_access: ''
+      fallback_edit: false
+      display_mode_edit: ''
+      fields_ajax_trigger: ''
+      fields_ajax_trigger_event: change
+    third_party_settings: {  }
+    weight: 0
+    region: top
+  title:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: top
+  uid:
+    type: author
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 9
+    region: second_below
+hidden:
+  flag_tec_order_accounting_verified: true
+  flag_tec_order_checkout_excel: true

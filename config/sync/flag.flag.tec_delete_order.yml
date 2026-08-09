@@ -1,0 +1,34 @@
+uuid: 171eefd3-9fb9-4403-aa67-66aff3457555
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_delete_order
+label: 'TEC Order: Delete order'
+bundles: {  }
+entity_type: tec_order
+global: true
+flag_short: '<img src="/sites/default/files/000-delete-21.png" title="Delete">Delete'
+flag_long: 'This will remove the order from the system.'
+flag_message: ''
+unflag_short: 'Unset delete order'
+unflag_long: Unset
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_order'
+link_type: confirm
+flagTypeConfig:
+  show_in_links: {  }
+  show_as_field: true
+  show_on_form: false
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig:
+  flag_confirmation: 'Are you sure?'
+  unflag_confirmation: 'Unset?'
+  flag_create_button: 'OK, continue'
+  flag_delete_button: Unset
+  form_behavior: modal

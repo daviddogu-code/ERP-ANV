@@ -1,0 +1,22 @@
+uuid: 4d8e1ddc-7a52-4d7e-aba0-4ed631a2f092
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_purchase_order
+id: tec_order.tec_purchase_order.status
+field_name: status
+entity_type: tec_order
+bundle: tec_purchase_order
+label: Active
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

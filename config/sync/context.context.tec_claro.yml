@@ -1,0 +1,32 @@
+uuid: 0ba6cc6c-0ecc-4edb-bacd-1bc90fdfeb6a
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+label: Claro
+name: tec_claro
+group: Themes
+description: 'Sets the Claro Theme'
+requireAllConditions: true
+disabled: false
+conditions:
+  request_path:
+    id: request_path
+    negate: false
+    uuid: 309bae85-13a3-4cb9-a993-45f00df64045
+    context_mapping: {  }
+    pages: "/admin/content/tec_product/*\r\n/tec_product/*/edit\r\n/tec_product/*/delete\r\n/tec_inventory/*/edit\r\n/tec_inventory/*/delete\r\n/admin/structure/taxonomy/manage/tec_inventory/*\r\n/admin/structure/taxonomy/manage/tec_patterns/*\r\n/taxonomy/term/*/edit\r\n/feed/*\r\n/bom/*/magic\r\n/admin/content/tec_inventory/add/tec_inventory_transaction\r\n/admin/structure/taxonomy/*\r\n/admin/*\r\n/tec_crm/*/edit\r\n/tec_crm/*/delete\r\n"
+  request_path_exclusion:
+    id: request_path_exclusion
+    negate: true
+    uuid: a9142b34-7650-40b8-bea8-6e9d6d9d5869
+    context_mapping: {  }
+    pages: /admin/appearance/settings/dxpr_theme
+reactions:
+  theme:
+    id: theme
+    uuid: 60d047ed-d316-412b-a0e2-4c3d70cb92ab
+    theme: claro
+    saved: false
+weight: 0

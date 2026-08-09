@@ -1,0 +1,20 @@
+uuid: cf90f785-b044-4d87-8f1e-31e222a8370d
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+_core:
+  default_config_hash: C5L0nHN2Zm8g0c6caIXvTzNpsz7fDuqPwG90r0oC-BA
+id: tec_inventory.field_tec_mutation_complete
+field_name: field_tec_mutation_complete
+entity_type: tec_inventory
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

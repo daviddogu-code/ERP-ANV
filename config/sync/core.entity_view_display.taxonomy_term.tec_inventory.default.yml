@@ -1,0 +1,552 @@
+uuid: 9edad9a1-0443-40dc-a37d-bbaca97e4b75
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.tec_inventory.feeds_item
+    - field.field.taxonomy_term.tec_inventory.field_1_uou_uos_pu
+    - field.field.taxonomy_term.tec_inventory.field_tec_ai_color
+    - field.field.taxonomy_term.tec_inventory.field_tec_colors
+    - field.field.taxonomy_term.tec_inventory.field_tec_cost
+    - field.field.taxonomy_term.tec_inventory.field_tec_importer_item_id
+    - field.field.taxonomy_term.tec_inventory.field_tec_inventory_image
+    - field.field.taxonomy_term.tec_inventory.field_tec_material_type
+    - field.field.taxonomy_term.tec_inventory.field_tec_moq_package
+    - field.field.taxonomy_term.tec_inventory.field_tec_moq_quantity
+    - field.field.taxonomy_term.tec_inventory.field_tec_moq_unit
+    - field.field.taxonomy_term.tec_inventory.field_tec_package_units
+    - field.field.taxonomy_term.tec_inventory.field_tec_packaging
+    - field.field.taxonomy_term.tec_inventory.field_tec_placeholder_1
+    - field.field.taxonomy_term.tec_inventory.field_tec_placeholder_2
+    - field.field.taxonomy_term.tec_inventory.field_tec_placeholder_3
+    - field.field.taxonomy_term.tec_inventory.field_tec_placeholder_4
+    - field.field.taxonomy_term.tec_inventory.field_tec_placeholder_5
+    - field.field.taxonomy_term.tec_inventory.field_tec_price
+    - field.field.taxonomy_term.tec_inventory.field_tec_price_by_package
+    - field.field.taxonomy_term.tec_inventory.field_tec_price_uos
+    - field.field.taxonomy_term.tec_inventory.field_tec_price_uou
+    - field.field.taxonomy_term.tec_inventory.field_tec_purchasing_moq
+    - field.field.taxonomy_term.tec_inventory.field_tec_split_into
+    - field.field.taxonomy_term.tec_inventory.field_tec_split_inventory
+    - field.field.taxonomy_term.tec_inventory.field_tec_split_unit
+    - field.field.taxonomy_term.tec_inventory.field_tec_stock_level
+    - field.field.taxonomy_term.tec_inventory.field_tec_stock_mutations
+    - field.field.taxonomy_term.tec_inventory.field_tec_stock_unit_check
+    - field.field.taxonomy_term.tec_inventory.field_tec_suppliers
+    - field.field.taxonomy_term.tec_inventory.field_tec_traceability
+    - field.field.taxonomy_term.tec_inventory.field_tec_unit_purchase
+    - field.field.taxonomy_term.tec_inventory.field_tec_unit_use
+    - field.field.taxonomy_term.tec_inventory.field_tec_units
+    - field.field.taxonomy_term.tec_inventory.field_tec_uop_pu_uou
+    - field.field.taxonomy_term.tec_inventory.field_tec_uop_uou
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos_pu_uop
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos_pu_uou
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos_uop
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos_uou
+    - field.field.taxonomy_term.tec_inventory.field_tec_uou_control
+    - field.field.taxonomy_term.tec_inventory.field_tec_uou_split_qty
+    - field.field.taxonomy_term.tec_inventory.field_tec_uou_uop
+    - field.field.taxonomy_term.tec_inventory.field_tec_uou_uop_pu
+    - field.field.taxonomy_term.tec_inventory.field_tec_uou_uos
+    - field.field.taxonomy_term.tec_inventory.field_tec_vendor
+    - field.field.taxonomy_term.tec_inventory.field_uop_to_uos
+    - field.field.taxonomy_term.tec_inventory.layout_builder__layout
+    - taxonomy.vocabulary.tec_inventory
+  module:
+    - editablefields
+    - field_formatter_class
+    - field_label
+    - image
+    - markup
+    - options
+    - text
+id: taxonomy_term.tec_inventory.default
+targetEntityType: taxonomy_term
+bundle: tec_inventory
+mode: default
+content:
+  description:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_1_uou_uos_pu:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 42
+    region: content
+  field_tec_ai_color:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_tec_colors:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 14
+    region: content
+  field_tec_cost:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 15
+    region: content
+  field_tec_importer_item_id:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 17
+    region: content
+  field_tec_inventory_image:
+    type: image
+    label: above
+    settings:
+      image_link: ''
+      image_style: ''
+      image_loading:
+        attribute: lazy
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_tec_material_type:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_tec_moq_package:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 52
+    region: content
+  field_tec_moq_quantity:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 22
+    region: content
+  field_tec_moq_unit:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 23
+    region: content
+  field_tec_package_units:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 26
+    region: content
+  field_tec_packaging:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 19
+    region: content
+  field_tec_placeholder_1:
+    type: markup
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 20
+    region: content
+  field_tec_placeholder_2:
+    type: markup
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 27
+    region: content
+  field_tec_placeholder_3:
+    type: markup
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 34
+    region: content
+  field_tec_placeholder_4:
+    type: markup
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 50
+    region: content
+  field_tec_placeholder_5:
+    type: markup
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 51
+    region: content
+  field_tec_price:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 14
+    region: content
+  field_tec_price_by_package:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 33
+    region: content
+  field_tec_price_uos:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 45
+    region: content
+  field_tec_price_uou:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 47
+    region: content
+  field_tec_purchasing_moq:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 11
+    region: content
+  field_tec_split_into:
+    type: editablefields_formatter
+    label: above
+    settings:
+      form_mode: default
+      behaviour: inline
+      bypass_access: false
+      fallback_access: false
+      display_mode_access: ''
+      fallback_edit: false
+      display_mode_edit: ''
+      fields_ajax_trigger: ''
+      fields_ajax_trigger_event: change
+    third_party_settings: {  }
+    weight: 24
+    region: content
+  field_tec_split_inventory:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 40
+    region: content
+  field_tec_split_unit:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 25
+    region: content
+  field_tec_stock_level:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 9
+    region: content
+  field_tec_stock_mutations:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 8
+    region: content
+  field_tec_stock_unit_check:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 32
+    region: content
+  field_tec_suppliers:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_tec_traceability:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_tec_unit_purchase:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 13
+    region: content
+  field_tec_unit_use:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 12
+    region: content
+  field_tec_units:
+    type: editablefields_formatter
+    label: above
+    settings:
+      form_mode: default
+      behaviour: inline
+      bypass_access: false
+      fallback_access: false
+      display_mode_access: ''
+      fallback_edit: false
+      display_mode_edit: ''
+      fields_ajax_trigger: ''
+      fields_ajax_trigger_event: change
+    third_party_settings: {  }
+    weight: 21
+    region: content
+  field_tec_uop_pu_uou:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 48
+    region: content
+  field_tec_uop_uou:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 41
+    region: content
+  field_tec_uos:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 31
+    region: content
+  field_tec_uos_pu_uop:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 44
+    region: content
+  field_tec_uos_pu_uou:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 49
+    region: content
+  field_tec_uos_uop:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 46
+    region: content
+  field_tec_uos_uou:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 43
+    region: content
+  field_tec_uou_control:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 36
+    region: content
+  field_tec_uou_split_qty:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 53
+    region: content
+  field_tec_uou_uop:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 37
+    region: content
+  field_tec_uou_uop_pu:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 39
+    region: content
+  field_tec_uou_uos:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 38
+    region: content
+  field_tec_vendor:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: compact
+      link: false
+    third_party_settings:
+      field_formatter_class:
+        class: ''
+    weight: 16
+    region: content
+  field_uop_to_uos:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 54
+    region: content
+  flag_tec_admin_update:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 10
+    region: content
+  name:
+    type: string
+    label: above
+    settings:
+      link_to_entity: true
+    third_party_settings:
+      field_formatter_class:
+        class: ''
+      field_label:
+        label_class: ''
+        label_value: 'Material name'
+        label_tag: ''
+    weight: 0
+    region: content
+hidden:
+  feeds_item: true
+  langcode: true
+  layout_builder__layout: true

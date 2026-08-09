@@ -1,0 +1,14 @@
+uuid: 17102eb1-9acc-4934-8183-6c552fe3692c
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.tec_supervisor
+  module:
+    - user
+id: user_add_role_action.tec_supervisor
+label: 'Add the Supervisor role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: tec_supervisor

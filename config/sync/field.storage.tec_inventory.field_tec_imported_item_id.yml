@@ -1,0 +1,25 @@
+uuid: c1002f51-aab2-421a-8e6a-034762308093
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_inventory.field_tec_imported_item_id
+field_name: field_tec_imported_item_id
+entity_type: tec_inventory
+type: string
+settings:
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,29 @@
+uuid: acafdf8f-0c15-4e6e-896e-563c2c55256a
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_color_variation
+    - eck.eck_type.tec_product.tec_product
+    - field.storage.tec_product.field_tec_color_variations
+id: tec_product.tec_product.field_tec_color_variations
+field_name: field_tec_color_variations
+entity_type: tec_product
+bundle: tec_product
+label: Variations
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_product'
+  handler_settings:
+    target_bundles:
+      tec_color_variation: tec_color_variation
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: true
+    auto_create_bundle: ''
+field_type: entity_reference

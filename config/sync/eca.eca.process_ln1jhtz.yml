@@ -1,0 +1,145 @@
+uuid: 560ddaa5-4ee3-46a7-9861-9ffe6a233c0d
+langcode: en
+status: false
+dependencies:
+  module:
+    - eca_content
+    - eca_log
+    - eca_tamper
+id: process_ln1jhtz
+modeller: bpmn_io
+label: 'TEC Colors: Set color term data (clone)'
+version: '1.1'
+weight: null
+events:
+  Event_0ikodly:
+    plugin: 'content_entity:insert'
+    label: Insert
+    configuration:
+      type: 'taxonomy_term tec_colors'
+    successors:
+      -
+        id: Activity_1uk2k7f
+        condition: ''
+  Event_08izgc2:
+    plugin: 'content_entity:update'
+    label: Update
+    configuration:
+      type: 'taxonomy_term tec_colors'
+    successors:
+      -
+        id: Activity_0lnkrbs
+        condition: ''
+conditions:
+  Flow_1tyh6k7:
+    plugin: eca_entity_field_value_changed
+    configuration:
+      negate: false
+      field_name: field_tec_ai_color
+      entity: ''
+  Flow_05fwtvr:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_color_code_html
+      entity: ''
+  Flow_1qq1d8f:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_ai_color
+      negate: true
+      entity: ''
+gateways:
+  Gateway_0bxnowk:
+    type: 0
+    successors:
+      -
+        id: Gateway_08jb1ze
+        condition: Flow_05fwtvr
+      -
+        id: Gateway_1rc9mt0
+        condition: ''
+  Gateway_1rc9mt0:
+    type: 0
+    successors:
+      -
+        id: Activity_1flltgx
+        condition: Flow_1tyh6k7
+  Gateway_08jb1ze:
+    type: 0
+    successors:
+      -
+        id: Activity_1flltgx
+        condition: Flow_1qq1d8f
+actions:
+  Activity_1uk2k7f:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Colors: Set color term data " ECA Model.'
+    successors:
+      -
+        id: Activity_0lqow90
+        condition: ''
+  Activity_19if21f:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished running: "TEC Colors: Set color term data " ECA Model.'
+    successors: {  }
+  Activity_0i0yukt:
+    plugin: eca_set_field_value
+    label: 'Set Term name & save'
+    configuration:
+      field_name: name
+      field_value: '[colorName]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_19if21f
+        condition: ''
+  Activity_0lqow90:
+    plugin: 'eca_tamper:convert_case'
+    label: 'Convert case of Term name'
+    configuration:
+      operation: ucwords
+      eca_data: '[entity:name]'
+      eca_token_name: colorName
+    successors:
+      -
+        id: Activity_0i0yukt
+        condition: ''
+  Activity_0lnkrbs:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Colors: Set color term data " ECA Model.'
+    successors:
+      -
+        id: Gateway_0bxnowk
+        condition: ''
+  Activity_1flltgx:
+    plugin: eca_set_field_value
+    label: 'Set HTML code'
+    configuration:
+      field_name: field_tec_color_code_html
+      field_value: '[entity:field_tec_ai_color:value]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_19if21f
+        condition: ''

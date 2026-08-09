@@ -1,0 +1,84 @@
+label: Files
+description: 'Find and manage files.'
+display:
+  default:
+    display_title: Default
+    display_options:
+      title: Files
+      fields:
+        fid:
+          label: Fid
+        filename:
+          label: Name
+        filesize:
+          label: Size
+        status:
+          label: สถานะ
+          settings:
+            format_custom_false: ชั่วคราว
+            format_custom_true: ถาวร
+        created:
+          label: 'Upload date'
+        changed:
+          label: 'Changed date'
+        count:
+          label: 'Used in'
+        operations:
+          label: Operations
+      pager:
+        options:
+          tags:
+            next: 'next ›'
+            previous: '‹ previous'
+          expose:
+            items_per_page_label: 'Items per page'
+            items_per_page_options_all_label: '- All -'
+            offset_label: Offset
+      exposed_form:
+        options:
+          submit_button: Filter
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+      empty:
+        area_text_custom:
+          content: ไม่พบไฟล์ใดๆ
+      filters:
+        filename:
+          expose:
+            label: Filename
+        status:
+          expose:
+            label: สถานะ
+  page_1:
+    display_title: 'Files overview'
+    display_options:
+      menu:
+        title: Files
+  page_2:
+    display_title: 'File usage'
+    display_options:
+      title: 'File usage'
+      fields:
+        entity_label:
+          label: Entity
+        type:
+          label: 'Entity type'
+        module:
+          label: 'Registering module'
+        count:
+          label: 'Use count'
+      pager:
+        options:
+          tags:
+            next: 'next ›'
+            previous: '‹ previous'
+          expose:
+            items_per_page_label: 'Items per page'
+            items_per_page_options_all_label: '- All -'
+            offset_label: Offset
+      arguments:
+        fid:
+          exception:
+            title: ทั้งหมด

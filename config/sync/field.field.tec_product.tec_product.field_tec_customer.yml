@@ -1,0 +1,31 @@
+uuid: 1e4384f5-87fe-43fc-9d93-2771e779b8f5
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+    - field.storage.tec_product.field_tec_customer
+  module:
+    - epp
+third_party_settings:
+  epp:
+    value: '[current-page:query:target_id]'
+    on_update: 0
+id: tec_product.tec_product.field_tec_customer
+field_name: field_tec_customer
+entity_type: tec_product
+bundle: tec_product
+label: Customer
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: views
+  handler_settings:
+    view:
+      view_name: tec_crm_references
+      display_name: entity_reference_3
+      arguments: {  }
+field_type: entity_reference

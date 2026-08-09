@@ -1,0 +1,25 @@
+uuid: 86cfaabe-0a8b-4556-9b73-817af391a724
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_sales_order
+    - field.storage.tec_order.field_tec_customer
+id: tec_order.tec_sales_order.field_tec_customer
+field_name: field_tec_customer
+entity_type: tec_order
+bundle: tec_sales_order
+label: Customer
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: views
+  handler_settings:
+    view:
+      view_name: tec_crm_references
+      display_name: entity_reference_3
+      arguments: {  }
+field_type: entity_reference

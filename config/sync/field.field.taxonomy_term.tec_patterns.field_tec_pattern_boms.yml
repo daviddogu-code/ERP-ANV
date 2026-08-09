@@ -1,0 +1,27 @@
+uuid: 32511dce-9cf8-4c68-8680-ed658f8f2ba0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_pattern_boms
+    - taxonomy.vocabulary.tec_patterns
+id: taxonomy_term.tec_patterns.field_tec_pattern_boms
+field_name: field_tec_pattern_boms
+entity_type: taxonomy_term
+bundle: tec_patterns
+label: 'Pattern BoMs'
+description: 'Add a BoM for each size of this Pattern.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_gui'
+  handler_settings:
+    target_bundles: {  }
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

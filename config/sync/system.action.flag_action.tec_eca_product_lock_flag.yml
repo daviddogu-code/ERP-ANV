@@ -1,0 +1,15 @@
+uuid: cdd501f4-a392-46cc-a97a-be82fc7038ae
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_eca_product_lock
+  module:
+    - flag
+id: flag_action.tec_eca_product_lock_flag
+label: 'Lock Tec product'
+type: tec_product
+plugin: 'flag_action:tec_eca_product_lock_flag'
+configuration:
+  flag_id: tec_eca_product_lock
+  flag_action: flag

@@ -1,0 +1,31 @@
+uuid: 9b93f58c-f14b-4c1d-878e-ece96c16ef7a
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - eck.eck_type.tec_crm.tec_contact_person
+    - eck.eck_type.tec_order.tec_purchase_order
+    - field.storage.tec_order.field_tec_customer
+id: tec_order.tec_purchase_order.field_tec_customer
+field_name: field_tec_customer
+entity_type: tec_order
+bundle: tec_purchase_order
+label: Customer
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_crm'
+  handler_settings:
+    target_bundles:
+      tec_contact_organization: tec_contact_organization
+      tec_contact_person: tec_contact_person
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: true
+    auto_create_bundle: tec_contact_organization
+field_type: entity_reference

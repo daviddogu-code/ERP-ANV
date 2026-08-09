@@ -1,0 +1,18 @@
+uuid: dc99e637-99cb-400b-8a7f-04f659605363
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_po_line_item
+id: tec_line_item.tec_po_line_item.created
+field_name: created
+entity_type: tec_line_item
+bundle: tec_po_line_item
+label: 'Created on'
+description: 'The time that the entity was created.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: created

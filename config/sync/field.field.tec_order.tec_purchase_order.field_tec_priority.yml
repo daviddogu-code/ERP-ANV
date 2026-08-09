@@ -1,0 +1,23 @@
+uuid: d15c1981-c94e-4dbb-8f8e-e86b132b6e10
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_purchase_order
+    - field.storage.tec_order.field_tec_priority
+  module:
+    - options
+id: tec_order.tec_purchase_order.field_tec_priority
+field_name: field_tec_priority
+entity_type: tec_order
+bundle: tec_purchase_order
+label: Priority
+description: 'This field is not visible to customers.'
+required: false
+translatable: false
+default_value:
+  -
+    value: normal
+default_value_callback: ''
+settings: {  }
+field_type: list_string

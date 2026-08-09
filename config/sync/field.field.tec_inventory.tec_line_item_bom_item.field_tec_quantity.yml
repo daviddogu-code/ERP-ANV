@@ -1,0 +1,25 @@
+uuid: d2900320-ab9a-4a2c-a5df-9e328325f1a0
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_line_item_bom_item
+    - field.storage.tec_inventory.field_tec_quantity
+_core:
+  default_config_hash: 11vgiUYQ2blF3v1W_B6OJj3DF_wt88Q-fdLkwrzFYWI
+id: tec_inventory.tec_line_item_bom_item.field_tec_quantity
+field_name: field_tec_quantity
+entity_type: tec_inventory
+bundle: tec_line_item_bom_item
+label: 'Production requires'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ' units'
+field_type: decimal

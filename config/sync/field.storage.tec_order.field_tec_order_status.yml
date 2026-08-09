@@ -1,0 +1,48 @@
+uuid: c7eb5635-b936-4f7e-9c88-084d30ab0fc7
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - options
+id: tec_order.field_tec_order_status
+field_name: field_tec_order_status
+entity_type: tec_order
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: draft
+      label: Open
+    -
+      value: accounting_verified
+      label: 'Accounting Verified'
+    -
+      value: in_progress_processing
+      label: 'In Processing'
+    -
+      value: ready_for_production
+      label: 'Ready for Production'
+    -
+      value: production_started
+      label: 'Production Started'
+    -
+      value: quality_control_inspection
+      label: 'Quality Control/Inspection'
+    -
+      value: completed_ready_for_delivery
+      label: 'Completed/Ready for Delivery'
+    -
+      value: shipped_delivered
+      label: Shipped/Delivered
+    -
+      value: cancelled
+      label: Cancelled
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

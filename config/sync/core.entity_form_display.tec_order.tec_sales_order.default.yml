@@ -1,0 +1,104 @@
+uuid: 33f4b9f1-b99c-4abc-9ef8-f2c4b2d95a43
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_sales_order
+    - field.field.tec_order.tec_sales_order.field_tec_customer
+    - field.field.tec_order.tec_sales_order.field_tec_line_items
+    - field.field.tec_order.tec_sales_order.field_tec_order_status
+    - field.field.tec_order.tec_sales_order.field_tec_priority
+  module:
+    - field_group
+    - ief_table_view_mode
+    - inline_entity_form
+third_party_settings:
+  field_group:
+    group_sidebar:
+      children:
+        - field_tec_order_status
+        - field_tec_priority
+      label: Details
+      region: content
+      parent_name: ''
+      weight: 3
+      format_type: details
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        open: true
+        description: ''
+        required_fields: true
+id: tec_order.tec_sales_order.default
+targetEntityType: tec_order
+bundle: tec_sales_order
+mode: default
+content:
+  field_tec_customer:
+    type: inline_entity_form_complex
+    weight: 1
+    region: content
+    settings:
+      form_mode: default
+      override_labels: true
+      label_singular: customer
+      label_plural: customers
+      allow_new: true
+      allow_existing: true
+      match_operator: CONTAINS
+      allow_duplicate: false
+      collapsible: false
+      collapsed: false
+      revision: false
+      removed_reference: keep
+    third_party_settings: {  }
+  field_tec_line_items:
+    type: inline_entity_form_complex_table_view_mode
+    weight: 2
+    region: content
+    settings:
+      form_mode: default
+      override_labels: true
+      label_singular: 'line item'
+      label_plural: 'line items'
+      allow_new: true
+      allow_existing: false
+      match_operator: CONTAINS
+      allow_duplicate: true
+      collapsible: false
+      collapsed: false
+      revision: false
+      removed_reference: delete
+    third_party_settings: {  }
+  field_tec_order_status:
+    type: options_select
+    weight: 3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tec_priority:
+    type: options_select
+    weight: 4
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  langcode:
+    type: language_select
+    weight: 2
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  created: true
+  status: true
+  uid: true

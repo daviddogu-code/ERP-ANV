@@ -1,0 +1,125 @@
+uuid: 8fcb981b-55c8-491e-a0a1-1aa24732b5db
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - field.field.tec_inventory.tec_bom_item.field_tec_size_variation
+    - field.storage.tec_inventory.field_tec_size_variation
+  module:
+    - ai_interpolator_eca
+    - eca_content
+    - eca_log
+id: process_uhiwdqa
+modeller: bpmn_io
+label: 'TEC Inventory: Import BoM item'
+version: '1.0'
+weight: -5
+events:
+  Event_1f8iu69:
+    plugin: 'content_entity:insert'
+    label: 'Insert BoM Item'
+    configuration:
+      type: 'tec_inventory tec_bom_item'
+    successors:
+      -
+        id: Activity_1meagnj
+        condition: Flow_110i712
+conditions:
+  Flow_110i712:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_size_variation
+      negate: true
+      entity: ''
+  Flow_0birar7:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_quantity
+      entity: ''
+  Flow_0izr0fb:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_quantity_input
+      negate: true
+      entity: ''
+gateways:
+  Gateway_031mjgn:
+    type: 0
+    successors:
+      -
+        id: Activity_0lq4n16
+        condition: ''
+      -
+        id: Gateway_1bspm76
+        condition: Flow_0birar7
+  Gateway_1bspm76:
+    type: 0
+    successors:
+      -
+        id: Activity_1v75f7b
+        condition: Flow_0izr0fb
+actions:
+  Activity_1meagnj:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Inventory: Import BoM item" ECA Model.'
+    successors:
+      -
+        id: Activity_0fo9e7v
+        condition: ''
+  Activity_0fo9e7v:
+    plugin: eca_token_load_entity_ref
+    label: 'Load Size variation'
+    configuration:
+      field_name_entity_ref: field_tec_size_variation
+      token_name: size
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_1rtrvnh
+        condition: ''
+  Activity_1rtrvnh:
+    plugin: eca_set_field_value
+    label: 'Reference BoM item on Size'
+    configuration:
+      field_name: field_tec_bom
+      field_value: '[entity]'
+      method: 'append:not_full'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: size
+    successors:
+      -
+        id: Gateway_031mjgn
+        condition: ''
+  Activity_0lq4n16:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished: "TEC Inventory: Import BoM item" ECA Model.'
+    successors: {  }
+  Activity_1v75f7b:
+    plugin: eca_ai_interpolator_rule
+    label: 'Interpolate the Quantity'
+    configuration:
+      rule_name: tec_inventory--tec_bom_item--field_tec_quantity
+      overwrite: 1
+      save_entity: 1
+      object: ''
+    successors: {  }

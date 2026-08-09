@@ -1,0 +1,18 @@
+uuid: 57d0675d-3b71-4745-8da7-d7f4011c7c34
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_inventory
+id: taxonomy_term.tec_inventory.name
+field_name: name
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'Material name'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

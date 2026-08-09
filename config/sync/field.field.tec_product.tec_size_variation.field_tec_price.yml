@@ -1,0 +1,28 @@
+uuid: 275bf60c-7327-4064-a939-3fdef0ce7bba
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.storage.tec_product.field_tec_price
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: tec_product.tec_size_variation.field_tec_price
+field_name: field_tec_price
+entity_type: tec_product
+bundle: tec_size_variation
+label: 'Sales price'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: '฿ '
+  suffix: ''
+field_type: decimal

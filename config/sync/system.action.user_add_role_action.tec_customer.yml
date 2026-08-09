@@ -1,0 +1,14 @@
+uuid: 2e77df7b-a67c-4276-b392-5ad1d0fb4804
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.tec_customer
+  module:
+    - user
+id: user_add_role_action.tec_customer
+label: 'Add the Customer role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: tec_customer

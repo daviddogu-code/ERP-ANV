@@ -1,0 +1,20 @@
+uuid: 8d82f291-de94-4725-bba4-8009fc23bc09
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+id: tec_product.tec_product.uid
+field_name: uid
+entity_type: tec_product
+bundle: tec_product
+label: 'Created by'
+description: 'The username of the entity author.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: default
+  handler_settings: {  }
+field_type: entity_reference

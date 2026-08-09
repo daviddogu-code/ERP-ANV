@@ -1,0 +1,19 @@
+uuid: 3ce39ccc-980a-4b15-983c-afb9208e7ba0
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_line_item.field_tec_line_item_bom
+field_name: field_tec_line_item_bom
+entity_type: tec_line_item
+type: entity_reference
+settings:
+  target_type: tec_inventory
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

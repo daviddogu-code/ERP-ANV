@@ -1,0 +1,102 @@
+uuid: e42e599e-eb55-4443-a847-b0d15bb5bdb3
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+    - field.field.tec_product.tec_product.field_product_name
+    - field.storage.tec_product.field_product_name
+  module:
+    - eca_content
+    - eca_log
+    - eca_tamper
+id: process_arru6tx
+modeller: bpmn_io
+label: 'TEC Product: Insert Product entity'
+version: '1.0'
+weight: 2
+events:
+  Event_0ikodly:
+    plugin: 'content_entity:insert'
+    label: Insert
+    configuration:
+      type: 'tec_product tec_product'
+    successors:
+      -
+        id: Activity_1uk2k7f
+        condition: Flow_10dtiva
+conditions:
+  Flow_10dtiva:
+    plugin: eca_entity_type_bundle
+    configuration:
+      negate: false
+      type: 'tec_product tec_product'
+      entity: ''
+  Flow_0hhuzpq:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_product_name
+      negate: true
+      entity: ''
+gateways: {  }
+actions:
+  Activity_1uk2k7f:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Product: Insert product entity" ECA Model.'
+    successors:
+      -
+        id: Activity_0lqow90
+        condition: Flow_0hhuzpq
+  Activity_19if21f:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished running: "TEC Product: Insert product entity" ECA Model.'
+    successors: {  }
+  Activity_0i0yukt:
+    plugin: eca_set_field_value
+    label: 'Set Title & save'
+    configuration:
+      field_name: title
+      field_value: '[entity:field_product_name:value]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_19if21f
+        condition: ''
+  Activity_0lqow90:
+    plugin: 'eca_tamper:convert_case'
+    label: 'Convert case of Product name'
+    configuration:
+      operation: ucwords
+      eca_data: '[entity:field_product_name:value]'
+      eca_token_name: productName
+    successors:
+      -
+        id: Activity_1imyh18
+        condition: ''
+  Activity_1imyh18:
+    plugin: eca_set_field_value
+    label: 'Set Product name'
+    configuration:
+      field_name: field_product_name
+      field_value: '[productName]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_0i0yukt
+        condition: ''

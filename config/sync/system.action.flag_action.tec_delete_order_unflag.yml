@@ -1,0 +1,15 @@
+uuid: daf66e8f-ccf3-4e01-86eb-2f5490970daf
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_delete_order
+  module:
+    - flag
+id: flag_action.tec_delete_order_unflag
+label: 'Unset delete order'
+type: tec_order
+plugin: 'flag_action:tec_delete_order_unflag'
+configuration:
+  flag_id: tec_delete_order
+  flag_action: unflag

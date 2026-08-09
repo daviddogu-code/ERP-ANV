@@ -1,0 +1,65 @@
+uuid: 64b14a53-26a8-4a88-afd3-603e50f071e3
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.tec_line_item.editable
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_color_variation
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_custom_sales_price
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_gui_product
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_bom
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_total
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_total_number
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_order
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_price
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_product
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_quantity
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_size_variation
+  module:
+    - editablefields
+    - field_formatter_class
+    - layout_builder
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+id: tec_line_item.tec_sales_order_line_item.editable
+targetEntityType: tec_line_item
+bundle: tec_sales_order_line_item
+mode: editable
+content:
+  field_tec_quantity:
+    type: editablefields_formatter
+    label: hidden
+    settings:
+      form_mode: default
+      behaviour: inline
+      bypass_access: 0
+      fallback_access: 0
+      display_mode_access: default
+      fallback_edit: 0
+      display_mode_edit: default
+      fields_ajax_trigger: 'field_tec_quantity,field_tec_line_item_total_number,field_tec_line_item_total'
+      fields_ajax_trigger_event: change
+    third_party_settings:
+      field_formatter_class:
+        class: ''
+    weight: 0
+    region: content
+hidden:
+  changed: true
+  created: true
+  field_tec_color_variation: true
+  field_tec_custom_sales_price: true
+  field_tec_gui_product: true
+  field_tec_line_item_bom: true
+  field_tec_line_item_total: true
+  field_tec_line_item_total_number: true
+  field_tec_order: true
+  field_tec_price: true
+  field_tec_product: true
+  field_tec_size_variation: true
+  flag_tec_eca_line_item_lock: true
+  langcode: true
+  title: true

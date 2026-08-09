@@ -1,0 +1,241 @@
+uuid: c51908c8-caad-4982-bade-9ef2427e5ee0
+langcode: en
+status: false
+dependencies:
+  config:
+    - field.field.tec_inventory.tec_bom_item.field_tec_quantity
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_mutation_complete
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_quantity
+    - field.field.tec_inventory.tec_line_item_bom_item.field_tec_quantity
+    - field.storage.tec_inventory.field_tec_mutation_complete
+    - field.storage.tec_inventory.field_tec_quantity
+  module:
+    - eca_content
+    - eca_log
+    - eca_tamper
+id: process_izfwjuv
+modeller: bpmn_io
+label: 'Inventory: Stock manager - Inventory is saved or updated (clone)'
+version: '1.0'
+weight: null
+events:
+  Event_09rtvco:
+    plugin: 'content_entity:update'
+    label: 'Update inventory'
+    configuration:
+      type: 'taxonomy_term tec_inventory'
+    successors:
+      -
+        id: Gateway_0ykg31e
+        condition: ''
+  Event_1ls6aui:
+    plugin: 'content_entity:insert'
+    label: 'Insert inventory'
+    configuration:
+      type: 'taxonomy_term tec_inventory'
+    successors:
+      -
+        id: Gateway_0ykg31e
+        condition: ''
+conditions:
+  Flow_0e7s5b6:
+    plugin: eca_entity_field_value
+    configuration:
+      case: false
+      expected_value: '1'
+      field_name: field_tec_mutation_complete
+      operator: equal
+      type: value
+      negate: true
+      entity: mutationLoaded
+  Flow_1g224ro:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: field_tec_mutation_complete
+      operator: equal
+      type: value
+      entity: mutationLoaded
+  Flow_1p7a2a9:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_stock_level
+      entity: ''
+gateways:
+  Gateway_0ykg31e:
+    type: 0
+    successors:
+      -
+        id: Activity_1m5x8zc
+        condition: ''
+  Gateway_1xjrrnb:
+    type: 0
+    successors:
+      -
+        id: Activity_12m54n7
+        condition: Flow_0e7s5b6
+      -
+        id: Activity_1djh1pc
+        condition: Flow_1g224ro
+  Gateway_148xg67:
+    type: 0
+    successors:
+      -
+        id: Activity_014i850
+        condition: ''
+      -
+        id: Activity_0bwkygi
+        condition: Flow_1p7a2a9
+actions:
+  Activity_014i850:
+    plugin: eca_get_field_value
+    label: 'Get field value and build mutations list'
+    configuration:
+      field_name: field_tec_stock_mutations
+      token_name: mutationsList
+      object: ''
+    successors:
+      -
+        id: Activity_12qfu5v
+        condition: ''
+  Activity_1djh1pc:
+    plugin: eca_list_remove_entity
+    label: 'Drop the 1st Mutation'
+    configuration:
+      token_name: mutationDropped
+      method: first
+      index: ''
+      list_token: mutationsList
+      object: entity
+    successors:
+      -
+        id: Activity_1f5bk5y
+        condition: ''
+  Activity_1cb1uww:
+    plugin: eca_token_load_entity
+    label: 'Load the Mutation'
+    configuration:
+      token_name: mutationLoaded
+      from: id
+      entity_type: tec_inventory
+      entity_id: '[mutationDropped]'
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_1e2f012
+        condition: ''
+  Activity_03rkjk6:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate new stock level'
+    configuration:
+      operation: addition
+      flip: false
+      value: '[mutationLoaded:field_tec_quantity:value]'
+      eca_data: '[entity:field_tec_stock_level:value]'
+      eca_token_name: stocklevelNew
+    successors:
+      -
+        id: Activity_175gvpo
+        condition: ''
+  Activity_175gvpo:
+    plugin: eca_set_field_value
+    label: 'Set mutation status'
+    configuration:
+      field_name: field_tec_mutation_complete
+      field_value: '1'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: mutationLoaded
+    successors:
+      -
+        id: Activity_154us6i
+        condition: ''
+  Activity_154us6i:
+    plugin: eca_set_field_value
+    label: 'Set the new Stock level'
+    configuration:
+      field_name: field_tec_stock_level
+      field_value: '[stocklevelNew]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_0bwkygi:
+    plugin: eca_set_field_value
+    label: 'Set stock level to 0.00'
+    configuration:
+      field_name: field_tec_stock_level
+      field_value: '0.00'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_1e2f012:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Loaded mutation: [mutationLoaded]'
+    successors:
+      -
+        id: Gateway_1xjrrnb
+        condition: ''
+  Activity_1m5x8zc:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: '<strong>Running: Inventory: Stock manager - Inventory is saved or updated ECA Model</strong>'
+    successors:
+      -
+        id: Gateway_148xg67
+        condition: ''
+  Activity_12qfu5v:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'The list of mutations: [mutationsList]'
+    successors:
+      -
+        id: Activity_1djh1pc
+        condition: ''
+  Activity_12m54n7:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Mutation complete value: [mutationLoaded:field_tec_mutation_complete]'
+    successors:
+      -
+        id: Activity_03rkjk6
+        condition: ''
+  Activity_1f5bk5y:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'The dropped mutation: [mutationDropped]'
+    successors:
+      -
+        id: Activity_1cb1uww
+        condition: ''

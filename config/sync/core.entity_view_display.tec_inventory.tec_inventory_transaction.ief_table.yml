@@ -1,0 +1,74 @@
+uuid: 34353fdc-bf5d-4c4f-bb86-9ed1e80534ba
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.tec_inventory.ief_table
+    - eck.eck_type.tec_inventory.tec_inventory_transaction
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_inventory
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_mutation_complete
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_mutation_note
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_quantity
+  module:
+    - field_formatter_class
+    - user
+_core:
+  default_config_hash: z1W9MSSzvRzcxg4AHAH9LONEOvpW91nBpbeTqsywMdM
+id: tec_inventory.tec_inventory_transaction.ief_table
+targetEntityType: tec_inventory
+bundle: tec_inventory_transaction
+mode: ief_table
+content:
+  created:
+    type: timestamp
+    label: hidden
+    settings:
+      date_format: medium
+      custom_date_format: ''
+      timezone: ''
+      tooltip:
+        date_format: long
+        custom_date_format: ''
+      time_diff:
+        enabled: false
+        future_format: '@interval hence'
+        past_format: '@interval ago'
+        granularity: 2
+        refresh: 60
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_tec_quantity:
+    type: number_decimal
+    label: hidden
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 5
+      prefix_suffix: true
+    third_party_settings:
+      field_formatter_class:
+        class: ''
+    weight: 1
+    region: content
+  title:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: -5
+    region: content
+  uid:
+    type: author
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  changed: true
+  field_tec_inventory: true
+  field_tec_mutation_complete: true
+  field_tec_mutation_note: true
+  langcode: true

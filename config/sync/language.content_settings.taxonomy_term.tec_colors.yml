@@ -1,0 +1,11 @@
+uuid: e757caad-bbb1-46b5-b664-f541ccac4e19
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_colors
+id: taxonomy_term.tec_colors
+target_entity_type_id: taxonomy_term
+target_bundle: tec_colors
+default_langcode: site_default
+language_alterable: false

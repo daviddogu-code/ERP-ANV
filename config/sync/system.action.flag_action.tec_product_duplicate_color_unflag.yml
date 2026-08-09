@@ -1,0 +1,15 @@
+uuid: 8035ff1c-9915-4d87-89a9-615cdbb3ff4a
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_product_duplicate_color
+  module:
+    - flag
+id: flag_action.tec_product_duplicate_color_unflag
+label: 'Unset duplicate button'
+type: tec_product
+plugin: 'flag_action:tec_product_duplicate_color_unflag'
+configuration:
+  flag_id: tec_product_duplicate_color
+  flag_action: unflag

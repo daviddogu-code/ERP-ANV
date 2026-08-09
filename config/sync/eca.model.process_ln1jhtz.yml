@@ -1,0 +1,347 @@
+uuid: d4e21ff8-c8c7-4ff8-a431-4e9d29b48140
+langcode: en
+status: true
+dependencies:
+  config:
+    - eca.eca.process_ln1jhtz
+id: process_ln1jhtz
+label: 'TEC Colors: Set color term data (clone)'
+tags:
+  - untagged
+documentation: ''
+filename: ''
+modeldata: |
+  <?xml version="1.0" encoding="UTF-8"?>
+  <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:qa="http://some-company/schema/bpmn/qa" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+    <bpmn2:process id="Process_lN1Jhtz" name="TEC Colors: Set color term data (clone)" isExecutable="false" camunda:versionTag="1.1">
+      <bpmn2:startEvent id="Event_0ikodly" name="Insert" camunda:modelerTemplate="org.drupal.event.content_entity:insert">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="content_entity:insert"/>
+          </camunda:properties>
+          <camunda:field name="type">
+            <camunda:string>taxonomy_term tec_colors</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:outgoing>Flow_0u07qsq</bpmn2:outgoing>
+      </bpmn2:startEvent>
+      <bpmn2:task id="Activity_1uk2k7f" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_write_log_message"/>
+          </camunda:properties>
+          <camunda:field name="channel">
+            <camunda:string/>
+          </camunda:field>
+          <camunda:field name="severity">
+            <camunda:string>7</camunda:string>
+          </camunda:field>
+          <camunda:field name="message">
+            <camunda:string>Running: "TEC Colors: Set color term data " ECA Model.</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_0u07qsq</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_191rnq2</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:task id="Activity_19if21f" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_write_log_message"/>
+          </camunda:properties>
+          <camunda:field name="channel">
+            <camunda:string/>
+          </camunda:field>
+          <camunda:field name="severity">
+            <camunda:string>7</camunda:string>
+          </camunda:field>
+          <camunda:field name="message">
+            <camunda:string>Finished running: "TEC Colors: Set color term data " ECA Model.</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_1ox049l</bpmn2:incoming>
+        <bpmn2:incoming>Flow_0iodlf7</bpmn2:incoming>
+      </bpmn2:task>
+      <bpmn2:task id="Activity_0i0yukt" name="Set Term name &amp; save" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_set_field_value"/>
+          </camunda:properties>
+          <camunda:field name="method">
+            <camunda:string>set:clear</camunda:string>
+          </camunda:field>
+          <camunda:field name="strip_tags">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="trim">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="field_name">
+            <camunda:string>name</camunda:string>
+          </camunda:field>
+          <camunda:field name="save_entity">
+            <camunda:string>yes</camunda:string>
+          </camunda:field>
+          <camunda:field name="field_value">
+            <camunda:string>[colorName]</camunda:string>
+          </camunda:field>
+          <camunda:field name="object">
+            <camunda:string/>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_148b5mk</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_1ox049l</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:task id="Activity_0lqow90" name="Convert case of Term name" camunda:modelerTemplate="org.drupal.action.eca_tamper:convert_case">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_tamper:convert_case"/>
+          </camunda:properties>
+          <camunda:field name="eca_data">
+            <camunda:string>[entity:name]</camunda:string>
+          </camunda:field>
+          <camunda:field name="operation">
+            <camunda:string>ucwords</camunda:string>
+          </camunda:field>
+          <camunda:field name="eca_token_name">
+            <camunda:string>colorName</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_191rnq2</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_148b5mk</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_148b5mk" sourceRef="Activity_0lqow90" targetRef="Activity_0i0yukt"/>
+      <bpmn2:sequenceFlow id="Flow_191rnq2" sourceRef="Activity_1uk2k7f" targetRef="Activity_0lqow90"/>
+      <bpmn2:sequenceFlow id="Flow_0u07qsq" sourceRef="Event_0ikodly" targetRef="Activity_1uk2k7f"/>
+      <bpmn2:startEvent id="Event_08izgc2" name="Update" camunda:modelerTemplate="org.drupal.event.content_entity:update">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="content_entity:update"/>
+          </camunda:properties>
+          <camunda:field name="type">
+            <camunda:string>taxonomy_term tec_colors</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:outgoing>Flow_111znsz</bpmn2:outgoing>
+      </bpmn2:startEvent>
+      <bpmn2:task id="Activity_0lnkrbs" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_write_log_message"/>
+          </camunda:properties>
+          <camunda:field name="channel">
+            <camunda:string/>
+          </camunda:field>
+          <camunda:field name="severity">
+            <camunda:string>7</camunda:string>
+          </camunda:field>
+          <camunda:field name="message">
+            <camunda:string>Running: "TEC Colors: Set color term data " ECA Model.</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_111znsz</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_1594sio</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_111znsz" sourceRef="Event_08izgc2" targetRef="Activity_0lnkrbs"/>
+      <bpmn2:sequenceFlow id="Flow_1594sio" sourceRef="Activity_0lnkrbs" targetRef="Gateway_0bxnowk"/>
+      <bpmn2:sequenceFlow id="Flow_1tyh6k7" name="AI code has changed" camunda:modelerTemplate="org.drupal.condition.eca_entity_field_value_changed" sourceRef="Gateway_1rc9mt0" targetRef="Activity_1flltgx">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_entity_field_value_changed"/>
+          </camunda:properties>
+          <camunda:field name="field_name">
+            <camunda:string>field_tec_ai_color</camunda:string>
+          </camunda:field>
+          <camunda:field name="negate">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="entity">
+            <camunda:string/>
+          </camunda:field>
+        </bpmn2:extensionElements>
+      </bpmn2:sequenceFlow>
+      <bpmn2:sequenceFlow id="Flow_1ox049l" sourceRef="Activity_0i0yukt" targetRef="Activity_19if21f"/>
+      <bpmn2:exclusiveGateway id="Gateway_0bxnowk">
+        <bpmn2:incoming>Flow_1594sio</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_05fwtvr</bpmn2:outgoing>
+        <bpmn2:outgoing>Flow_198qw8j</bpmn2:outgoing>
+      </bpmn2:exclusiveGateway>
+      <bpmn2:sequenceFlow id="Flow_05fwtvr" name="No color code" camunda:modelerTemplate="org.drupal.condition.eca_entity_field_value_empty" sourceRef="Gateway_0bxnowk" targetRef="Gateway_08jb1ze">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_entity_field_value_empty"/>
+          </camunda:properties>
+          <camunda:field name="field_name">
+            <camunda:string>field_tec_color_code_html</camunda:string>
+          </camunda:field>
+          <camunda:field name="negate">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="entity">
+            <camunda:string/>
+          </camunda:field>
+        </bpmn2:extensionElements>
+      </bpmn2:sequenceFlow>
+      <bpmn2:exclusiveGateway id="Gateway_1rc9mt0">
+        <bpmn2:incoming>Flow_198qw8j</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_1tyh6k7</bpmn2:outgoing>
+      </bpmn2:exclusiveGateway>
+      <bpmn2:task id="Activity_1flltgx" name="Set HTML code" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_set_field_value"/>
+          </camunda:properties>
+          <camunda:field name="method">
+            <camunda:string>set:clear</camunda:string>
+          </camunda:field>
+          <camunda:field name="strip_tags">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="trim">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="field_name">
+            <camunda:string>field_tec_color_code_html</camunda:string>
+          </camunda:field>
+          <camunda:field name="save_entity">
+            <camunda:string>yes</camunda:string>
+          </camunda:field>
+          <camunda:field name="field_value">
+            <camunda:string>[entity:field_tec_ai_color:value]</camunda:string>
+          </camunda:field>
+          <camunda:field name="object">
+            <camunda:string/>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_1qq1d8f</bpmn2:incoming>
+        <bpmn2:incoming>Flow_1tyh6k7</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_0iodlf7</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_1qq1d8f" name="Has AI code" camunda:modelerTemplate="org.drupal.condition.eca_entity_field_value_empty" sourceRef="Gateway_08jb1ze" targetRef="Activity_1flltgx">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_entity_field_value_empty"/>
+          </camunda:properties>
+          <camunda:field name="field_name">
+            <camunda:string>field_tec_ai_color</camunda:string>
+          </camunda:field>
+          <camunda:field name="negate">
+            <camunda:string>yes</camunda:string>
+          </camunda:field>
+          <camunda:field name="entity">
+            <camunda:string/>
+          </camunda:field>
+        </bpmn2:extensionElements>
+      </bpmn2:sequenceFlow>
+      <bpmn2:exclusiveGateway id="Gateway_08jb1ze">
+        <bpmn2:incoming>Flow_05fwtvr</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_1qq1d8f</bpmn2:outgoing>
+      </bpmn2:exclusiveGateway>
+      <bpmn2:sequenceFlow id="Flow_198qw8j" sourceRef="Gateway_0bxnowk" targetRef="Gateway_1rc9mt0"/>
+      <bpmn2:sequenceFlow id="Flow_0iodlf7" sourceRef="Activity_1flltgx" targetRef="Activity_19if21f"/>
+    </bpmn2:process>
+    <bpmndi:BPMNDiagram id="sid-71b1e7d4-0f0a-4899-b1ab-3ddb12efb079">
+      <bpmndi:BPMNPlane id="sid-70a2c421-a2f8-4d02-b0ca-33e8009476d7" bpmnElement="Process_kDVJIeS">
+        <bpmndi:BPMNShape id="Event_0ikodly_di" bpmnElement="Event_0ikodly">
+          <dc:Bounds x="-408" y="272" width="36" height="36"/>
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="-404" y="315" width="29" height="14"/>
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_1uk2k7f_di" bpmnElement="Activity_1uk2k7f">
+          <dc:Bounds x="-290" y="250" width="100" height="80"/>
+          <bpmndi:BPMNLabel/>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_0lqow90_di" bpmnElement="Activity_0lqow90">
+          <dc:Bounds x="-140" y="250" width="100" height="80"/>
+          <bpmndi:BPMNLabel/>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_0i0yukt_di" bpmnElement="Activity_0i0yukt">
+          <dc:Bounds x="10" y="250" width="100" height="80"/>
+          <bpmndi:BPMNLabel/>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_19if21f_di" bpmnElement="Activity_19if21f">
+          <dc:Bounds x="180" y="250" width="100" height="80"/>
+          <bpmndi:BPMNLabel/>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Event_08izgc2_di" bpmnElement="Event_08izgc2">
+          <dc:Bounds x="362" y="422" width="36" height="36"/>
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="362" y="465" width="36" height="14"/>
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_0lnkrbs_di" bpmnElement="Activity_0lnkrbs">
+          <dc:Bounds x="450" y="400" width="100" height="80"/>
+          <bpmndi:BPMNLabel/>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Gateway_0bxnowk_di" bpmnElement="Gateway_0bxnowk" isMarkerVisible="true">
+          <dc:Bounds x="605" y="545" width="50" height="50"/>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Gateway_1rc9mt0_di" bpmnElement="Gateway_1rc9mt0" isMarkerVisible="true">
+          <dc:Bounds x="605" y="665" width="50" height="50"/>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_1flltgx_di" bpmnElement="Activity_1flltgx">
+          <dc:Bounds x="290" y="530" width="100" height="80"/>
+          <bpmndi:BPMNLabel/>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Gateway_08jb1ze_di" bpmnElement="Gateway_08jb1ze" isMarkerVisible="true">
+          <dc:Bounds x="475" y="545" width="50" height="50"/>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNEdge id="Flow_148b5mk_di" bpmnElement="Flow_148b5mk">
+          <di:waypoint x="-40" y="290"/>
+          <di:waypoint x="10" y="290"/>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_191rnq2_di" bpmnElement="Flow_191rnq2">
+          <di:waypoint x="-190" y="290"/>
+          <di:waypoint x="-140" y="290"/>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_0u07qsq_di" bpmnElement="Flow_0u07qsq">
+          <di:waypoint x="-372" y="290"/>
+          <di:waypoint x="-290" y="290"/>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_1ox049l_di" bpmnElement="Flow_1ox049l">
+          <di:waypoint x="110" y="290"/>
+          <di:waypoint x="180" y="290"/>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_111znsz_di" bpmnElement="Flow_111znsz">
+          <di:waypoint x="398" y="440"/>
+          <di:waypoint x="450" y="440"/>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_1594sio_di" bpmnElement="Flow_1594sio">
+          <di:waypoint x="550" y="440"/>
+          <di:waypoint x="630" y="440"/>
+          <di:waypoint x="630" y="545"/>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_1tyh6k7_di" bpmnElement="Flow_1tyh6k7">
+          <di:waypoint x="605" y="690"/>
+          <di:waypoint x="340" y="690"/>
+          <di:waypoint x="340" y="610"/>
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="409" y="647" width="63" height="27"/>
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_05fwtvr_di" bpmnElement="Flow_05fwtvr">
+          <di:waypoint x="605" y="570"/>
+          <di:waypoint x="525" y="570"/>
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="536" y="550" width="69" height="14"/>
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_198qw8j_di" bpmnElement="Flow_198qw8j">
+          <di:waypoint x="630" y="595"/>
+          <di:waypoint x="630" y="665"/>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_1qq1d8f_di" bpmnElement="Flow_1qq1d8f">
+          <di:waypoint x="475" y="570"/>
+          <di:waypoint x="390" y="570"/>
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="402" y="552" width="61" height="14"/>
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_0iodlf7_di" bpmnElement="Flow_0iodlf7">
+          <di:waypoint x="290" y="570"/>
+          <di:waypoint x="230" y="570"/>
+          <di:waypoint x="230" y="330"/>
+        </bpmndi:BPMNEdge>
+      </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+  </bpmn2:definitions>

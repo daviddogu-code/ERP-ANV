@@ -1,0 +1,183 @@
+uuid: 0feb4263-ca93-439b-aa90-ada8225639a5
+langcode: en
+status: true
+dependencies:
+  config:
+    - eca.eca.process_v0gguvo
+id: process_v0gguvo
+label: 'TEC Order: Excel lover checkout'
+tags:
+  - untagged
+documentation: ''
+filename: ''
+modeldata: |
+  <?xml version="1.0" encoding="UTF-8"?>
+  <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:qa="http://some-company/schema/bpmn/qa" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+    <bpmn2:process id="Process_v0ggUVO" name="TEC Order: Excel lover checkout" isExecutable="true" camunda:versionTag="1.0">
+      <bpmn2:startEvent id="Event_1y2gwcn" name="Flag&#10;" camunda:modelerTemplate="org.drupal.event.flag:flag">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="flag:flag" />
+          </camunda:properties>
+        </bpmn2:extensionElements>
+        <bpmn2:outgoing>Flow_0m4vf76</bpmn2:outgoing>
+      </bpmn2:startEvent>
+      <bpmn2:task id="Activity_10h819l" name="Unflag" camunda:modelerTemplate="org.drupal.action.flag_delete_flagging">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="flag_delete_flagging" />
+          </camunda:properties>
+          <camunda:field name="object">
+            <camunda:string>flagging</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_0m4vf76</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_01z9oqf</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_0m4vf76" name="Flag check" camunda:modelerTemplate="org.drupal.condition.eca_scalar" sourceRef="Event_1y2gwcn" targetRef="Activity_10h819l">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_scalar" />
+          </camunda:properties>
+          <camunda:field name="left">
+            <camunda:string>[flag]</camunda:string>
+          </camunda:field>
+          <camunda:field name="operator">
+            <camunda:string>equal</camunda:string>
+          </camunda:field>
+          <camunda:field name="right">
+            <camunda:string>tec_order_checkout_excel</camunda:string>
+          </camunda:field>
+          <camunda:field name="type">
+            <camunda:string>value</camunda:string>
+          </camunda:field>
+          <camunda:field name="case">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="negate">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+      </bpmn2:sequenceFlow>
+      <bpmn2:task id="Activity_03gim3q" name="Redirect" camunda:modelerTemplate="org.drupal.action.action_goto_action">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="action_goto_action" />
+          </camunda:properties>
+          <camunda:field name="url">
+            <camunda:string>[contact:url]</camunda:string>
+          </camunda:field>
+          <camunda:field name="replace_tokens">
+            <camunda:string>yes</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_05igvrn</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_1ofxeef</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_01z9oqf" sourceRef="Activity_10h819l" targetRef="Activity_02ih4p8" />
+      <bpmn2:task id="Activity_02ih4p8" name="Load the CRM entity" camunda:modelerTemplate="org.drupal.action.eca_token_load_entity_ref">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_token_load_entity_ref" />
+          </camunda:properties>
+          <camunda:field name="token_name">
+            <camunda:string>contact</camunda:string>
+          </camunda:field>
+          <camunda:field name="field_name_entity_ref">
+            <camunda:string>field_tec_customer</camunda:string>
+          </camunda:field>
+          <camunda:field name="from">
+            <camunda:string>current</camunda:string>
+          </camunda:field>
+          <camunda:field name="entity_type">
+            <camunda:string>_none</camunda:string>
+          </camunda:field>
+          <camunda:field name="entity_id">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:field name="revision_id">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:field name="langcode">
+            <camunda:string>_interface</camunda:string>
+          </camunda:field>
+          <camunda:field name="latest_revision">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="unchanged">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="properties">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:field name="object">
+            <camunda:string></camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_01z9oqf</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_05igvrn</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_05igvrn" sourceRef="Activity_02ih4p8" targetRef="Activity_03gim3q" />
+      <bpmn2:task id="Activity_09dlzcb" name="Show a message" camunda:modelerTemplate="org.drupal.action.action_message_action">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="action_message_action" />
+          </camunda:properties>
+          <camunda:field name="message">
+            <camunda:string>&lt;strong&gt;Checkout successful.
+  Further magic will happen here in the next release.&lt;/strong&gt;</camunda:string>
+          </camunda:field>
+          <camunda:field name="replace_tokens">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_1ofxeef</bpmn2:incoming>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_1ofxeef" sourceRef="Activity_03gim3q" targetRef="Activity_09dlzcb" />
+    </bpmn2:process>
+    <bpmndi:BPMNDiagram id="sid-0e26bfc5-f358-4507-aa55-7109867ff170">
+      <bpmndi:BPMNPlane id="sid-bebc50e4-d69a-4002-a079-b4fdb56a2149" bpmnElement="Process_v0ggUVO">
+        <bpmndi:BPMNShape id="Event_1y2gwcn_di" bpmnElement="Event_1y2gwcn">
+          <dc:Bounds x="312" y="372" width="36" height="36" />
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="319" y="415" width="22" height="27" />
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_10h819l_di" bpmnElement="Activity_10h819l">
+          <dc:Bounds x="440" y="350" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_02ih4p8_di" bpmnElement="Activity_02ih4p8">
+          <dc:Bounds x="630" y="350" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_03gim3q_di" bpmnElement="Activity_03gim3q">
+          <dc:Bounds x="820" y="350" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_09dlzcb_di" bpmnElement="Activity_09dlzcb">
+          <dc:Bounds x="1010" y="350" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNEdge id="Flow_0m4vf76_di" bpmnElement="Flow_0m4vf76">
+          <di:waypoint x="348" y="390" />
+          <di:waypoint x="440" y="390" />
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="353" y="372" width="54" height="14" />
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_01z9oqf_di" bpmnElement="Flow_01z9oqf">
+          <di:waypoint x="540" y="390" />
+          <di:waypoint x="630" y="390" />
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_05igvrn_di" bpmnElement="Flow_05igvrn">
+          <di:waypoint x="730" y="390" />
+          <di:waypoint x="820" y="390" />
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_1ofxeef_di" bpmnElement="Flow_1ofxeef">
+          <di:waypoint x="920" y="390" />
+          <di:waypoint x="1010" y="390" />
+        </bpmndi:BPMNEdge>
+      </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+  </bpmn2:definitions>

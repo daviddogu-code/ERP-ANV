@@ -1,0 +1,57 @@
+uuid: 8ac3a29b-eb1f-4d32-94ae-2e3722c33b26
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: tec_inventory_inventory_term_page
+label: 'TEC Inventory: Inventory term page'
+code: |-
+  /* Removing the Feed icons */
+  .feed-icons {
+    display: none;
+  }
+
+  /* Styling fields */
+  /* Stock level */
+  .field--name-field-tec-stock-level .field__item {
+      font-weight: bold;
+  }
+
+  /* The Units section */
+  #units-section .inline-block {
+  	min-width: 190px;
+      width: auto;
+  	vertical-align: top;
+      margin-right: 30px;
+  }
+
+  /* For some reason the first block has margin */
+  #units-section .block:first-child h2.block-title {
+      margin-top: 0;
+  }
+
+  /* Styling the supplier */
+  .field--name-field-tec-vendor {
+  	font-weight: bold;
+  }
+
+  /* The right sidebar */
+  /* The description block */
+  .block-field-blocktaxonomy-termtec-inventorydescription {
+      background-color: #eee;
+      padding: 10px;
+      border-radius: 1px;
+  }
+media: all
+preprocess: true
+conditions:
+  'entity_bundle:taxonomy_term':
+    id: 'entity_bundle:taxonomy_term'
+    negate: false
+    context_mapping:
+      taxonomy_term: '@taxonomy_term.taxonomy_term_route_context:taxonomy_term'
+    bundles:
+      tec_inventory: tec_inventory
+contexts: {  }
+conditions_require_all: true

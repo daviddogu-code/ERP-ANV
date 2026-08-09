@@ -1,0 +1,9 @@
+uuid: befab943-6ef3-4912-b7bc-a6ee1f2119c2
+langcode: en
+status: true
+dependencies: {  }
+name: Materials
+vid: tec_materials
+description: 'Various types of materials'
+weight: 0
+new_revision: false

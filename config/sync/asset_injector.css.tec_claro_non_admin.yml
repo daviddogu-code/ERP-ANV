@@ -1,0 +1,54 @@
+uuid: 1f76d1f9-2c88-4861-988b-1d655ffe4f77
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+    - user
+id: tec_claro_non_admin
+label: 'Claro non-admin'
+code: |-
+  /* Disables certain regions of Claro on certain paths, but not for Admins. */
+  /* Claro resets */
+  /* @TODO: debug the core issue */
+  /* On ECK product entity edit, the fields mis-align */
+  .js-form-item.form-item.js-form-type-select.form-type--select.js-form-item-field-tec-product-type.form-item--field-tec-product-type {
+    margin-top: 0px;
+      padding-top: 2px;
+  }
+
+  .content-header.clearfix {
+      display: none;
+  }
+
+  /* FEEDS */
+  .path-feed .form-type--vertical-tabs {
+      display:none;
+  }
+
+  /* TAXONOMY */
+  /* Removing relations */
+  #edit-relations {
+  	display: none;
+  }
+
+  /* VERTICAL TABS */
+  .vertical-tabs {
+  	display: none;
+  }
+media: all
+preprocess: true
+conditions:
+  request_path:
+    id: request_path
+    negate: false
+    pages: "/admin/content/tec_product/*\r\n/tec_product/*/edit\r\n/tec_product/*/delete\r\n/tec_inventory/*/edit\r\n/tec_inventory/*/delete\r\n/admin/structure/taxonomy/manage/tec_inventory/*\r\n/admin/structure/taxonomy/manage/tec_patterns/*\r\n/taxonomy/term/*/edit\r\n/feed/*\r\n/bom/*/magic\r\n/admin/content/tec_inventory/add/tec_inventory_transaction\r\n/admin/structure/taxonomy/*\r\n/admin/*\r\n/tec_crm/*/edit\r\n/tec_crm/*/delete"
+  user_role:
+    id: user_role
+    negate: true
+    context_mapping:
+      user: '@user.current_user_context:current_user'
+    roles:
+      administrator: administrator
+contexts: {  }
+conditions_require_all: true

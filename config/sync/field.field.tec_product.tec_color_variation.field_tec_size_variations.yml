@@ -1,0 +1,29 @@
+uuid: 802b2ca4-9684-4f7f-ab19-331d7a9e2280
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_color_variation
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.storage.tec_product.field_tec_size_variations
+id: tec_product.tec_color_variation.field_tec_size_variations
+field_name: field_tec_size_variations
+entity_type: tec_product
+bundle: tec_color_variation
+label: Sizes
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_product'
+  handler_settings:
+    target_bundles:
+      tec_size_variation: tec_size_variation
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: tec_color_variation
+field_type: entity_reference

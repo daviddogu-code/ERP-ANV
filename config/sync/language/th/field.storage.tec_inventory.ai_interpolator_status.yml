@@ -1,0 +1,6 @@
+settings:
+  allowed_values:
+    1:
+      label: กำลังดำเนินการ
+    2:
+      label: ไม่ผ่าน

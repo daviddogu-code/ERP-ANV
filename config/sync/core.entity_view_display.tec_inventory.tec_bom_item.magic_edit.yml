@@ -1,0 +1,93 @@
+uuid: 733852d9-42cb-48bf-99fb-d16162a6134f
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.tec_inventory.magic_edit
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - field.field.tec_inventory.tec_bom_item.ai_interpolator_status
+    - field.field.tec_inventory.tec_bom_item.feeds_item
+    - field.field.tec_inventory.tec_bom_item.field_tec_color_swatch_vf
+    - field.field.tec_inventory.tec_bom_item.field_tec_imported_item_id
+    - field.field.tec_inventory.tec_bom_item.field_tec_inventory
+    - field.field.tec_inventory.tec_bom_item.field_tec_production_requires_vf
+    - field.field.tec_inventory.tec_bom_item.field_tec_quantity
+    - field.field.tec_inventory.tec_bom_item.field_tec_quantity_input
+    - field.field.tec_inventory.tec_bom_item.field_tec_size_variation
+  module:
+    - ds
+    - editablefields
+    - field_formatter_class
+    - layout_builder
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+  ds:
+    layout:
+      id: layout_twocol_section
+      library: layout_builder/twocol_section
+      disable_css: false
+      entity_classes: all_classes
+      settings:
+        label: ''
+        column_widths: 50-50
+    regions:
+      first:
+        - field_tec_inventory
+      second:
+        - field_tec_quantity_input
+id: tec_inventory.tec_bom_item.magic_edit
+targetEntityType: tec_inventory
+bundle: tec_bom_item
+mode: magic_edit
+content:
+  field_tec_inventory:
+    type: editablefields_formatter
+    label: hidden
+    settings:
+      form_mode: default
+      behaviour: inline
+      bypass_access: 0
+      fallback_access: 0
+      display_mode_access: default
+      fallback_edit: 0
+      display_mode_edit: default
+      fields_ajax_trigger: field_tec_inventory
+      fields_ajax_trigger_event: change
+    third_party_settings:
+      field_formatter_class:
+        class: ''
+    weight: 0
+    region: first
+  field_tec_quantity_input:
+    type: editablefields_formatter
+    label: hidden
+    settings:
+      form_mode: default
+      behaviour: inline
+      bypass_access: 0
+      fallback_access: 0
+      display_mode_access: default
+      fallback_edit: 0
+      display_mode_edit: default
+      fields_ajax_trigger: field_tec_quantity_input
+      fields_ajax_trigger_event: change
+    third_party_settings:
+      field_formatter_class:
+        class: ''
+    weight: 1
+    region: second
+hidden:
+  ai_interpolator_status: true
+  changed: true
+  created: true
+  feeds_item: true
+  field_tec_color_swatch_vf: true
+  field_tec_imported_item_id: true
+  field_tec_production_requires_vf: true
+  field_tec_quantity: true
+  field_tec_size_variation: true
+  langcode: true
+  title: true
+  uid: true

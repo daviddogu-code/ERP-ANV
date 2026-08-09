@@ -1,0 +1,30 @@
+uuid: 29430b88-131a-4dbb-a564-27ee61d9a938
+langcode: en
+status: false
+dependencies:
+  module:
+    - eck
+id: tec_order_sales_save_continue
+label: 'TEC Order: Sales order save & continue'
+bundles:
+  - tec_sales_order
+entity_type: tec_order
+global: true
+flag_short: '<img src="/sites/default/files/000-save-21.png" title="Save & Continue">Save and continue'
+flag_long: ''
+flag_message: ''
+unflag_short: 'Unset save & continue'
+unflag_long: ''
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_order'
+link_type: reload
+flagTypeConfig:
+  show_in_links: {  }
+  show_as_field: true
+  show_on_form: false
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig: {  }

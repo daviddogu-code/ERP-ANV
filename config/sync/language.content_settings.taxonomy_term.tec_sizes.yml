@@ -1,0 +1,11 @@
+uuid: 0fda892f-3706-4fae-b52d-50dd12dbf673
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_sizes
+id: taxonomy_term.tec_sizes
+target_entity_type_id: taxonomy_term
+target_bundle: tec_sizes
+default_langcode: site_default
+language_alterable: false

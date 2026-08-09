@@ -1,0 +1,14 @@
+uuid: 0fe4aba1-2fe1-404c-bc64-3b448b2033aa
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.tec_manager
+  module:
+    - user
+id: user_remove_role_action.tec_manager
+label: 'Remove the Manager role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: tec_manager

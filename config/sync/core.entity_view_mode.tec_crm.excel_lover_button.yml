@@ -1,0 +1,11 @@
+uuid: bc9a0549-7454-46e0-8445-f71a81cc29c5
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.excel_lover_button
+label: 'Excel lover button'
+description: 'Render the Flag link in difficult places, such as empty view texts.'
+targetEntityType: tec_crm
+cache: true

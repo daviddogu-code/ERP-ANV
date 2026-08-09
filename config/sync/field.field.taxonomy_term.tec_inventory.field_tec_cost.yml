@@ -1,0 +1,28 @@
+uuid: 912db827-0237-42f9-aa1e-88d5b3a4650e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_cost
+    - taxonomy.vocabulary.tec_inventory
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: taxonomy_term.tec_inventory.field_tec_cost
+field_name: field_tec_cost
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'Cost by UoP'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: '฿ '
+  suffix: ''
+field_type: decimal

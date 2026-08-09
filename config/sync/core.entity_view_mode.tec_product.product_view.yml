@@ -1,0 +1,11 @@
+uuid: e73e1cf1-d482-4dce-ae49-6077dee7bead
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_product.product_view
+label: 'Product view'
+description: 'View mode for rendering Color variations on Product full view.'
+targetEntityType: tec_product
+cache: true

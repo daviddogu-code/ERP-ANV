@@ -1,0 +1,24 @@
+uuid: 97d47f97-8ca1-4d5c-a4b0-aa912fc71008
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_line_item.field_tec_line_item_total_number
+field_name: field_tec_line_item_total_number
+entity_type: tec_line_item
+type: decimal
+settings:
+  precision: 10
+  scale: 2
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

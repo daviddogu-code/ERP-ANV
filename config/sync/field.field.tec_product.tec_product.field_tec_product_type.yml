@@ -1,0 +1,29 @@
+uuid: bf8738aa-5f95-496c-a44f-d357a593734b
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+    - field.storage.tec_product.field_tec_product_type
+    - taxonomy.vocabulary.tec_product_types
+id: tec_product.tec_product.field_tec_product_type
+field_name: field_tec_product_type
+entity_type: tec_product
+bundle: tec_product
+label: 'Product type'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tec_product_types: tec_product_types
+    sort:
+      field: name
+      direction: asc
+    auto_create: true
+    auto_create_bundle: ''
+field_type: entity_reference

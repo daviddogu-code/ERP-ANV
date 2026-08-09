@@ -1,0 +1,34 @@
+uuid: 239c7e57-cdfd-4923-bc42-bf71368d87fd
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_color_variation
+    - field.storage.tec_product.field_tec_colors
+    - taxonomy.vocabulary.tec_colors
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: tec_product.tec_color_variation.field_tec_colors
+field_name: field_tec_colors
+entity_type: tec_product
+bundle: tec_color_variation
+label: Color
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tec_colors: tec_colors
+    sort:
+      field: name
+      direction: asc
+    auto_create: true
+    auto_create_bundle: ''
+field_type: entity_reference

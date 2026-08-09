@@ -1,0 +1,24 @@
+uuid: 84a91a95-4445-480f-b248-c4a5418912ae
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_line_item.field_tec_price
+field_name: field_tec_price
+entity_type: tec_line_item
+type: decimal
+settings:
+  precision: 10
+  scale: 2
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

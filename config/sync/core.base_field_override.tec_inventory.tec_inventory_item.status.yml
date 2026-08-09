@@ -1,0 +1,22 @@
+uuid: abd18407-551f-424e-b3c8-3c86673d2bc2
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_inventory_item
+id: tec_inventory.tec_inventory_item.status
+field_name: status
+entity_type: tec_inventory
+bundle: tec_inventory_item
+label: Active
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

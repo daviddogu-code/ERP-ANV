@@ -1,0 +1,14 @@
+uuid: 821ae67f-4073-4771-a3eb-cdc6768f0654
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.tec_manager
+  module:
+    - user
+id: user_add_role_action.tec_manager
+label: 'Add the Manager role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: tec_manager

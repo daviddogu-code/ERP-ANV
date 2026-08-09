@@ -1,0 +1,121 @@
+uuid: 2b708804-e4e7-4ce7-a9b1-33592fd23659
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_inventory_transaction
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_inventory
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_mutation_complete
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_mutation_note
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_quantity
+  module:
+    - field_group
+third_party_settings:
+  field_group:
+    group_main:
+      children:
+        - field_tec_quantity
+      label: Main
+      region: content
+      parent_name: ''
+      weight: 0
+      format_type: details
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        open: true
+        description: ''
+        required_fields: true
+    group_advanced:
+      children:
+        - field_tec_mutation_note
+        - field_tec_mutation_complete
+        - created
+        - uid
+        - field_tec_inventory
+      label: Advanced
+      region: content
+      parent_name: ''
+      weight: 1
+      format_type: details
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        open: false
+        description: ''
+        required_fields: true
+        formatter: closed
+_core:
+  default_config_hash: g6ZFYYrTYVlzEr9We_oJFWLuZyr_Ay-T0NW0LEPzF_0
+id: tec_inventory.tec_inventory_transaction.default
+targetEntityType: tec_inventory
+bundle: tec_inventory_transaction
+mode: default
+content:
+  created:
+    type: datetime_timestamp
+    weight: 4
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tec_inventory:
+    type: entity_reference_autocomplete
+    weight: 6
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings:
+      entity_browser_entity_form:
+        entity_browser_id: _none
+  field_tec_mutation_complete:
+    type: boolean_checkbox
+    weight: 3
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_tec_mutation_note:
+    type: string_textarea
+    weight: 2
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_quantity:
+    type: number
+    weight: 0
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  flag:
+    weight: 10
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  langcode:
+    type: language_select
+    weight: 2
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  uid:
+    type: entity_reference_autocomplete
+    weight: 5
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  status: true
+  title: true

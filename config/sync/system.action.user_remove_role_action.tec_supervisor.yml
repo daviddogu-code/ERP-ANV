@@ -1,0 +1,14 @@
+uuid: 964bc804-00a1-485d-9c69-06d3624242cc
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.tec_supervisor
+  module:
+    - user
+id: user_remove_role_action.tec_supervisor
+label: 'Remove the Supervisor role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: tec_supervisor

@@ -1,0 +1,29 @@
+uuid: bb7e4870-283b-41b6-9a81-e4558ffd7e2c
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.storage.tec_product.field_tec_product
+id: tec_product.tec_size_variation.field_tec_product
+field_name: field_tec_product
+entity_type: tec_product
+bundle: tec_size_variation
+label: Product
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_product'
+  handler_settings:
+    target_bundles:
+      tec_product: tec_product
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: tec_product
+field_type: entity_reference

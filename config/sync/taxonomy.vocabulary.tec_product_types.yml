@@ -1,0 +1,9 @@
+uuid: e035f921-575b-449b-8f18-dbf91a493ee3
+langcode: en
+status: true
+dependencies: {  }
+name: 'Product types'
+vid: tec_product_types
+description: 'Catalog of Product types'
+weight: 0
+new_revision: false

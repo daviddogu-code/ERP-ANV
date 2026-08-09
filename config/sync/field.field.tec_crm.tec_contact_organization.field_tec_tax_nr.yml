@@ -1,0 +1,19 @@
+uuid: ccfea7dc-978b-4561-9ac9-ed199947bc1b
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - field.storage.tec_crm.field_tec_tax_nr
+id: tec_crm.tec_contact_organization.field_tec_tax_nr
+field_name: field_tec_tax_nr
+entity_type: tec_crm
+bundle: tec_contact_organization
+label: 'Tax nr.'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

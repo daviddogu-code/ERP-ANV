@@ -1,0 +1,29 @@
+uuid: a506cc0c-09bf-4b72-93c1-03adb19c543c
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - eck.eck_type.tec_order.tec_draft_order
+    - field.storage.tec_order.field_tec_line_items
+id: tec_order.tec_draft_order.field_tec_line_items
+field_name: field_tec_line_items
+entity_type: tec_order
+bundle: tec_draft_order
+label: 'Line items'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_line_item'
+  handler_settings:
+    target_bundles:
+      tec_sales_order_line_item: tec_sales_order_line_item
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

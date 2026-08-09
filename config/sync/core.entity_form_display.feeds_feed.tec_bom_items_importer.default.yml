@@ -1,0 +1,18 @@
+uuid: 52774572-ed8a-45c7-a7e3-734a16c8f264
+langcode: en
+status: true
+dependencies:
+  config:
+    - feeds.feed_type.tec_bom_items_importer
+    - field.field.feeds_feed.tec_bom_items_importer.field_tec_size_variation
+id: feeds_feed.tec_bom_items_importer.default
+targetEntityType: feeds_feed
+bundle: tec_bom_items_importer
+mode: default
+content: {  }
+hidden:
+  created: true
+  feeds_log: true
+  field_tec_size_variation: true
+  title: true
+  uid: true

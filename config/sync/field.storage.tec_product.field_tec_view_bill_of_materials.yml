@@ -1,0 +1,26 @@
+uuid: eefd79fc-531b-4913-99ae-9f2a61ad019c
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+    - viewfield
+    - views
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_product.field_tec_view_bill_of_materials
+field_name: field_tec_view_bill_of_materials
+entity_type: tec_product
+type: viewfield
+settings:
+  target_type: view
+  handler: 'default:view'
+module: viewfield
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

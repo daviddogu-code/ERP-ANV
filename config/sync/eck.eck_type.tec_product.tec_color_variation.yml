@@ -1,0 +1,9 @@
+uuid: a5faba6c-68dc-4f2b-a75a-030be30ab8de
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_product
+name: 'Color variation'
+type: tec_color_variation
+description: ''

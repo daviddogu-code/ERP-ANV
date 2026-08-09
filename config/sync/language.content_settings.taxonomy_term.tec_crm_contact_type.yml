@@ -1,0 +1,11 @@
+uuid: bfedfdaa-964d-4ad9-a453-91a8c2275718
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_crm_contact_type
+id: taxonomy_term.tec_crm_contact_type
+target_entity_type_id: taxonomy_term
+target_bundle: tec_crm_contact_type
+default_langcode: site_default
+language_alterable: false

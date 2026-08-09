@@ -1,0 +1,18 @@
+uuid: 154ae103-82ed-44bd-a999-b1d509d5fe2a
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+id: tec_product.tec_product.created
+field_name: created
+entity_type: tec_product
+bundle: tec_product
+label: 'Created on'
+description: 'The time that the entity was created.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: created

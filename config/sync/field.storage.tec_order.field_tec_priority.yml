@@ -1,0 +1,33 @@
+uuid: 38dd5cc2-b1ce-40b5-a155-b4d2029125fb
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - options
+id: tec_order.field_tec_priority
+field_name: field_tec_priority
+entity_type: tec_order
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: low
+      label: Low
+    -
+      value: normal
+      label: Normal
+    -
+      value: high
+      label: High
+    -
+      value: emergency
+      label: Emergency
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,11 @@
+uuid: 9e58680b-5aae-4d2c-bdea-dff696a2095b
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.tec_color_swatch
+label: 'Color swatch'
+description: ''
+targetEntityType: taxonomy_term
+cache: true

@@ -1,0 +1,53 @@
+uuid: c8fdc14c-4acf-45e4-b5dc-555c10825f0c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.tec_colors.ai_interpolator_status
+    - field.field.taxonomy_term.tec_colors.field_tec_ai_color
+    - field.field.taxonomy_term.tec_colors.field_tec_color_code_html
+    - taxonomy.vocabulary.tec_colors
+  module:
+    - color_field
+    - field_formatter_class
+    - field_label
+    - manage_display
+id: taxonomy_term.tec_colors.default
+targetEntityType: taxonomy_term
+bundle: tec_colors
+mode: default
+content:
+  field_tec_color_code_html:
+    type: color_field_formatter_swatch_options
+    label: hidden
+    settings:
+      shape: circle
+      width: '12'
+      height: '12'
+      opacity: true
+      data_attribute: false
+    third_party_settings:
+      field_formatter_class:
+        class: inline-block
+      field_label:
+        label_class: ''
+        label_value: ''
+        label_tag: ''
+    weight: 0
+    region: content
+  name:
+    type: title
+    label: hidden
+    settings:
+      link_to_entity: false
+      tag: div
+    third_party_settings:
+      field_formatter_class:
+        class: inline-block
+    weight: 1
+    region: content
+hidden:
+  ai_interpolator_status: true
+  description: true
+  field_tec_ai_color: true
+  langcode: true

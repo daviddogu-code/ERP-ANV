@@ -1,0 +1,29 @@
+uuid: 17a2e85d-5467-4e0d-aeba-ab5efc5ddc91
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.storage.tec_product.field_tec_bom
+id: tec_product.tec_size_variation.field_tec_bom
+field_name: field_tec_bom
+entity_type: tec_product
+bundle: tec_size_variation
+label: 'Bill of Materials'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_inventory'
+  handler_settings:
+    target_bundles:
+      tec_bom_item: tec_bom_item
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

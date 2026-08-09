@@ -1,0 +1,33 @@
+uuid: 56ffc62b-50ec-43be-aafc-c2bd5c493cda
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: tec_products_color_variation_gui_ux
+label: 'TEC Products - Color variation - GUI UX'
+code: |-
+  /* Overrides where we override back-end form elements that are intended to
+  be set elsewhere */
+
+  /* Disable fields */
+  #edit-field-tec-color-variations,
+  #edit-field-tec-size-variations {
+  	display: none;
+  }
+
+  /* The uploader should span the width of the screen */
+  [data-drupal-selector="edit-group-left"] {
+      display: block !important;
+      width: 100% !important;
+      padding: 0 !important;
+  }
+media: all
+preprocess: true
+conditions:
+  request_path:
+    id: request_path
+    negate: false
+    pages: /admin/content/tec_product/add/tec_color_variation
+contexts: {  }
+conditions_require_all: true

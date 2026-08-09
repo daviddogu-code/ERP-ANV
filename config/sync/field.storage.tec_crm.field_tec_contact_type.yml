@@ -1,0 +1,24 @@
+uuid: 75765ef4-24ba-4c9d-9719-390eb3dd8f9e
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+    - taxonomy
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_crm.field_tec_contact_type
+field_name: field_tec_contact_type
+entity_type: tec_crm
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

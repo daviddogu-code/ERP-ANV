@@ -1,0 +1,23 @@
+uuid: 953cf0f0-e595-40ae-be81-0d34ab18ed70
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_product.field_tec_product
+field_name: field_tec_product
+entity_type: tec_product
+type: entity_reference
+settings:
+  target_type: tec_product
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

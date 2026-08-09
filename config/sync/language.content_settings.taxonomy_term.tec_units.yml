@@ -1,0 +1,11 @@
+uuid: db84eb6c-7096-45dc-9fd6-f403a8df2513
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_units
+id: taxonomy_term.tec_units
+target_entity_type_id: taxonomy_term
+target_bundle: tec_units
+default_langcode: site_default
+language_alterable: false

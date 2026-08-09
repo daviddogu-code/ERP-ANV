@@ -1,0 +1,18 @@
+uuid: a4d13969-c9aa-4353-b9a2-aa15c94e3132
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_inventory_item
+id: tec_inventory.tec_inventory_item.changed
+field_name: changed
+entity_type: tec_inventory
+bundle: tec_inventory_item
+label: Updated
+description: 'The time that the entity was last edited.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: changed

@@ -1,0 +1,10 @@
+uuid: 9d08e4d6-22d4-4dc9-ac96-4f290a26081a
+langcode: en
+status: true
+dependencies: {  }
+id: tec_app_link
+label: 'App link'
+uid: false
+created: false
+changed: false
+title: true

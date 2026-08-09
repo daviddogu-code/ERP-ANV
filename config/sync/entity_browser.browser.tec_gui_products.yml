@@ -1,0 +1,17 @@
+uuid: 247f79ea-9a9b-4219-b7c4-83c1413e220c
+langcode: en
+status: true
+dependencies: {  }
+name: tec_gui_products
+label: TEMP
+display: modal
+display_configuration:
+  width: '650'
+  height: '500'
+  link_text: 'Select entities'
+  auto_open: false
+selection_display: no_display
+selection_display_configuration: {  }
+widget_selector: tabs
+widget_selector_configuration: {  }
+widgets: {  }

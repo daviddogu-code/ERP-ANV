@@ -1,0 +1,25 @@
+uuid: 55d7c608-fbc2-4c97-9a69-c41574209f10
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_customer
+    - taxonomy.vocabulary.tec_brands
+id: taxonomy_term.tec_brands.field_tec_customer
+field_name: field_tec_customer
+entity_type: taxonomy_term
+bundle: tec_brands
+label: Customer
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: views
+  handler_settings:
+    view:
+      view_name: tec_crm_references
+      display_name: entity_reference_3
+      arguments: {  }
+field_type: entity_reference

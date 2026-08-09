@@ -1,0 +1,15 @@
+uuid: 9471bf77-bc17-4d0d-aaa8-0b3174c10424
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_order_draft_po
+  module:
+    - flag
+id: flag_action.tec_order_draft_po_flag
+label: '+ Purchase order'
+type: tec_crm
+plugin: 'flag_action:tec_order_draft_po_flag'
+configuration:
+  flag_id: tec_order_draft_po
+  flag_action: flag

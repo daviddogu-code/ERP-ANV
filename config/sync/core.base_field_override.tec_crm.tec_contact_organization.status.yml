@@ -1,0 +1,22 @@
+uuid: c629c6f5-ed38-4b07-aa9a-7452082f7f6e
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+id: tec_crm.tec_contact_organization.status
+field_name: status
+entity_type: tec_crm
+bundle: tec_contact_organization
+label: Active
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

@@ -1,0 +1,24 @@
+uuid: 59bef6eb-179b-46cd-9910-48a2d20c7aed
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+    - taxonomy
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: taxonomy_term.field_tec_vendor
+field_name: field_tec_vendor
+entity_type: taxonomy_term
+type: entity_reference
+settings:
+  target_type: tec_crm
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

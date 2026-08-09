@@ -1,0 +1,70 @@
+uuid: 72f5d718-df6a-4915-84df-c96e581b016a
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: tec_print
+label: 'TEC Print'
+code: |-
+  .html {
+      background-color: #fff;
+  }
+
+  /* GIN resets */
+  .gin-secondary-toolbar,
+  .toolbar-menu-administration {
+      display: none;
+  }
+
+  /* DXPR resets */
+  #navbar {
+      display: none;
+  }
+
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  /* We set the page to A4 width */
+  .main-container.container {
+      width: 21.00cm;
+      box-shadow: none;
+  }
+
+  /* The page content*/
+  table {
+      width: 100%;
+      margin-top: 0.5cm;
+  }
+
+  .table-cell {
+      vertical-align: top;
+  }
+
+  .col-lg-9.col-md-6.col-12 {
+      display: none;
+  }
+
+  .table-2-1-row-1-col-1 {
+      width: 12cm;
+  }
+
+  svg.mailto {
+      display: none;
+  }
+
+  /* Resetting labels inside the supplier column */
+  .table-2-1-row-1-col-1 .field__label {
+      font-weight: normal;
+  }
+media: all
+preprocess: true
+conditions:
+  request_path:
+    id: request_path
+    negate: false
+    pages: "/po/*/print\r\n/o/pf/*/print"
+contexts: {  }
+conditions_require_all: true

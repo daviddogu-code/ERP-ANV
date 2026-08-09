@@ -1,0 +1,24 @@
+uuid: 315ec584-1af5-42c4-aa91-d7c2fe1ba079
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_placeholder_2
+    - taxonomy.vocabulary.tec_inventory
+  module:
+    - markup
+id: taxonomy_term.tec_inventory.field_tec_placeholder_2
+field_name: field_tec_placeholder_2
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'Placeholder 2'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  markup:
+    value: '<p>&nbsp;<strong>UoP.</strong></p>'
+    format: basic_html
+field_type: markup

@@ -1,0 +1,19 @@
+uuid: 1d041347-6496-43d9-9b0a-bee81c0ad58e
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_order.field_tec_line_items
+field_name: field_tec_line_items
+entity_type: tec_order
+type: entity_reference
+settings:
+  target_type: tec_line_item
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

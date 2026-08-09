@@ -1,0 +1,267 @@
+uuid: c7d65bc5-4c4c-4dce-a4da-ca80b3469bb2
+langcode: en
+status: true
+dependencies:
+  config:
+    - eca.eca.process_nyohhvq
+id: process_nyohhvq
+label: 'TEC Inventory: Feed data'
+tags:
+  - untagged
+documentation: ''
+filename: ''
+modeldata: |
+  <?xml version="1.0" encoding="UTF-8"?>
+  <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:qa="http://some-company/schema/bpmn/qa" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+    <bpmn2:process id="Process_nYOhHvQ" name="TEC Inventory: Feed data" isExecutable="true" camunda:versionTag="1.0">
+      <bpmn2:startEvent id="Event_0d7i50v" name="Insert Size" camunda:modelerTemplate="org.drupal.event.content_entity:insert">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="content_entity:insert" />
+          </camunda:properties>
+          <camunda:field name="type">
+            <camunda:string>tec_product tec_size_variation</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:outgoing>Flow_0ap9r1q</bpmn2:outgoing>
+      </bpmn2:startEvent>
+      <bpmn2:startEvent id="Event_0e5akzx" name="Update Size" camunda:modelerTemplate="org.drupal.event.content_entity:update">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="content_entity:update" />
+          </camunda:properties>
+          <camunda:field name="type">
+            <camunda:string>tec_product tec_size_variation</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:outgoing>Flow_1wndimq</bpmn2:outgoing>
+      </bpmn2:startEvent>
+      <bpmn2:exclusiveGateway id="Gateway_1xhc939">
+        <bpmn2:incoming>Flow_1wndimq</bpmn2:incoming>
+        <bpmn2:incoming>Flow_0ap9r1q</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_0nng7ql</bpmn2:outgoing>
+      </bpmn2:exclusiveGateway>
+      <bpmn2:sequenceFlow id="Flow_1wndimq" sourceRef="Event_0e5akzx" targetRef="Gateway_1xhc939" />
+      <bpmn2:sequenceFlow id="Flow_0ap9r1q" sourceRef="Event_0d7i50v" targetRef="Gateway_1xhc939" />
+      <bpmn2:task id="Activity_0hua51x" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_write_log_message" />
+          </camunda:properties>
+          <camunda:field name="channel">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:field name="severity">
+            <camunda:string>7</camunda:string>
+          </camunda:field>
+          <camunda:field name="message">
+            <camunda:string>Running: "TEC Invetory: Feed data" ECA Model.</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_0nng7ql</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_1vf1xsr</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_0nng7ql" name="Importer check" camunda:modelerTemplate="org.drupal.condition.eca_entity_field_value_empty" sourceRef="Gateway_1xhc939" targetRef="Activity_0hua51x">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_entity_field_value_empty" />
+          </camunda:properties>
+          <camunda:field name="field_name">
+            <camunda:string>field_tec_import_bom</camunda:string>
+          </camunda:field>
+          <camunda:field name="negate">
+            <camunda:string>yes</camunda:string>
+          </camunda:field>
+          <camunda:field name="entity">
+            <camunda:string></camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+      </bpmn2:sequenceFlow>
+      <bpmn2:task id="Activity_1bbssu4" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_write_log_message" />
+          </camunda:properties>
+          <camunda:field name="channel">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:field name="severity">
+            <camunda:string>7</camunda:string>
+          </camunda:field>
+          <camunda:field name="message">
+            <camunda:string>Finished: "TEC Invetory: Feed data" ECA Model.</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_187quri</bpmn2:incoming>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_1vf1xsr" sourceRef="Activity_0hua51x" targetRef="Gateway_1unsq1v" />
+      <bpmn2:exclusiveGateway id="Gateway_1unsq1v">
+        <bpmn2:incoming>Flow_1vf1xsr</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_187quri</bpmn2:outgoing>
+        <bpmn2:outgoing>Flow_1ujnmzf</bpmn2:outgoing>
+      </bpmn2:exclusiveGateway>
+      <bpmn2:sequenceFlow id="Flow_187quri" sourceRef="Gateway_1unsq1v" targetRef="Activity_1bbssu4" />
+      <bpmn2:task id="Activity_1yo6d04" name="Load the Importer" camunda:modelerTemplate="org.drupal.action.eca_token_load_entity_ref">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_token_load_entity_ref" />
+          </camunda:properties>
+          <camunda:field name="token_name">
+            <camunda:string>importer</camunda:string>
+          </camunda:field>
+          <camunda:field name="field_name_entity_ref">
+            <camunda:string>field_tec_import_bom</camunda:string>
+          </camunda:field>
+          <camunda:field name="from">
+            <camunda:string>current</camunda:string>
+          </camunda:field>
+          <camunda:field name="entity_type">
+            <camunda:string>_none</camunda:string>
+          </camunda:field>
+          <camunda:field name="entity_id">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:field name="revision_id">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:field name="langcode">
+            <camunda:string>_interface</camunda:string>
+          </camunda:field>
+          <camunda:field name="latest_revision">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="unchanged">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="properties">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:field name="object">
+            <camunda:string></camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_1ujnmzf</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_03971ui</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_1ujnmzf" sourceRef="Gateway_1unsq1v" targetRef="Activity_1yo6d04" />
+      <bpmn2:task id="Activity_05l01xv" name="Reference the Size" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_set_field_value" />
+          </camunda:properties>
+          <camunda:field name="method">
+            <camunda:string>set:clear</camunda:string>
+          </camunda:field>
+          <camunda:field name="strip_tags">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="trim">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="field_name">
+            <camunda:string>field_tec_size_variation</camunda:string>
+          </camunda:field>
+          <camunda:field name="save_entity">
+            <camunda:string>yes</camunda:string>
+          </camunda:field>
+          <camunda:field name="field_value">
+            <camunda:string>[entity]</camunda:string>
+          </camunda:field>
+          <camunda:field name="object">
+            <camunda:string>importer</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_03971ui</bpmn2:incoming>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_03971ui" name="Size variation check" camunda:modelerTemplate="org.drupal.condition.eca_entity_field_value_empty" sourceRef="Activity_1yo6d04" targetRef="Activity_05l01xv">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_entity_field_value_empty" />
+          </camunda:properties>
+          <camunda:field name="field_name">
+            <camunda:string>field_tec_size_variation</camunda:string>
+          </camunda:field>
+          <camunda:field name="negate">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="entity">
+            <camunda:string>importer</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+      </bpmn2:sequenceFlow>
+    </bpmn2:process>
+    <bpmndi:BPMNDiagram id="sid-9cdc6b79-ecb4-4db5-a16a-9bcbde8bda42">
+      <bpmndi:BPMNPlane id="sid-a4e9885c-6018-4bfa-9a61-00c80009ebe7" bpmnElement="Process_nYOhHvQ">
+        <bpmndi:BPMNShape id="Event_06rxb9s_di" bpmnElement="Event_0d7i50v">
+          <dc:Bounds x="362" y="332" width="36" height="36" />
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="354" y="375" width="53" height="14" />
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Event_0e5akzx_di" bpmnElement="Event_0e5akzx">
+          <dc:Bounds x="362" y="212" width="36" height="36" />
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="350" y="255" width="60" height="14" />
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Gateway_1xhc939_di" bpmnElement="Gateway_1xhc939" isMarkerVisible="true">
+          <dc:Bounds x="545" y="265" width="50" height="50" />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_0hua51x_di" bpmnElement="Activity_0hua51x">
+          <dc:Bounds x="750" y="250" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_1bbssu4_di" bpmnElement="Activity_1bbssu4">
+          <dc:Bounds x="1310" y="250" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Gateway_1unsq1v_di" bpmnElement="Gateway_1unsq1v" isMarkerVisible="true">
+          <dc:Bounds x="945" y="265" width="50" height="50" />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_1yo6d04_di" bpmnElement="Activity_1yo6d04">
+          <dc:Bounds x="920" y="400" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_05l01xv_di" bpmnElement="Activity_05l01xv">
+          <dc:Bounds x="920" y="610" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNEdge id="Flow_1wndimq_di" bpmnElement="Flow_1wndimq">
+          <di:waypoint x="398" y="230" />
+          <di:waypoint x="570" y="230" />
+          <di:waypoint x="570" y="265" />
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_0ap9r1q_di" bpmnElement="Flow_0ap9r1q">
+          <di:waypoint x="398" y="350" />
+          <di:waypoint x="570" y="350" />
+          <di:waypoint x="570" y="315" />
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_0nng7ql_di" bpmnElement="Flow_0nng7ql">
+          <di:waypoint x="595" y="290" />
+          <di:waypoint x="750" y="290" />
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="636" y="272" width="73" height="14" />
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_1vf1xsr_di" bpmnElement="Flow_1vf1xsr">
+          <di:waypoint x="850" y="290" />
+          <di:waypoint x="945" y="290" />
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_187quri_di" bpmnElement="Flow_187quri">
+          <di:waypoint x="995" y="290" />
+          <di:waypoint x="1310" y="290" />
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_1ujnmzf_di" bpmnElement="Flow_1ujnmzf">
+          <di:waypoint x="970" y="315" />
+          <di:waypoint x="970" y="400" />
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_03971ui_di" bpmnElement="Flow_03971ui">
+          <di:waypoint x="970" y="480" />
+          <di:waypoint x="970" y="610" />
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="975" y="542" width="70" height="27" />
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNEdge>
+      </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+  </bpmn2:definitions>

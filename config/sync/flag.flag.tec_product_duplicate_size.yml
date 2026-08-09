@@ -1,0 +1,36 @@
+uuid: 76700da5-2432-4650-81f5-a528466562cf
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_product_duplicate_size
+label: 'TEC Product: Duplicate size'
+bundles:
+  - tec_size_variation
+entity_type: tec_product
+global: true
+flag_short: '<img src="/sites/default/files/000-copy-21.png" title="Duplicate size">'
+flag_long: 'This will duplicate the size and its BoM.'
+flag_message: ''
+unflag_short: 'Unflag this item'
+unflag_long: ''
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_product'
+link_type: reload
+flagTypeConfig:
+  show_in_links:
+    product_view: product_view
+  show_as_field: true
+  show_on_form: false
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig:
+  flag_confirmation: 'Duplicate size?'
+  unflag_confirmation: 'Unset?'
+  flag_create_button: 'OK, continue'
+  flag_delete_button: Unset
+  form_behavior: dialog

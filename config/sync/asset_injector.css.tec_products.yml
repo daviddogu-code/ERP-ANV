@@ -1,0 +1,41 @@
+uuid: c9a57401-1511-4bf3-a342-20126476b584
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: tec_products
+label: 'TEC Products'
+code: |-
+  /* DXPR Overrides on Product full view */
+  .container {
+    max-width:1580px;
+    padding-right:0;
+      padding-left: 0;
+  }
+
+  .col-lg-9 {
+    flex:0 0 auto;
+    width:85%;
+  }
+
+  .field--name-field-tec-size-variations .layout--twocol-bricks {
+    border:1px solid #a0a0a0;
+    padding:1px;
+    margin-right:20px;
+    margin-top:10px;
+    width:261px;
+  }
+media: all
+preprocess: true
+conditions:
+  request_path:
+    id: request_path
+    negate: false
+    pages: '/tec_product/*'
+  current_theme:
+    id: current_theme
+    negate: false
+    theme: dxpr_theme
+contexts: {  }
+conditions_require_all: true

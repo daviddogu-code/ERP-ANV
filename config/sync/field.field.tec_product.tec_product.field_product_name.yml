@@ -1,0 +1,19 @@
+uuid: 70ce2ce7-a276-4590-b814-5fb1ff83b0e9
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+    - field.storage.tec_product.field_product_name
+id: tec_product.tec_product.field_product_name
+field_name: field_product_name
+entity_type: tec_product
+bundle: tec_product
+label: 'Product name'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

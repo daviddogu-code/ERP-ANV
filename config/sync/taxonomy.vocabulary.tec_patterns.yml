@@ -1,0 +1,9 @@
+uuid: 76c3f5ac-a985-490c-ac24-47bdd9616999
+langcode: en
+status: true
+dependencies: {  }
+name: Patterns
+vid: tec_patterns
+description: 'Holds Patterns of all products'
+weight: 0
+new_revision: false

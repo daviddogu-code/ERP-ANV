@@ -1,0 +1,18 @@
+uuid: 4fddd651-f67b-4a54-9b6e-34226097546d
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_draft_order
+id: tec_order.tec_draft_order.title
+field_name: title
+entity_type: tec_order
+bundle: tec_draft_order
+label: 'Order ID'
+description: 'The title of the entity.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

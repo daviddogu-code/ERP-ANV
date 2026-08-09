@@ -1,0 +1,29 @@
+uuid: 52f08fe3-3305-4857-816c-b0214d7c653e
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_eca_product_lock
+label: 'ECA Product lock'
+bundles: {  }
+entity_type: tec_product
+global: false
+flag_short: 'Lock Tec product'
+flag_long: ''
+flag_message: ''
+unflag_short: 'Unlock Tec product'
+unflag_long: ''
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_product'
+link_type: reload
+flagTypeConfig:
+  show_in_links: {  }
+  show_as_field: true
+  show_on_form: true
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig: {  }

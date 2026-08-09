@@ -1,0 +1,17 @@
+uuid: c1060b5e-804b-4290-bd59-940b0cf08460
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+_core:
+  default_config_hash: cRtxxVepDGctmr0jauGmQ1phak55mCFCbzt7KvDVr8s
+name: Inventory
+vid: tec_inventory
+description: 'Holds inventory and their materials'
+weight: 0
+new_revision: false

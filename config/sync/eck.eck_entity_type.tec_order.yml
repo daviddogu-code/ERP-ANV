@@ -1,0 +1,10 @@
+uuid: fd6240f0-50e5-4d6d-a271-9c74a1b20544
+langcode: en
+status: true
+dependencies: {  }
+id: tec_order
+label: Order
+uid: true
+created: true
+changed: true
+title: true

@@ -1,0 +1,333 @@
+uuid: f6224910-b3dd-428a-b60a-abd5c0ed67b3
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_po_line_item
+    - eck.eck_type.tec_order.tec_purchase_order
+    - field.field.tec_line_item.tec_po_line_item.field_tec_inventory
+    - field.field.tec_line_item.tec_po_line_item.field_tec_order
+    - field.field.tec_line_item.tec_po_line_item.field_tec_price
+    - field.field.tec_line_item.tec_po_line_item.field_tec_vendor
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_order
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_price
+    - field.field.tec_order.tec_draft_order.field_tec_line_items
+    - field.field.tec_order.tec_purchase_order.field_tec_line_items
+    - field.field.tec_order.tec_purchase_order.field_tec_vendor
+    - field.field.tec_order.tec_sales_order.field_tec_line_items
+    - field.storage.tec_line_item.field_tec_inventory
+    - field.storage.tec_line_item.field_tec_order
+    - field.storage.tec_line_item.field_tec_price
+    - field.storage.tec_line_item.field_tec_vendor
+    - field.storage.tec_order.field_tec_line_items
+    - field.storage.tec_order.field_tec_vendor
+    - views.view.tec_order_eca_count_orders
+    - views.view.tec_order_eca_create_draft_po_excel_lover
+  module:
+    - eca_base
+    - eca_content
+    - eca_flag
+    - eca_log
+    - eca_views
+    - flag
+id: process_kryibry
+modeller: bpmn_io
+label: 'TEC Order: Create Purchase order - Excel lover'
+version: '1.2'
+weight: 11
+events:
+  Event_05bhyol:
+    plugin: 'flag:flag'
+    label: Flag
+    configuration: {  }
+    successors:
+      -
+        id: Gateway_08eqdlg
+        condition: Flow_05s51v9
+conditions:
+  Flow_0eybbbn:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: inventoryItem
+  Flow_10bh1je:
+    plugin: eca_token_exists
+    configuration:
+      token_name: inventoryItem
+      negate: true
+  Flow_05s51v9:
+    plugin: eca_flag_entity_is_flagged
+    configuration:
+      negate: false
+      flag_name: tec_order_draft_po
+      entity: ''
+gateways:
+  Gateway_08eqdlg:
+    type: 0
+    successors:
+      -
+        id: Activity_1lj5hkh
+        condition: ''
+  Gateway_14xnz1m:
+    type: 0
+    successors:
+      -
+        id: Activity_1m91vxe
+        condition: Flow_0eybbbn
+      -
+        id: Activity_1p9725b
+        condition: Flow_10bh1je
+actions:
+  Activity_1lj5hkh:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: |-
+        Session user [session_user:uid]<br>
+        Running: "TEC Order: Create Purchase order - Excel lover" ECA model.<br>
+    successors:
+      -
+        id: Activity_1vaioqk
+        condition: ''
+  Activity_1yw0bq2:
+    plugin: eca_views_query
+    label: 'Query Inventory items'
+    configuration:
+      token_name: inventoryItems
+      view_id: tec_order_eca_create_draft_po_excel_lover
+      display_id: default
+      arguments: '[entity]'
+    successors:
+      -
+        id: Activity_02hh29p
+        condition: ''
+  Activity_02hh29p:
+    plugin: eca_list_remove
+    label: 'Drop first Inventory item'
+    configuration:
+      value: ''
+      token_name: inventoryItem
+      method: first
+      index: ''
+      list_token: inventoryItems
+    successors:
+      -
+        id: Gateway_14xnz1m
+        condition: ''
+  Activity_1m91vxe:
+    plugin: eca_new_entity
+    label: 'Create line item'
+    configuration:
+      token_name: lineitem
+      type: 'tec_line_item tec_po_line_item'
+      langcode: ''
+      label: '[inventoryItem:name]'
+      published: true
+      owner: '[session_user:uid]'
+    successors:
+      -
+        id: Activity_1ms20z1
+        condition: ''
+  Activity_0ycxvxd:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished: "TEC Order: Create Purchase order - Excel lover"  ECA Model.'
+    successors: {  }
+  Activity_1vaioqk:
+    plugin: flag_delete_flagging
+    label: Unflag
+    configuration:
+      object: flagging
+    successors:
+      -
+        id: Activity_0yxiix4
+        condition: ''
+  Activity_1ms20z1:
+    plugin: eca_save_entity
+    label: 'Save line item'
+    configuration:
+      object: lineitem
+    successors:
+      -
+        id: Activity_0x43g1g
+        condition: ''
+  Activity_1simmlu:
+    plugin: eca_set_field_value
+    label: 'Set Order'
+    configuration:
+      field_name: field_tec_order
+      field_value: '[order]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: lineitem
+    successors:
+      -
+        id: Activity_00es7rw
+        condition: ''
+  Activity_0yxiix4:
+    plugin: eca_new_entity
+    label: 'Create Purchase order'
+    configuration:
+      token_name: order
+      type: 'tec_order tec_purchase_order'
+      langcode: ''
+      label: 'Draft Purchase order for [entity:title]'
+      published: false
+      owner: '[session_user:uid]'
+    successors:
+      -
+        id: Activity_0eek2xm
+        condition: ''
+  Activity_0eek2xm:
+    plugin: eca_save_entity
+    label: 'Save Purchase order'
+    configuration:
+      object: order
+    successors:
+      -
+        id: Activity_01wk5lh
+        condition: ''
+  Activity_00es7rw:
+    plugin: eca_set_field_value
+    label: 'Set Sales price & save'
+    configuration:
+      field_name: field_tec_price
+      field_value: '[inventoryItem:field_tec_price]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: lineitem
+    successors:
+      -
+        id: Activity_08bketh
+        condition: ''
+  Activity_08bketh:
+    plugin: eca_set_field_value
+    label: 'Add line item to order'
+    configuration:
+      field_name: field_tec_line_items
+      field_value: '[lineitem]'
+      method: 'append:not_full'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: order
+    successors:
+      -
+        id: Activity_02hh29p
+        condition: ''
+  Activity_01wk5lh:
+    plugin: eca_set_field_value
+    label: 'Set Vendor'
+    configuration:
+      field_name: field_tec_vendor
+      field_value: '[entity]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: order
+    successors:
+      -
+        id: Activity_0no2rub
+        condition: ''
+  Activity_1qp5g3h:
+    plugin: action_goto_action
+    label: 'Redirect to order'
+    configuration:
+      url: '/po/draft/[order:id]?destination=/tec_order/[order:id]'
+      replace_tokens: true
+    successors:
+      -
+        id: Activity_0ycxvxd
+        condition: ''
+  Activity_101bx0h:
+    plugin: eca_set_field_value
+    label: 'Set the Inventory item'
+    configuration:
+      field_name: field_tec_inventory
+      field_value: '[inventoryItem]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: lineitem
+    successors:
+      -
+        id: Activity_1simmlu
+        condition: ''
+  Activity_1p9725b:
+    plugin: eca_set_field_value
+    label: 'Set the Order owner'
+    configuration:
+      field_name: uid
+      field_value: '[session_user:uid]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: order
+    successors:
+      -
+        id: Activity_1qp5g3h
+        condition: ''
+  Activity_0x43g1g:
+    plugin: eca_set_field_value
+    label: 'Set the Vendor'
+    configuration:
+      field_name: field_tec_vendor
+      field_value: '[entity]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: lineitem
+    successors:
+      -
+        id: Activity_101bx0h
+        condition: ''
+  Activity_0no2rub:
+    plugin: eca_views_query
+    label: 'Query Purchase orders'
+    configuration:
+      token_name: poList
+      view_id: tec_order_eca_count_orders
+      display_id: po_count
+      arguments: '[entity:id]'
+    successors:
+      -
+        id: Activity_1ok286e
+        condition: ''
+  Activity_1e5fwyj:
+    plugin: eca_set_field_value
+    label: 'Set the order nr/ title'
+    configuration:
+      field_name: title
+      field_value: '[current-date:custom:y]-[poCount]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: order
+    successors:
+      -
+        id: Activity_1yw0bq2
+        condition: ''
+  Activity_1ok286e:
+    plugin: eca_count
+    label: 'Count the Purchase orders'
+    configuration:
+      token_name: poCount
+      list_token: poList
+    successors:
+      -
+        id: Activity_1e5fwyj
+        condition: ''

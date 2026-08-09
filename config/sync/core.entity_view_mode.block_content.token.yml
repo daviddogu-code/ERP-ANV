@@ -1,0 +1,11 @@
+uuid: ccd1256a-8400-40fc-8035-7d081dd02737
+langcode: en
+status: true
+dependencies:
+  module:
+    - block_content
+id: block_content.token
+label: Token
+description: ''
+targetEntityType: block_content
+cache: true

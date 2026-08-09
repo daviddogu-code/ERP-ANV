@@ -1,0 +1,207 @@
+uuid: c1ebf258-d844-4bdb-9d5f-a98b985fc4d9
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.field.tec_product.tec_size_variation.field_tec_barcode_nr
+    - field.field.tec_product.tec_size_variation.field_tec_bom
+    - field.field.tec_product.tec_size_variation.field_tec_color_variation
+    - field.field.tec_product.tec_size_variation.field_tec_controls
+    - field.field.tec_product.tec_size_variation.field_tec_import_bom
+    - field.field.tec_product.tec_size_variation.field_tec_price
+    - field.field.tec_product.tec_size_variation.field_tec_product
+    - field.field.tec_product.tec_size_variation.field_tec_size
+    - field.field.tec_product.tec_size_variation.field_tec_view_bill_of_materials
+  module:
+    - entity_browser_entity_form
+    - field_group
+    - ief_table_view_mode
+    - inline_entity_form
+    - scan_code
+    - select2
+    - viewfield
+third_party_settings:
+  field_group:
+    group_left:
+      children:
+        - field_tec_size
+      label: Left
+      region: content
+      parent_name: ''
+      weight: 0
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_right:
+      children:
+        - field_tec_barcode_nr
+        - field_tec_price
+      label: Right
+      region: content
+      parent_name: ''
+      weight: 1
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_excluded:
+      children:
+        - field_tec_import_bom
+        - field_tec_color_variation
+        - field_tec_product
+      label: Excluded
+      region: content
+      parent_name: ''
+      weight: 5
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: excluded
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+id: tec_product.tec_size_variation.default
+targetEntityType: tec_product
+bundle: tec_size_variation
+mode: default
+content:
+  field_tec_barcode_nr:
+    type: string_textfield
+    weight: 3
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings:
+      scan_code:
+        scan_code_group:
+          barcode_scan_enabled: '1'
+          scan_code_patterns:
+            code_128_reader: code_128_reader
+            ean_reader: 0
+            ean_8_reader: 0
+            code_39_reader: 0
+            code_39_vin_reader: 0
+            codabar_reader: 0
+            upc_reader: 0
+            upc_e_reader: 0
+            i2of5_reader: 0
+            2of5_reader: 0
+            code_93_reader: 0
+  field_tec_bom:
+    type: inline_entity_form_complex_table_view_mode
+    weight: 2
+    region: content
+    settings:
+      form_mode: default
+      override_labels: true
+      label_singular: 'BoM item'
+      label_plural: 'BoM items'
+      allow_new: true
+      allow_existing: false
+      match_operator: CONTAINS
+      allow_duplicate: false
+      collapsible: false
+      collapsed: false
+      revision: false
+      removed_reference: delete
+    third_party_settings:
+      entity_browser_entity_form:
+        entity_browser_id: _none
+  field_tec_color_variation:
+    type: entity_reference_autocomplete
+    weight: 4
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_controls:
+    type: viewfield_select
+    weight: 4
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tec_import_bom:
+    type: inline_entity_form_complex
+    weight: 3
+    region: content
+    settings:
+      form_mode: default
+      override_labels: true
+      label_singular: 'CSV file'
+      label_plural: 'CSV files'
+      allow_new: true
+      allow_existing: false
+      match_operator: CONTAINS
+      allow_duplicate: false
+      collapsible: false
+      collapsed: false
+      revision: false
+      removed_reference: delete
+    third_party_settings:
+      entity_browser_entity_form:
+        entity_browser_id: _none
+  field_tec_price:
+    type: number
+    weight: 5
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_product:
+    type: entity_reference_autocomplete
+    weight: 5
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_size:
+    type: select2_entity_reference
+    weight: 1
+    region: content
+    settings:
+      width: 90%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+hidden:
+  created: true
+  field_tec_view_bill_of_materials: true
+  flag: true
+  langcode: true
+  status: true
+  title: true
+  uid: true

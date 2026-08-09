@@ -1,0 +1,9 @@
+uuid: eac75c7d-599b-4332-ac24-7f7031139cab
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_product
+name: Product
+type: tec_product
+description: 'General purpose product'

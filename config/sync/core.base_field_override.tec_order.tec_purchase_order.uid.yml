@@ -1,0 +1,20 @@
+uuid: c2c17ba8-d423-4278-87f2-49a4d830bdba
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_purchase_order
+id: tec_order.tec_purchase_order.uid
+field_name: uid
+entity_type: tec_order
+bundle: tec_purchase_order
+label: 'Created by'
+description: 'The username of the entity author.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: default
+  handler_settings: {  }
+field_type: entity_reference

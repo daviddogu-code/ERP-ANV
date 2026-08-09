@@ -1,0 +1,181 @@
+uuid: 42467b21-2b12-48db-9133-a2adceee5229
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.field.tec_product.tec_color_variation.field_tec_product
+    - field.field.tec_product.tec_color_variation.field_tec_size_variations
+    - field.field.tec_product.tec_size_variation.field_tec_color_variation
+    - field.field.tec_product.tec_size_variation.field_tec_product
+    - field.field.tec_product.tec_size_variation.field_tec_size
+    - field.storage.tec_product.field_tec_color_variation
+    - field.storage.tec_product.field_tec_product
+    - field.storage.tec_product.field_tec_size
+    - field.storage.tec_product.field_tec_size_variations
+  module:
+    - eca_content
+    - eca_log
+id: process_qlf96jn
+modeller: bpmn_io
+label: 'TEC Product: Insert Size entity'
+version: '1.0'
+weight: -4
+events:
+  Event_09jscyq:
+    plugin: 'content_entity:insert'
+    label: Insert
+    configuration:
+      type: 'tec_product tec_size_variation'
+    successors:
+      -
+        id: Activity_0v0c0ue
+        condition: ''
+conditions:
+  Flow_1vwki6c:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_color_variation
+      negate: true
+      entity: ''
+  Flow_1hen4vc:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: title
+      entity: ''
+gateways:
+  Gateway_1qp8bye:
+    type: 0
+    successors:
+      -
+        id: Activity_00xsj33
+        condition: Flow_1vwki6c
+      -
+        id: Activity_0at1jp5
+        condition: ''
+  Gateway_1ui3py5:
+    type: 0
+    successors:
+      -
+        id: Gateway_1qp8bye
+        condition: ''
+      -
+        id: Activity_0yxwcox
+        condition: Flow_1hen4vc
+actions:
+  Activity_14gj02s:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the Product'
+    configuration:
+      field_name_entity_ref: field_tec_product
+      token_name: product
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: color
+    successors:
+      -
+        id: Activity_0dk2zj1
+        condition: ''
+  Activity_0dk2zj1:
+    plugin: eca_set_field_value
+    label: 'Reference Product on Size'
+    configuration:
+      field_name: field_tec_product
+      field_value: '[product]'
+      method: 'append:not_full'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_1nwrn1r
+        condition: ''
+  Activity_0v0c0ue:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running "TEC Product: Insert Size entity" ECA Model'
+    successors:
+      -
+        id: Gateway_1ui3py5
+        condition: ''
+  Activity_0at1jp5:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished running "TEC Product: Insert Size entity" ECA Model'
+    successors: {  }
+  Activity_00xsj33:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the Color'
+    configuration:
+      field_name_entity_ref: field_tec_color_variation
+      token_name: color
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_14gj02s
+        condition: ''
+  Activity_1nwrn1r:
+    plugin: eca_set_field_value
+    label: 'Reference Size on Color'
+    configuration:
+      field_name: field_tec_size_variations
+      field_value: '[entity]'
+      method: 'append:not_full'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: color
+    successors: {  }
+  Activity_0yxwcox:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the Size term'
+    configuration:
+      field_name_entity_ref: field_tec_size
+      token_name: sizeTerm
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_18amye0
+        condition: ''
+  Activity_18amye0:
+    plugin: eca_set_field_value
+    label: 'Set Title'
+    configuration:
+      field_name: title
+      field_value: '[sizeTerm:name]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }

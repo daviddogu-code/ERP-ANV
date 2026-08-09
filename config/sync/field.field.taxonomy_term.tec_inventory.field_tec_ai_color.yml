@@ -1,0 +1,24 @@
+uuid: fdc81e83-7c03-4b08-a290-49572d7ea333
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_ai_color
+    - taxonomy.vocabulary.tec_inventory
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: taxonomy_term.tec_inventory.field_tec_ai_color
+field_name: field_tec_ai_color
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'AI Color determination'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

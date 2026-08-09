@@ -1,0 +1,22 @@
+uuid: b23151d4-83ef-4c93-97a3-fa7592799864
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: tec_inventory_materials
+label: 'TEC Inventory: Materials'
+type: 'canonical_entities:taxonomy_term'
+pattern: 'material/[term:field_tec_material_type]/[term:name]'
+selection_criteria:
+  ffdc2967-8b8d-4657-9e36-89d5f482c9a3:
+    id: 'entity_bundle:taxonomy_term'
+    negate: false
+    uuid: ffdc2967-8b8d-4657-9e36-89d5f482c9a3
+    context_mapping:
+      taxonomy_term: taxonomy_term
+    bundles:
+      tec_materials: tec_materials
+selection_logic: and
+weight: -5
+relationships: {  }

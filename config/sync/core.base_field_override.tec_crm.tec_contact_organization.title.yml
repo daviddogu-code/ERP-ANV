@@ -1,0 +1,18 @@
+uuid: 2fe8dca8-0c31-4841-8c64-23234a34e541
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+id: tec_crm.tec_contact_organization.title
+field_name: title
+entity_type: tec_crm
+bundle: tec_contact_organization
+label: Name
+description: '<none>'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

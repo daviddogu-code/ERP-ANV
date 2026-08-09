@@ -1,0 +1,31 @@
+uuid: 1dde8323-c8c5-4135-bb6a-d6d58dff91a3
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_inventory_transaction
+    - field.storage.taxonomy_term.field_tec_stock_mutations
+    - taxonomy.vocabulary.tec_inventory
+_core:
+  default_config_hash: j-BFY0N4IUc2FGLzUTsUqeVtF-53ESYr0BxsfI1nHhk
+id: taxonomy_term.tec_inventory.field_tec_stock_mutations
+field_name: field_tec_stock_mutations
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'Stock mutations'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_inventory'
+  handler_settings:
+    target_bundles:
+      tec_inventory_transaction: tec_inventory_transaction
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

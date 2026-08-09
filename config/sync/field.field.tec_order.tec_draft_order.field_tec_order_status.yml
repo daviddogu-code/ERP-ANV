@@ -1,0 +1,23 @@
+uuid: ab7176af-961c-4e9d-94b3-2bc36708f593
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_draft_order
+    - field.storage.tec_order.field_tec_order_status
+  module:
+    - options
+id: tec_order.tec_draft_order.field_tec_order_status
+field_name: field_tec_order_status
+entity_type: tec_order
+bundle: tec_draft_order
+label: 'Order status'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: draft
+default_value_callback: ''
+settings: {  }
+field_type: list_string

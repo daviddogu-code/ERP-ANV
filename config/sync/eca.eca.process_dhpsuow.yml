@@ -1,0 +1,206 @@
+uuid: 36b42fde-a528-43ec-8c8c-eecb70639925
+langcode: en
+status: true
+dependencies:
+  module:
+    - eca_base
+    - eca_content
+    - eca_flag
+    - eca_log
+    - flag
+id: process_dhpsuow
+modeller: bpmn_io
+label: 'TEC Order:Delete order'
+version: '1.1'
+weight: 9
+events:
+  Event_1heswvq:
+    plugin: 'flag:flag'
+    label: Flag
+    configuration: {  }
+    successors:
+      -
+        id: Activity_1paucfe
+        condition: Flow_025m475
+conditions:
+  Flow_025m475:
+    plugin: eca_scalar
+    configuration:
+      negate: false
+      case: false
+      left: '[flag]'
+      right: tec_delete_order
+      operator: equal
+      type: value
+  Flow_0szo34k:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_line_items
+      negate: true
+      entity: ''
+  Flow_1cb51st:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: lineitem
+  Flow_00xtymb:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: lineitem
+  Flow_1kr1wha:
+    plugin: eca_entity_type_bundle
+    configuration:
+      negate: false
+      type: 'tec_order tec_sales_order'
+      entity: ''
+  Flow_0tprj3g:
+    plugin: eca_entity_type_bundle
+    configuration:
+      negate: false
+      type: 'tec_order tec_purchase_order'
+      entity: ''
+gateways:
+  Gateway_1gjqczh:
+    type: 0
+    successors:
+      -
+        id: Gateway_1xcte7a
+        condition: ''
+      -
+        id: Activity_079nkl7
+        condition: Flow_0szo34k
+  Gateway_1xcte7a:
+    type: 0
+    successors:
+      -
+        id: Activity_1rbkbn1
+        condition: Flow_1kr1wha
+      -
+        id: Gateway_0wfgq3k
+        condition: ''
+  Gateway_0wfgq3k:
+    type: 0
+    successors:
+      -
+        id: Activity_19niaax
+        condition: ''
+      -
+        id: Activity_0nxsivs
+        condition: Flow_0tprj3g
+actions:
+  Activity_1paucfe:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Order:Delete order" ECA Model.'
+    successors:
+      -
+        id: Activity_0j3646t
+        condition: ''
+  Activity_19niaax:
+    plugin: eca_delete_entity
+    label: 'Delete the order'
+    configuration:
+      object: ''
+    successors:
+      -
+        id: Activity_0o53no8
+        condition: ''
+  Activity_0ixuavt:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished: "TEC Order:Delete order" ECA Model.'
+    successors: {  }
+  Activity_079nkl7:
+    plugin: eca_get_field_value
+    label: 'Get field value and build list'
+    configuration:
+      field_name: field_tec_line_items
+      token_name: lineitems
+      object: ''
+    successors:
+      -
+        id: Activity_0810v6j
+        condition: ''
+  Activity_0810v6j:
+    plugin: eca_list_remove_entity
+    label: 'Drop the first line item'
+    configuration:
+      token_name: lineitem
+      method: first
+      index: ''
+      list_token: lineitems
+      object: ''
+    successors:
+      -
+        id: Activity_1r8xxyx
+        condition: Flow_1cb51st
+      -
+        id: Activity_19niaax
+        condition: Flow_00xtymb
+  Activity_1r8xxyx:
+    plugin: eca_delete_entity
+    label: 'Delete line item'
+    configuration:
+      object: lineitem
+    successors:
+      -
+        id: Activity_0810v6j
+        condition: ''
+  Activity_0o53no8:
+    plugin: action_goto_action
+    label: 'Redirect the user'
+    configuration:
+      url: '[contact:url]'
+      replace_tokens: true
+    successors:
+      -
+        id: Activity_0ixuavt
+        condition: ''
+  Activity_1rbkbn1:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the Customer'
+    configuration:
+      field_name_entity_ref: field_tec_customer
+      token_name: contact
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors: {  }
+  Activity_0nxsivs:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the Supplier'
+    configuration:
+      field_name_entity_ref: field_tec_vendor
+      token_name: contact
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors: {  }
+  Activity_0j3646t:
+    plugin: flag_delete_flagging
+    label: Unflag
+    configuration:
+      object: flagging
+    successors:
+      -
+        id: Gateway_1gjqczh
+        condition: ''

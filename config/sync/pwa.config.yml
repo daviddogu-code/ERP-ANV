@@ -1,0 +1,22 @@
+_core:
+  default_config_hash: mN2oCEdjGtL8kxM2pn61KraReH8xINSHCIEUT-_HtCA
+langcode: en
+name: 'Acta ERP'
+short_name: 'Acta ERP'
+description: 'The Acta non Verba ERP'
+start_url: /
+scope: /removethis
+lang: en
+dir: auto
+orientation: any
+categories:
+  - business
+theme_color: '#000000'
+background_color: '#ffffff'
+display: fullscreen
+cross_origin: false
+image_fid: 113
+image_small_fid: 217
+image_very_small_fid: 218
+manifest_path_mode: all_except_listed
+manifest_paths: ''

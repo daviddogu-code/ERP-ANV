@@ -1,0 +1,424 @@
+_core:
+  default_config_hash: K_LddvA0aVOWbF6aw7aoX1n_BmWah6y3HWE1Ya7QmUc
+entity_type_cancel_destination:
+  default:
+    path: /
+    enabled: true
+  comment:
+    path: /
+    enabled: false
+  block:
+    path: /admin/structure/block
+    enabled: true
+  block_content_type:
+    path: /admin/structure/block/block-content/types
+    enabled: true
+  comment_type:
+    path: /admin/structure/comment
+    enabled: true
+  contact_form:
+    path: /admin/structure/contact
+    enabled: true
+  editor:
+    path: /
+    enabled: false
+  field_storage_config:
+    path: /
+    enabled: false
+  field_config:
+    path: /
+    enabled: true
+  file:
+    path: /
+    enabled: false
+  filter_format:
+    path: /admin/config/content/formats
+    enabled: true
+  image_style:
+    path: /admin/config/media/image-styles
+    enabled: true
+  node_type:
+    path: /admin/structure/types
+    enabled: true
+  node:
+    path: /
+    enabled: true
+  shortcut_set:
+    path: /
+    enabled: false
+  shortcut:
+    path: /
+    enabled: false
+  action:
+    path: /
+    enabled: false
+  menu:
+    path: /
+    enabled: false
+  taxonomy_term:
+    path: /
+    enabled: true
+  taxonomy_vocabulary:
+    path: /admin/structure/taxonomy
+    enabled: true
+  tour:
+    path: /
+    enabled: false
+  user_role:
+    path: /admin/people/roles
+    enabled: true
+  user:
+    path: /
+    enabled: true
+  menu_link_content:
+    path: /
+    enabled: false
+  view:
+    path: /
+    enabled: false
+  base_field_override:
+    path: /
+    enabled: false
+  date_format:
+    path: /
+    enabled: false
+  entity_view_mode:
+    path: /admin/structure/display-modes/view
+    enabled: true
+  entity_form_display:
+    path: /
+    enabled: false
+  entity_view_display:
+    path: /
+    enabled: false
+  entity_form_mode:
+    path: /admin/structure/display-modes/form
+    enabled: true
+  asset_injector_css:
+    path: /
+    enabled: true
+  asset_injector_js:
+    path: /
+    enabled: true
+  backup_migrate_destination:
+    path: /
+    enabled: true
+  backup_migrate_settings:
+    path: /
+    enabled: true
+  backup_migrate_schedule:
+    path: /
+    enabled: true
+  backup_migrate_source:
+    path: /
+    enabled: true
+  block_content_basic:
+    path: /
+  block_content:
+    enabled: true
+  blb_layout:
+    path: /
+    enabled: true
+  blb_layout_option:
+    path: /
+    enabled: true
+  blb_breakpoint:
+    path: /
+    enabled: true
+  comment_comment:
+    path: /
+  commerce_log:
+    path: /
+    enabled: true
+  commerce_number_pattern:
+    path: /
+    enabled: true
+  commerce_order_item_default:
+    path: /
+  commerce_order_item:
+    enabled: true
+  commerce_order_item_type:
+    path: /
+    enabled: true
+  commerce_order_default:
+    path: /
+  commerce_order:
+    enabled: true
+  commerce_order_type:
+    path: /
+    enabled: true
+  commerce_payment:
+    path: /
+    enabled: true
+  commerce_payment_method:
+    path: /
+    enabled: true
+  commerce_payment_gateway:
+    path: /
+    enabled: true
+  commerce_currency:
+    path: /
+    enabled: true
+  commerce_product_variation_type:
+    path: /
+    enabled: true
+  commerce_product_attribute:
+    path: /
+    enabled: true
+  commerce_product_type:
+    path: /
+    enabled: true
+  commerce_product_tec_glove:
+    path: /
+  commerce_product_tec_product:
+    path: /
+  commerce_product_tec_shin_guard:
+    path: /
+  commerce_product:
+    enabled: true
+  commerce_product_variation_tec_glove:
+    path: /
+  commerce_product_variation_tec_product:
+    path: /
+  commerce_product_variation_tec_shin_guard:
+    path: /
+  commerce_product_variation:
+    enabled: true
+  commerce_product_attribute_value_tec_color:
+    path: /
+  commerce_product_attribute_value_tec_glove_weight:
+    path: /
+  commerce_product_attribute_value_tec_size:
+    path: /
+  commerce_product_attribute_value:
+    enabled: true
+  commerce_shipment_type:
+    path: /
+    enabled: true
+  commerce_shipping_method:
+    path: /
+    enabled: true
+  commerce_package_type:
+    path: /
+    enabled: true
+  commerce_shipment_default:
+    path: /
+  commerce_shipment:
+    enabled: true
+  commerce_store_type:
+    path: /
+    enabled: true
+  commerce_store_online:
+    path: /
+  commerce_store:
+    enabled: true
+  commerce_tax_type:
+    path: /
+    enabled: true
+  contact_message_feedback:
+    path: /
+  contact_message_personal:
+    path: /
+  contact_message:
+    enabled: true
+  context:
+    path: /
+    enabled: true
+  eca_model:
+    path: /
+    enabled: true
+  eca:
+    path: /
+    enabled: true
+  eck_entity_bundle:
+    path: /
+    enabled: true
+  eck_entity_type:
+    path: /
+    enabled: true
+  entity_browser:
+    path: /
+    enabled: true
+  features_bundle:
+    path: /
+    enabled: true
+  feeds_feed_tec_inventory_csv_importer:
+    path: /
+  feeds_feed:
+    enabled: true
+  feeds_subscription:
+    path: /
+    enabled: true
+  feeds_feed_type:
+    path: /
+    enabled: true
+  feeds_import_log:
+    path: /
+    enabled: true
+  file_resup:
+    path: /
+    enabled: true
+  flagging_duplicate_product_variation:
+    path: /
+  flagging_tec_duplicate_gui:
+    path: /
+  flagging_tec_eca_gui_lock:
+    path: /
+  flagging_tec_eca_line_item_lock:
+    path: /
+  flagging:
+    enabled: true
+  flag:
+    path: /
+    enabled: true
+  configurable_language:
+    path: /
+    enabled: true
+  language_content_settings:
+    path: /
+    enabled: true
+  media_audio:
+    path: /
+  media_document:
+    path: /
+  media_image:
+    path: /
+  media_remote_video:
+    path: /
+  media_video:
+    path: /
+  media:
+    enabled: true
+  media_type:
+    path: /
+    enabled: true
+  name_list_format:
+    path: /
+    enabled: true
+  name_format:
+    path: /
+    enabled: true
+  node_entity_browser_test:
+    path: /
+  node_tec_landing_page:
+    path: /
+  path_alias:
+    path: /
+    enabled: true
+  profile_type:
+    path: /
+    enabled: true
+  profile_customer:
+    path: /
+  profile_t:
+    path: /
+  profile:
+    enabled: true
+  redirect:
+    path: /
+    enabled: true
+  search_page:
+    path: /
+    enabled: true
+  shortcut_default:
+    path: /
+  taxonomy_term_tags:
+    path: /
+  taxonomy_term_tec_brands:
+    path: /
+  taxonomy_term_tec_colors:
+    path: /
+  taxonomy_term_tec_inventory:
+    path: /
+  taxonomy_term_tec_materials:
+    path: /
+  taxonomy_term_tec_patterns:
+    path: /
+  taxonomy_term_tec_patterns_gloves:
+    path: /
+  taxonomy_term_tec_patterns_shin_guards:
+    path: /
+  taxonomy_term_tec_product_types:
+    path: /
+  taxonomy_term_tec_sizes:
+    path: /
+  taxonomy_term_tec_units:
+    path: /
+  ultimate_cron_job:
+    path: /
+    enabled: true
+  workflow:
+    path: /
+    enabled: true
+  pathauto_pattern:
+    path: /
+    enabled: true
+  tec_app_link_tec_facebook:
+    path: /
+  tec_app_link_tec_instagram:
+    path: /
+  tec_app_link_tec_line:
+    path: /
+  tec_app_link_tec_phone:
+    path: /
+  tec_app_link_tec_whatsapp:
+    path: /
+  tec_app_link_tec_x:
+    path: /
+  tec_app_link:
+    enabled: true
+  tec_app_link_type:
+    path: /
+    enabled: true
+  tec_crm_tec_contact_organization:
+    path: /
+  tec_crm_tec_contact_person:
+    path: /
+  tec_crm:
+    enabled: true
+  tec_crm_type:
+    path: /
+    enabled: true
+  tec_gui_pattern_bom:
+    path: /
+  tec_gui_tec_general_product_ui:
+    path: /
+  tec_gui:
+    enabled: true
+  tec_gui_type:
+    path: /
+    enabled: true
+  tec_inventory_tec_bom_item:
+    path: /
+  tec_inventory_tec_inventory_item:
+    path: /
+  tec_inventory_tec_inventory_transaction:
+    path: /
+  tec_inventory_tec_line_item_bom_item:
+    path: /
+  tec_inventory:
+    enabled: true
+  tec_inventory_type:
+    path: /
+    enabled: true
+  tec_line_item_tec_sales_order_line_item:
+    path: /
+  tec_line_item:
+    enabled: true
+  tec_line_item_type:
+    path: /
+    enabled: true
+  tec_order_tec_sales_order:
+    path: /
+  tec_order:
+    enabled: true
+  tec_order_type:
+    path: /
+    enabled: true
+  tec_product_tec_product:
+    path: /
+  tec_product:
+    enabled: true
+  tec_product_type:
+    path: /
+    enabled: true

@@ -1,0 +1,36 @@
+uuid: ed20ba3e-4261-4ddd-8bcd-ceb6fa042cc8
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_product_duplicate_color
+label: 'TEC Product: Duplicate color variation'
+bundles:
+  - tec_color_variation
+entity_type: tec_product
+global: true
+flag_short: '<span class="tec-control"><img src="/sites/default/files/000-copy-21.png" title="Duplicate variation"></span>'
+flag_long: 'This will duplicate the variation and all of its sizes.'
+flag_message: ''
+unflag_short: 'Unset duplicate button'
+unflag_long: 'Unset the button in case the process failed or got stuck.'
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_product'
+link_type: confirm
+flagTypeConfig:
+  show_in_links:
+    product_view: product_view
+  show_as_field: true
+  show_on_form: false
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig:
+  flag_confirmation: 'Duplicate this variation?'
+  unflag_confirmation: 'Unset?'
+  flag_create_button: 'OK, continue'
+  flag_delete_button: Unset
+  form_behavior: dialog

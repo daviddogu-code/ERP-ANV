@@ -1,0 +1,64 @@
+uuid: c522691e-7de7-4d89-a56f-8ee12702b72f
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_draft_order
+    - entity_browser.browser.tec_products
+    - field.field.tec_order.tec_draft_order.field_tec_customer
+    - field.field.tec_order.tec_draft_order.field_tec_line_items
+    - field.field.tec_order.tec_draft_order.field_tec_order_status
+  module:
+    - entity_browser
+    - field_group
+third_party_settings:
+  field_group:
+    group_sidebar:
+      children:
+        - field_tec_order_status
+      label: Details
+      region: hidden
+      parent_name: ''
+      weight: 7
+      format_type: details
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        open: true
+        description: ''
+        required_fields: true
+id: tec_order.tec_draft_order.default
+targetEntityType: tec_order
+bundle: tec_draft_order
+mode: default
+content:
+  field_tec_line_items:
+    type: entity_browser_entity_reference
+    weight: 1
+    region: content
+    settings:
+      entity_browser: tec_products
+      field_widget_display: entity_browser_vertical_label
+      field_widget_edit: true
+      field_widget_remove: true
+      field_widget_replace: false
+      open: true
+      field_widget_display_settings: {  }
+      selection_mode: selection_append
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  created: true
+  field_tec_customer: true
+  field_tec_order_status: true
+  langcode: true
+  status: true
+  uid: true

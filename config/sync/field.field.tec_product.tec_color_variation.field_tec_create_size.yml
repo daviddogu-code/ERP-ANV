@@ -1,0 +1,105 @@
+uuid: 262d6e4c-f690-447d-98a0-df69811cbd39
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_color_variation
+    - field.storage.tec_product.field_tec_create_size
+    - views.view.tec_product_elements
+  module:
+    - viewfield
+id: tec_product.tec_color_variation.field_tec_create_size
+field_name: field_tec_create_size
+entity_type: tec_product
+bundle: tec_color_variation
+label: 'Create size button'
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    target_uuid: c6059cfd-41b5-45ab-9489-730f04da9bda
+    display_id: embed_5
+    arguments: '[tec_product:id]'
+    items_to_display: ''
+    token_help: ''
+default_value_callback: ''
+settings:
+  force_default: true
+  allowed_views:
+    tec_product_elements: tec_product_elements
+    commerce_activity: '0'
+    comment: '0'
+    content: '0'
+    block_content: '0'
+    draggableviews_demo: '0'
+    dragtest: '0'
+    eca_log: '0'
+    tec_order_eca_create_draft_excel_lover: '0'
+    feeds_feed: '0'
+    feeds_import_logs: '0'
+    files: '0'
+    files_entity_browser: '0'
+    frontpage: '0'
+    media: '0'
+    media_library: '0'
+    nodes_entity_browser: '0'
+    commerce_order_item_table: '0'
+    commerce_orders: '0'
+    order_shipments: '0'
+    commerce_order_payments: '0'
+    user_admin_people: '0'
+    commerce_products: '0'
+    product_terms: '0'
+    profiles: '0'
+    comments_recent: '0'
+    content_recent: '0'
+    redirect: '0'
+    commerce_stores: '0'
+    taxonomy_term: '0'
+    tec_entity_browser_taxonomy: '0'
+    tec_icons_launchpad: '0'
+    tec_inventory_overview: '0'
+    tec_product_gui_entities: '0'
+    tec_products_overview: '0'
+    tec_product_variation_bom_viewmode: '0'
+    tec_product_variation_elements: '0'
+    tec_product_variation_overview: '0'
+    tec_admin_gui_entities: '0'
+    tec_admin_inventory_entities: '0'
+    tec_admin_line_items: '0'
+    tec_admin_order_entities: '0'
+    te: '0'
+    tec_brands: '0'
+    tec_brands_gui_products_by_brand: '0'
+    tec_crm_contact_customer_products: '0'
+    tec_crm_contact_details_tab: '0'
+    tec_crm_customers: '0'
+    tec_gui_bom_item_viewfields: '0'
+    tec_gui_products_entity_browser: '0'
+    tec_inventory_bom_inventory_entity_reference_select: '0'
+    tec_order_color_variations_and_line_items: '0'
+    tec_order_create_draft_order_ii_excel_lover_style_eca_model: '0'
+    tec_order_draft_order_line_items_excel_lover: '0'
+    tec_order_material_calculation_terms: '0'
+    tec_order_sales_order_line_items: '0'
+    tec_orders_orders: '0'
+    tec_pattern_elements: '0'
+    tec_products: '0'
+    tec_products_entity_browser: '0'
+    commerce_user_orders: '0'
+    watchdog: '0'
+    who_s_new: '0'
+    who_s_online: '0'
+  allowed_display_types:
+    embed: embed
+    attachment: '0'
+    block: '0'
+    default: '0'
+    entity_browser: '0'
+    entity_reference: '0'
+    feed: '0'
+    page: '0'
+  handler: 'default:view'
+  handler_settings: {  }
+field_type: viewfield

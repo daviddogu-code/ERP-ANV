@@ -1,0 +1,15 @@
+uuid: 767a82a9-5e0d-4e79-ade1-3ca4a1cb1f15
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_order_cancel_sales_order
+  module:
+    - flag
+id: flag_action.tec_order_cancel_sales_order_flag
+label: 'Cancel order'
+type: tec_order
+plugin: 'flag_action:tec_order_cancel_sales_order_flag'
+configuration:
+  flag_id: tec_order_cancel_sales_order
+  flag_action: flag

@@ -1,0 +1,26 @@
+uuid: 8d5a6641-9426-43d9-86ac-b5a20a2d3969
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - field.storage.tec_line_item.field_tec_custom_sales_price
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: tec_line_item.tec_sales_order_line_item.field_tec_custom_sales_price
+field_name: field_tec_custom_sales_price
+entity_type: tec_line_item
+bundle: tec_sales_order_line_item
+label: 'Custom price'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: 'Custom price'
+  off_label: 'Default price'
+field_type: boolean

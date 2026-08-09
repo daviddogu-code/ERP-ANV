@@ -1,0 +1,20 @@
+uuid: f82da6d5-7219-4aae-8c18-693ba6d92cfa
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+id: tec_crm.tec_contact_organization.uid
+field_name: uid
+entity_type: tec_crm
+bundle: tec_contact_organization
+label: 'Created by'
+description: 'The username of the entity author.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: default
+  handler_settings: {  }
+field_type: entity_reference

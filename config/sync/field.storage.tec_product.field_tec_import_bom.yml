@@ -1,0 +1,24 @@
+uuid: 507e8de8-2c05-4b27-8b3e-08d0946f0f79
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - feeds
+    - field_permissions
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_product.field_tec_import_bom
+field_name: field_tec_import_bom
+entity_type: tec_product
+type: entity_reference
+settings:
+  target_type: feeds_feed
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

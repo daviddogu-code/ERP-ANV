@@ -1,0 +1,162 @@
+uuid: 12bcced1-38d8-4dc4-b71e-09206dd647b2
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_color_variation
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_custom_sales_price
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_gui_product
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_bom
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_total
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_total_number
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_order
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_price
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_product
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_quantity
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_size_variation
+  module:
+    - editablefields
+    - field_formatter_class
+id: tec_line_item.tec_sales_order_line_item.default
+targetEntityType: tec_line_item
+bundle: tec_sales_order_line_item
+mode: default
+content:
+  created:
+    type: timestamp
+    label: hidden
+    settings:
+      date_format: medium
+      custom_date_format: ''
+      timezone: ''
+      tooltip:
+        date_format: long
+        custom_date_format: ''
+      time_diff:
+        enabled: false
+        future_format: '@interval hence'
+        past_format: '@interval ago'
+        granularity: 2
+        refresh: 60
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_tec_color_variation:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 12
+    region: content
+  field_tec_custom_sales_price:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 9
+    region: content
+  field_tec_line_item_bom:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 7
+    region: content
+  field_tec_line_item_total:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 15
+    region: content
+  field_tec_line_item_total_number:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_tec_order:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 8
+    region: content
+  field_tec_price:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 14
+    region: content
+  field_tec_product:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 10
+    region: content
+  field_tec_quantity:
+    type: editablefields_formatter
+    label: above
+    settings:
+      form_mode: default
+      behaviour: inline
+      bypass_access: 0
+      fallback_access: 0
+      display_mode_access: default
+      fallback_edit: 0
+      display_mode_edit: default
+      fields_ajax_trigger: 'field_tec_quantity,field_tec_line_item_total_number,field_tec_line_item_total'
+      fields_ajax_trigger_event: change
+    third_party_settings:
+      field_formatter_class:
+        class: ''
+    weight: 3
+    region: content
+  field_tec_size_variation:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 11
+    region: content
+  flag_tec_eca_line_item_lock:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 10
+    region: content
+  title:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: -5
+    region: content
+hidden:
+  changed: true
+  field_tec_gui_product: true
+  langcode: true

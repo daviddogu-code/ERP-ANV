@@ -1,0 +1,61 @@
+uuid: c1222115-dc76-464c-b98f-d211545d2453
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.tec_units.ai_interpolator_status
+    - field.field.taxonomy_term.tec_units.field_tec_unit_plural
+    - field.field.taxonomy_term.tec_units.field_tec_unit_symbol
+    - field.field.taxonomy_term.tec_units.field_tec_unit_type
+    - taxonomy.vocabulary.tec_units
+  module:
+    - manage_display
+    - options
+    - text
+id: taxonomy_term.tec_units.default
+targetEntityType: taxonomy_term
+bundle: tec_units
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_tec_unit_plural:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_tec_unit_symbol:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_tec_unit_type:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  name:
+    type: title
+    label: hidden
+    settings:
+      link_to_entity: true
+      tag: h2
+    third_party_settings: {  }
+    weight: -49
+    region: content
+hidden:
+  ai_interpolator_status: true
+  langcode: true

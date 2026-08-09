@@ -1,0 +1,34 @@
+uuid: 77d11f84-16eb-4c6e-bd2b-db0610d560c1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_uos_uop
+    - taxonomy.vocabulary.tec_inventory
+  module:
+    - ai_interpolator
+    - epp
+third_party_settings:
+  epp:
+    value: '1'
+    on_update: 0
+  ai_interpolator:
+    interpolator_enabled: false
+id: taxonomy_term.tec_inventory.field_tec_uos_uop
+field_name: field_tec_uos_uop
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: '1 UoP = UoS'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 1.0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

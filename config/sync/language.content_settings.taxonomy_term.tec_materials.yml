@@ -1,0 +1,11 @@
+uuid: 1e285685-7e7c-45d9-8693-99b4ae648165
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_materials
+id: taxonomy_term.tec_materials
+target_entity_type_id: taxonomy_term
+target_bundle: tec_materials
+default_langcode: site_default
+language_alterable: false

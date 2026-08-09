@@ -1,0 +1,29 @@
+uuid: b016f10e-8586-4239-ab38-72331d6974f8
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - eck.eck_type.tec_order.tec_purchase_order
+    - field.storage.tec_order.field_tec_vendor
+id: tec_order.tec_purchase_order.field_tec_vendor
+field_name: field_tec_vendor
+entity_type: tec_order
+bundle: tec_purchase_order
+label: Supplier
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_crm'
+  handler_settings:
+    target_bundles:
+      tec_contact_organization: tec_contact_organization
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

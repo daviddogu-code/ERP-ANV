@@ -1,0 +1,29 @@
+uuid: f074be5c-173b-41e6-a868-6d6a011fdeca
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - eck.eck_type.tec_product.tec_product
+    - field.storage.tec_line_item.field_tec_size_variation
+id: tec_line_item.tec_sales_order_line_item.field_tec_size_variation
+field_name: field_tec_size_variation
+entity_type: tec_line_item
+bundle: tec_sales_order_line_item
+label: 'Size variation'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_product'
+  handler_settings:
+    target_bundles:
+      tec_product: tec_product
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

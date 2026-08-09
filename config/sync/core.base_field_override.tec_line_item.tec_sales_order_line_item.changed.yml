@@ -1,0 +1,18 @@
+uuid: 97086e32-25b3-486b-8b22-4a722b514ede
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+id: tec_line_item.tec_sales_order_line_item.changed
+field_name: changed
+entity_type: tec_line_item
+bundle: tec_sales_order_line_item
+label: Updated
+description: 'The time that the entity was last edited.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: changed

@@ -1,0 +1,18 @@
+uuid: 9d55b4b6-d065-4a02-9ed0-d6d42dc2a501
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_purchase_order
+id: tec_order.tec_purchase_order.title
+field_name: title
+entity_type: tec_order
+bundle: tec_purchase_order
+label: 'Order ID'
+description: 'The title of the entity.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

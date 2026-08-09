@@ -1,0 +1,10 @@
+settings:
+  allowed_values:
+    0:
+      label: นำทาง
+    4:
+      label: ส่วนหัว
+    6:
+      label: Content
+    10:
+      label: Footer

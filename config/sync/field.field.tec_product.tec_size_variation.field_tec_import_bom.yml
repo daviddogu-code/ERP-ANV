@@ -1,0 +1,29 @@
+uuid: c4d48bd9-ecb3-4274-968b-c44967ec8ab8
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_size_variation
+    - feeds.feed_type.tec_bom_items_importer
+    - field.storage.tec_product.field_tec_import_bom
+id: tec_product.tec_size_variation.field_tec_import_bom
+field_name: field_tec_import_bom
+entity_type: tec_product
+bundle: tec_size_variation
+label: 'Import BoM'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:feeds_feed'
+  handler_settings:
+    target_bundles:
+      tec_bom_items_importer: tec_bom_items_importer
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: true
+    auto_create_bundle: ''
+field_type: entity_reference

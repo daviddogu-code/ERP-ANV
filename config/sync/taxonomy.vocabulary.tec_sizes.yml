@@ -1,0 +1,9 @@
+uuid: b8b24ad1-642b-4a4c-9d8b-9959326748f1
+langcode: en
+status: true
+dependencies: {  }
+name: Sizes
+vid: tec_sizes
+description: 'Catalog of sizes'
+weight: 0
+new_revision: false

@@ -1,0 +1,20 @@
+uuid: 4f147b77-cb2e-4460-b39a-4045e09d4e8a
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - taxonomy
+id: taxonomy_term.field_tec_stock_mutations
+field_name: field_tec_stock_mutations
+entity_type: taxonomy_term
+type: entity_reference
+settings:
+  target_type: tec_inventory
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,23 @@
+uuid: 248593e5-8747-4d58-a07a-ad18a3f3602e
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_inventory.field_tec_size_variation
+field_name: field_tec_size_variation
+entity_type: tec_inventory
+type: entity_reference
+settings:
+  target_type: tec_product
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

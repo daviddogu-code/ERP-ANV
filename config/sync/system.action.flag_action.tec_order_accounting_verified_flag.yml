@@ -1,0 +1,15 @@
+uuid: 39aab9ee-5e5d-4302-ab73-b3b69cd21de6
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_order_accounting_verified
+  module:
+    - flag
+id: flag_action.tec_order_accounting_verified_flag
+label: '=> Accounting verified'
+type: tec_order
+plugin: 'flag_action:tec_order_accounting_verified_flag'
+configuration:
+  flag_id: tec_order_accounting_verified
+  flag_action: flag

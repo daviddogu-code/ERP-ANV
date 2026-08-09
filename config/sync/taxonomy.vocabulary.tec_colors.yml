@@ -1,0 +1,9 @@
+uuid: 2c4c0674-3d17-4cfc-aa4b-dbf52cc33320
+langcode: en
+status: true
+dependencies: {  }
+name: Colors
+vid: tec_colors
+description: 'Holds colors of all products and materials'
+weight: 0
+new_revision: false

@@ -1,0 +1,25 @@
+uuid: 691c1fd6-6c5b-4b21-89c0-c996225c9aa0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.feeds_item
+    - taxonomy.vocabulary.tec_inventory
+  module:
+    - feeds
+_core:
+  default_config_hash: mnCFc71FeyAPXwcJIBXMpiMZAGNbZxAgl-4olfpatHc
+id: taxonomy_term.tec_inventory.feeds_item
+field_name: feeds_item
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'Feeds item'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:feeds_feed'
+  handler_settings: {  }
+field_type: feeds_item

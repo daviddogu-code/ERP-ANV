@@ -1,0 +1,9 @@
+uuid: 1238d9af-3537-4f29-a87a-36d54e787c70
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_order
+name: 'Sales order'
+type: tec_sales_order
+description: ''

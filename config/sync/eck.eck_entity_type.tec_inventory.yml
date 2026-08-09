@@ -1,0 +1,12 @@
+uuid: 8e2c376a-ef29-49f2-997c-b36e20d34b2c
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: OLY2CTd6_M9qkwQ1iSQmoslWn7f4oCj8TzpUUU_2whg
+id: tec_inventory
+label: Inventory
+uid: true
+created: true
+changed: true
+title: true

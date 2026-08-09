@@ -1,0 +1,282 @@
+uuid: defd03e9-c8b5-4ceb-8fff-c6d0ce63a193
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+    - field.field.tec_product.tec_color_variation.field_tec_product
+    - field.field.tec_product.tec_color_variation.field_tec_size_variations
+    - field.field.tec_product.tec_product.field_tec_color_variations
+    - field.field.tec_product.tec_size_variation.field_tec_color_variation
+    - field.field.tec_product.tec_size_variation.field_tec_product
+    - field.storage.tec_product.field_tec_color_variation
+    - field.storage.tec_product.field_tec_color_variations
+    - field.storage.tec_product.field_tec_product
+    - field.storage.tec_product.field_tec_size_variations
+    - flag.flag.tec_eca_product_lock
+  module:
+    - eca_base
+    - eca_content
+    - eca_log
+    - flag
+id: process_dxgyftk
+modeller: bpmn_io
+label: 'TEC Product: Set references on sub-entities.'
+version: '1.2'
+weight: 3
+events:
+  Event_187304w:
+    plugin: 'content_entity:insert'
+    label: 'Product insert'
+    configuration:
+      type: 'tec_product tec_product'
+    successors:
+      -
+        id: Gateway_0h2w28p
+        condition: ''
+  Event_1j8jyce:
+    plugin: 'content_entity:update'
+    label: Update
+    configuration:
+      type: 'tec_product tec_product'
+    successors:
+      -
+        id: Activity_1l5g923
+        condition: ''
+conditions:
+  Flow_0jqoc83:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: colorDropped
+  Flow_0pez2zs:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: sizeDropped
+  Flow_1qk83tq:
+    plugin: eca_token_exists
+    configuration:
+      token_name: colorDropped
+      negate: true
+  Flow_0exne9i:
+    plugin: eca_token_exists
+    configuration:
+      token_name: sizeDropped
+      negate: true
+  Flow_1rj8lkf:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_size_variations
+      negate: true
+      entity: ''
+  Flow_0hdyob6:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_size_variations
+      entity: ''
+  Flow_1pbnj0q:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_color_variations
+      negate: true
+      entity: ''
+  Flow_1rbpo55:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_color_variations
+      entity: ''
+gateways:
+  Gateway_0h2w28p:
+    type: 0
+    successors:
+      -
+        id: Activity_1r8r1c5
+        condition: ''
+  Gateway_1ylkkhs:
+    type: 0
+    successors:
+      -
+        id: Activity_1l04y22
+        condition: Flow_0jqoc83
+      -
+        id: Activity_1u97ldr
+        condition: Flow_1qk83tq
+  Gateway_1a1bxzg:
+    type: 0
+    successors:
+      -
+        id: Activity_025r795
+        condition: Flow_0pez2zs
+      -
+        id: Gateway_07xlwfs
+        condition: Flow_0exne9i
+  Gateway_07xlwfs:
+    type: 0
+    successors:
+      -
+        id: Gateway_0byo9a8
+        condition: ''
+  Gateway_0byo9a8:
+    type: 0
+    successors:
+      -
+        id: Gateway_0eyiy77
+        condition: ''
+  Gateway_0eyiy77:
+    type: 0
+    successors:
+      -
+        id: Activity_1oeknte
+        condition: ''
+  Gateway_0ov4vsu:
+    type: 0
+    successors:
+      -
+        id: Activity_0ap1yo3
+        condition: Flow_1rj8lkf
+      -
+        id: Activity_1oeknte
+        condition: Flow_0hdyob6
+  Gateway_0pos1qz:
+    type: 0
+    successors:
+      -
+        id: Activity_05gdkq7
+        condition: Flow_1pbnj0q
+      -
+        id: Activity_1u97ldr
+        condition: Flow_1rbpo55
+actions:
+  Activity_1r8r1c5:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: TEC Products: Set field data on sub-entities ECA Model.<br>'
+    successors:
+      -
+        id: Gateway_0pos1qz
+        condition: ''
+  Activity_05gdkq7:
+    plugin: eca_get_field_value
+    label: 'Get field value and build list'
+    configuration:
+      field_name: field_tec_color_variations
+      token_name: colorVariations
+      object: ''
+    successors:
+      -
+        id: Activity_1oeknte
+        condition: ''
+  Activity_1oeknte:
+    plugin: eca_list_remove_entity
+    label: 'Drop the first Color variation'
+    configuration:
+      token_name: colorDropped
+      method: first
+      index: ''
+      list_token: colorVariations
+      object: ''
+    successors:
+      -
+        id: Gateway_1ylkkhs
+        condition: ''
+  Activity_0ap1yo3:
+    plugin: eca_get_field_value
+    label: 'Get field value and build list'
+    configuration:
+      field_name: field_tec_size_variations
+      token_name: sizeVariations
+      object: colorDropped
+    successors:
+      -
+        id: Activity_1e0nq3a
+        condition: ''
+  Activity_1e0nq3a:
+    plugin: eca_list_remove_entity
+    label: 'Drop the first Size variation'
+    configuration:
+      token_name: sizeDropped
+      method: first
+      index: ''
+      list_token: sizeVariations
+      object: ''
+    successors:
+      -
+        id: Gateway_1a1bxzg
+        condition: ''
+  Activity_025r795:
+    plugin: eca_set_field_value
+    label: 'Reference the Color variation'
+    configuration:
+      field_name: field_tec_color_variation
+      field_value: '[colorDropped]'
+      method: 'set:empty'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: sizeDropped
+    successors:
+      -
+        id: Activity_1hr8sdf
+        condition: ''
+  Activity_1hr8sdf:
+    plugin: eca_set_field_value
+    label: 'Reference the Product'
+    configuration:
+      field_name: field_tec_product
+      field_value: '[entity]'
+      method: 'set:empty'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: sizeDropped
+    successors:
+      -
+        id: Activity_1e0nq3a
+        condition: ''
+  Activity_1dsrd5s:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished "TEC Products: Set field data on sub-entities" ECA Model.'
+    successors: {  }
+  Activity_1l5g923:
+    plugin: 'flag_action:tec_eca_product_lock_flag'
+    label: 'Lock Product'
+    configuration:
+      object: ''
+    successors:
+      -
+        id: Gateway_0h2w28p
+        condition: ''
+  Activity_1u97ldr:
+    plugin: 'flag_action:tec_eca_product_lock_unflag'
+    label: 'Unlock Product'
+    configuration:
+      object: ''
+    successors:
+      -
+        id: Activity_1dsrd5s
+        condition: ''
+  Activity_1l04y22:
+    plugin: eca_set_field_value
+    label: 'Reference the Product'
+    configuration:
+      field_name: field_tec_product
+      field_value: '[entity]'
+      method: 'set:empty'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: colorDropped
+    successors:
+      -
+        id: Gateway_0ov4vsu
+        condition: ''

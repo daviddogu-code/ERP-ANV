@@ -1,0 +1,15 @@
+uuid: 14b117e2-cf5f-4010-957d-3e43bfa19ff3
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_order_sales_save_continue
+  module:
+    - flag
+id: flag_action.tec_order_sales_save_continue_flag
+label: 'Save and continue'
+type: tec_order
+plugin: 'flag_action:tec_order_sales_save_continue_flag'
+configuration:
+  flag_id: tec_order_sales_save_continue
+  flag_action: flag

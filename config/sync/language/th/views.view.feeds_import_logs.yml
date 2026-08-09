@@ -1,0 +1,36 @@
+display:
+  default:
+    display_title: Master
+    display_options:
+      fields:
+        import_id:
+          label: ไอดี
+        uid:
+          label: User
+        sources_value:
+          label: แหล่ง
+      pager:
+        options:
+          tags:
+            next: ››
+            previous: ‹‹
+          expose:
+            items_per_page_label: 'Items per page'
+            items_per_page_options_all_label: '- All -'
+            offset_label: Offset
+      exposed_form:
+        options:
+          submit_button: Apply
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+      arguments:
+        feed:
+          exception:
+            title: ทั้งหมด
+  page_1:
+    display_title: Page
+    display_options:
+      menu:
+        title: ภาพรวม

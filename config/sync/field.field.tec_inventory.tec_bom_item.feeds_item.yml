@@ -1,0 +1,23 @@
+uuid: bb660aac-9a26-4929-99cd-27c2ab889d8f
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - field.storage.tec_inventory.feeds_item
+  module:
+    - feeds
+id: tec_inventory.tec_bom_item.feeds_item
+field_name: feeds_item
+entity_type: tec_inventory
+bundle: tec_bom_item
+label: 'Feeds item'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:feeds_feed'
+  handler_settings: {  }
+field_type: feeds_item

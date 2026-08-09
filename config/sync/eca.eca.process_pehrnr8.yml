@@ -1,0 +1,465 @@
+uuid: 3f93ed11-8d2d-4020-92f7-280d42857be0
+langcode: en
+status: false
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_po_line_item
+    - field.field.tec_line_item.tec_po_line_item.field_tec_inventory
+    - field.field.tec_line_item.tec_po_line_item.field_tec_line_item_total_number
+    - field.field.tec_line_item.tec_po_line_item.field_tec_price
+    - field.field.tec_line_item.tec_po_line_item.field_tec_quantity
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_total_number
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_price
+    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_quantity
+    - field.storage.tec_line_item.field_tec_inventory
+    - field.storage.tec_line_item.field_tec_line_item_total_number
+    - field.storage.tec_line_item.field_tec_price
+    - field.storage.tec_line_item.field_tec_quantity
+  module:
+    - eca_content
+    - eca_log
+    - eca_tamper
+id: process_pehrnr8
+modeller: bpmn_io
+label: 'TEC Line item: Set PO line item data (clone)'
+version: '0.3'
+weight: null
+events:
+  Event_1u4dhan:
+    plugin: 'content_entity:update'
+    label: Update
+    configuration:
+      type: 'tec_line_item tec_po_line_item'
+    successors:
+      -
+        id: Gateway_0f9ff4g
+        condition: ''
+  Event_0ble8kd:
+    plugin: 'content_entity:insert'
+    label: Insert
+    configuration:
+      type: 'tec_line_item tec_po_line_item'
+    successors:
+      -
+        id: Gateway_0f9ff4g
+        condition: ''
+conditions:
+  Flow_0qyud9f:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: title
+      entity: ''
+  Flow_1kgsmx5:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_price
+      negate: true
+      entity: ''
+  Flow_10q2ohe:
+    plugin: eca_entity_field_value
+    configuration:
+      case: false
+      expected_value: '[lineitemTotalFormatted]'
+      field_name: field_tec_line_item_total_number
+      operator: equal
+      type: value
+      negate: true
+      entity: ''
+  Flow_0ow34a5:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_quantity
+      negate: true
+      entity: ''
+  Flow_0ifn2n7:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_quantity
+      entity: ''
+  Flow_1q639op:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_line_item_total_number
+      negate: true
+      entity: ''
+  Flow_0zwojsk:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '0.1'
+      field_name: field_tec_quantity
+      operator: greaterthan
+      type: value
+      entity: ''
+  Flow_0wcd1kc:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: field_tec_quantity
+      operator: lessthan
+      type: value
+      entity: ''
+  Flow_1bbf7dx:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_line_item_total_number
+      negate: true
+      entity: ''
+  Flow_0vokjl5:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '[lineitemTotalFormatted]'
+      field_name: field_tec_line_item_total_number
+      operator: equal
+      type: value
+      entity: ''
+  Flow_0vwgp9n:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_package_units:value'
+      operator: equal
+      type: value
+      entity: inventoryItem
+  Flow_04va143:
+    plugin: eca_entity_field_value
+    configuration:
+      case: false
+      expected_value: '[lineitemPriceFormatted]'
+      field_name: field_tec_price
+      operator: equal
+      type: value
+      negate: true
+      entity: ''
+  Flow_1mr4auq:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '[lineitemPriceFormatted]'
+      field_name: field_tec_price
+      operator: equal
+      type: value
+      entity: ''
+  Flow_0pft622:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_split_inventory:value'
+      operator: equal
+      type: value
+      entity: inventoryItem
+gateways:
+  Gateway_08mh5x7:
+    type: 0
+    successors:
+      -
+        id: Activity_1kfpox7
+        condition: Flow_0qyud9f
+      -
+        id: Gateway_0dupqyy
+        condition: ''
+  Gateway_0f9ff4g:
+    type: 0
+    successors:
+      -
+        id: Activity_0zrl5uw
+        condition: ''
+  Gateway_0dupqyy:
+    type: 0
+    successors:
+      -
+        id: Gateway_088ab1a
+        condition: ''
+      -
+        id: Gateway_1d59009
+        condition: ''
+  Gateway_17k7pz9:
+    type: 0
+    successors:
+      -
+        id: Gateway_02wcv7l
+        condition: Flow_0ow34a5
+      -
+        id: Gateway_12do8qw
+        condition: Flow_0ifn2n7
+  Gateway_1d59009:
+    type: 0
+    successors:
+      -
+        id: Gateway_17k7pz9
+        condition: Flow_1kgsmx5
+  Gateway_12do8qw:
+    type: 0
+    successors:
+      -
+        id: Activity_19lza6u
+        condition: Flow_1q639op
+  Gateway_02wcv7l:
+    type: 0
+    successors:
+      -
+        id: Gateway_0sk7oxt
+        condition: Flow_0zwojsk
+      -
+        id: Gateway_0uesxu4
+        condition: Flow_0wcd1kc
+  Gateway_088ab1a:
+    type: 0
+    successors:
+      -
+        id: Activity_1bvif8x
+        condition: ''
+  Gateway_0uesxu4:
+    type: 0
+    successors:
+      -
+        id: Activity_19lza6u
+        condition: Flow_1bbf7dx
+  Gateway_1u9dhwx:
+    type: 0
+    successors:
+      -
+        id: Gateway_1kirlmw
+        condition: Flow_10q2ohe
+      -
+        id: Activity_00orgr2
+        condition: Flow_0vokjl5
+  Gateway_1kirlmw:
+    type: 0
+    successors:
+      -
+        id: Activity_174s2w8
+        condition: ''
+  Gateway_0sk7oxt:
+    type: 0
+    successors:
+      -
+        id: Activity_020nm9h
+        condition: ''
+  Gateway_1b3l2br:
+    type: 0
+    successors:
+      -
+        id: Activity_1cqqxqq
+        condition: Flow_04va143
+      -
+        id: Activity_1y15zcd
+        condition: Flow_1mr4auq
+  Gateway_1qkjqz7:
+    type: 0
+    successors:
+      -
+        id: Activity_08b3x6v
+        condition: Flow_0vwgp9n
+  Gateway_1fqxeh9:
+    type: 0
+    successors:
+      -
+        id: Activity_13zmhep
+        condition: Flow_0pft622
+      -
+        id: Gateway_1u9dhwx
+        condition: ''
+actions:
+  Activity_1kfpox7:
+    plugin: eca_set_field_value
+    label: 'Set the title field'
+    configuration:
+      field_name: title
+      field_value: '[inventoryItem:name]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: false
+      object: ''
+    successors: {  }
+  Activity_1jsq6vp:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the Inventory item'
+    configuration:
+      field_name_entity_ref: field_tec_inventory
+      token_name: inventoryItem
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Gateway_08mh5x7
+        condition: ''
+  Activity_020nm9h:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate line item total'
+    configuration:
+      operation: multiplication
+      flip: false
+      value: '[entity:field_tec_price:value]'
+      eca_data: '[entity:field_tec_quantity:value]'
+      eca_token_name: lineitemTotal
+    successors:
+      -
+        id: Activity_1nf5hlm
+        condition: ''
+  Activity_174s2w8:
+    plugin: eca_set_field_value
+    label: 'Set line item total numer field & Save'
+    configuration:
+      field_name: field_tec_line_item_total_number
+      field_value: '[lineitemTotalFormatted]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_1nf5hlm:
+    plugin: 'eca_tamper:number_format'
+    label: 'Format the number'
+    configuration:
+      decimals: '2'
+      dec_point: .
+      thousands_sep: ''
+      eca_data: '[lineitemTotal]'
+      eca_token_name: lineitemTotalFormatted
+    successors:
+      -
+        id: Gateway_1fqxeh9
+        condition: ''
+  Activity_19lza6u:
+    plugin: eca_set_field_value
+    label: 'Clear Line item total & Save'
+    configuration:
+      field_name: field_tec_line_item_total_number
+      field_value: ''
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_00orgr2:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: "Total is what's calculated. Returning to process."
+    successors: {  }
+  Activity_0zrl5uw:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Line item: Set PO line item data" ECA Model.'
+    successors:
+      -
+        id: Activity_1jsq6vp
+        condition: ''
+  Activity_1bvif8x:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finsihed: "TEC Line item: Set PO line item data" ECA Model.'
+    successors: {  }
+  Activity_16f7ax1:
+    plugin: 'eca_tamper:math'
+    label: 'Calculate new price'
+    configuration:
+      operation: multiplication
+      flip: false
+      value: '[entity:field_tec_price:value]'
+      eca_data: '[inventoryItem:field_tec_units:value]'
+      eca_token_name: lineitemPrice
+    successors:
+      -
+        id: Activity_0d8zf11
+        condition: ''
+  Activity_08b3x6v:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: |-
+        Custom UoP found.
+        Price: [entity:field_tec_price:value]
+    successors:
+      -
+        id: Activity_16f7ax1
+        condition: ''
+  Activity_1y15zcd:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: "Price doesn't need adjusting."
+    successors: {  }
+  Activity_0d8zf11:
+    plugin: 'eca_tamper:number_format'
+    label: 'Format the new number'
+    configuration:
+      decimals: '2'
+      dec_point: .
+      thousands_sep: ','
+      eca_data: '[lineitemPrice]'
+      eca_token_name: lineitemPriceFormatted
+    successors:
+      -
+        id: Gateway_1b3l2br
+        condition: ''
+  Activity_1cqqxqq:
+    plugin: eca_set_field_value
+    label: 'Set new price & Save'
+    configuration:
+      field_name: field_tec_price
+      field_value: '[tec_line_item:field_tec_inventory:entity:field_tec_cost]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }
+  Activity_1xz7dl3:
+    plugin: 'eca_tamper:math'
+    label: 'Multiply the line item total'
+    configuration:
+      operation: multiplication
+      flip: false
+      value: '[multiplierFormatted]'
+      eca_data: '[lineitemTotalFormatted]'
+      eca_token_name: lineitemTotalFormatted
+    successors: {  }
+  Activity_13zmhep:
+    plugin: 'eca_tamper:number_format'
+    label: 'Format the multiplier'
+    configuration:
+      decimals: '2'
+      dec_point: .
+      thousands_sep: ''
+      eca_data: '[inventoryItem:field_tec_uou_split_qty]'
+      eca_token_name: multiplierFormatted
+    successors:
+      -
+        id: Activity_1xz7dl3
+        condition: ''

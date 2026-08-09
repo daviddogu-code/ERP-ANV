@@ -1,0 +1,69 @@
+uuid: 38c70c26-92f1-4bf1-92c3-be81338c47f0
+langcode: en
+status: true
+dependencies:
+  config:
+    - feeds.feed_type.tec_bom_items_importer
+    - field.field.feeds_feed.tec_bom_items_importer.field_tec_size_variation
+  module:
+    - feeds
+    - user
+id: feeds_feed.tec_bom_items_importer.default
+targetEntityType: feeds_feed
+bundle: tec_bom_items_importer
+mode: default
+content:
+  field_tec_size_variation:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  imported:
+    type: timestamp_ago
+    label: inline
+    settings:
+      future_format: '@interval hence'
+      past_format: '@interval ago'
+      granularity: 2
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  item_count:
+    type: number_integer
+    label: inline
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  next:
+    type: timestamp
+    label: inline
+    settings:
+      date_format: medium
+      custom_date_format: ''
+      timezone: ''
+      tooltip:
+        date_format: long
+        custom_date_format: ''
+      time_diff:
+        enabled: false
+        future_format: '@interval hence'
+        past_format: '@interval ago'
+        granularity: 2
+        refresh: 60
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  source:
+    type: feeds_uri_link
+    label: inline
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden: {  }

@@ -1,0 +1,278 @@
+uuid: 0d6686c1-bec9-4722-95a6-467e4f47d54d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.tec_product.tec_color_variation.field_tec_size_variations
+    - field.field.tec_product.tec_product.field_tec_color_variations
+    - field.storage.tec_product.field_tec_color_variations
+    - field.storage.tec_product.field_tec_size_variations
+  module:
+    - eca_base
+    - eca_content
+    - eca_log
+id: process_ztrjnog
+modeller: bpmn_io
+label: 'TEC Products: Deletion routine'
+version: '1.0'
+weight: 1
+events:
+  Event_0brmfsr:
+    plugin: 'content_entity:predelete'
+    label: Pre-delete
+    configuration:
+      type: 'tec_product _all'
+    successors:
+      -
+        id: Activity_1qyq4u9
+        condition: ''
+conditions:
+  Flow_05hpupq:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_size_variations
+      negate: true
+      entity: ''
+  Flow_1u8vgfk:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: size
+  Flow_1p9vnz6:
+    plugin: eca_token_exists
+    configuration:
+      token_name: size
+      negate: true
+  Flow_0o2xjsk:
+    plugin: eca_entity_type_bundle
+    configuration:
+      negate: false
+      type: 'tec_product tec_color_variation'
+      entity: ''
+  Flow_1i0nuz3:
+    plugin: eca_entity_type_bundle
+    configuration:
+      negate: false
+      type: 'tec_product tec_product'
+      entity: ''
+  Flow_1c88io6:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_color_variations
+      negate: true
+      entity: ''
+  Flow_1n1pj4g:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: color
+  Flow_0v6xlgs:
+    plugin: eca_token_exists
+    configuration:
+      token_name: color
+      negate: true
+  Flow_0uph2lb:
+    plugin: eca_token_exists
+    configuration:
+      negate: false
+      token_name: size
+  Flow_1az5p5y:
+    plugin: eca_token_exists
+    configuration:
+      token_name: size
+      negate: true
+gateways:
+  Gateway_0i60fma:
+    type: 0
+    successors:
+      -
+        id: Gateway_09jmn7y
+        condition: ''
+      -
+        id: Gateway_0sdxhvu
+        condition: Flow_0o2xjsk
+  Gateway_0oj70vx:
+    type: 0
+    successors:
+      -
+        id: Activity_16uahie
+        condition: Flow_1u8vgfk
+      -
+        id: Gateway_09jmn7y
+        condition: Flow_1p9vnz6
+  Gateway_09jmn7y:
+    type: 0
+    successors:
+      -
+        id: Gateway_0grp888
+        condition: ''
+  Gateway_0sdxhvu:
+    type: 0
+    successors:
+      -
+        id: Activity_0xwibcj
+        condition: Flow_05hpupq
+  Gateway_0grp888:
+    type: 0
+    successors:
+      -
+        id: Activity_13rshvg
+        condition: ''
+      -
+        id: Gateway_0ihog5q
+        condition: Flow_1i0nuz3
+  Gateway_0ihog5q:
+    type: 0
+    successors:
+      -
+        id: Activity_1gpz3he
+        condition: Flow_1c88io6
+  Gateway_01j2bjz:
+    type: 0
+    successors:
+      -
+        id: Activity_1ebdpdm
+        condition: Flow_1n1pj4g
+      -
+        id: Activity_13rshvg
+        condition: Flow_0v6xlgs
+  Gateway_0d22xvt:
+    type: 0
+    successors:
+      -
+        id: Activity_11qdbhu
+        condition: Flow_0uph2lb
+      -
+        id: Activity_0ewhsax
+        condition: Flow_1az5p5y
+actions:
+  Activity_1qyq4u9:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Product: Color entity deletion" ECA Model.'
+    successors:
+      -
+        id: Gateway_0i60fma
+        condition: ''
+  Activity_0ns5l33:
+    plugin: eca_get_field_value
+    label: 'Get value and build Sizes list'
+    configuration:
+      field_name: field_tec_size_variations
+      token_name: sizes
+      object: ''
+    successors:
+      -
+        id: Activity_1lniprf
+        condition: ''
+  Activity_1lniprf:
+    plugin: eca_list_remove_entity
+    label: 'Drop the first Size variation'
+    configuration:
+      token_name: size
+      method: first
+      index: ''
+      list_token: sizes
+      object: ''
+    successors:
+      -
+        id: Gateway_0oj70vx
+        condition: ''
+  Activity_16uahie:
+    plugin: eca_delete_entity
+    label: 'Delete the Size'
+    configuration:
+      object: size
+    successors:
+      -
+        id: Activity_1lniprf
+        condition: ''
+  Activity_1i4z50h:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished: "TEC Product: Color entity deletion" ECA Model.'
+    successors: {  }
+  Activity_0xwibcj:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Sizes found.'
+    successors:
+      -
+        id: Activity_0ns5l33
+        condition: ''
+  Activity_1gpz3he:
+    plugin: eca_get_field_value
+    label: 'Get value and build Colors list'
+    configuration:
+      field_name: field_tec_color_variations
+      token_name: colors
+      object: ''
+    successors:
+      -
+        id: Activity_0ewhsax
+        condition: ''
+  Activity_0ewhsax:
+    plugin: eca_list_remove_entity
+    label: 'Drop the first Color variation'
+    configuration:
+      token_name: color
+      method: first
+      index: ''
+      list_token: colors
+      object: ''
+    successors:
+      -
+        id: Gateway_01j2bjz
+        condition: ''
+  Activity_1ebdpdm:
+    plugin: eca_get_field_value
+    label: 'Get field value and build Sizes list'
+    configuration:
+      field_name: field_tec_size_variations
+      token_name: sizes
+      object: color
+    successors:
+      -
+        id: Activity_1lzvujn
+        condition: ''
+  Activity_1lzvujn:
+    plugin: eca_list_remove_entity
+    label: 'Drop the first Size variation'
+    configuration:
+      token_name: size
+      method: first
+      index: ''
+      list_token: sizes
+      object: ''
+    successors:
+      -
+        id: Gateway_0d22xvt
+        condition: ''
+  Activity_11qdbhu:
+    plugin: eca_delete_entity
+    label: 'Delete the size'
+    configuration:
+      object: size
+    successors:
+      -
+        id: Activity_0ewhsax
+        condition: ''
+  Activity_13rshvg:
+    plugin: action_goto_action
+    label: 'Redirect to Products'
+    configuration:
+      replace_tokens: false
+      url: /node/1
+    successors:
+      -
+        id: Activity_1i4z50h
+        condition: ''

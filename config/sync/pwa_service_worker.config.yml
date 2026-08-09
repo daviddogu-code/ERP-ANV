@@ -1,0 +1,8 @@
+_core:
+  default_config_hash: hbRa0Aq228bV5le62OUn5se9xY8yPa-D0FRSHLHkHL4
+langcode: en
+urls_to_cache: /
+urls_to_exclude: "admin/.*\r\nuser/.*\r\nnode/*/edit/*\r\ntaxonomy/term/*/edit/*\r\ntec_product/*/edit/*\r\ntec_inventory/*/edit/*\r\ntec_order/*/edit/*\r\ntec_line_item/*/edit/*\r\ntec_crm/*/edit/*\r\ntec_gui/*/edit/*"
+offline_page: /offline
+cache_version: '18'
+skip_waiting: false

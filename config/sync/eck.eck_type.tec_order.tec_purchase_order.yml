@@ -1,0 +1,9 @@
+uuid: 9b6568a3-093a-46e2-b942-dd0700c5a65d
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_order
+name: 'Purchase order'
+type: tec_purchase_order
+description: 'Order type used for material purchases from suppliers.'

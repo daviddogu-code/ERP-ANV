@@ -1,0 +1,14 @@
+uuid: b93f2f94-a56d-44f4-aa2b-343b41f56212
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.tec_customer
+  module:
+    - user
+id: user_remove_role_action.tec_customer
+label: 'Remove the Customer role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: tec_customer

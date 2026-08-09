@@ -1,0 +1,9 @@
+uuid: 0b6dc0a7-a657-4279-a445-e40ddf0f43ec
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_line_item
+name: 'Sales order line item'
+type: tec_sales_order_line_item
+description: ''

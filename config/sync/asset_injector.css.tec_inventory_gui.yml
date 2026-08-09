@@ -1,0 +1,290 @@
+uuid: d3edfe9a-8e82-4fdc-a9e8-c1dd39dc5b90
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+    - taxonomy
+id: tec_inventory_gui
+label: 'TEC Inventory: Term edit'
+code: |-
+  /* Refactoring the Graphical User Interface */
+  /* Adjusting fields */
+  /* Taxonomy name */
+  #edit-name-0-value {
+      width: 100%;
+      display: inline-block;
+  }
+
+  .select2-container--claro .select2-selection--multiple .select2-selection__choice {
+    background-color: #e9ecf1;
+    border: 1px solid rgba(0, 0, 0, .31) !important;
+    line-height: 1.3rem;
+    margin-top: 0.3rem;
+    margin-right: 0.5rem;
+    padding: calc(0.2rem - 1px);
+  }
+
+  .select2-container--claro .select2-selection--multiple .select2-selection__choice .select2-selection__choice__remove {
+    float: right;
+    border-radius: 50%;
+    color: #e9ecf1;
+    font-size: 0;
+    margin-right: 0;
+    margin-left: 0.35rem;
+    width: 1.5rem;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28px' height='28px' viewBox='0 0 28 28'%3E%3Cpath stroke='%23D4D4D8' stroke-width='4' d='M19,9L9,19'/%3E%3Cpath stroke='%23D4D4D8' stroke-width='4 ' d='M19,19L9,9'/%3E%3C/svg%3E%0A") 50% 50%/100% 100% no-repeat;
+      background-color: rgba(0, 0, 0, 0);
+    background-color: #999aa3;
+  }
+  .select2-container--claro .select2-selection--single {
+    min-height:47px;
+      height: 47px;
+  }
+
+  .select2-container--claro {
+    /* border-radius: 0.125rem; */
+    border-radius: 0;
+  }
+
+  .select2-container--claro .select2-search--dropdown .select2-search__field:hover, .select2-container--claro .select2-selection:hover {
+    /* box-shadow: inset 0 0 0 1px #222330; */
+    box-shadow: none;
+  }
+
+  .select2-container .select2-selection--multiple {
+    min-height:47px;
+  }
+
+  /* Autocomplete deluxe */
+  div.autocomplete-deluxe-container {
+      border-radius: 10px;
+      border-radius: 0px;
+      padding: 6px;
+      min-height: 40px;
+  }
+
+
+  /* Description */
+  #edit-description-0-format {
+      display: none;
+  }
+
+  /* Material category */
+  #edit-field-tec-material-type--description {
+      display: none;
+  }
+
+  /* Colors */
+  #edit-field-tec-colors--description {
+    display: none;
+  }
+
+  #right-1,
+  #left-1 {
+      display: inline-block;
+      width: 48%;
+      vertical-align: top;
+      margin-right: 1%;
+  }
+
+  #purchasing,
+  #processing,
+  #usage {
+      display: inline-block;
+      vertical-align: top;
+      margin-right: 1%;
+      padding: 10px;
+  }
+
+  /* Default styles */
+  #purchasing, #processing {
+      width: 46%;
+  }
+
+  /* Responsive styles for screens smaller than 1200px (e.g., smaller desktops) */
+  @media screen and (max-width: 1200px) {
+      #purchasing, #processing {
+          width: 48%;
+      }
+  }
+
+  /* Responsive styles for screens smaller than 992px (e.g., tablets in landscape) */
+  @media screen and (max-width: 992px) {
+      #purchasing, #processing {
+          width: 100%;
+      }
+  }
+
+  /* Responsive styles for screens smaller than 768px (e.g., tablets) */
+  @media screen and (max-width: 768px) {
+      #purchasing, #processing {
+          width: 100%;
+      }
+  }
+
+  /* Responsive styles for screens smaller than 576px (e.g., phones) */
+  @media screen and (max-width: 576px) {
+      #purchasing, #processing {
+          width: 100%;
+      }
+  }
+
+
+  #usage {
+      width: auto;
+      padding-right: 0px;
+  }
+
+  #purchasing {
+      border-right: 1px solid #ccc;
+  }
+
+  #purchasing {
+      padding-right: 20px;
+  }
+
+  /* The split option */
+  #edit-field-tec-split-wrapper {
+    display: block;
+    width: auto;
+    margin:  0 auto 60px 0;
+  }
+
+  .form-item--field-tec-split-value {
+    margin-top: 55px;
+  }
+
+  /* Tabs wrapper */
+  .field-group-tabs-wrapper {
+      margin-top: 30px;
+  }
+
+  /* Unit of Purchase column */
+  #edit-field-tec-unit-purchase-wrapper {
+      display: inline-block;
+      vertical-align: top;
+      width:40%;
+  }
+
+  #edit-field-tec-packaging-wrapper{
+      display: inline-block;
+      width: 50%;
+  }
+
+  /* Placeholder markup fields */
+  #edit-field-tec-placeholder-1-wrapper,
+  #edit-field-tec-placeholder-2-wrapper,
+  #edit-field-tec-placeholder-3-wrapper,
+  #edit-field-tec-placeholder-4-wrapper,
+  #edit-field-tec-placeholder-5-wrapper {
+      display: inline-block;
+  }
+
+  #edit-field-tec-placeholder-3-wrapper,
+  #edit-field-tec-placeholder-5-wrapper {
+      margin-right: 6px;
+  }
+
+  #edit-field-tec-units-wrapper {
+      display: inline-block;
+      width: 20%;
+  }
+
+  #edit-field-tec-units-wrapper .form-item__label {
+      display: none;
+  }
+
+  #edit-field-tec-moq-quantity-wrapper {
+      display: inline-block;
+      
+  }
+
+  #edit-field-tec-moq-package-wrapper {
+      display: inline-block;
+  }
+
+  /* The price fields need extra attention */
+  #edit-field-tec-price-by-package-wrapper,
+  #edit-field-tec-price-wrapper {
+      display: inline-block;
+      width: 50%;
+  }
+
+  #edit-field-tec-price-by-package-wrapper .form-item--field-tec-price-by-package-0-value {
+      width: 260px;
+  }
+
+  /* Unit of Stock column */
+  #edit-field-tec-uou-split-qty-wrapper {
+      display: inline-block;
+      vertical-align: top;
+      width: 30%
+  }
+  #edit-field-tec-split-unit-wrapper {
+      display: inline-block;
+      vertical-align: top;
+      width: 67%;
+      margin-left: 10px;
+  }
+
+  #edit-field-tec-split-into-wrapper {
+      display: inline-block;
+      vertical-align: top;
+      width: 30%
+  }
+
+  #edit-field-tec-uos-wrapper {
+      display: inline-block;
+      vertical-align: top;
+      width: 57%;
+      margin-left: 10px;
+  }
+
+  /* Usage column */
+
+  #edit-field-tec-unit-of-use-check-wrapper {
+      margin-top: 60px;
+  }
+
+  #edit-field-tec-unit-use-wrapper {
+      display: inline-block;
+      width: 48%;
+      margin-left: 10px;
+  }
+
+  #select2-edit-field-tec-vendor-container {
+    margin-top: -4px;
+  }
+
+  #edit-field-tec-split-unit-wrapper {
+      display: inline-block;
+      width: 66%;
+      margin-left: 10px;
+  }
+
+  /* Removing relations */
+  #edit-relations {
+      display: none;
+  }
+
+  /* Removing the "Save and go to list" control */
+  #edit-overview {
+      display: none;
+  }
+media: all
+preprocess: true
+conditions:
+  request_path:
+    id: request_path
+    negate: false
+    pages: "/admin/structure/taxonomy/manage/tec_inventory/add\r\n/taxonomy/term/*/edit"
+  'entity_bundle:taxonomy_term':
+    id: 'entity_bundle:taxonomy_term'
+    negate: false
+    context_mapping:
+      taxonomy_term: '@taxonomy_term.taxonomy_term_route_context:taxonomy_term'
+    bundles:
+      tec_inventory: tec_inventory
+contexts: {  }
+conditions_require_all: true

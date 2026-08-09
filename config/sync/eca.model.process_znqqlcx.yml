@@ -1,0 +1,162 @@
+uuid: 6951ed27-42b8-43cd-a22a-9090aabfb7e8
+langcode: en
+status: true
+dependencies:
+  config:
+    - eca.eca.process_znqqlcx
+id: process_znqqlcx
+label: 'TEC Order: Publish order'
+tags:
+  - untagged
+documentation: ''
+filename: ''
+modeldata: |
+  <?xml version="1.0" encoding="UTF-8"?>
+  <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:qa="http://some-company/schema/bpmn/qa" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+    <bpmn2:process id="Process_znQqlCx" name="TEC Order: Publish order" isExecutable="true" camunda:versionTag="0.1">
+      <bpmn2:task id="Activity_1paucfe" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_write_log_message" />
+          </camunda:properties>
+          <camunda:field name="channel">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:field name="severity">
+            <camunda:string>7</camunda:string>
+          </camunda:field>
+          <camunda:field name="message">
+            <camunda:string>Running: "TEC Order: Publish order" ECA Model.
+  </camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_1cje8z2</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_191uhqn</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:task id="Activity_0ixuavt" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_write_log_message" />
+          </camunda:properties>
+          <camunda:field name="channel">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:field name="severity">
+            <camunda:string>7</camunda:string>
+          </camunda:field>
+          <camunda:field name="message">
+            <camunda:string>Finished: "TEC Order: Publish order" ECA Model.</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_1t2mshl</bpmn2:incoming>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_191uhqn" sourceRef="Activity_1paucfe" targetRef="Activity_0z1hiad" />
+      <bpmn2:task id="Activity_0z1hiad" name="Publish order" camunda:modelerTemplate="org.drupal.action.entity:publish_action:tec_order">
+        <bpmn2:extensionElements>
+          <camunda:field name="object">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="entity:publish_action:tec_order" />
+          </camunda:properties>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_191uhqn</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_0rn29s4</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="Flow_0rn29s4" sourceRef="Activity_0z1hiad" targetRef="Activity_1950fan" />
+      <bpmn2:task id="Activity_1950fan" name="Save order" camunda:modelerTemplate="org.drupal.action.eca_save_entity">
+        <bpmn2:extensionElements>
+          <camunda:field name="object">
+            <camunda:string></camunda:string>
+          </camunda:field>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_save_entity" />
+          </camunda:properties>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>Flow_0rn29s4</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_1t2mshl</bpmn2:outgoing>
+      </bpmn2:task>
+      <bpmn2:startEvent id="Event_0z43zbj" name="Update order" camunda:modelerTemplate="org.drupal.event.content_entity:update">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="content_entity:update" />
+          </camunda:properties>
+          <camunda:field name="type">
+            <camunda:string>tec_order _all</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+        <bpmn2:outgoing>Flow_1cje8z2</bpmn2:outgoing>
+      </bpmn2:startEvent>
+      <bpmn2:sequenceFlow id="Flow_1t2mshl" sourceRef="Activity_1950fan" targetRef="Activity_0ixuavt" />
+      <bpmn2:sequenceFlow id="Flow_1cje8z2" name="Publish check" camunda:modelerTemplate="org.drupal.condition.eca_scalar" sourceRef="Event_0z43zbj" targetRef="Activity_1paucfe">
+        <bpmn2:extensionElements>
+          <camunda:properties>
+            <camunda:property name="pluginid" value="eca_scalar" />
+          </camunda:properties>
+          <camunda:field name="left">
+            <camunda:string>[entity:status:value]</camunda:string>
+          </camunda:field>
+          <camunda:field name="operator">
+            <camunda:string>equal</camunda:string>
+          </camunda:field>
+          <camunda:field name="right">
+            <camunda:string>1</camunda:string>
+          </camunda:field>
+          <camunda:field name="type">
+            <camunda:string>value</camunda:string>
+          </camunda:field>
+          <camunda:field name="case">
+            <camunda:string>no</camunda:string>
+          </camunda:field>
+          <camunda:field name="negate">
+            <camunda:string>yes</camunda:string>
+          </camunda:field>
+        </bpmn2:extensionElements>
+      </bpmn2:sequenceFlow>
+    </bpmn2:process>
+    <bpmndi:BPMNDiagram id="sid-de1b7786-9ac3-4a75-850e-9a8e112e7d2f">
+      <bpmndi:BPMNPlane id="sid-58ec0e84-524c-42bc-b84c-ec8834f347be" bpmnElement="Process_znQqlCx">
+        <bpmndi:BPMNShape id="Event_0z43zbj_di" bpmnElement="Event_0z43zbj">
+          <dc:Bounds x="742" y="422" width="36" height="36" />
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="728" y="465" width="65" height="14" />
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_1paucfe_di" bpmnElement="Activity_1paucfe">
+          <dc:Bounds x="860" y="400" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_0z1hiad_di" bpmnElement="Activity_0z1hiad">
+          <dc:Bounds x="1040" y="400" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_1950fan_di" bpmnElement="Activity_1950fan">
+          <dc:Bounds x="1200" y="400" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNShape id="Activity_0ixuavt_di" bpmnElement="Activity_0ixuavt">
+          <dc:Bounds x="1360" y="400" width="100" height="80" />
+          <bpmndi:BPMNLabel />
+        </bpmndi:BPMNShape>
+        <bpmndi:BPMNEdge id="Flow_191uhqn_di" bpmnElement="Flow_191uhqn">
+          <di:waypoint x="960" y="440" />
+          <di:waypoint x="1040" y="440" />
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_0rn29s4_di" bpmnElement="Flow_0rn29s4">
+          <di:waypoint x="1140" y="440" />
+          <di:waypoint x="1200" y="440" />
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_1t2mshl_di" bpmnElement="Flow_1t2mshl">
+          <di:waypoint x="1300" y="440" />
+          <di:waypoint x="1360" y="440" />
+        </bpmndi:BPMNEdge>
+        <bpmndi:BPMNEdge id="Flow_1cje8z2_di" bpmnElement="Flow_1cje8z2">
+          <di:waypoint x="778" y="440" />
+          <di:waypoint x="860" y="440" />
+          <bpmndi:BPMNLabel>
+            <dc:Bounds x="785" y="422" width="68" height="14" />
+          </bpmndi:BPMNLabel>
+        </bpmndi:BPMNEdge>
+      </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+  </bpmn2:definitions>

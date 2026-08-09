@@ -1,0 +1,15 @@
+uuid: ca6ac7c9-c268-473a-8119-3dbd449cea36
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_order_draft_po
+  module:
+    - flag
+id: flag_action.tec_order_draft_po_unflag
+label: 'Unset + Purchase order'
+type: tec_crm
+plugin: 'flag_action:tec_order_draft_po_unflag'
+configuration:
+  flag_id: tec_order_draft_po
+  flag_action: unflag

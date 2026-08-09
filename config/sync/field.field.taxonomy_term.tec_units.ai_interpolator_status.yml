@@ -1,0 +1,22 @@
+uuid: 873c6423-1de3-4765-a3f5-f05fdf51cbca
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.ai_interpolator_status
+    - taxonomy.vocabulary.tec_units
+  module:
+    - options
+id: taxonomy_term.tec_units.ai_interpolator_status
+field_name: ai_interpolator_status
+entity_type: taxonomy_term
+bundle: tec_units
+label: 'AI Interpolator Status'
+description: ''
+required: true
+translatable: true
+default_value:
+  - pending
+default_value_callback: ''
+settings: {  }
+field_type: list_string

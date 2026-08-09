@@ -1,0 +1,9 @@
+uuid: 5a0a638b-973c-43ee-a186-c83c7a0f1a33
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_app_link
+name: X
+type: tec_x
+description: 'X contact link'

@@ -1,0 +1,22 @@
+uuid: 091603f5-6810-43f4-8e55-1e7c58119274
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+id: tec_product.tec_product.status
+field_name: status
+entity_type: tec_product
+bundle: tec_product
+label: Active
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

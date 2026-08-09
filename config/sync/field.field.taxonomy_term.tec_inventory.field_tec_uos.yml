@@ -1,0 +1,34 @@
+uuid: 7e23c9a2-33c7-48ca-a06e-4f72dbd97a9e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_uos
+    - taxonomy.vocabulary.tec_inventory
+    - taxonomy.vocabulary.tec_units
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: taxonomy_term.tec_inventory.field_tec_uos
+field_name: field_tec_uos
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'Unit of Stock (UoS)'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tec_units: tec_units
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -1,0 +1,22 @@
+uuid: 24260801-9fb5-4fa3-8f37-9822d437c3c2
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_sales_order
+id: tec_order.tec_sales_order.status
+field_name: status
+entity_type: tec_order
+bundle: tec_sales_order
+label: Status
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

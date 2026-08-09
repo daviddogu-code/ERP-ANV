@@ -1,0 +1,48 @@
+uuid: 27e4304c-b14e-46b2-8249-a3c54fac6f01
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.tec_landing_page.body
+    - field.field.node.tec_landing_page.field_icon_order
+    - field.field.node.tec_landing_page.field_tec_icon
+    - field.field.node.tec_landing_page.layout_builder__layout
+    - node.type.tec_landing_page
+  module:
+    - manage_display
+    - text
+id: node.tec_landing_page.teaser
+targetEntityType: node
+bundle: tec_landing_page
+mode: teaser
+content:
+  body:
+    type: text_summary_or_trimmed
+    label: hidden
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+  title:
+    type: title
+    label: hidden
+    settings:
+      link_to_entity: true
+      tag: h2
+    third_party_settings: {  }
+    weight: -49
+    region: content
+hidden:
+  created: true
+  field_icon_order: true
+  field_tec_icon: true
+  langcode: true
+  layout_builder__layout: true
+  uid: true

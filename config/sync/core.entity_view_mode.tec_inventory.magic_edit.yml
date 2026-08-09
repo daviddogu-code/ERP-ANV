@@ -1,0 +1,11 @@
+uuid: 24809c0c-c722-4b82-adda-38ba4a39d766
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_inventory.magic_edit
+label: 'Magic edit'
+description: ''
+targetEntityType: tec_inventory
+cache: true

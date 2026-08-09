@@ -1,0 +1,25 @@
+uuid: dc621e58-500d-4c48-91e9-135ab2e4ec73
+langcode: en
+status: true
+dependencies:
+  module:
+    - quicktabs
+    - system
+  theme:
+    - dxpr_theme
+id: dxpr_theme_quicktabsteccrmsuppliertabs
+theme: dxpr_theme
+region: content
+weight: -1
+provider: null
+plugin: 'quicktabs_block:tec_crm_supplier_tabs'
+settings:
+  id: 'quicktabs_block:tec_crm_supplier_tabs'
+  label: 'QuickTabs - TEC CRM: Supplier tabs'
+  label_display: '0'
+  provider: quicktabs
+visibility:
+  request_path:
+    id: request_path
+    negate: false
+    pages: '/supplier/*'

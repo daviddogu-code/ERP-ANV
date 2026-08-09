@@ -1,0 +1,34 @@
+uuid: 0dd0a2b5-2d86-4b6a-a1cc-a910db8d584a
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_eca_inventory_lock
+label: 'ECA Inventory lock'
+bundles: {  }
+entity_type: tec_inventory
+global: true
+flag_short: 'Lock Inventory item'
+flag_long: ''
+flag_message: ''
+unflag_short: 'Unlock inventory item'
+unflag_long: ''
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_inventory'
+link_type: reload
+flagTypeConfig:
+  show_in_links: {  }
+  show_as_field: false
+  show_on_form: true
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig:
+  flag_confirmation: 'Flag this content?'
+  unflag_confirmation: 'Unflag this content?'
+  flag_create_button: 'Create flagging'
+  flag_delete_button: 'Delete flagging'
+  form_behavior: default

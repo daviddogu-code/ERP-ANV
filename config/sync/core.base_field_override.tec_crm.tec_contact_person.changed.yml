@@ -1,0 +1,18 @@
+uuid: 5a9b027e-bb57-4dc8-a051-2cd3e7509cbe
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_person
+id: tec_crm.tec_contact_person.changed
+field_name: changed
+entity_type: tec_crm
+bundle: tec_contact_person
+label: Updated
+description: 'The time that the entity was last edited.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: changed

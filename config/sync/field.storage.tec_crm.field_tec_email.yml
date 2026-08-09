@@ -1,0 +1,18 @@
+uuid: 2c27bbb8-e20c-4c98-b3ee-6f0af753f19c
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.field_tec_email
+field_name: field_tec_email
+entity_type: tec_crm
+type: email
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

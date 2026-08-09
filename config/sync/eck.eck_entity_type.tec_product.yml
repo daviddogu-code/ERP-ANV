@@ -1,0 +1,10 @@
+uuid: 046d67eb-0060-4236-adbb-14dd07ef23fe
+langcode: en
+status: true
+dependencies: {  }
+id: tec_product
+label: 'TEC Product'
+uid: true
+created: true
+changed: true
+title: true

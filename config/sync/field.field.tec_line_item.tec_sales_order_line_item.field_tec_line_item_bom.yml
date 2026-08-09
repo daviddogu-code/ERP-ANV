@@ -1,0 +1,29 @@
+uuid: f63f7920-904a-4b55-be02-c5586e7d5a06
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_line_item_bom_item
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - field.storage.tec_line_item.field_tec_line_item_bom
+id: tec_line_item.tec_sales_order_line_item.field_tec_line_item_bom
+field_name: field_tec_line_item_bom
+entity_type: tec_line_item
+bundle: tec_sales_order_line_item
+label: 'Line item BoM'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_inventory'
+  handler_settings:
+    target_bundles:
+      tec_line_item_bom_item: tec_line_item_bom_item
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

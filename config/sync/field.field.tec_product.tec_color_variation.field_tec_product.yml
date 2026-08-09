@@ -1,0 +1,29 @@
+uuid: 02c8cdee-63a9-447d-a00f-aa0dfe2ad0aa
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_color_variation
+    - eck.eck_type.tec_product.tec_product
+    - field.storage.tec_product.field_tec_product
+id: tec_product.tec_color_variation.field_tec_product
+field_name: field_tec_product
+entity_type: tec_product
+bundle: tec_color_variation
+label: Product
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_product'
+  handler_settings:
+    target_bundles:
+      tec_product: tec_product
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: tec_product
+field_type: entity_reference

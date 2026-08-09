@@ -1,0 +1,194 @@
+uuid: 5224fc21-e442-46a0-b6f6-d57b5d907eb6
+langcode: en
+status: true
+dependencies:
+  module:
+    - eca_content
+    - eca_log
+id: process_rxuimsq
+modeller: bpmn_io
+label: 'TEC Inventory: Calculation data'
+version: '0.2'
+weight: -19
+events:
+  Event_0usfck8:
+    plugin: 'content_entity:insert'
+    label: Insert
+    configuration:
+      type: 'taxonomy_term tec_inventory'
+    successors:
+      -
+        id: Gateway_1gi1is3
+        condition: ''
+  Event_01njuyq:
+    plugin: 'content_entity:update'
+    label: Update
+    configuration:
+      type: 'taxonomy_term tec_inventory'
+    successors:
+      -
+        id: Gateway_1gi1is3
+        condition: ''
+conditions:
+  Flow_1lghswa:
+    plugin: eca_entity_field_value
+    configuration:
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_split_inventory:value'
+      operator: equal
+      type: value
+      negate: true
+      entity: ''
+  Flow_06kjw67:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_unit_purchase
+      negate: true
+      entity: ''
+  Flow_1rd40uo:
+    plugin: eca_entity_field_value
+    configuration:
+      negate: false
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_package_units:value'
+      operator: equal
+      type: value
+      entity: ''
+  Flow_0ks14g4:
+    plugin: eca_entity_field_value
+    configuration:
+      case: false
+      expected_value: '1'
+      field_name: 'field_tec_package_units:value'
+      operator: equal
+      type: value
+      negate: true
+      entity: ''
+  Flow_0fqgjwe:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_units
+      negate: true
+      entity: ''
+gateways:
+  Gateway_1gi1is3:
+    type: 0
+    successors:
+      -
+        id: Activity_15eybxe
+        condition: Flow_06kjw67
+  Gateway_0p2ik9x:
+    type: 0
+    successors:
+      -
+        id: Activity_0y94xv0
+        condition: Flow_1lghswa
+      -
+        id: Activity_10porc9
+        condition: ''
+  Gateway_0ncmh2h:
+    type: 0
+    successors:
+      -
+        id: Activity_0t7jpt6
+        condition: Flow_1rd40uo
+      -
+        id: Activity_0zn11mg
+        condition: Flow_0ks14g4
+actions:
+  Activity_0y94xv0:
+    plugin: eca_set_field_value
+    label: 'Set UoU & Save'
+    configuration:
+      field_name: field_tec_unit_use
+      field_value: '[entity:field_tec_unit_purchase]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Gateway_0ncmh2h
+        condition: ''
+  Activity_0zn11mg:
+    plugin: eca_set_field_value
+    label: 'Set UoS & Save'
+    configuration:
+      field_name: field_tec_uos
+      field_value: '[entity:field_tec_unit_purchase]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_10porc9
+        condition: ''
+  Activity_0t7jpt6:
+    plugin: eca_set_field_value
+    label: 'Set UoS & Save'
+    configuration:
+      field_name: field_tec_uos
+      field_value: '[entity:field_tec_packaging]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_0icpk2k
+        condition: Flow_0fqgjwe
+  Activity_0ti4cal:
+    plugin: eca_set_field_value
+    label: 'Set the Split into value & Save'
+    configuration:
+      field_name: field_tec_split_into
+      field_value: '[entity:field_tec_units]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_10porc9
+        condition: ''
+  Activity_15eybxe:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '0'
+      message: 'Running: "TEC Inventory: Calculation data" ECA Model.'
+    successors:
+      -
+        id: Gateway_0p2ik9x
+        condition: ''
+  Activity_10porc9:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished: "TEC Inventory: Calculation data" ECA Model.'
+    successors: {  }
+  Activity_0icpk2k:
+    plugin: eca_set_field_value
+    label: 'Set the UoU split quantity'
+    configuration:
+      field_name: field_tec_uou_split_qty
+      field_value: '1'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_0ti4cal
+        condition: ''

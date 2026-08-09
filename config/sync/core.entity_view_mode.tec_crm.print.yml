@@ -1,0 +1,11 @@
+uuid: 480931e9-af71-446a-93bb-1ed1d9d6fffb
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.print
+label: Print
+description: ''
+targetEntityType: tec_crm
+cache: true

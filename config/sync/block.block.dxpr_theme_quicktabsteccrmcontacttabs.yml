@@ -1,0 +1,25 @@
+uuid: f7409323-ecac-47bc-8b66-e764cc04c33e
+langcode: en
+status: true
+dependencies:
+  module:
+    - quicktabs
+    - system
+  theme:
+    - dxpr_theme
+id: dxpr_theme_quicktabsteccrmcontacttabs
+theme: dxpr_theme
+region: content
+weight: -2
+provider: null
+plugin: 'quicktabs_block:tec_crm_contact_tabs'
+settings:
+  id: 'quicktabs_block:tec_crm_contact_tabs'
+  label: 'QuickTabs - TEC CRM: Contact tabs'
+  label_display: '0'
+  provider: quicktabs
+visibility:
+  request_path:
+    id: request_path
+    negate: false
+    pages: '/customer/*'

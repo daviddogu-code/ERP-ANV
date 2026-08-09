@@ -1,0 +1,29 @@
+uuid: 8e210697-2a3f-465b-8372-dea35ff090f4
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.storage.tec_product.field_tec_size
+    - taxonomy.vocabulary.tec_sizes
+id: tec_product.tec_size_variation.field_tec_size
+field_name: field_tec_size
+entity_type: tec_product
+bundle: tec_size_variation
+label: Size
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tec_sizes: tec_sizes
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -1,0 +1,11 @@
+uuid: eb6c8b4e-8070-44fc-82a7-bf45955d1801
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_order.pdf
+label: PDF
+description: ''
+targetEntityType: tec_order
+cache: true

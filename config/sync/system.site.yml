@@ -1,0 +1,15 @@
+_core:
+  default_config_hash: VDJxTZtQR21qB4lvOq8zszJZLvLKrSPQpdn2E3T71Ww
+langcode: en
+uuid: 2963fe1f-5476-454c-9518-cb68ce762ede
+name: 'Acta Total Enterprise Control'
+mail: oscar@drusphere.com
+slogan: ''
+page:
+  403: ''
+  404: ''
+  front: /start
+admin_compact_mode: false
+weight_select_max: 100
+default_langcode: en
+mail_notification: ''

@@ -1,0 +1,29 @@
+uuid: 1f7935dc-10d0-48fa-b51c-22ddde532411
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_po_line_item
+    - eck.eck_type.tec_order.tec_purchase_order
+    - field.storage.tec_line_item.field_tec_order
+id: tec_line_item.tec_po_line_item.field_tec_order
+field_name: field_tec_order
+entity_type: tec_line_item
+bundle: tec_po_line_item
+label: Order
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_order'
+  handler_settings:
+    target_bundles:
+      tec_purchase_order: tec_purchase_order
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: tec_purchase_order
+field_type: entity_reference

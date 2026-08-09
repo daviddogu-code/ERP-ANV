@@ -1,0 +1,34 @@
+uuid: 0a09e381-6e33-4f30-9c46-95e82e8f75f1
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+    - field.storage.tec_product.field_tec_pattern
+    - taxonomy.vocabulary.tec_patterns
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: tec_product.tec_product.field_tec_pattern
+field_name: field_tec_pattern
+entity_type: tec_product
+bundle: tec_product
+label: Pattern
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tec_patterns: tec_patterns
+    sort:
+      field: name
+      direction: asc
+    auto_create: true
+    auto_create_bundle: tec_patterns_gloves
+field_type: entity_reference

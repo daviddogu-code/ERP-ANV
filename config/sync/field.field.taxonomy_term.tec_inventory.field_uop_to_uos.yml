@@ -1,0 +1,28 @@
+uuid: d3b56f48-7594-47a8-98ca-e65dc20b834b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_uop_to_uos
+    - taxonomy.vocabulary.tec_inventory
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: taxonomy_term.tec_inventory.field_uop_to_uos
+field_name: field_uop_to_uos
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'UoP to UoS conversion formula'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

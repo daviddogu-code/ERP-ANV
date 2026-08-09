@@ -1,0 +1,20 @@
+uuid: e5ca9558-8b5f-4791-a9e7-86c114b7f914
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - taxonomy
+id: tec_product.field_tec_product_type
+field_name: field_tec_product_type
+entity_type: tec_product
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

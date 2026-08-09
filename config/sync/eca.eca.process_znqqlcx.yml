@@ -1,0 +1,73 @@
+uuid: fac77a3d-7ff0-400c-9342-c1ef07ba199d
+langcode: en
+status: true
+dependencies:
+  module:
+    - eca_base
+    - eca_content
+    - eca_log
+    - eck
+id: process_znqqlcx
+modeller: bpmn_io
+label: 'TEC Order: Publish order'
+version: '0.1'
+weight: 7
+events:
+  Event_0z43zbj:
+    plugin: 'content_entity:update'
+    label: 'Update order'
+    configuration:
+      type: 'tec_order _all'
+    successors:
+      -
+        id: Activity_1paucfe
+        condition: Flow_1cje8z2
+conditions:
+  Flow_1cje8z2:
+    plugin: eca_scalar
+    configuration:
+      case: false
+      left: '[entity:status:value]'
+      right: '1'
+      operator: equal
+      type: value
+      negate: true
+gateways: {  }
+actions:
+  Activity_1paucfe:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Order: Publish order" ECA Model.'
+    successors:
+      -
+        id: Activity_0z1hiad
+        condition: ''
+  Activity_0ixuavt:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished: "TEC Order: Publish order" ECA Model.'
+    successors: {  }
+  Activity_0z1hiad:
+    plugin: 'entity:publish_action:tec_order'
+    label: 'Publish order'
+    configuration:
+      object: ''
+    successors:
+      -
+        id: Activity_1950fan
+        condition: ''
+  Activity_1950fan:
+    plugin: eca_save_entity
+    label: 'Save order'
+    configuration:
+      object: ''
+    successors:
+      -
+        id: Activity_0ixuavt
+        condition: ''

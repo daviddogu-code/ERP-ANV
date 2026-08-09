@@ -1,0 +1,11 @@
+uuid: 0218534d-e432-41db-a519-d4e10ade6beb
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_inventory
+_core:
+  default_config_hash: n28ZIeca0VbKlJNK3XUbwwWdfHoWTBmIcqvpgtqh7xc
+type: tec_inventory_transaction
+name: 'Inventory transaction'
+description: 'Increases or decreases stock levels of inventory.'

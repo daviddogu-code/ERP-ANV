@@ -1,0 +1,9 @@
+uuid: 4ff392bc-8e52-4701-9e21-08d8fd5590a4
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_product
+name: 'Size variation'
+type: tec_size_variation
+description: 'Size variations contain a Bill of Material'

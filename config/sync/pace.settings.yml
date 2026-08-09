@@ -1,0 +1,4 @@
+pace_theme: minimal
+pace_color: blue
+pace_load_on_admin_enabled: 1
+pace_use_unminified_js: 0

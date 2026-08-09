@@ -1,0 +1,91 @@
+uuid: da34196c-c85e-4679-b59b-0ab40da8226b
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_po_line_item
+    - field.field.tec_line_item.tec_po_line_item.field_tec_custom_sales_price
+    - field.field.tec_line_item.tec_po_line_item.field_tec_inventory
+    - field.field.tec_line_item.tec_po_line_item.field_tec_line_item_total
+    - field.field.tec_line_item.tec_po_line_item.field_tec_line_item_total_number
+    - field.field.tec_line_item.tec_po_line_item.field_tec_order
+    - field.field.tec_line_item.tec_po_line_item.field_tec_price
+    - field.field.tec_line_item.tec_po_line_item.field_tec_quantity
+    - field.field.tec_line_item.tec_po_line_item.field_tec_vendor
+id: tec_line_item.tec_po_line_item.default
+targetEntityType: tec_line_item
+bundle: tec_po_line_item
+mode: default
+content:
+  field_tec_custom_sales_price:
+    type: boolean_checkbox
+    weight: 2
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_tec_line_item_total_number:
+    type: number
+    weight: 5
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_price:
+    type: number
+    weight: 3
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings:
+      conditional_fields:
+        b44e410a-0fc2-4c69-a92c-cc7ffa359412:
+          entity_type: tec_line_item
+          bundle: tec_po_line_item
+          dependee: field_tec_custom_sales_price
+          settings:
+            state: visible
+            reset: false
+            condition: checked
+            grouping: AND
+            values_set: 1
+            value: ''
+            values: {  }
+            value_form:
+              value: false
+            effect: fade
+            effect_options:
+              fade:
+                speed: '400'
+              slide:
+                speed: '400'
+            selector: ''
+  field_tec_quantity:
+    type: number
+    weight: 1
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  langcode:
+    type: language_select
+    weight: 4
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  created: true
+  field_tec_inventory: true
+  field_tec_line_item_total: true
+  field_tec_order: true
+  field_tec_vendor: true
+  flag: true

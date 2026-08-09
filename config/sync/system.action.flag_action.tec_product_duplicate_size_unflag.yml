@@ -1,0 +1,15 @@
+uuid: 16386d51-365d-442c-b941-184eb8bbd9e2
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_product_duplicate_size
+  module:
+    - flag
+id: flag_action.tec_product_duplicate_size_unflag
+label: 'Unflag this item'
+type: tec_product
+plugin: 'flag_action:tec_product_duplicate_size_unflag'
+configuration:
+  flag_id: tec_product_duplicate_size
+  flag_action: unflag

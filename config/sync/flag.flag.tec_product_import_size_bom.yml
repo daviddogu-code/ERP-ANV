@@ -1,0 +1,30 @@
+uuid: 82484ff7-86a4-4261-afd0-25e8fba5ab83
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_product_import_size_bom
+label: 'TEC Product: Import size BoM'
+bundles:
+  - tec_size_variation
+entity_type: tec_product
+global: true
+flag_short: '<img src="/sites/default/files/000-import-csv-21.png" title="Import BoM from CSV">'
+flag_long: 'Import a Bill of Materials from a CSV file.'
+flag_message: ''
+unflag_short: 'Unset Import BoM'
+unflag_long: Unset
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_product'
+link_type: reload
+flagTypeConfig:
+  show_in_links: {  }
+  show_as_field: true
+  show_on_form: false
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig: {  }

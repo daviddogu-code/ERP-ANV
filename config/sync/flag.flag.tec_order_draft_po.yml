@@ -1,0 +1,34 @@
+uuid: 6507b93b-1b83-42bd-ae26-993d2f86c464
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_order_draft_po
+label: 'TEC Order: Draft purchase order'
+bundles: {  }
+entity_type: tec_crm
+global: true
+flag_short: '+ Purchase order'
+flag_long: 'This will create an open P.O that you can edit.'
+flag_message: ''
+unflag_short: 'Unset + Purchase order'
+unflag_long: ''
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_crm'
+link_type: reload
+flagTypeConfig:
+  show_in_links: {  }
+  show_as_field: true
+  show_on_form: false
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig:
+  flag_confirmation: 'Create a Purchase order?'
+  unflag_confirmation: 'Unset?'
+  flag_create_button: 'Yes, continue'
+  flag_delete_button: Unset
+  form_behavior: dialog

@@ -1,0 +1,18 @@
+uuid: 591a77f0-e27d-42bd-8e30-b25aa9edf4bc
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+id: tec_product.tec_product.changed
+field_name: changed
+entity_type: tec_product
+bundle: tec_product
+label: Updated
+description: 'The time that the entity was last edited.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: changed

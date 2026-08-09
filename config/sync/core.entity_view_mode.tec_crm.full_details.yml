@@ -1,0 +1,11 @@
+uuid: 75ba9770-86bb-4cb8-b45c-b881cf115551
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.full_details
+label: 'Full details'
+description: ''
+targetEntityType: tec_crm
+cache: true

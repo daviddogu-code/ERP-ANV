@@ -1,0 +1,15 @@
+uuid: b3fb466e-18ed-488f-9cc5-099f2ec23053
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_product_import_size_bom
+  module:
+    - flag
+id: flag_action.tec_product_import_size_bom_unflag
+label: 'Unset Import BoM'
+type: tec_product
+plugin: 'flag_action:tec_product_import_size_bom_unflag'
+configuration:
+  flag_id: tec_product_import_size_bom
+  flag_action: unflag

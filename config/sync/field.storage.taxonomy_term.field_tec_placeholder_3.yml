@@ -1,0 +1,23 @@
+uuid: 96885b2d-4e83-40ba-973c-4ee203a7386d
+langcode: en
+status: true
+dependencies:
+  module:
+    - field_permissions
+    - markup
+    - taxonomy
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: taxonomy_term.field_tec_placeholder_3
+field_name: field_tec_placeholder_3
+entity_type: taxonomy_term
+type: markup
+settings: {  }
+module: markup
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

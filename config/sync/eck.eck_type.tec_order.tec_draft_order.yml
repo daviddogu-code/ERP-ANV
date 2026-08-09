@@ -1,0 +1,9 @@
+uuid: 21ac9a02-2583-4e39-b011-1d151f83ba0b
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_order
+name: 'Draft order'
+type: tec_draft_order
+description: ''

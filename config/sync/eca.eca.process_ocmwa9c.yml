@@ -1,0 +1,117 @@
+uuid: 3c0923a2-4e08-487d-961c-ae7c0e344c79
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.field.tec_product.tec_size_variation.field_tec_size
+    - field.storage.tec_product.field_tec_size
+  module:
+    - eca_content
+    - eca_log
+id: process_ocmwa9c
+modeller: bpmn_io
+label: 'TEC Product: Update Size entity'
+version: '0.4'
+weight: -3
+events:
+  Event_1bw522j:
+    plugin: 'content_entity:update'
+    label: Update
+    configuration:
+      type: 'tec_product tec_size_variation'
+    successors:
+      -
+        id: Activity_1uk2k7f
+        condition: ''
+conditions:
+  Flow_0plw1gv:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_size
+      negate: true
+      entity: ''
+  Flow_08z6eg0:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_size
+      entity: ''
+  Flow_0hbaq8r:
+    plugin: eca_entity_field_value_changed
+    configuration:
+      negate: false
+      field_name: field_tec_size
+      entity: ''
+gateways:
+  Gateway_1weltu1:
+    type: 0
+    successors:
+      -
+        id: Activity_0j5eg3d
+        condition: Flow_0hbaq8r
+  Gateway_1r1jk0l:
+    type: 0
+    successors:
+      -
+        id: Gateway_1weltu1
+        condition: Flow_0plw1gv
+      -
+        id: Activity_19if21f
+        condition: Flow_08z6eg0
+actions:
+  Activity_1uk2k7f:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Product: Update Size entity" ECA Model.'
+    successors:
+      -
+        id: Gateway_1r1jk0l
+        condition: ''
+  Activity_19if21f:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: |-
+        Finished running: "TEC Color variation: Set data values on Insert" ECA Model.
+        The size name is: [size:name]
+    successors: {  }
+  Activity_0i0yukt:
+    plugin: eca_set_field_value
+    label: 'Set Title & save'
+    configuration:
+      field_name: title
+      field_value: '[size:name]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_19if21f
+        condition: ''
+  Activity_0j5eg3d:
+    plugin: eca_token_load_entity_ref
+    label: 'Load size'
+    configuration:
+      field_name_entity_ref: field_tec_size
+      token_name: size
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_0i0yukt
+        condition: ''

@@ -1,0 +1,34 @@
+uuid: c56725f1-6f89-4e44-933e-6e63d706a984
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_draft_order_excel_lover
+label: 'TEC Order: Draft Sales order'
+bundles: {  }
+entity_type: tec_crm
+global: true
+flag_short: '+ Order'
+flag_long: 'This will create an open order that you can edit until a payment is made against it.'
+flag_message: ''
+unflag_short: 'Unset + Order'
+unflag_long: ''
+unflag_message: ''
+unflag_denied_text: ''
+weight: 0
+flag_type: 'entity:tec_crm'
+link_type: reload
+flagTypeConfig:
+  show_in_links: {  }
+  show_as_field: true
+  show_on_form: false
+  show_contextual_link: false
+  extra_permissions:
+    owner: '0'
+linkTypeConfig:
+  flag_confirmation: 'Create a new order?'
+  unflag_confirmation: 'Unset?'
+  flag_create_button: 'Yes, continue'
+  flag_delete_button: Unset
+  form_behavior: modal

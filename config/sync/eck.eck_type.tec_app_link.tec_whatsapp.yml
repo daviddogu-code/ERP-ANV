@@ -1,0 +1,9 @@
+uuid: 42ca4129-db95-4a60-8a85-a2c0555ff1b7
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_app_link
+name: Whatsapp
+type: tec_whatsapp
+description: 'Whatsapp contact link'

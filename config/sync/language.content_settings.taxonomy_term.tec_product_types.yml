@@ -1,0 +1,11 @@
+uuid: 78cbe517-bb4c-4343-a42a-d4d3347d7e7b
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_product_types
+id: taxonomy_term.tec_product_types
+target_entity_type_id: taxonomy_term
+target_bundle: tec_product_types
+default_langcode: site_default
+language_alterable: false

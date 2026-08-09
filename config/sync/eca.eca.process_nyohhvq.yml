@@ -1,0 +1,115 @@
+uuid: ae4a0f75-588b-4db6-ab6d-756e88b2b9ed
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_size_variation
+    - field.field.tec_product.tec_size_variation.field_tec_import_bom
+    - field.storage.tec_product.field_tec_import_bom
+  module:
+    - eca_content
+    - eca_log
+id: process_nyohhvq
+modeller: bpmn_io
+label: 'TEC Inventory: Feed data'
+version: '1.0'
+weight: -13
+events:
+  Event_0d7i50v:
+    plugin: 'content_entity:insert'
+    label: 'Insert Size'
+    configuration:
+      type: 'tec_product tec_size_variation'
+    successors:
+      -
+        id: Gateway_1xhc939
+        condition: ''
+  Event_0e5akzx:
+    plugin: 'content_entity:update'
+    label: 'Update Size'
+    configuration:
+      type: 'tec_product tec_size_variation'
+    successors:
+      -
+        id: Gateway_1xhc939
+        condition: ''
+conditions:
+  Flow_0nng7ql:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_import_bom
+      negate: true
+      entity: ''
+  Flow_03971ui:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_size_variation
+      entity: importer
+gateways:
+  Gateway_1xhc939:
+    type: 0
+    successors:
+      -
+        id: Activity_0hua51x
+        condition: Flow_0nng7ql
+  Gateway_1unsq1v:
+    type: 0
+    successors:
+      -
+        id: Activity_1bbssu4
+        condition: ''
+      -
+        id: Activity_1yo6d04
+        condition: ''
+actions:
+  Activity_0hua51x:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Running: "TEC Invetory: Feed data" ECA Model.'
+    successors:
+      -
+        id: Gateway_1unsq1v
+        condition: ''
+  Activity_1bbssu4:
+    plugin: eca_write_log_message
+    label: Log
+    configuration:
+      channel: ''
+      severity: '7'
+      message: 'Finished: "TEC Invetory: Feed data" ECA Model.'
+    successors: {  }
+  Activity_1yo6d04:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the Importer'
+    configuration:
+      field_name_entity_ref: field_tec_import_bom
+      token_name: importer
+      from: current
+      entity_type: _none
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_05l01xv
+        condition: Flow_03971ui
+  Activity_05l01xv:
+    plugin: eca_set_field_value
+    label: 'Reference the Size'
+    configuration:
+      field_name: field_tec_size_variation
+      field_value: '[entity]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: importer
+    successors: {  }

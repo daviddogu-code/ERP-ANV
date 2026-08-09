@@ -1,0 +1,15 @@
+uuid: 6fc9fc04-a002-429f-9eb1-a1961ea04c63
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_order_accounting_verified
+  module:
+    - flag
+id: flag_action.tec_order_accounting_verified_unflag
+label: 'Unflag this item'
+type: tec_order
+plugin: 'flag_action:tec_order_accounting_verified_unflag'
+configuration:
+  flag_id: tec_order_accounting_verified
+  flag_action: unflag

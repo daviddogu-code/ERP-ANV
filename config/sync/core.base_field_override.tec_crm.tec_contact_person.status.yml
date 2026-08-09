@@ -1,0 +1,22 @@
+uuid: 35f5451d-6ea4-422b-bb00-fe5f7577e21e
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_person
+id: tec_crm.tec_contact_person.status
+field_name: status
+entity_type: tec_crm
+bundle: tec_contact_person
+label: Active
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

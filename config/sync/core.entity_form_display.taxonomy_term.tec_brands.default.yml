@@ -1,0 +1,120 @@
+uuid: 7df782b9-2904-4053-8ffc-2cc5824b8f20
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.tec_brands.field_tec_customer
+    - field.field.taxonomy_term.tec_brands.field_tec_logo
+    - taxonomy.vocabulary.tec_brands
+  module:
+    - field_group
+    - file_uploader_uppy
+    - select2
+    - text
+third_party_settings:
+  field_group:
+    group_left:
+      children:
+        - name
+        - field_tec_customer
+        - description
+      label: Left
+      region: content
+      parent_name: ''
+      weight: 0
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_right:
+      children:
+        - field_tec_logo
+      label: Right
+      region: content
+      parent_name: ''
+      weight: 1
+      format_type: html_element
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+id: taxonomy_term.tec_brands.default
+targetEntityType: taxonomy_term
+bundle: tec_brands
+mode: default
+content:
+  description:
+    type: text_textarea
+    weight: 3
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_customer:
+    type: select2_entity_reference
+    weight: 2
+    region: content
+    settings:
+      width: 100%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+  field_tec_logo:
+    type: file_uploader_uppy
+    weight: 3
+    region: content
+    settings:
+      options:
+        instance:
+          autoProceed: true
+        plugin:
+          showProgressDetails: true
+          hideCancelButton: false
+          hideProgressAfterFinish: false
+          singleFileFullScreen: true
+          disableStatusBar: false
+          disableInformer: false
+          disableThumbnailGenerator: false
+          waitForThumbnailsBeforeUpload: false
+          thumbnailWidth: 200
+          enableImageEditor: false
+          autoOpenFileEditor: false
+          imageEditor:
+            actions: {  }
+          thumbnailHeight: 200
+          theme: light
+        uploader:
+          method: xhr
+      progress_indicator: throbber
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 1
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  langcode: true
+  path: true
+  status: true

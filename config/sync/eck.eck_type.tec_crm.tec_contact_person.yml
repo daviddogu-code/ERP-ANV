@@ -1,0 +1,9 @@
+uuid: 1e62247a-f65a-4eb5-85fc-8e1d93eadf01
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_crm
+name: 'Contact: Person'
+type: tec_contact_person
+description: ''

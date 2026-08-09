@@ -1,0 +1,41 @@
+display:
+  default:
+    display_title: Default
+    display_options:
+      fields:
+        edit_tec_product:
+          text: แก้ไข
+      exposed_form:
+        options:
+          submit_button: Apply
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+      arguments:
+        id:
+          exception:
+            title: ทั้งหมด
+  embed_1:
+    display_options:
+      arguments:
+        id:
+          exception:
+            title: ทั้งหมด
+  embed_2:
+    display_options:
+      arguments:
+        id:
+          exception:
+            title: ทั้งหมด
+  embed_3:
+    display_options:
+      fields:
+        edit_tec_product:
+          text: แก้ไข
+  embed_6:
+    display_options:
+      arguments:
+        id:
+          exception:
+            title: ทั้งหมด

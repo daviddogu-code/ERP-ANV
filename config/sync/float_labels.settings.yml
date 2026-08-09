@@ -1,0 +1,7 @@
+included_forms: views_form_tec_order_sales_order_line_items_block_1_14
+excluded_forms: ''
+included_selectors: '*'
+excluded_selectors: ''
+mark_required: 0
+select_field_default_value: 0
+select_field_default_value_template: ' - %s - '

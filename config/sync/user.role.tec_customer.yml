@@ -1,0 +1,45 @@
+uuid: 68a908fc-3596-4b6b-98b7-34e1defa284d
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_person
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - eck.eck_type.tec_inventory.tec_inventory_item
+    - eck.eck_type.tec_inventory.tec_inventory_transaction
+    - eck.eck_type.tec_inventory.tec_line_item_bom_item
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - eck.eck_type.tec_order.tec_draft_order
+    - eck.eck_type.tec_order.tec_sales_order
+    - eck.eck_type.tec_product.tec_color_variation
+    - eck.eck_type.tec_product.tec_product
+    - eck.eck_type.tec_product.tec_size_variation
+  module:
+    - eck_bundle_permissions
+    - editablefields
+    - flag
+    - system
+id: tec_customer
+label: Customer
+weight: -8
+is_admin: null
+permissions:
+  - 'create tec_crm entities of bundle tec_contact_person'
+  - 'create tec_inventory entities of bundle tec_bom_item'
+  - 'create tec_inventory entities of bundle tec_inventory_item'
+  - 'create tec_inventory entities of bundle tec_inventory_transaction'
+  - 'create tec_inventory entities of bundle tec_line_item_bom_item'
+  - 'create tec_line_item entities of bundle tec_sales_order_line_item'
+  - 'create tec_order entities of bundle tec_draft_order'
+  - 'create tec_order entities of bundle tec_sales_order'
+  - 'create tec_product entities of bundle tec_color_variation'
+  - 'create tec_product entities of bundle tec_product'
+  - 'create tec_product entities of bundle tec_size_variation'
+  - 'edit own tec_order entities of bundle tec_draft_order'
+  - 'flag tec_draft_order_excel_lover'
+  - 'flag tec_order_cancel_sales_order'
+  - 'flag tec_order_checkout_excel'
+  - 'unflag tec_draft_order_excel_lover'
+  - 'use editablefields'
+  - 'view own tec_order entities of bundle tec_draft_order'
+  - 'view the administration theme'

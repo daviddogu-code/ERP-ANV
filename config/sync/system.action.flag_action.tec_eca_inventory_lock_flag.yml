@@ -1,0 +1,15 @@
+uuid: 336f59a6-c2c0-4b6d-946f-6f51e1b8775a
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_eca_inventory_lock
+  module:
+    - flag
+id: flag_action.tec_eca_inventory_lock_flag
+label: 'Lock Inventory item'
+type: tec_inventory
+plugin: 'flag_action:tec_eca_inventory_lock_flag'
+configuration:
+  flag_id: tec_eca_inventory_lock
+  flag_action: flag

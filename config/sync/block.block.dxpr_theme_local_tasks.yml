@@ -1,0 +1,31 @@
+uuid: bca07429-fa78-4726-b8a5-7fe7158dffe7
+langcode: en
+status: true
+dependencies:
+  module:
+    - user
+  theme:
+    - dxpr_theme
+_core:
+  default_config_hash: bqcUyJfypWnp1brZbJafXVGafynv0TAEfKEDh4893qM
+id: dxpr_theme_local_tasks
+theme: dxpr_theme
+region: content
+weight: -5
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: Tabs
+  label_display: '0'
+  provider: core
+  primary: true
+  secondary: true
+visibility:
+  user_role:
+    id: user_role
+    negate: false
+    context_mapping:
+      user: '@user.current_user_context:current_user'
+    roles:
+      administrator: administrator

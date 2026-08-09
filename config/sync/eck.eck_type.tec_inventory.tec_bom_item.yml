@@ -1,0 +1,9 @@
+uuid: 63b77b84-6d00-4c10-a9fe-4395013b8e32
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_inventory
+name: 'BoM item'
+type: tec_bom_item
+description: 'An item in a Bill of Materials (BoM).'

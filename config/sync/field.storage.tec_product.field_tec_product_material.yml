@@ -1,0 +1,40 @@
+uuid: 8d1f4b0c-f073-485d-bca9-645a8bd111da
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+    - options
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_product.field_tec_product_material
+field_name: field_tec_product_material
+entity_type: tec_product
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: semi
+      label: Semi
+    -
+      value: leather
+      label: Leather
+    -
+      value: microfiber
+      label: Microfiber
+    -
+      value: pu_leather
+      label: 'PU Leather'
+    -
+      value: semi_micro
+      label: 'Micro + Semi'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,35 @@
+uuid: 8644047f-f27e-479f-967f-1f35215302bd
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - field.storage.taxonomy_term.field_tec_suppliers
+    - taxonomy.vocabulary.tec_inventory
+  module:
+    - epp
+third_party_settings:
+  epp:
+    value: '[current-page:query:target_id]'
+    on_update: 0
+id: taxonomy_term.tec_inventory.field_tec_suppliers
+field_name: field_tec_suppliers
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: Suppliers
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_crm'
+  handler_settings:
+    target_bundles:
+      tec_contact_organization: tec_contact_organization
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: true
+    auto_create_bundle: tec_contact_organization
+field_type: entity_reference

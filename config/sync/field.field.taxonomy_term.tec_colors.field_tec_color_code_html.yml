@@ -1,0 +1,22 @@
+uuid: b33bab9c-659f-48c4-9e29-aa1479899a23
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_color_code_html
+    - taxonomy.vocabulary.tec_colors
+  module:
+    - color_field
+id: taxonomy_term.tec_colors.field_tec_color_code_html
+field_name: field_tec_color_code_html
+entity_type: taxonomy_term
+bundle: tec_colors
+label: 'Color code (HTML)'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  opacity: 0
+field_type: color_field_type

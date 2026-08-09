@@ -1,0 +1,11 @@
+uuid: 49e9fd08-8193-4d35-b9ad-659aeeb19036
+langcode: en
+status: true
+dependencies: {  }
+name: 'Landing page'
+type: tec_landing_page
+description: null
+help: null
+new_revision: false
+preview_mode: 0
+display_submitted: true

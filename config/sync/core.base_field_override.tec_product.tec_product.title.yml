@@ -1,0 +1,18 @@
+uuid: 6a8674cc-c9e6-423f-bedf-4f5e681cc6d4
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+id: tec_product.tec_product.title
+field_name: title
+entity_type: tec_product
+bundle: tec_product
+label: Name
+description: 'The title of the entity.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

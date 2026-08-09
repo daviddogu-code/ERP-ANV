@@ -1,0 +1,9 @@
+uuid: a4c9a379-2179-4593-a049-5c72d2835655
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_app_link
+name: Facebook
+type: tec_facebook
+description: 'Facebook contact link'

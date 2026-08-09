@@ -1,0 +1,13 @@
+uuid: c279d213-c819-4395-9340-d05d4de5446c
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_inventory
+_core:
+  default_config_hash: xJ2PwNHY8WSKrOXBsJa7fSG9_1ZZsC4jMa1eKmsKcbE
+id: taxonomy_term.tec_inventory
+target_entity_type_id: taxonomy_term
+target_bundle: tec_inventory
+default_langcode: site_default
+language_alterable: false
