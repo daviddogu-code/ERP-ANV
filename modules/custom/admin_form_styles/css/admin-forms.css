@@ -408,6 +408,25 @@ body .page-wrapper .costs-row {
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
   box-sizing: border-box;
   padding: 20px 24px 12px;
+
+  /* Controls 15% shorter than Claro's 48px default. Claro derives the height
+     from ((padding-vertical + border) * 2) + line-height, so trimming only the
+     vertical padding shrinks the box and leaves the text size alone:
+     ((7.4 + 1) * 2) + 24 = 40.8px. */
+  --input-padding-vertical: calc(0.525rem - var(--input-border-size));
+}
+
+/* Select2 hard-codes 3rem instead of reading the Claro variables above. */
+.tec-card .select2-container--claro .select2-selection--single,
+.tec-card .select2-container--claro .select2-selection--single .select2-selection__arrow,
+.tec-card .select2-container--claro .select2-selection--multiple .select2-search--inline {
+  min-height: 2.55rem;
+}
+
+.tec-card .select2-container--claro .select2-selection--single,
+.tec-card .select2-container--claro .select2-selection--multiple .select2-search--inline {
+  padding-top: calc(0.525rem - 1px);
+  padding-bottom: calc(0.525rem - 1px);
 }
 
 .tec-card > h3 {
@@ -533,7 +552,7 @@ body .page-wrapper .costs-row {
 #costs-pricing .form-item__prefix,
 #costs-pricing .field-prefix {
   position: absolute;
-  bottom: 9px;
+  bottom: 12px;
   left: 12px;
   color: #475467;
   font-weight: 600;
@@ -541,7 +560,12 @@ body .page-wrapper .costs-row {
   pointer-events: none;
 }
 
+/* The calculator writes inline styles on the two derived cost inputs, including
+   a different border width than the one it puts on Purchase Cost, so the width
+   is pinned here to keep the three boxes identical. */
 #costs-pricing input[type="number"] {
+  width: 170px;
+  max-width: 100%;
   padding-left: 32px;
 }
 
