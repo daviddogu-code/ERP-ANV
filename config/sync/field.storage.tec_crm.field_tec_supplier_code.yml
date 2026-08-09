@@ -1,0 +1,21 @@
+uuid: 29f362fc-7faf-4342-a5df-5e6eed85a0ce
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.field_tec_supplier_code
+field_name: field_tec_supplier_code
+entity_type: tec_crm
+type: string
+settings:
+  max_length: 64
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

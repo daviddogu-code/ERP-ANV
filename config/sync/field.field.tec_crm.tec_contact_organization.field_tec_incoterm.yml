@@ -1,0 +1,21 @@
+uuid: 62a6eb82-d2ef-41ba-b757-65190b43e676
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - field.storage.tec_crm.field_tec_incoterm
+  module:
+    - options
+id: tec_crm.tec_contact_organization.field_tec_incoterm
+field_name: field_tec_incoterm
+entity_type: tec_crm
+bundle: tec_contact_organization
+label: Incoterm
+description: 'Default Incoterm for purchases (FOB, CIF, EXW…).'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

@@ -8,8 +8,15 @@ dependencies:
     - field.field.tec_crm.tec_contact_person.field_tec_address
     - field.field.tec_crm.tec_contact_person.field_tec_contact_type
     - field.field.tec_crm.tec_contact_person.field_tec_email
+    - field.field.tec_crm.tec_contact_person.field_tec_incoterm
     - field.field.tec_crm.tec_contact_person.field_tec_name
+    - field.field.tec_crm.tec_contact_person.field_tec_payment_terms
     - field.field.tec_crm.tec_contact_person.field_tec_phone
+    - field.field.tec_crm.tec_contact_person.field_tec_purchase_currency
+    - field.field.tec_crm.tec_contact_person.field_tec_supplier_active
+    - field.field.tec_crm.tec_contact_person.field_tec_supplier_code
+    - field.field.tec_crm.tec_contact_person.field_tec_website
+    - field.field.tec_crm.tec_contact_person.field_tec_works_at
   module:
     - address
     - layout_builder
@@ -86,6 +93,11 @@ content:
     third_party_settings: {  }
     weight: 10
     region: content
+  flag_tec_order_draft_po:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 10
+    region: content
   title:
     type: string
     label: hidden
@@ -104,4 +116,11 @@ content:
 hidden:
   changed: true
   field_tec_contact_type: true
+  field_tec_incoterm: true
+  field_tec_payment_terms: true
+  field_tec_purchase_currency: true
+  field_tec_supplier_active: true
+  field_tec_supplier_code: true
+  field_tec_website: true
+  field_tec_works_at: true
   langcode: true

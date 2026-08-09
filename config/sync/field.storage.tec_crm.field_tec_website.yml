@@ -1,0 +1,21 @@
+uuid: d467367e-05cd-4d05-b6ee-494750439f1d
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.field_tec_website
+field_name: field_tec_website
+entity_type: tec_crm
+type: string
+settings:
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

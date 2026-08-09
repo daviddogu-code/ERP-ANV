@@ -5,10 +5,19 @@
  * Usability fixes for the CRM contact forms.
  */
 
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\views\Views;
+
+/**
+ * Contact type taxonomy term IDs.
+ */
+const TEC_CRM_UX_TYPE_CUSTOMER = 1395;
+const TEC_CRM_UX_TYPE_SUPPLIER = 1396;
 
 /**
  * Field types a URL is allowed to prefill.
@@ -25,16 +34,27 @@ const TEC_CRM_UX_PREFILL_TYPES = [
 ];
 
 /**
+ * Purchase / supplier fields shown only when Contact type = Supplier.
+ */
+function tec_crm_ux_supplier_field_names(): array {
+  return [
+    'field_tec_purchase_currency',
+    'field_tec_incoterm',
+    'field_tec_payment_terms',
+    'field_tec_supplier_code',
+    'field_tec_website',
+    'field_tec_supplier_active',
+  ];
+}
+
+/**
  * Implements hook_entity_prepare_form().
  *
- * Fills fields of a new entity from a "prefill" query parameter, so that
- * /admin/content/tec_crm/add/tec_contact_organization?prefill[field_tec_contact_type]=1396
- * opens the form with Supplier already ticked.
- *
- * The contrib prepopulate module cannot do this here. It walks the render
- * array looking for a widget structure, so the parameter has to match the
- * widget currently in use, and it deliberately refuses to touch checkboxes.
- * Writing to the entity before the form is built works whatever the widget is.
+ * Supports:
+ *   ?prefill[field_tec_contact_type]=1396
+ *   ?prefill[field_tec_works_at]=123
+ *   ?tipo=supplier|customer   (shorthand for contact type)
+ *   ?works_at=123             (shorthand for Works at)
  */
 function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, FormStateInterface $form_state) {
   if (!$entity instanceof FieldableEntityInterface || !$entity->isNew()) {
@@ -42,6 +62,37 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
   }
 
   $query = \Drupal::request()->query->all();
+
+  // Shorthand used by the Customers / Suppliers landing buttons.
+  if ($entity->getEntityTypeId() === 'tec_crm'
+    && $entity->hasField('field_tec_contact_type')
+    && $entity->get('field_tec_contact_type')->isEmpty()
+    && !empty($query['tipo'])) {
+    $tipo = strtolower((string) $query['tipo']);
+    $tid = match ($tipo) {
+      'supplier' => TEC_CRM_UX_TYPE_SUPPLIER,
+      'customer' => TEC_CRM_UX_TYPE_CUSTOMER,
+      default => NULL,
+    };
+    if ($tid) {
+      $entity->set('field_tec_contact_type', [$tid]);
+    }
+  }
+
+  if ($entity->getEntityTypeId() === 'tec_crm'
+    && $entity->bundle() === 'tec_contact_person'
+    && $entity->hasField('field_tec_works_at')
+    && $entity->get('field_tec_works_at')->isEmpty()
+    && !empty($query['works_at'])) {
+    $works_at = (int) $query['works_at'];
+    if ($works_at > 0) {
+      $org = \Drupal::entityTypeManager()->getStorage('tec_crm')->load($works_at);
+      if ($org && $org->bundle() === 'tec_contact_organization') {
+        $entity->set('field_tec_works_at', $works_at);
+      }
+    }
+  }
+
   if (empty($query['prefill']) || !is_array($query['prefill'])) {
     return;
   }
@@ -55,7 +106,6 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
     if (!in_array($definition->getType(), TEC_CRM_UX_PREFILL_TYPES, TRUE)) {
       continue;
     }
-    // Never overwrite a value the entity already carries.
     if (!$entity->get($field_name)->isEmpty()) {
       continue;
     }
@@ -71,5 +121,79 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
     }
 
     $entity->set($field_name, array_values($values));
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if (!in_array($form_id, [
+    'tec_crm_tec_contact_organization_form',
+    'tec_crm_tec_contact_person_form',
+  ], TRUE)) {
+    return;
+  }
+
+  $selector = ':input[name="field_tec_contact_type[' . TEC_CRM_UX_TYPE_SUPPLIER . ']"]';
+  $states = [
+    'visible' => [
+      $selector => ['checked' => TRUE],
+    ],
+  ];
+  foreach (tec_crm_ux_supplier_field_names() as $field_name) {
+    if (isset($form[$field_name])) {
+      $form[$field_name]['#states'] = $states;
+    }
+  }
+  if (isset($form['group_supplier'])) {
+    $form['group_supplier']['#states'] = $states;
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view() for tec_crm.
+ */
+function tec_crm_ux_tec_crm_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($entity->bundle() !== 'tec_contact_organization') {
+    return;
+  }
+  if (in_array($view_mode, ['compact', 'excel_lover_button', 'p_o_button', 'print'], TRUE)) {
+    return;
+  }
+
+  $build['tec_crm_contacts'] = [
+    '#type' => 'container',
+    '#attributes' => ['class' => ['tec-crm-org-contacts'], 'id' => 'contact-persons'],
+    '#weight' => 100,
+  ];
+
+  $build['tec_crm_contacts']['title'] = [
+    '#type' => 'html_tag',
+    '#tag' => 'h2',
+    '#value' => t('Contact persons'),
+  ];
+
+  $build['tec_crm_contacts']['add'] = [
+    '#type' => 'link',
+    '#title' => t('+ Add contact person'),
+    '#url' => Url::fromUserInput('/admin/content/tec_crm/add/tec_contact_person', [
+      'query' => [
+        'works_at' => $entity->id(),
+        'destination' => \Drupal::service('path.current')->getPath(),
+      ],
+    ]),
+    '#attributes' => ['class' => ['button', 'button--small']],
+    '#weight' => -10,
+  ];
+
+  $view = Views::getView('tec_crm_org_contacts');
+  if ($view) {
+    $build['tec_crm_contacts']['list'] = $view->buildRenderable('block_1', [(string) $entity->id()]);
+  }
+  else {
+    $build['tec_crm_contacts']['empty'] = [
+      '#markup' => '<p>' . t('No contact persons linked yet. Use “Add contact person” above.') . '</p>',
+    ];
   }
 }

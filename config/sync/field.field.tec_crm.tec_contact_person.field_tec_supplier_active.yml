@@ -1,0 +1,23 @@
+uuid: 3a1c0bf8-dcea-423f-832e-5a96a6e7c67b
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_person
+    - field.storage.tec_crm.field_tec_supplier_active
+id: tec_crm.tec_contact_person.field_tec_supplier_active
+field_name: field_tec_supplier_active
+entity_type: tec_crm
+bundle: tec_contact_person
+label: 'Active supplier'
+description: 'Uncheck to hide this supplier from new purchase selections without deleting history.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

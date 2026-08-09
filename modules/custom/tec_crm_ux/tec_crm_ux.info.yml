@@ -1,5 +1,9 @@
 name: 'TEC CRM UX'
 type: module
-description: 'Usability fixes for the CRM contact forms.'
+description: 'CRM form prefill, supplier-field visibility, and organization contact lists.'
+core_version_requirement: '^9.4 || ^10'
 package: TEC
-core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:system
+  - eck:eck
+  - views:views

@@ -1,0 +1,21 @@
+uuid: f3a01687-e01e-4a95-a180-4bc47edf316e
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.field_tec_payment_terms
+field_name: field_tec_payment_terms
+entity_type: tec_crm
+type: string
+settings:
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

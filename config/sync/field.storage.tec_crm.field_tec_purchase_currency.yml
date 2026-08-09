@@ -1,0 +1,33 @@
+uuid: 919304e9-3497-437d-93b6-cf496d7278a9
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - options
+id: tec_crm.field_tec_purchase_currency
+field_name: field_tec_purchase_currency
+entity_type: tec_crm
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: THB
+      label: THB
+    -
+      value: USD
+      label: USD
+    -
+      value: CNY
+      label: CNY
+    -
+      value: EUR
+      label: EUR
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

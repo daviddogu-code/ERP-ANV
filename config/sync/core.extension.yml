@@ -131,7 +131,6 @@ module:
   module_filter: 0
   mysql: 0
   name: 0
-  navigation: 0
   node: 0
   openai: 0
   openai_eca: 0

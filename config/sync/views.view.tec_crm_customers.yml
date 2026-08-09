@@ -433,6 +433,12 @@ display:
           grouping: {  }
           row_class: ''
           default_row_class: true
+          responsive: false
+          bootstrap_styles:
+            bordered: bordered
+            sm: '0'
+            hover: hover
+            striped: striped
           override: 1
           sticky: 0
           caption: ''
@@ -498,12 +504,6 @@ display:
               responsive: ''
           default: '-1'
           empty_table: 0
-          responsive: 0
-          bootstrap_styles:
-            striped: striped
-            bordered: bordered
-            hover: hover
-            sm: 0
       row:
         type: fields
       query:
@@ -526,7 +526,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: false
-          content: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\"><strong><a href=\"/admin/content/tec_crm/add/tec_contact_organization?destination=/node/5\">+ Organization</a></strong></div>\r\n<div class=\"btn-default\"><strong><a href=\"/admin/content/tec_crm/add/tec_contact_person?destination=/node/5\">+ Person</a></strong></div>\r\n</div>"
+          content: '<div class="text-align-right"><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_organization?destination=/node/5">+ Organization</a></strong></div><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_person?destination=/node/5">+ Person</a></strong></div></div>'
           tokenize: false
       footer: {  }
       display_extenders: {  }
@@ -642,7 +642,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: false
-          content: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\"><strong><a href=\"/admin/content/tec_crm/add/tec_contact_organization?edit[field_tec_contact_type][widget][0][target_id]=1395&destination=/node/6\">+ Organization</a></strong></div>\r\n</div>"
+          content: '<div class="text-align-right"><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_organization?tipo=customer&destination=/node/6">+ Organization</a></strong></div><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_person?tipo=customer&destination=/node/6">+ Person</a></strong></div></div>'
           tokenize: false
       display_extenders: {  }
       block_description: 'TEC CRM: Customers landing page block'
@@ -740,7 +740,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: false
-          content: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\"><strong><a href=\"/admin/content/tec_crm/add/tec_contact_organization?edit[field_tec_contact_type][widget][0][target_id]=1396&destination=/node/7\">+ Organization</a></strong></div>\r\n</div>"
+          content: '<div class="text-align-right"><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_organization?tipo=supplier&destination=/node/7">+ Organization</a></strong></div><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_person?tipo=supplier&destination=/node/7">+ Person</a></strong></div></div>'
           tokenize: false
       display_extenders: {  }
       block_description: 'TEC CRM: Suppliers landing page block'

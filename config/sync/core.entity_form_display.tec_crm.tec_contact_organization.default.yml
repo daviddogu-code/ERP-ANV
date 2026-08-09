@@ -7,8 +7,14 @@ dependencies:
     - field.field.tec_crm.tec_contact_organization.field_tec_address
     - field.field.tec_crm.tec_contact_organization.field_tec_contact_type
     - field.field.tec_crm.tec_contact_organization.field_tec_email
+    - field.field.tec_crm.tec_contact_organization.field_tec_incoterm
+    - field.field.tec_crm.tec_contact_organization.field_tec_payment_terms
     - field.field.tec_crm.tec_contact_organization.field_tec_phone
+    - field.field.tec_crm.tec_contact_organization.field_tec_purchase_currency
+    - field.field.tec_crm.tec_contact_organization.field_tec_supplier_active
+    - field.field.tec_crm.tec_contact_organization.field_tec_supplier_code
     - field.field.tec_crm.tec_contact_organization.field_tec_tax_nr
+    - field.field.tec_crm.tec_contact_organization.field_tec_website
   module:
     - address
     - field_group
@@ -59,6 +65,26 @@ third_party_settings:
         effect: none
         speed: fast
         required_fields: true
+    group_supplier:
+      children:
+        - field_tec_purchase_currency
+        - field_tec_incoterm
+        - field_tec_payment_terms
+        - field_tec_supplier_code
+        - field_tec_website
+        - field_tec_supplier_active
+      label: 'Supplier purchase defaults'
+      region: content
+      parent_name: ''
+      weight: 5
+      format_type: fieldset
+      format_settings:
+        classes: tec-crm-supplier-fields
+        show_empty_fields: false
+        id: supplier-purchase-defaults
+        description: 'Shown when Contact type includes Supplier. Used later for purchase orders and landed cost.'
+        required_fields: false
+        open: true
 id: tec_crm.tec_contact_organization.default
 targetEntityType: tec_crm
 bundle: tec_contact_organization
@@ -72,7 +98,7 @@ content:
       wrapper_type: fieldset
     third_party_settings: {  }
   field_tec_contact_type:
-    type: options_select
+    type: options_buttons
     weight: 3
     region: content
     settings: {  }
@@ -85,6 +111,20 @@ content:
       placeholder: ''
       size: 60
     third_party_settings: {  }
+  field_tec_incoterm:
+    type: options_select
+    weight: 21
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tec_payment_terms:
+    type: string_textfield
+    weight: 22
+    region: content
+    settings:
+      size: 60
+      placeholder: 'e.g. T/T 30 days'
+    third_party_settings: {  }
   field_tec_phone:
     type: phone_number_default
     weight: 2
@@ -95,6 +135,27 @@ content:
       phone_size: 60
       extension_size: 5
     third_party_settings: {  }
+  field_tec_purchase_currency:
+    type: options_select
+    weight: 20
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tec_supplier_active:
+    type: boolean_checkbox
+    weight: 25
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_tec_supplier_code:
+    type: string_textfield
+    weight: 23
+    region: content
+    settings:
+      size: 30
+      placeholder: ''
+    third_party_settings: {  }
   field_tec_tax_nr:
     type: string_textfield
     weight: 11
@@ -102,6 +163,14 @@ content:
     settings:
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  field_tec_website:
+    type: string_textfield
+    weight: 24
+    region: content
+    settings:
+      size: 60
+      placeholder: 'https://'
     third_party_settings: {  }
   langcode:
     type: language_select

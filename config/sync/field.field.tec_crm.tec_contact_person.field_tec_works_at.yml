@@ -1,0 +1,28 @@
+uuid: f36c7131-0ef9-46d0-85f0-11e831fb5928
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - eck.eck_type.tec_crm.tec_contact_person
+    - field.storage.tec_crm.field_tec_works_at
+id: tec_crm.tec_contact_person.field_tec_works_at
+field_name: field_tec_works_at
+entity_type: tec_crm
+bundle: tec_contact_person
+label: 'Works at'
+description: 'Organization this person belongs to.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_crm'
+  handler_settings:
+    target_bundles:
+      tec_contact_organization: tec_contact_organization
+    sort:
+      field: title
+      direction: ASC
+    auto_create: false
+field_type: entity_reference

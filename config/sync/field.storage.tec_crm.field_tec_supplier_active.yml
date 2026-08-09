@@ -1,0 +1,18 @@
+uuid: 0f5a347c-31ce-4244-9ee9-eeccd615d529
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.field_tec_supplier_active
+field_name: field_tec_supplier_active
+entity_type: tec_crm
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

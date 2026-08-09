@@ -1,0 +1,42 @@
+uuid: 87e1075f-313c-446a-ba3e-fddc31c3b023
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - options
+id: tec_crm.field_tec_incoterm
+field_name: field_tec_incoterm
+entity_type: tec_crm
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: EXW
+      label: EXW
+    -
+      value: FCA
+      label: FCA
+    -
+      value: FOB
+      label: FOB
+    -
+      value: CFR
+      label: CFR
+    -
+      value: CIF
+      label: CIF
+    -
+      value: DAP
+      label: DAP
+    -
+      value: DDP
+      label: DDP
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

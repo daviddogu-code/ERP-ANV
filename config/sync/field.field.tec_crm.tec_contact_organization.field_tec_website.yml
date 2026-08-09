@@ -1,19 +1,19 @@
-uuid: e1b36085-e532-4840-a335-1ac8f5f27154
+uuid: e43223b8-cd05-41a3-b493-75c89e169850
 langcode: en
 status: true
 dependencies:
   config:
     - eck.eck_type.tec_crm.tec_contact_organization
-    - field.storage.tec_crm.field_tec_email
-id: tec_crm.tec_contact_organization.field_tec_email
-field_name: field_tec_email
+    - field.storage.tec_crm.field_tec_website
+id: tec_crm.tec_contact_organization.field_tec_website
+field_name: field_tec_website
 entity_type: tec_crm
 bundle: tec_contact_organization
-label: E-mail
+label: Website
 description: ''
 required: false
 translatable: false
 default_value: {  }
 default_value_callback: ''
 settings: {  }
-field_type: email
+field_type: string

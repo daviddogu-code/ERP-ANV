@@ -1,0 +1,19 @@
+uuid: 2d9476ec-8d31-4f90-bc15-e7c2c5321372
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - field.storage.tec_crm.field_tec_payment_terms
+id: tec_crm.tec_contact_organization.field_tec_payment_terms
+field_name: field_tec_payment_terms
+entity_type: tec_crm
+bundle: tec_contact_organization
+label: 'Payment terms'
+description: 'e.g. T/T 30 days, Prepayment, L/C.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

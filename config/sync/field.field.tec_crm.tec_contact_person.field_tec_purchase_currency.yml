@@ -1,0 +1,23 @@
+uuid: f7dca2d5-2651-417b-8b7d-dd45c0cc281a
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_person
+    - field.storage.tec_crm.field_tec_purchase_currency
+  module:
+    - options
+id: tec_crm.tec_contact_person.field_tec_purchase_currency
+field_name: field_tec_purchase_currency
+entity_type: tec_crm
+bundle: tec_contact_person
+label: 'Purchase currency'
+description: 'Default currency for purchase orders from this supplier.'
+required: false
+translatable: false
+default_value:
+  -
+    value: THB
+default_value_callback: ''
+settings: {  }
+field_type: list_string

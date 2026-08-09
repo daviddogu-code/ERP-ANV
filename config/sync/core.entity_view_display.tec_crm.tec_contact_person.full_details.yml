@@ -8,14 +8,22 @@ dependencies:
     - field.field.tec_crm.tec_contact_person.field_tec_address
     - field.field.tec_crm.tec_contact_person.field_tec_contact_type
     - field.field.tec_crm.tec_contact_person.field_tec_email
+    - field.field.tec_crm.tec_contact_person.field_tec_incoterm
     - field.field.tec_crm.tec_contact_person.field_tec_name
+    - field.field.tec_crm.tec_contact_person.field_tec_payment_terms
     - field.field.tec_crm.tec_contact_person.field_tec_phone
+    - field.field.tec_crm.tec_contact_person.field_tec_purchase_currency
+    - field.field.tec_crm.tec_contact_person.field_tec_supplier_active
+    - field.field.tec_crm.tec_contact_person.field_tec_supplier_code
+    - field.field.tec_crm.tec_contact_person.field_tec_website
+    - field.field.tec_crm.tec_contact_person.field_tec_works_at
   module:
     - address
     - bootstrap_layout_builder
     - layout_builder
     - layout_discovery
     - name
+    - options
     - phone_number
     - user
 third_party_settings:
@@ -205,6 +213,128 @@ third_party_settings:
                 third_party_settings: {  }
             weight: 0
             additional: {  }
+          e86a3e1f-0abd-4381-8301-ae3313663bf1:
+            uuid: e86a3e1f-0abd-4381-8301-ae3313663bf1
+            region: blb_region_col_1
+            configuration:
+              id: 'extra_field_block:tec_crm:tec_contact_person:flag_tec_order_draft_po'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+            weight: 1
+            additional: {  }
+          3469dee9-440b-4f5b-8ac5-9018575cce3b:
+            uuid: 3469dee9-440b-4f5b-8ac5-9018575cce3b
+            region: content
+            configuration:
+              id: 'field_block:tec_crm:tec_contact_person:field_tec_purchase_currency'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: list_default
+                label: above
+                settings: {  }
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
+          5be8af51-6430-490f-8094-391b867299b2:
+            uuid: 5be8af51-6430-490f-8094-391b867299b2
+            region: content
+            configuration:
+              id: 'field_block:tec_crm:tec_contact_person:field_tec_incoterm'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: list_default
+                label: above
+                settings: {  }
+                third_party_settings: {  }
+            weight: 1
+            additional: {  }
+          d0ee4173-1180-4aa3-99ba-8534de70201f:
+            uuid: d0ee4173-1180-4aa3-99ba-8534de70201f
+            region: content
+            configuration:
+              id: 'field_block:tec_crm:tec_contact_person:field_tec_payment_terms'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: string
+                label: above
+                settings:
+                  link_to_entity: false
+                third_party_settings: {  }
+            weight: 2
+            additional: {  }
+          dd3dbaf5-e036-48aa-9fad-e73ba72dc012:
+            uuid: dd3dbaf5-e036-48aa-9fad-e73ba72dc012
+            region: content
+            configuration:
+              id: 'field_block:tec_crm:tec_contact_person:field_tec_supplier_code'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: string
+                label: above
+                settings:
+                  link_to_entity: false
+                third_party_settings: {  }
+            weight: 3
+            additional: {  }
+          f6f1332b-485a-4c69-aaad-46d45472a6ed:
+            uuid: f6f1332b-485a-4c69-aaad-46d45472a6ed
+            region: content
+            configuration:
+              id: 'field_block:tec_crm:tec_contact_person:field_tec_website'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: string
+                label: above
+                settings:
+                  link_to_entity: false
+                third_party_settings: {  }
+            weight: 4
+            additional: {  }
+          592faa55-252b-46cc-ad0b-59e497579fa2:
+            uuid: 592faa55-252b-46cc-ad0b-59e497579fa2
+            region: content
+            configuration:
+              id: 'field_block:tec_crm:tec_contact_person:field_tec_supplier_active'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: boolean
+                label: above
+                settings:
+                  format: yes-no
+                  format_custom_false: ''
+                  format_custom_true: ''
+                third_party_settings: {  }
+            weight: 5
+            additional: {  }
+          7801c0d7-7744-4d2d-a128-8b03a99f81d6:
+            uuid: 7801c0d7-7744-4d2d-a128-8b03a99f81d6
+            region: content
+            configuration:
+              id: 'field_block:tec_crm:tec_contact_person:field_tec_works_at'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: entity_reference_label
+                label: above
+                settings:
+                  link: true
+                third_party_settings: {  }
+            weight: 6
+            additional: {  }
         third_party_settings: {  }
       -
         layout_id: layout_onecol
@@ -258,6 +388,13 @@ content:
     third_party_settings: {  }
     weight: 1
     region: content
+  field_tec_incoterm:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 21
+    region: content
   field_tec_name:
     type: name_default
     label: above
@@ -273,6 +410,14 @@ content:
     third_party_settings: {  }
     weight: 1
     region: content
+  field_tec_payment_terms:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 22
+    region: content
   field_tec_phone:
     type: phone_number_international
     label: inline
@@ -281,11 +426,57 @@ content:
     third_party_settings: {  }
     weight: 2
     region: content
+  field_tec_purchase_currency:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 20
+    region: content
+  field_tec_supplier_active:
+    type: boolean
+    label: above
+    settings:
+      format: yes-no
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 25
+    region: content
+  field_tec_supplier_code:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 23
+    region: content
+  field_tec_website:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 24
+    region: content
+  field_tec_works_at:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 5
+    region: content
   flag_tec_draft_order_excel_lover:
     settings: {  }
     third_party_settings: {  }
     weight: 10
     region: content
+  flag_tec_order_draft_po:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 10
+    region: blb_region_col_1
   title:
     type: string
     label: hidden

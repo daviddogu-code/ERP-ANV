@@ -17,7 +17,7 @@ entity_type: tec_crm
 bundle: tec_contact_person
 label: 'Contact type'
 description: ''
-required: false
+required: true
 translatable: false
 default_value: {  }
 default_value_callback: ''
