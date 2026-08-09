@@ -391,18 +391,14 @@ body .page-wrapper .costs-row {
    classes so the two never fight over the same elements.
    ========================================================================== */
 
+/* Two cards per row. minmax(0, 1fr) is what stops the wide select2 controls
+   from pushing the whole page into horizontal scroll. */
 .tec-card-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 20px;
   margin-bottom: 20px;
-}
-
-/* Two cards per row on wide screens, stacked once there is no room. */
-.tec-card-row > .tec-card {
-  flex: 1 1 460px;
-  min-width: 0;
 }
 
 .tec-card {
@@ -427,14 +423,25 @@ body .page-wrapper .costs-row {
 }
 
 .tec-card-cols {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 8px 24px;
 }
 
-.tec-card-cols > .tec-card-col {
-  flex: 1 1 200px;
-  min-width: 0;
+/* Cards whose fields sit three per row instead of stacking. The heading is a
+   grid child too, so it has to be told to span the full row. */
+.tec-card--inline-fields,
+.tec-card--grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 4px 16px;
+}
+
+.tec-card--inline-fields > h3,
+.tec-card--grid > h3 {
+  grid-column: 1 / -1;
 }
 
 .tec-card .form-item,
@@ -443,7 +450,7 @@ body .page-wrapper .costs-row {
 }
 
 .tec-card .form-item__label,
-.tec-card label {
+.tec-card .form-item > label {
   display: block;
   margin-bottom: 6px;
   color: #475467;
@@ -451,40 +458,39 @@ body .page-wrapper .costs-row {
   font-weight: 600;
 }
 
-.tec-card .form-element,
+/* Controls are capped rather than stretched: on a wide screen a full-width
+   input is several times wider than the value it holds. */
 .tec-card input[type="text"],
-.tec-card input[type="number"],
+.tec-card input[type="email"],
 .tec-card textarea,
+.tec-card select.form-select,
 .tec-card .select2-container {
-  width: 100% !important;
+  width: 100%;
+  max-width: 320px;
   box-sizing: border-box;
 }
 
 .tec-card input[type="number"] {
+  width: 100%;
+  max-width: 170px;
+  box-sizing: border-box;
   text-align: right;
 }
 
-/* Cards whose fields sit side by side instead of stacking. */
-.tec-card--inline-fields > .field-group-format-wrapper,
-.tec-card--inline-fields {
-  --tec-inline-gap: 16px;
+/* The rich-text editor and the Uppy drop area both default to sizes that
+   leave the General Information card mostly empty. */
+.tec-card .text-format-wrapper,
+.tec-card .ck.ck-editor {
+  max-width: 320px;
 }
 
-.tec-card--inline-fields .form-item,
-.tec-card--inline-fields .form-wrapper {
-  display: inline-block;
-  width: calc(33.333% - var(--tec-inline-gap));
-  margin-right: var(--tec-inline-gap);
-  vertical-align: top;
+.tec-card .ck-editor__editable {
+  min-height: 90px;
 }
 
-/* Reorder rules: three per row, wrapping to a second line. */
-.tec-card--grid .form-item,
-.tec-card--grid .form-wrapper {
-  display: inline-block;
-  width: calc(33.333% - 16px);
-  margin-right: 16px;
-  vertical-align: top;
+#general-information .form-type-file-uploader,
+#general-information .file-uploader-uppy {
+  max-width: 260px;
 }
 
 /* Currency symbol comes from the field prefix; float it inside the input. */
@@ -492,7 +498,8 @@ body .page-wrapper .costs-row {
   position: relative;
 }
 
-#costs-pricing .form-item__prefix {
+#costs-pricing .form-item__prefix,
+#costs-pricing .field-prefix {
   position: absolute;
   bottom: 9px;
   left: 12px;
@@ -511,13 +518,16 @@ body .page-wrapper .costs-row {
   width: 100%;
 }
 
+@media (max-width: 1200px) {
+  .tec-card-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 900px) {
-  .tec-card--inline-fields .form-item,
-  .tec-card--inline-fields .form-wrapper,
-  .tec-card--grid .form-item,
-  .tec-card--grid .form-wrapper {
-    display: block;
-    width: 100%;
-    margin-right: 0;
+  .tec-card--inline-fields,
+  .tec-card--grid,
+  .tec-card-cols {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
