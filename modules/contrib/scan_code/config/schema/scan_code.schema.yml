@@ -1,0 +1,44 @@
+scan_code.settings:
+  type: mapping
+  label: 'Barcode settings.'
+  mapping:
+    _core:
+      type: _core_config_info
+    langcode:
+      type: string
+      label: 'Language code'
+    status_on_load:
+      type: string
+      label: 'Status on load'
+    close_after_scanning:
+      type: string
+      label: 'Need to close after scanning?'
+    text_barcode_reading:
+      type: string
+      label: 'Text during barcode reading process'
+    delay:
+      type: string
+      label: 'Delay'
+    patterns:
+      type: string
+      label: 'Patterns'
+    widgets:
+      type: string
+      label: 'Widgets list'
+
+field.widget.third_party.scan_code:
+  type: mapping
+  label: 'Scan code settings.'
+  mapping:
+    scan_code_group:
+      type: mapping
+      label: 'Scan code group settings.'
+      mapping:
+        barcode_scan_enabled:
+          type: boolean
+          label: 'Enable barcode scanning'
+        scan_code_patterns:
+          type: sequence
+          label: 'Allowed scan patterns'
+          sequence:
+            type: string

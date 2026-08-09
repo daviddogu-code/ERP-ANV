@@ -1,0 +1,13 @@
+name: File Resumable Upload
+type: module
+description: 'Allows users to add large files, multiple files, and resume uploads.'
+core_version_requirement: ^9 || ^10
+package: Field types
+configure: file_resup.settings
+dependencies:
+  - drupal:file
+
+# Information added by Drupal.org packaging script on 2024-03-18
+version: '2.0.0'
+project: 'file_resup'
+datestamp: 1710772354

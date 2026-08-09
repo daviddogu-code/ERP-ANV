@@ -1,0 +1,11 @@
+name: "File Uploader by Uppy"
+type: module
+description: "File uploader by Uppy."
+core_version_requirement: "^9 || ^10"
+dependencies:
+  - file_uploader:file_uploader
+
+# Information added by Drupal.org packaging script on 2023-11-06
+version: '1.0.9'
+project: 'file_uploader_uppy'
+datestamp: 1699291860

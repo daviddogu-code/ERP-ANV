@@ -1,0 +1,385 @@
+/* Main container styling */
+body.path-admin .units-row,
+body .page-wrapper .units-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  margin-bottom: 30px !important;
+  width: 100% !important;
+}
+
+/* Unit of Purchase section - First row */
+body.path-admin #purchasing,
+body .page-wrapper #purchasing {
+  background: #f8f9fa !important;
+  padding: 20px !important;
+  border-radius: 6px !important;
+  border: 1px solid #e9ecef !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#purchasing h5 {
+  margin: 0 0 15px 0 !important;
+  color: #495057 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  width: 100% !important;
+}
+
+/* Horizontal layout for Unit of Purchase fields */
+.unit_purchase_wrapper {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 15px !important;
+  align-items: flex-end !important;
+  width: 100% !important;
+}
+
+.unit_purchase_wrapper .form-wrapper {
+  flex: 1 !important;
+  min-width: 150px !important;
+}
+
+/* Costs section - Updated for 5 fields */
+body.path-admin .costs-row,
+body .page-wrapper .costs-row {
+  background: #f8f9fa !important;
+  padding: 20px !important;
+  border-radius: 6px !important;
+  border: 1px solid #e9ecef !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 12px !important; /* Reduced gap for 5 fields */
+  align-items: flex-end !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.costs-row .form-wrapper {
+  flex: 1 !important;
+  min-width: 140px !important; /* Reduced min-width for 5 fields */
+  max-width: 20% !important; /* Ensure equal distribution */
+}
+/* FIXED: Better positioned currency prefix */
+.costs-row .form-item,
+#purchasing .form-item {
+  position: relative !important;
+}
+
+/* IMPROVED: Better positioned currency prefix and right-aligned numbers */
+.costs-row .form-item__prefix,
+#purchasing .form-item__prefix {
+  position: absolute !important;
+  left: 10px !important;
+  bottom: 14px !important; /* Moved up 4px from bottom: 10px */
+  z-index: 10 !important;
+  font-weight: 600 !important;
+  color: #495057 !important;
+  pointer-events: none !important;
+  line-height: 1 !important;
+}
+
+/* IMPROVED: Right-aligned text and better padding for currency fields */
+.costs-row .form-element[type="number"],
+#purchasing .form-element[type="number"] {
+  width: 100% !important;
+  height: 38px !important;
+  border: 1px solid #ced4da !important;
+  border-radius: 4px !important;
+  padding: 8px 35px 8px 35px !important; /* Left padding for ฿, right padding for spacing */
+  font-size: 14px !important;
+  text-align: right !important; /* Right-align the numbers */
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+/* Style form labels */
+#purchasing .form-item__label,
+.costs-row .form-item__label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #495057 !important;
+  margin-bottom: 6px !important;
+  display: block !important;
+}
+
+/* Style number inputs only - not select2 */
+#purchasing .form-element[type="number"],
+.costs-row .form-element[type="number"] {
+  width: 100% !important;
+  height: 38px !important;
+  border: 1px solid #ced4da !important;
+  border-radius: 4px !important;
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+
+/* REMOVED: Select2 custom styling to fix the gray square issue */
+/* Let Select2 use its default Claro theme styling */
+
+/* Focus states for number inputs only */
+#purchasing .form-element[type="number"]:focus,
+.costs-row .form-element[type="number"]:focus {
+  border-color: #80bdff !important;
+  outline: none !important;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25) !important;
+}
+
+/* Hide/style placeholder fields */
+.field--name-field-tec-placeholder-1 {
+  flex: 0 0 30px !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.field--name-field-tec-placeholder-2 {
+  flex: 0 0 50px !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Required field asterisk styling */
+.form-required:after {
+  content: " *" !important;
+  color: #dc3545 !important;
+  font-weight: bold !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .unit_purchase_wrapper,
+  .costs-row {
+    flex-direction: column !important;
+  }
+  
+  .unit_purchase_wrapper .form-wrapper,
+  .costs-row .form-wrapper {
+    min-width: 100% !important;
+    margin-bottom: 15px !important;
+  }
+}
+
+/* Ensure proper box-sizing for all elements */
+#purchasing *,
+.costs-row * {
+  box-sizing: border-box !important;
+}
+
+/* === MODAL STYLES === */
+/* === MODAL STYLES === */
+
+/* Modal title styling */
+.ui-dialog .ui-dialog-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0073aa;
+  padding: 10px 20px;
+}
+
+.ui-dialog .ui-dialog-titlebar {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 2px solid #0073aa;
+  padding: 15px 20px;
+}
+
+/* Hide inventory material field */
+.ui-dialog div[data-drupal-selector="edit-field-tec-inventory-wrapper"] {
+  display: none;
+}
+
+.ui-dialog .field--name-field-tec-inventory {
+  display: none;
+}
+
+/* Main quantity section - minimal styling */
+.ui-dialog .field--name-field-tec-quantity {
+  min-width: fit-content;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Create the two-column layout at the form-item level */
+.ui-dialog .field--name-field-tec-quantity .js-form-item {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  grid-template-rows: auto auto auto;
+  gap: 20px;
+  grid-template-areas: 
+    "label stock"
+    "input stock"
+    "description stock";
+}
+
+/* Position each element in the grid */
+.ui-dialog .field--name-field-tec-quantity label {
+  grid-area: label;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.ui-dialog .field--name-field-tec-quantity input {
+  grid-area: input;
+  font-size: 28px;
+  padding: 18px 50px 18px 20px;
+  text-align: center;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-weight: bold;
+  background: white;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.ui-dialog .field--name-field-tec-quantity input:focus {
+  border-color: #0073aa;
+  box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
+  outline: none;
+}
+
+.ui-dialog .field--name-field-tec-quantity .field-suffix {
+  grid-area: input;
+  justify-self: end;
+  align-self: center;
+  margin-right: 15px;
+  font-weight: 600;
+  color: #666;
+  font-size: 16px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ui-dialog .field--name-field-tec-quantity .description {
+  grid-area: description;
+  background: #e8f4f8;
+  border: 1px solid #bee5eb;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #0c5460;
+  margin: 0;
+}
+
+/* Stock display - minimal styling */
+.ui-dialog .current-stock-display {
+  grid-area: stock;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  margin-top: 15px;
+  background: transparent;
+}
+
+.ui-dialog .current-stock-display .stock-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.ui-dialog .current-stock-display .current {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(40,167,69,0.3);
+}
+
+.ui-dialog .current-stock-display .new-stock {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+  transition: all 0.3s ease;
+}
+
+/* Advanced section improvements */
+.ui-dialog div[data-drupal-selector="edit-group-advanced"] .card-header {
+  background: #f8f9fa;
+  padding: 12px 15px;
+  font-size: 14px;
+  color: #495057;
+}
+
+/* Put Created on and Created by in same row */
+.ui-dialog div[data-drupal-selector="edit-created-wrapper"],
+.ui-dialog div[data-drupal-selector="edit-uid-wrapper"] {
+  display: inline-block;
+  width: 48%;
+  vertical-align: top;
+  margin-right: 2%;
+}
+
+.ui-dialog div[data-drupal-selector="edit-created-wrapper"] h4,
+.ui-dialog div[data-drupal-selector="edit-uid-wrapper"] label {
+  font-size: 13px;
+  margin-bottom: 5px;
+  color: #666;
+}
+
+/* Hide descriptions for Created fields */
+.ui-dialog div[data-drupal-selector="edit-created-wrapper"] .description,
+.ui-dialog div[data-drupal-selector="edit-uid-wrapper"] .description {
+  display: none;
+}
+
+/* Modal dialog improvements */
+.ui-dialog {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ui-dialog .ui-dialog-content {
+  padding: 20px;
+}
+
+/* Button styling */
+.ui-dialog .ui-dialog-buttonpane {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-top: 1px solid #dee2e6;
+  padding: 15px 20px;
+}
+
+.ui-dialog .ui-button {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.ui-dialog .ui-button.btn-primary {
+  background: linear-gradient(135deg, #0073aa, #005a87);
+  border-color: #0073aa;
+  color: white;
+}
+
+.ui-dialog .ui-button.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+}
+
+/* === TEMPORARY: top black menu accent === */
+.dxpr-theme-header,
+.dxpr-theme-header--top,
+.region-secondary-header,
+.toolbar-bar,
+.gin-secondary-toolbar {
+  border-bottom: 3px solid #39ff14 !important;
+  box-shadow: 0 3px 10px rgba(57, 255, 20, 0.5);
+}

@@ -1,0 +1,15 @@
+file_resup.upload:
+  path: 'file-resup/upload'
+  defaults:
+    _title: 'File Resumable Upload'
+    _controller: '\Drupal\file_resup\Controller\UploadController::build'
+  requirements:
+    _permission: 'access content'
+
+file_resup.settings:
+  path: '/admin/config/system/file-resup-settings'
+  defaults:
+    _title: 'File Resumable Uploads Settings'
+    _form: 'Drupal\file_resup\Form\FileResupSettingsForm'
+  requirements:
+    _permission: 'administer file resup'

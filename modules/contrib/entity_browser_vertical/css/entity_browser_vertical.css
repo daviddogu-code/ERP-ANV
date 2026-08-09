@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Tweaks the entity-reference Entity Browser widgets.
+ */
+
+.entities-list.entity-browser-vertical .item-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  border: 2px solid #CCC;
+  background-color: #EEE;
+  flex-direction: row;
+}
+
+.entities-list.entity-browser-vertical .item-container input {
+  display: flex!important;
+  margin: inherit!important;
+}
+
+.entities-list.entity-browser-vertical .item-container .tabledrag-handle {
+  margin-left: 1rem;
+}

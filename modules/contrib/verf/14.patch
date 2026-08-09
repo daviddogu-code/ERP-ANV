@@ -1,0 +1,26 @@
+From 686182c4eee3dc732d9a2e0ec0fb64b6a45c08d6 Mon Sep 17 00:00:00 2001
+From: Panagiotis Moutsopoulos <43545-vensires@users.noreply.drupalcode.org>
+Date: Wed, 12 Jun 2024 13:04:05 +0000
+Subject: [PATCH] Introduce correct hook. Deprecate old one.
+
+---
+ src/Plugin/views/filter/EntityReference.php | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/Plugin/views/filter/EntityReference.php b/src/Plugin/views/filter/EntityReference.php
+index 10baebf..3686cf2 100644
+--- a/src/Plugin/views/filter/EntityReference.php
++++ b/src/Plugin/views/filter/EntityReference.php
+@@ -231,7 +231,8 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+       $this->referenceableEntities = $filtered_target_ids;
+     }
+     $referenceable_entities = $this->referenceableEntities;
+-    $this->moduleHandler->alter('verf_entites_options', $referenceable_entities);
++    $this->moduleHandler->alterDeprecated('Use hook_verf_entities_options() instead.', 'verf_entites_options', $referenceable_entities);
++    $this->moduleHandler->alter('verf_entities_options', $referenceable_entities);
+     return $referenceable_entities;
+   }
+ 
+-- 
+GitLab
+

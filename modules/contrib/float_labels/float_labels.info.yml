@@ -1,0 +1,11 @@
+name: Float Labels
+type: module
+description: 'Applies configurable, JS-enhanced floating CSS labels to Drupal forms.'
+core_version_requirement: ^9 || ^10
+package: Forms
+configure: float_labels.admin_settings
+
+# Information added by Drupal.org packaging script on 2023-08-18
+version: '2.0.0-beta1'
+project: 'float_labels'
+datestamp: 1692320590

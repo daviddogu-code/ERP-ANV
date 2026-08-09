@@ -1,0 +1,75 @@
+// modules/custom/admin_form_styles/js/inventory-calculator.js
+(function (Drupal) {
+  'use strict';
+
+  Drupal.behaviors.inventoryCostCalculator = {
+    attach: function (context, settings) {
+      const form = once('inventory-cost-form', '.taxonomy-term-tec-inventory-form', context).shift();
+      if (!form) {
+        return;
+      }
+
+      console.log('✅ Calculator Initialized on Form.');
+
+      // --- Define all field selectors in one place ---
+      const fields = {
+        costUoP: form.querySelector('#edit-field-tec-cost-0-value'),
+        uopToUoSFormula: form.querySelector('#edit-field-tec-uou-split-qty-0-value'),
+        uosToUoUFormula: form.querySelector('#edit-field-tec-split-into-0-value'),
+        costUoS: form.querySelector('#edit-field-tec-price-uos-0-value'),
+        costUoU: form.querySelector('#edit-field-tec-price-0-value')
+      };
+
+      // --- Safety Check ---
+      if (Object.values(fields).some(field => field === null)) {
+        console.error('❌ Calculator Halted: Not all required fields were found.');
+        return;
+      }
+
+      const calculateCosts = () => {
+        // This function now only does the math, it doesn't log anything to keep the console clean.
+        const costUoP = parseFloat(fields.costUoP.value) || 0;
+        const uopToUoSFormula = parseFloat(fields.uopToUoSFormula.value) || 0;
+        const uosToUoUFormula = parseFloat(fields.uosToUoUFormula.value) || 0;
+        
+        let calculatedCostUoS = 0;
+
+        if (costUoP > 0 && uopToUoSFormula > 0) {
+          calculatedCostUoS = costUoP / uopToUoSFormula;
+          fields.costUoS.value = calculatedCostUoS.toFixed(4);
+        } else {
+          fields.costUoS.value = '';
+        }
+
+        if (calculatedCostUoS > 0 && uosToUoUFormula > 0) {
+          const calculatedCostUoU = calculatedCostUoS / uosToUoUFormula;
+          fields.costUoU.value = calculatedCostUoU.toFixed(4);
+        } else {
+          fields.costUoU.value = '';
+        }
+      };
+
+      // --- Style the output fields ---
+      const makeReadOnly = (field) => {
+        if (field) {
+          field.setAttribute('readonly', 'readonly');
+          field.style.backgroundColor = '#f0f0f0';
+          field.setAttribute('title', 'This value is calculated automatically.');
+        }
+      };
+      
+      makeReadOnly(fields.costUoS);
+      makeReadOnly(fields.costUoU);
+      
+      // --- THE FINAL FIX: A Persistent Interval ---
+      // Instead of relying on input events that might conflict, we will now
+      // run our calculation function every 250 milliseconds.
+      // This ensures that even if another script clears our values,
+      // they will be restored almost instantly.
+      setInterval(calculateCosts, 250);
+
+      console.log('✅ Calculator is now running continuously.');
+    }
+  };
+
+})(Drupal);

@@ -1,0 +1,138 @@
+<?php
+
+/**
+ * @file
+ * Enables the organization of content into categories.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\commerce_product\Entity\Product;
+
+/**
+ * @defgroup commerce_product_taxonomy_index Taxonomy indexing
+ * @{
+ * Functions to maintain taxonomy indexing.
+ *
+ * Taxonomy uses default field storage to store canonical relationships
+ * between terms and fieldable entities. However its most common use case
+ * requires listing all content associated with a term or group of terms
+ * sorted by creation date. To avoid slow queries due to joining across
+ * multiple commerce_product and field tables with various conditions and
+ * order by criteria, we maintain a denormalized table with all relationships
+ * between terms, commerce_products and common sort criteria such
+ * as status and created. When using other field storage engines or
+ * alternative methods of denormalizing this data you should set the
+ * taxonomy.settings:maintain_index_table to '0' to avoid unnecessary writes in
+ * SQL.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function commerce_product_taxonomy_filter_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.commerce_product_taxonomy_filter':
+      $output = '';
+      $output .= '<h3>' . t('Commerce Product Taxonomy Filter') . '</h3>';
+      $output .= '<p>' . t('The commerce product taxonomy filter module provides filter for categories product') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert() for commerce_product entities.
+ */
+function commerce_product_taxonomy_filter_commerce_product_insert(EntityInterface $commerce_product) {
+  // Add taxonomy index entries for the commerce_product.
+  commerce_product_taxonomy_filter_build_commerce_product_index($commerce_product);
+}
+
+/**
+ * Builds and inserts taxonomy index entries for a given commerce_product.
+ *
+ * The index lists all terms that are related to a given
+ * commerce_product entity, and is therefore maintained
+ * at the entity level.
+ *
+ * @param \Drupal\commerce_product\Entity\Product $commerce_product
+ *   The commerce_product entity.
+ */
+function commerce_product_taxonomy_filter_build_commerce_product_index(Product $commerce_product) {
+  // We maintain a denormalized table of term/commerce_product relationships,
+  if (!\Drupal::config('taxonomy.settings')->get('maintain_index_table') || !(\Drupal::entityTypeManager()->getStorage('commerce_product') instanceof SqlContentEntityStorage)) {
+    return;
+  }
+
+  
+
+  if ($commerce_product->isDefaultRevision()) {
+    // Collect a unique list of all the tids from all commerce_product fields.
+    $tid_all = [];
+    $entity_reference_class = 'Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem';
+    foreach ($commerce_product->getFieldDefinitions() as $field) {
+      $field_name = $field->getName();
+      $class = $field->getItemDefinition()->getClass();
+      $is_entity_reference_class = ($class === $entity_reference_class) || is_subclass_of($class, $entity_reference_class);
+      if ($is_entity_reference_class && $field->getSetting('target_type') == 'taxonomy_term') {
+        foreach ($commerce_product->getTranslationLanguages() as $language) {
+          foreach ($commerce_product->getTranslation($language->getId())->$field_name as $item) {
+            if (!$item->isEmpty()) {
+              $tid_all[$item->target_id] = $item->target_id;
+            }
+          }
+        }
+      }
+    }
+    // Insert index entries for all the commerce_product's terms.
+    if (!empty($tid_all)) {
+      $status = (int)$commerce_product->isPublished();
+      $connection = \Drupal::database();
+      foreach ($tid_all as $tid) {
+        $connection->merge('commerce_product_taxonomy_index')
+          ->key([
+            'product_id' => $commerce_product->id(),
+            'tid' => $tid,
+            'status' => $status,
+          ])
+          ->fields(['created' => $commerce_product->getCreatedTime()])
+          ->execute();
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for commerce_product entities.
+ */
+function commerce_product_taxonomy_filter_commerce_product_update(EntityInterface $commerce_product) {
+  // If we're not dealing with the default revision of the commerce_product,
+  // Do not make any change to the commerce product taxonomy index.
+  if (!$commerce_product->isDefaultRevision()) {
+    return;
+  }
+  commerce_product_taxonomy_filter_delete_commerce_product_index($commerce_product);
+  commerce_product_taxonomy_filter_build_commerce_product_index($commerce_product);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_predelete() for commerce_product entities.
+ */
+function commerce_product_taxonomy_filter_commerce_product_predelete(EntityInterface $commerce_product) {
+  // Clean up the {commerce_product_taxonomy_index} table.
+  // When commerce_products are deleted.
+  commerce_product_taxonomy_filter_delete_commerce_product_index($commerce_product);
+}
+
+/**
+ * Deletes taxonomy index entries for a given commerce_product.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $commerce_product
+ *   The commerce_product entity.
+ */
+function commerce_product_taxonomy_filter_delete_commerce_product_index(EntityInterface $commerce_product) {
+  if (\Drupal::config('taxonomy.settings')->get('maintain_index_table')) {
+    \Drupal::database()->delete('commerce_product_taxonomy_index')->condition('product_id', $commerce_product->id())->execute();
+  }
+}

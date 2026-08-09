@@ -1,0 +1,10 @@
+name: 'Bootstrap 4 Modal'
+type: module
+description: 'This module will provide bootstrap 4 modal as a drupal ajax dialog.'
+core_version_requirement: ^9 || ^10
+package: UI
+
+# Information added by Drupal.org packaging script on 2024-01-25
+version: '2.1.7'
+project: 'bootstrap4_modal'
+datestamp: 1706198452

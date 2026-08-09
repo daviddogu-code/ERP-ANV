@@ -1,0 +1,98 @@
+diff --git a/src/Plugin/views/filter/EntityReference.php b/src/Plugin/views/filter/EntityReference.php
+index 10baebf..180a9eb 100644
+--- a/src/Plugin/views/filter/EntityReference.php
++++ b/src/Plugin/views/filter/EntityReference.php
+@@ -4,7 +4,7 @@ namespace Drupal\verf\Plugin\views\filter;
+ 
+ use Drupal\Core\Cache\Cache;
+ use Drupal\Core\Cache\CacheableMetadata;
+-use Drupal\Core\Entity\EntityInterface;
++use Drupal\Core\Database\Connection;
+ use Drupal\Core\Entity\EntityStorageInterface;
+ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+ use Drupal\Core\Entity\EntityTypeInterface;
+@@ -65,6 +65,13 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+    */
+   protected $targetEntityType;
+ 
++  /**
++   * The database connection.
++   *
++   * @var \Drupal\Core\Database\Connection
++   */
++  protected $database;
++
+   /**
+    * Module handler service.
+    *
+@@ -91,14 +98,27 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+    *   The target entity type.
+    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+    *   The module handler.
++   * @param \Drupal\Core\Database\Connection $database
++   *   The database connection.
+    */
+-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, LanguageManagerInterface $language_manager, EntityStorageInterface $target_entity_storage, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityTypeInterface $target_entity_type, ModuleHandlerInterface $module_handler) {
++  public function __construct(
++    array $configuration,
++    $plugin_id,
++    array $plugin_definition,
++    LanguageManagerInterface $language_manager,
++    EntityStorageInterface $target_entity_storage,
++    EntityTypeBundleInfoInterface $entity_type_bundle_info,
++    EntityTypeInterface $target_entity_type,
++    ModuleHandlerInterface $module_handler,
++    Connection $database
++  ) {
+     parent::__construct($configuration, $plugin_id, $plugin_definition);
+     $this->entityTypeBundleInfo = $entity_type_bundle_info;
+     $this->targetEntityStorage = $target_entity_storage;
+     $this->targetEntityType = $target_entity_type;
+     $this->languageManager = $language_manager;
+     $this->moduleHandler = $module_handler;
++    $this->database = $database;
+   }
+ 
+   /**
+@@ -107,7 +127,17 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
+     $entity_type_manager = $container->get('entity_type.manager');
+-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('language_manager'), $entity_type_manager->getStorage($configuration['verf_target_entity_type_id']), $container->get('entity_type.bundle.info'), $entity_type_manager->getDefinition($configuration['verf_target_entity_type_id']), $container->get('module_handler'));
++    return new static(
++      $configuration,
++      $plugin_id,
++      $plugin_definition,
++      $container->get('language_manager'),
++      $entity_type_manager->getStorage($configuration['verf_target_entity_type_id']),
++      $container->get('entity_type.bundle.info'),
++      $entity_type_manager->getDefinition($configuration['verf_target_entity_type_id']),
++      $container->get('module_handler'),
++      $container->get('database')
++    );
+   }
+ 
+   /**
+@@ -208,7 +238,11 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+     if ($this->referenceableEntities !== NULL) {
+       return $this->referenceableEntities;
+     }
+-    $target_ids = NULL;
++
++    $selectQuery = $this->database->select($this->table);
++    $selectQuery->fields($this->table, [$this->realField]);
++    $results = $selectQuery->execute()->fetchAllAssoc($this->realField);
++    $target_ids = array_keys($results);
+ 
+     // Filter by bundle if if the plugin was configured to do so.
+     $target_bundles = array_filter($this->options['verf_target_bundles']);
+@@ -216,6 +250,9 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+       $query = $this->targetEntityStorage->getQuery();
+       $query->accessCheck(TRUE);
+       $query->condition($this->targetEntityType->getKey('bundle'), $target_bundles, 'IN');
++      if (!empty($target_ids)) {
++        $query->condition($this->targetEntityType->getKey('id'), $target_ids, 'IN');
++      }
+       $target_ids = $query->execute();
+     }
+ 

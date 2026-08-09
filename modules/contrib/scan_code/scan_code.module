@@ -1,0 +1,130 @@
+<?php
+
+/**
+ * @file
+ * Scan code module file.
+ */
+
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\PluginSettingsBase;
+use Drupal\Core\Field\WidgetInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_field_formatter_third_party_settings_form().
+ */
+function scan_code_field_widget_third_party_settings_form(
+  WidgetInterface $plugin,
+  FieldDefinitionInterface $field_definition,
+  $form_mode,
+  array $form,
+  FormStateInterface $form_state,
+) {
+
+  /** @var \Drupal\scan_code\Services\ScanCodeSettings $scan_code_settings */
+  $scan_code_settings = \Drupal::service('scan_code.settings');
+  $element = [];
+
+  // If widget type in allowed type list from settings.
+  if (in_array($plugin->getPluginId(), $scan_code_settings->getWidgetsArray())) {
+
+    // Scan code group.
+    $element['scan_code_group'] = [
+      '#type' => 'fieldgroup',
+      '#title' => t('Scan Code'),
+      '#attributes' => [
+        'class' => [
+          'scan-code-fieldgroup',
+        ],
+      ],
+    ];
+
+    $scan_code_group = $plugin->getThirdPartySetting('scan_code', 'scan_code_group');
+    $element['scan_code_group']['barcode_scan_enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Enable barcode scanning'),
+      '#description' => t('Add button - using camera or another input device for barcode`s scanning.'),
+      '#default_value' => ($scan_code_group && $scan_code_group['barcode_scan_enabled'])
+        ? $scan_code_group['barcode_scan_enabled']
+        : FALSE,
+    ];
+
+    $field__name = $field_definition->getName();
+    $first_element_array = $scan_code_settings->getDefaultPaternArray();
+    $first_element = reset($first_element_array);
+    $element['scan_code_group']['scan_code_patterns'] = [
+      '#type' => 'checkboxes',
+      '#title' => t('Allowed scan patterns'),
+      '#default_value' => ($scan_code_group && $scan_code_group['scan_code_patterns'])
+        ? $scan_code_group['scan_code_patterns']
+        : [$first_element],
+      '#required' => TRUE,
+      '#options' => $scan_code_settings->getPaternArray(),
+      '#states' => [
+        'visible' => [
+          ":input[name=\"fields[$field__name][settings_edit_form]"
+          . "[third_party_settings][scan_code][scan_code_group][barcode_scan_enabled]\"]"
+          => ['checked' => TRUE],
+        ],
+      ],
+    ];
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_code_field_widget_single_element_form_alter().
+ */
+function scan_code_field_widget_single_element_form_alter(
+  array &$element,
+  FormStateInterface $form_state,
+  array $context,
+) {
+
+  if ($context['widget'] instanceof PluginSettingsBase
+  && $settings = $context['widget']->getThirdPartySettings('scan_code')) {
+
+    $module_path = \Drupal::service('extension.list.module')->getPath('scan_code');
+
+    // Add Barcode button.
+    $element['scan_code_barcode'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'img',
+      '#weight' => 1,
+      '#attributes' => [
+        'class' => [
+          'scan-code-toggle',
+        ],
+        'src' => "/$module_path/images/barcode-scan-icon.svg",
+      ],
+      '#attached' => [
+        'library' => [
+          'scan_code/quagga',
+          'scan_code/webrtc',
+          'scan_code/scancode_library',
+        ],
+      ],
+    ];
+
+    if (isset($settings['scan_code_group']['scan_code_patterns'])) {
+      $patterns = [];
+      foreach ($settings['scan_code_group']['scan_code_patterns'] as $pattern) {
+        if ($pattern !== 0) {
+          $patterns[] = $pattern;
+        }
+      }
+    }
+
+    // Drupal settings for JS.
+    $config = \Drupal::configFactory()->getEditable('scan_code.settings');
+    $element['#attached']['drupalSettings']['scan_code'] = [
+      'statusOnLoad' => $config->get('status_on_load'),
+      'closeAfterScanning' => $config->get('close_after_scanning'),
+      'delay' => $config->get('delay'),
+      'textBarcodeReading' => $config->get('text_barcode_reading'),
+      'patterns' => $patterns,
+    ];
+
+  }
+}

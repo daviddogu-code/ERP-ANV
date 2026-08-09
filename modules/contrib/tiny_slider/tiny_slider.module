@@ -1,0 +1,229 @@
+<?php
+
+/**
+ * @file
+ * Contains tiny-slider.module..
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\tiny_slider\TinySliderGlobal;
+use Drupal\tiny_slider\TinySliderView;
+
+/**
+ * Implements hook_help().
+ */
+function tiny_slider_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the tiny_slider module.
+    case 'help.page.tiny_slider':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('This module integrates Tiny Slider 2, a Vanilla javascript slider for all purposes, inspired by Owl Carousel.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function tiny_slider_theme() {
+  return [
+    'tiny_slider' => [
+      'variables' => ['items' => NULL, 'settings' => NULL],
+    ],
+    'tiny_slider_views' => [
+      'variables' => [],
+    ],
+  ];
+}
+
+/**
+ * Themeable for tiny_slider.
+ */
+function template_preprocess_tiny_slider(&$variables) {
+  $items = $variables['items'];
+
+  $settings = _tiny_slider_format_settings($variables['settings']);
+
+  $variables['attributes']['class'][] = 'tiny-slider-wrapper';
+  $variables['attributes']['class'][] = 'tiny-slider';
+  $variables['attributes']['class'][] = 'tiny-slider-theme';
+  if (TinySliderGlobal::isValidJson($settings['configJson'])) {
+    $config = json_decode($settings['configJson']);
+    $variables['attributes']['data-settings'] = json_encode($config, JSON_FORCE_OBJECT);
+  }
+  else {
+    $variables['attributes']['data-settings'] = json_encode($settings, JSON_FORCE_OBJECT);
+  }
+
+  $html = $navAsThumbs = '';
+  if (!empty($items)) {
+    $i = 0;
+    foreach ($items as $item) {
+      $renderedItem = \Drupal::service('renderer')->render($item);
+      $html .= '<div class="tiny-slider-item-inner tiny-slider-item-inner' . $i . '">' . $renderedItem . '</div>';
+
+      if ($variables['settings']['navAsThumbnails']) {
+        $navAsThumbs .= '<li class="tiny-slider-thumb-item-inner tiny-slider-thumb-item-inner' . $i . '">' . $renderedItem . '</li>';
+      }
+      $i++;
+    }
+  }
+  $output = [
+    '#type' => 'markup',
+    '#markup' => $html,
+  ];
+  $variables['output'] = \Drupal::service('renderer')->render($output);
+
+  if ($variables['settings']['navAsThumbnails']) {
+    $output = [
+      '#type' => 'markup',
+      '#markup' => $navAsThumbs,
+    ];
+
+    $variables['thumbs'] = \Drupal::service('renderer')->render($output);
+  }
+
+}
+
+/**
+ * Prepares variables for Tiny Slider Views templates.
+ *
+ * Default template: tiny-slider-views.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *     - view: A View object.
+ */
+function template_preprocess_tiny_slider_views(array &$variables) {
+  $view = $variables['view'];
+  $handler = $variables['view']->style_plugin;
+
+  //$variables['id'] = TinySliderView::getUniqueId($view);
+  $settings = _tiny_slider_format_settings($handler->options);
+  // Used JSON_FORCE_OBJECT to force the numbers
+  // in the $settings array keys.
+  if (TinySliderGlobal::isValidJson($settings['configJson'])) {
+    $config = json_decode($settings['configJson']);
+    $variables['attributes']['data-settings'] = json_encode($config, JSON_FORCE_OBJECT);
+  }
+  else {
+    $variables['attributes']['data-settings'] = json_encode($settings, JSON_FORCE_OBJECT);
+  }
+  $variables['attributes']['class'][] = 'tiny-slider-wrapper';
+  $variables['attributes']['class'][] = 'tiny-slider';
+
+  $attached = [
+    '#attached' => ['library' => ['tiny_slider/tiny_slider']],
+  ];
+
+  \Drupal::service('renderer')->render($attached);
+  template_preprocess_views_view_unformatted($variables);
+}
+
+/**
+ * Default settings for Tiny slider.
+ *
+ * @return array|string
+ */
+function _tiny_slider_default_settings($key = NULL) {
+  $settings = [
+    'image_style' => '',
+    'responsive_image_style' => '',
+    'image_link' => '',
+    'items' => 1,
+    'gutter' => '0',
+    'nav' => TRUE,
+    'navPosition' => 'top',
+    'navAsThumbnails' => FALSE,
+    'autoplay' => FALSE,
+    'autoplayButtonOutput' => FALSE,
+    'autoplayTextStart' => 'start',
+    'autoplayTextStop' => 'stop',
+    'autoplayHoverPause' => FALSE,
+    'autoplayPosition' => 'top',
+    'controls' => TRUE,
+    'controlsPosition' => 'top',
+    'controlsTextPrev' => 'prev',
+    'controlsTextNext' => 'next',
+    'slideBy' => '1',
+    'arrowKeys' => FALSE,
+    'mouseDrag' => FALSE,
+    'loop' => TRUE,
+    'center' => FALSE,
+    'speed' => 300,
+    'advancedMode' => FALSE,
+    'configJson' => '[]',
+  ];
+
+  return ($key && isset($settings[$key])) ? $settings[$key] : $settings;
+}
+
+/**
+ * Return formatted js array of settings.
+ */
+function _tiny_slider_format_settings($settings) {
+  $settings['items'] = (float) $settings['items'];
+
+  $settings['gutter'] = (int) $settings['gutter'];
+  $settings['nav'] = (bool) $settings['nav'];
+  $settings['navPosition'] = (string) $settings['navPosition'];
+  $settings['navAsThumbnails'] = (bool) $settings['navAsThumbnails'];
+  $settings['autoplay'] = (bool) $settings['autoplay'];
+  $settings['autoplayHoverPause'] = (bool) $settings['autoplayHoverPause'];
+  $settings['autoplayButtonOutput'] = (bool) $settings['autoplayButtonOutput'];
+  $settings['autoplayPosition'] = (string) $settings['autoplayPosition'];
+  $settings['autoplayText'] = (array) [
+    (string) $settings['autoplayTextStart'],
+    (string) $settings['autoplayTextStop'],
+  ];
+  $settings['controls'] = (bool) $settings['controls'];
+  $settings['controlsPosition'] = (string) $settings['controlsPosition'];
+  $settings['controlsText'] = (array) [
+    (string) $settings['controlsTextPrev'],
+    (string) $settings['controlsTextNext'],
+  ];
+  $settings['slideBy'] = (string) $settings['slideBy'];
+  $settings['arrowKeys'] = (bool) $settings['arrowKeys'];
+  $settings['mouseDrag'] = (bool) $settings['mouseDrag'];
+  $settings['loop'] = (bool) $settings['loop'];
+  $settings['center'] = (bool) $settings['center'];
+  $settings['speed'] = (int) $settings['speed'];
+
+  if ($settings['itemsMobile']) {
+    $dimensionMobile = (int) $settings['dimensionMobile'];
+    $itemsMobile['items'] = (float) $settings['itemsMobile'];
+    $settings['responsive'][$dimensionMobile] = $itemsMobile;
+  }
+
+  if ($settings['itemsDesktop']) {
+    $dimensionDesktop = (int) $settings['dimensionDesktop'];
+    $itemsDesktop['items'] = (float) $settings['itemsDesktop'];
+    $settings['responsive'][$dimensionDesktop] = $itemsDesktop;
+  }
+
+  if ($settings['navAsThumbnails']) {;
+    $settings['navContainer'] = '.thumbs-slider[data-field-id="' . $settings['uniqueFieldID'] . '"]';
+  }
+
+  if (isset($settings['image_style'])) {
+    unset($settings['image_style']);
+  }
+
+  if (isset($settings['responsive_image_style'])) {
+    unset($settings['responsive_image_style']);
+  }
+
+  if (isset($settings['image_link'])) {
+    unset($settings['image_link']);
+  }
+
+  $settings['advancedMode'] = (bool) $settings['advancedMode'];
+
+  $config_json = json_decode($settings['configJson']);
+  $settings['configJson'] = json_encode($config_json);
+
+  return $settings;
+}

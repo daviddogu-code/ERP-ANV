@@ -1,0 +1,63 @@
+<?php
+/**
+ * Implements hook_page_attachments().
+ */
+function admin_form_styles_page_attachments(array &$attachments) {
+  // Temporary: accent styles for the top black menu (all pages).
+  $attachments['#attached']['library'][] = 'admin_form_styles/menu-accent';
+
+  $route_match = \Drupal::routeMatch();
+  
+  // SAFETY CHECK - prevent 500 errors
+  if (!$route_match) {
+    return;
+  }
+  
+  $route_name = $route_match->getRouteName();
+  
+  // Additional safety check for route name
+  if (!$route_name) {
+    return;
+  }
+  
+  $current_path = \Drupal::service('path.current')->getPath();
+  $request = \Drupal::request();
+  
+  // Purchase Order Calculator - FIRST PRIORITY
+  if (strpos($current_path, '/po/draft/') !== FALSE) {
+    $attachments['#attached']['library'][] = 'admin_form_styles/purchase_order_calculator';
+    return; // Exit early to avoid conflicts
+  }
+  
+  // Load on taxonomy add/edit forms (original functionality)
+  if (strpos($route_name, 'entity.taxonomy_term.add_form') !== FALSE ||
+      strpos($route_name, 'entity.taxonomy_term.edit_form') !== FALSE) {
+    $attachments['#attached']['library'][] = 'admin_form_styles/form-styles';
+  }
+  
+  // ONLY load on inventory transaction forms - be more specific
+  if (strpos($current_path, '/admin/content/tec_inventory/add/tec_inventory_transaction') !== FALSE) {
+    $attachments['#attached']['library'][] = 'admin_form_styles/form-styles';
+  }
+  
+  // Force load ONLY on inventory modal wrapper format requests
+  if ($request->query->get('_wrapper_format') === 'drupal_modal' && 
+      strpos($current_path, 'tec_inventory_transaction') !== FALSE) {
+    $attachments['#attached']['library'][] = 'admin_form_styles/form-styles';
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function admin_form_styles_form_alter(&$form, $form_state, $form_id) {
+  // Attach calculator library to main inventory form
+  if ($form_id === 'taxonomy_term_tec_inventory_form') {
+    $form['#attached']['library'][] = 'admin_form_styles/inventory-calculator';
+  }
+  
+  // ONLY target the inventory transaction form - be very specific
+  if ($form_id === 'tec_inventory_tec_inventory_transaction_form') {
+    $form['#attached']['library'][] = 'admin_form_styles/form-styles';
+  }
+}

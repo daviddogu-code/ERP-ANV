@@ -1,0 +1,5 @@
+entity.symfony_mailer_log.collection:
+  title: 'Mail log'
+  parent: system.admin_reports
+  description: 'View Drupal Symfony Mailer mail logs'
+  route_name: entity.symfony_mailer_log.collection

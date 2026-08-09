@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - field.storage.tec_inventory.ai_interpolator_status
+  module:
+    - options
+id: tec_inventory.tec_bom_item.ai_interpolator_status
+field_name: ai_interpolator_status
+entity_type: tec_inventory
+bundle: tec_bom_item
+label: 'AI Interpolator Status'
+description: ''
+required: true
+translatable: true
+default_value:
+  - pending
+default_value_callback: ''
+settings: {  }
+field_type: list_string

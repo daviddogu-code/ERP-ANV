@@ -1,0 +1,1 @@
+(()=>{"use strict";void 0===window.Uppy&&(window.Uppy={locales:{}})})();

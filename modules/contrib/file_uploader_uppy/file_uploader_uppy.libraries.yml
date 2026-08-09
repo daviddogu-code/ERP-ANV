@@ -1,0 +1,15 @@
+global:
+  version: 1.0.8
+  js:
+    public/js/global.js: { minified: true }
+
+widget:
+  version: 1.0.8
+  js:
+    public/js/widget.js: { minified: true }
+  css:
+    component:
+      public/css/widget.css: { minified: true }
+  dependencies:
+    - file_uploader/widget
+    - file_uploader_uppy/global

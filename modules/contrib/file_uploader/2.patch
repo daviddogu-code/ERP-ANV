@@ -1,0 +1,37 @@
+From 23f4623b287cc6e0ad7f9b31d6d82f3b5b250671 Mon Sep 17 00:00:00 2001
+From: Aditya Rawat <65708-adityarawat_ln@users.noreply.drupalcode.org>
+Date: Wed, 24 Apr 2024 12:00:25 +0000
+Subject: [PATCH] Update FileUploader.php
+
+---
+ src/Element/FileUploader.php | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/Element/FileUploader.php b/src/Element/FileUploader.php
+index 340e1bd..8d15e4a 100644
+--- a/src/Element/FileUploader.php
++++ b/src/Element/FileUploader.php
+@@ -88,8 +88,10 @@ class FileUploader extends ManagedFile {
+       '#type' => 'hidden',
+       '#value' => implode(' ', $fids),
+     ];
+-
+     // Prepare the attachment settings.
++    $extensions = $element['#upload_validators']['file_validate_extensions'][0] ?? '';
++    $extensions_array = explode(' ', $extensions);
++    $valid_extensions = preg_filter('/^/', '.', $extensions_array);
+     $settings = [
+       'provider' => $element['#upload_provider'],
+       'name' => $element['#name'],
+@@ -97,7 +99,7 @@ class FileUploader extends ManagedFile {
+         'xhr' => $url->toString(),
+         'validators' => [
+           'limit' => $element['#cardinality'],
+-          'extensions' => preg_filter('/^/', '.', explode(' ', $element['#upload_validators']['file_validate_extensions'][0] ?? NULL)),
++          'extensions' => $valid_extensions,
+           'filesize' => $element['#upload_validators']['file_validate_size'][0] ?? 0,
+         ],
+       ],
+-- 
+GitLab
+

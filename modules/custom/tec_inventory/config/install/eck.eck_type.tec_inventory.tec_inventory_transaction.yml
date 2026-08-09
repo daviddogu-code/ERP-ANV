@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_inventory
+name: 'Inventory transaction'
+type: tec_inventory_transaction
+description: 'Increases or decreases stock levels of inventory.'

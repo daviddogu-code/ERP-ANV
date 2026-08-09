@@ -1,0 +1,9 @@
+entity.symfony_mailer_log.collection:
+  route_name: entity.symfony_mailer_log.collection
+  title: 'List'
+  base_route: entity.symfony_mailer_log.collection
+
+symfony_mailer_log.settings_task:
+  route_name: symfony_mailer_log.settings
+  title: 'Log Settings'
+  base_route: entity.mailer_policy.collection

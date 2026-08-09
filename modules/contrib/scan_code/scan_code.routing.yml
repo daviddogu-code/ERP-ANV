@@ -1,0 +1,14 @@
+scan_code.admin_config:
+  path: '/admin/config/scan-code'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Scan code settings'
+  requirements:
+    _permission: 'administer site configuration'
+
+scan_code.settings:
+  path: '/admin/config/scan-code/settings'
+  defaults:
+    _form: '\Drupal\scan_code\Form\ScanCodeSettingsForm'
+  requirements:
+    _permission: 'administer barcode scan search'

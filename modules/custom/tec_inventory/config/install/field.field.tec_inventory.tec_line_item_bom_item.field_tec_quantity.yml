@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_line_item_bom_item
+    - field.storage.tec_inventory.field_tec_quantity
+id: tec_inventory.tec_line_item_bom_item.field_tec_quantity
+field_name: field_tec_quantity
+entity_type: tec_inventory
+bundle: tec_line_item_bom_item
+label: 'Production requires'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ' units'
+field_type: decimal

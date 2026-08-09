@@ -1,0 +1,11 @@
+name: PACE - Page Load Progress Bar
+type: module
+description: 'Enable PACE loader on your website'
+core_version_requirement: ^8.9 || ^9 || ^10
+package: JavaScript
+configure: pace.settings
+
+# Information added by Drupal.org packaging script on 2022-07-31
+version: '2.0.1'
+project: 'pace'
+datestamp: 1659271973

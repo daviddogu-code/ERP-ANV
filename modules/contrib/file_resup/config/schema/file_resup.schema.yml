@@ -1,0 +1,8 @@
+# Schema for the configuration files of the File Resumable Upload module.
+file_resup.settings:
+  type: config_object
+  label: 'File Resumable Upload settings'
+  mapping:
+    prevent_duplicates:
+      type: bool
+      label: 'Prevent Duplicates'

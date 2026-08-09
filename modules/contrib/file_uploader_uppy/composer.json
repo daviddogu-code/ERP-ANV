@@ -1,0 +1,9 @@
+{
+    "name": "drupal/file_uploader_uppy",
+    "description": "File uploader by Uppy.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "drupal/file_uploader": "^1.0.3"
+    }
+}

@@ -1,0 +1,33 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_person
+    - field.storage.tec_crm.field_tec_contact_type
+    - taxonomy.vocabulary.tec_crm_contact_type
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: tec_crm.tec_contact_person.field_tec_contact_type
+field_name: field_tec_contact_type
+entity_type: tec_crm
+bundle: tec_contact_person
+label: 'Contact type'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tec_crm_contact_type: tec_crm_contact_type
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

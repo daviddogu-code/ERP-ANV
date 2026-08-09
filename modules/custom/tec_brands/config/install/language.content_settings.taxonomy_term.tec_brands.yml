@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_brands
+id: taxonomy_term.tec_brands
+target_entity_type_id: taxonomy_term
+target_bundle: tec_brands
+default_langcode: site_default
+language_alterable: false

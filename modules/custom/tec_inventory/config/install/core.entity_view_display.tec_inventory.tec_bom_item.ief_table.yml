@@ -1,0 +1,54 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.tec_inventory.ief_table
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - field.field.tec_inventory.tec_bom_item.ai_interpolator_status
+    - field.field.tec_inventory.tec_bom_item.field_tec_inventory
+    - field.field.tec_inventory.tec_bom_item.field_tec_production_requires_vf
+    - field.field.tec_inventory.tec_bom_item.field_tec_quantity
+    - field.field.tec_inventory.tec_bom_item.field_tec_quantity_input
+  module:
+    - field_formatter_class
+    - layout_builder
+    - viewfield
+third_party_settings:
+  layout_builder:
+    enabled: false
+    allow_custom: false
+id: tec_inventory.tec_bom_item.ief_table
+targetEntityType: tec_inventory
+bundle: tec_bom_item
+mode: ief_table
+content:
+  field_tec_inventory:
+    type: entity_reference_label
+    label: hidden
+    settings:
+      link: false
+    third_party_settings:
+      field_formatter_class:
+        class: ''
+    weight: 0
+    region: content
+  field_tec_production_requires_vf:
+    type: viewfield_default
+    label: hidden
+    settings:
+      view_title: hidden
+      always_build_output: false
+      empty_view_title: hidden
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  ai_interpolator_status: true
+  changed: true
+  created: true
+  field_tec_quantity: true
+  field_tec_quantity_input: true
+  label: true
+  langcode: true
+  title: true
+  uid: true

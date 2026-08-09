@@ -1,0 +1,11 @@
+.flex-inline {
+  display: inline-flex;
+}
+
+.flex-inline .form-item__description {
+  margin-top: 0;
+}
+
+.flex-inline .dropbutton-wrapper {
+  display: inline-flex !important;
+}

@@ -1,0 +1,6 @@
+services:
+  eca_flag.subscriber:
+    class: Drupal\eca_flag\EventSubscriber\EcaFlag
+    parent: eca.default_event_subscriber
+    tags:
+      - { name: event_subscriber }

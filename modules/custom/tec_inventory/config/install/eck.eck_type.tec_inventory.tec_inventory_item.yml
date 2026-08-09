@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_inventory
+name: 'Inventory item'
+type: tec_inventory_item
+description: 'Acquired inventory item'

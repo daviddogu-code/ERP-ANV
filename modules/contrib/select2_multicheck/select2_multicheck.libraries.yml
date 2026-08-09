@@ -1,0 +1,18 @@
+select2-multi-check:
+  css:
+    theme:
+      css/select2-multi-check.css: {}
+  js:
+    js/select2.multi-checkboxes.js: {}
+    js/select2-multi-check.js: {}
+font-awesome:
+  remote: https://fontawesome.com
+  version: 5.11.2
+  license:
+    name: MIT
+    url: https://github.com/FortAwesome/Font-Awesome/blob/master/LICENSE.txt
+    gpl-compatible: true
+  css:
+    theme:
+      https://use.fontawesome.com/releases/v5.11.2/css/all.css:
+        { type: external, minified: true }

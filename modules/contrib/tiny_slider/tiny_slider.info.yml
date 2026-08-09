@@ -1,0 +1,13 @@
+name: Tiny Slider
+type: module
+description: Tiny Slider vanilla JS plugin integration module.
+core_version_requirement: ^9.3 || ^10
+package: media
+dependencies:
+  - drupal:field
+  - drupal:image
+
+# Information added by Drupal.org packaging script on 2024-07-01
+version: '1.1.0-rc4'
+project: 'tiny_slider'
+datestamp: 1719871501

@@ -1,0 +1,9 @@
+name: "Entity Prepopulate"
+type: module
+description: "Prepopulate entity values via tokens. Install the Token module for more tokens and Token browser access."
+core_version_requirement: ^8.7.7 || ^9 || ^10
+
+# Information added by Drupal.org packaging script on 2023-11-06
+version: '8.x-1.6'
+project: 'epp'
+datestamp: 1699288595

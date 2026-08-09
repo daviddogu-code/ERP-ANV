@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_person
+    - field.storage.tec_crm.field_tec_phone
+  module:
+    - phone_number
+id: tec_crm.tec_contact_person.field_tec_phone
+field_name: field_tec_phone
+entity_type: tec_crm
+bundle: tec_contact_person
+label: Phone
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_countries: {  }
+  allowed_types: {  }
+  extension_field: true
+field_type: phone_number

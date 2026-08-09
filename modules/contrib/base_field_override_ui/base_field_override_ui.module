@@ -1,0 +1,78 @@
+<?php
+
+/**
+ * @file
+ * Contains base_field_override_ui.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function base_field_override_ui_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the base_field_override_ui module.
+    case 'help.page.base_field_override_ui':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Enables the possibility to easily override the base fields of any content entity type with an user interface.') . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Override a base field') . '</dt>';
+      $output .= '<dd>' . t('On the <em>Manage fields</em> page for your entity type or sub-type will appear a secondary tabs called <em>Base fields Override</em>. Here you can add, edit, and delete base fields override. The attributes that you can changes is the label and the description of the base field.') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function base_field_override_ui_entity_type_build(array &$entity_types) {
+  $entity_types['base_field_override']->setFormClass('edit', 'Drupal\base_field_override_ui\Form\BaseFieldOverrideForm');
+  $entity_types['base_field_override']->setFormClass('delete', 'Drupal\base_field_override_ui\Form\BaseFieldOverrideDeleteForm');
+  $entity_types['base_field_override']->setListBuilderClass('Drupal\base_field_override_ui\BaseFieldOverrideListBuilder');
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function base_field_override_ui_entity_type_alter(array &$entity_types) {
+  $entity_types['base_field_override']->setHandlerClass('config_translation_list', 'Drupal\base_field_override_ui\ConfigTranslation\ConfigTranslationBaseFieldOverrideListBuilder');
+}
+
+/**
+ * Implements hook_config_translation_info().
+ */
+function base_field_override_ui_config_translation_info(&$info) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+
+  foreach ($entity_type_manager->getDefinitions() as $entity_type_id => $entity_type) {
+    if (!$entity_type->get('field_ui_base_route')) {
+      continue;
+    }
+
+    $info[$entity_type_id . '_base_field_override'] = [
+      'base_route_name' => "entity.base_field_override.{$entity_type_id}_base_field_override_edit_form",
+      'entity_type' => 'base_field_override',
+      'base_entity_type' => $entity_type_id,
+      'class' => '\Drupal\base_field_override_ui\ConfigTranslation\BaseFieldOverrideMapper',
+      'weight' => 10,
+    ];
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function base_field_override_ui_module_implements_alter(&$implementations, $hook) {
+  switch ($hook) {
+    // Move our hook_entity_type_alter() implementation to the end of the list.
+    case 'entity_type_alter':
+      $group = $implementations['base_field_override_ui'];
+      unset($implementations['base_field_override_ui']);
+      $implementations['base_field_override_ui'] = $group;
+      break;
+  }
+}

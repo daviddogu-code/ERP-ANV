@@ -1,0 +1,6 @@
+status_on_load: closed
+close_after_scanning: closed
+text_barcode_reading: 'Barcode scanning'
+delay: '1000'
+patterns: "code_128_reader\r\nean_reader\r\nean_8_reader\r\ncode_39_reader\r\ncode_39_vin_reader\r\ncodabar_reader\r\nupc_reader\r\nupc_e_reader\r\ni2of5_reader\r\n2of5_reader\r\ncode_93_reader"
+widgets: "string_textfield"

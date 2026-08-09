@@ -1,0 +1,39 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - field.storage.tec_inventory.field_tec_quantity
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: 1
+    interpolator_rule: ai_interpolator_openai_decimal
+    interpolator_mode: base
+    interpolator_base_field: field_tec_quantity_input
+    interpolator_prompt: "If the following context is a formula, return the result of the calculation as a decimal value. If the context is not a formula but a value, just return that same value as a decimal number.\r\nContext: {{ context }}."
+    interpolator_token: ''
+    interpolator_edit_mode: 0
+    interpolator_weight: '100'
+    interpolator_worker_type: eca
+    interpolator_openai_model: gpt-3.5-turbo
+    interpolator_openai_vision_images: ''
+    interpolator_openai_role: ''
+    interpolator_openai_moderation: 0
+id: tec_inventory.tec_bom_item.field_tec_quantity
+field_name: field_tec_quantity
+entity_type: tec_inventory
+bundle: tec_bom_item
+label: 'Production requires'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ' units'
+field_type: decimal

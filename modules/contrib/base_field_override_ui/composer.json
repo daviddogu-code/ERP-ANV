@@ -1,0 +1,13 @@
+{
+  "name": "drupal/base_field_override_ui",
+  "type": "drupal-module",
+  "description": "Enables the possibility to easily override the base fields of any content entity type with an user interface",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/base_field_override_ui",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/base_field_override_ui",
+    "source": "https://git.drupalcode.org/project/base_field_override_ui"
+  }
+}

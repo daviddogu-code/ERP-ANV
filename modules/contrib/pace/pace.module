@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * Loads PACE js.
+ */
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+
+/**
+ * Implements template_preprocess_html().
+ */
+function pace_preprocess_html(&$variables) {
+  // Check if PACE is disabled for admin pages and don't load it.
+  if (!\Drupal::config('pace.settings')->get('pace_load_on_admin_enabled')) {
+    $is_admin = \Drupal::service('router.admin_context')->isAdminRoute();
+    if (!$is_admin) {
+      load_pace($variables);
+    }
+  }
+  else {
+    load_pace($variables);
+  }
+}
+
+function load_pace(&$variables) {
+  // Always use minified JS first.
+  $variables['#attached']['library'][] = 'pace/pace-min';
+  if (\Drupal::config('pace.settings')->get('pace_use_unminified_js')) {
+    // Remove minified and load unminified JS.
+    array_pop($variables['#attached']['library']);
+    $variables['#attached']['library'][] = 'pace/pace';
+  }
+  $variables['#attached']['library'][] = 'pace/' . \Drupal::config('pace.settings')->get('pace_color') . '-' . \Drupal::config('pace.settings')->get('pace_theme');
+}

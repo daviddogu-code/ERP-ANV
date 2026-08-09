@@ -1,0 +1,47 @@
+<?php
+
+/**
+ * @file
+ * Allows users to add large files, multiple files, and resume uploads.
+ */
+
+use Drupal\Core\Render\Element;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\file_resup\Form\FieldConfigFormAlter;
+use Drupal\file_resup\Form\FileWidgetFormAlter;
+
+define('FILE_RESUP_DEFAULT_CHUNKSIZE', 2 * 1024 * 1024);
+define('FILE_RESUP_TEMPORARY', 'file_resup_temporary');
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function file_resup_form_field_config_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  \Drupal::classResolver(FieldConfigFormAlter::class)->formAlter($form, $form_state, $form_id);
+}
+
+/**
+ * Implements hook_field_widget_complete_form_alter().
+ */
+function file_resup_field_widget_complete_form_alter(&$field_widget_complete_form, FormStateInterface $form_state, $context) {
+  $file_widget_form_alter = \Drupal::classResolver(FileWidgetFormAlter::class);
+  $field_definition = $context['items']->getFieldDefinition();
+  if ($file_widget_form_alter->isEnabled($field_definition)) {
+    $keys = Element::children($field_widget_complete_form['widget']);
+    $delta = end($keys);
+    $element = &$field_widget_complete_form['widget'][$delta];
+    $form_object = $form_state->getFormObject();
+    if (method_exists($form_object, 'getEntity')) {
+      $entity = $form_object->getEntity();
+      $file_widget_form_alter->formAlter($field_widget_complete_form, $form_state, $field_definition, $element, $delta, $entity->getEntityTypeId(), $entity->bundle());
+    }
+  }
+}
+
+/**
+ * Returns the configured size of a file chunk.
+ */
+function file_resup_chunksize() {
+  $configured_default_chunk_size = \Drupal::config('file_resup')->get('default_chunk_size');
+  return $configured_default_chunk_size ?? FILE_RESUP_DEFAULT_CHUNKSIZE;
+}

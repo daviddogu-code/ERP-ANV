@@ -1,0 +1,14 @@
+entity.commerce_pricelist.prices:
+  route_name: 'entity.commerce_pricelist_item.collection'
+  base_route: 'entity.commerce_pricelist.edit_form'
+  title: 'Prices'
+
+entity.commerce_pricelist.collection:
+  route_name: entity.commerce_pricelist.collection
+  base_route: entity.commerce_pricelist.collection
+  title: List
+
+entity.commerce_pricelist.reorder_form:
+  route_name: entity.commerce_pricelist.reorder
+  base_route: entity.commerce_pricelist.collection
+  title: Reorder

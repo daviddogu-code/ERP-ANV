@@ -1,0 +1,15 @@
+{
+  "name": "drupal/ai_interpolator_eca",
+  "description": "Use your AI Interpolator rules in an ECA workflow",
+  "type": "drupal-module",
+  "require": {
+      "drupal/ai_interpolator": "^1.0@RC",
+      "drupal/eca": "^1.1"
+  },
+  "authors": [
+      {
+          "name": "Marcus Johansson",
+          "email": "me@marcusmailbox.com"
+      }
+  ]
+}

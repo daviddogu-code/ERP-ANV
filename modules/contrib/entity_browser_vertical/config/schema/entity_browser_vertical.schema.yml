@@ -1,0 +1,3 @@
+entity_browser.field_widget_display.entity_browser_vertical_label:
+  type: mapping
+  label: 'Entity label, stacked vertically'

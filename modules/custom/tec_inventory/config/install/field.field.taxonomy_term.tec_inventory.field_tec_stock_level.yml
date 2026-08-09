@@ -1,0 +1,24 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_stock_level
+    - taxonomy.vocabulary.tec_inventory
+id: taxonomy_term.tec_inventory.field_tec_stock_level
+field_name: field_tec_stock_level
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'Stock level'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 0.0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ' units'
+field_type: decimal

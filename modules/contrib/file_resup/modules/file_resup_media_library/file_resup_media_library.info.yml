@@ -1,0 +1,12 @@
+name: File Resup Media Library
+type: module
+description: Adds Media Library support for the File Resup module.
+package: Field types
+core_version_requirement: ^9 || ^10 ||  ^11
+dependencies:
+  - file_resup
+
+# Information added by Drupal.org packaging script on 2024-03-18
+version: '2.0.0'
+project: 'file_resup'
+datestamp: 1710772354

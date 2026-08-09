@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_inventory.ief_table
+label: 'Inline Entity Form Table'
+description: ''
+targetEntityType: tec_inventory
+cache: true

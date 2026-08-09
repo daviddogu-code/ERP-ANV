@@ -1,0 +1,21 @@
+symfony_mailer_log.settings:
+  type: config_object
+  label: 'Symfony Mailer log settings'
+  mapping:
+    log_expiry:
+      type: config_object
+      label: 'Configuration regarding log expiry'
+      mapping:
+        max_age:
+          type: string
+          nullable: true
+          label: 'Maximum age of log entries'
+          constraints:
+            SymfonyMailerLogDateInterval: { }
+        batch_size:
+          type: integer
+          nullable: true
+          label: 'Number of entries to delete in one cron run'
+          constraints:
+            Range:
+              min: 1

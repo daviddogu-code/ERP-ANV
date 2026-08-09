@@ -1,0 +1,353 @@
+From e5cc472d28e03a2833381dc3767fae1b9423dddd Mon Sep 17 00:00:00 2001
+From: Maria <mboutoudi@gmail.com>
+Date: Tue, 14 May 2024 15:57:24 +0300
+Subject: [PATCH 1/5] update autocomplete
+
+---
+ src/Plugin/views/filter/EntityReference.php | 76 +++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
+
+diff --git a/src/Plugin/views/filter/EntityReference.php b/src/Plugin/views/filter/EntityReference.php
+index 10baebf..1126bdb 100644
+--- a/src/Plugin/views/filter/EntityReference.php
++++ b/src/Plugin/views/filter/EntityReference.php
+@@ -123,9 +123,63 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+       'default' => FALSE,
+     ];
+ 
++    // Set the default value for exposed type.
++    $options['expose_type'] = [
++      'default' => 'dropdown',
++    ];
++
+     return $options;
+   }
+ 
++  /**
++   * {@inheritdoc}
++   */
++  public function buildExposeForm(&$form, FormStateInterface $form_state)
++  {
++    // Get parent method. (Drupal\views\Plugin\views\filter\InOperator).
++    parent::buildExposeForm($form, $form_state);
++
++    // Add form field to select exposed type. 
++    $form['expose_type'] = [
++      '#title' => $this->t('Select expose type'),
++      '#type' => 'radios',
++      '#options' => [
++        'autocomplete' => $this->t('Autocomplete'),
++        'dropdown' => $this->t('Dropdown'),
++      ],
++      '#default_value' => $this->options['expose_type'],
++    ];
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function buildExposedForm(&$form, FormStateInterface $form_state) 
++  {
++    // Get parent method. (Drupal\views\Plugin\views\filter\FilterPluginBase).
++    parent::buildExposedForm($form, $form_state);
++
++    //  Replace field type based on configuration option.
++    if ($this->options['expose_type'] == 'autocomplete'){
++
++      $fieldId = $this->options['id'];
++      $targetBundles = $this->options["verf_target_bundles"];
++
++      // Autocomplete field.
++      $form[$fieldId] = [
++        '#type' => 'entity_autocomplete',
++        '#target_type' => 'taxonomy_term',
++        '#tags' => false,
++        '#default_value' => "",
++        '#selection_settings' => [
++          'target_bundles' => array_keys($targetBundles), 
++        ],
++      ];
++
++    }
++
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+@@ -163,6 +217,28 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+    */
+   protected function valueForm(&$form, FormStateInterface $form_state) {
+     parent::valueForm($form, $form_state);
++
++    
++    // Unset default value 'All' from autocomplete exposed type.
++    if ($this->options['expose_type'] == 'autocomplete'){
++
++
++      $exposed = $form_state->get('exposed');
++      if ($exposed) {
++        $identifier = $this->options['expose']['identifier'];
++        $user_input = $form_state->getUserInput();
++          if ($user_input[$identifier] == "All") {
++           
++            $form_state->setUserInput([]);
++      }
++      elseif($user_input[$identifier]){
++        $form_state->setUserInput($this->valueOptions[$user_input[$identifier]]);
++
++      }
++    }
++  }
++
++   
+     // Apply cacheability metadata, because the parent class does not.
+     // @todo Remove this once https://www.drupal.org/node/2754103 is fixed.
+     $cacheability_metdata = CacheableMetadata::createFromObject($this);
+-- 
+GitLab
+
+
+From 37b643dab5de7737f4cd9e477ff0a8c29c535e1a Mon Sep 17 00:00:00 2001
+From: Maria <mboutoudi@gmail.com>
+Date: Tue, 14 May 2024 16:48:49 +0300
+Subject: [PATCH 2/5] fix default value
+
+---
+ src/Plugin/views/filter/EntityReference.php | 26 +++++++++++++++------
+ 1 file changed, 19 insertions(+), 7 deletions(-)
+
+diff --git a/src/Plugin/views/filter/EntityReference.php b/src/Plugin/views/filter/EntityReference.php
+index 1126bdb..b80ae11 100644
+--- a/src/Plugin/views/filter/EntityReference.php
++++ b/src/Plugin/views/filter/EntityReference.php
+@@ -218,26 +218,38 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+   protected function valueForm(&$form, FormStateInterface $form_state) {
+     parent::valueForm($form, $form_state);
+ 
+-    
+     // Unset default value 'All' from autocomplete exposed type.
+     if ($this->options['expose_type'] == 'autocomplete'){
+ 
+-
+       $exposed = $form_state->get('exposed');
+       if ($exposed) {
+         $identifier = $this->options['expose']['identifier'];
+         $user_input = $form_state->getUserInput();
+-          if ($user_input[$identifier] == "All") {
++
++      if ($user_input[$identifier] == "All" || $user_input[$identifier] == "") {
+            
+-            $form_state->setUserInput([]);
++            $form_state->setUserInput([$identifier => ""]);
++      }
++      else {
++
++        if(is_numeric($user_input[$identifier])) {
++          
++          $form_state->setUserInput([$identifier => ""]);
++        }
++       
+       }
+-      elseif($user_input[$identifier]){
+-        $form_state->setUserInput($this->valueOptions[$user_input[$identifier]]);
++      if (!is_array($form['value']['#default_value'])) {
+ 
++        $form['value']['#default_value'] = $form['value']['#options'];
++      }
++      else {
++        foreach ($form['value']['#default_value'] as $key => $value) {          
++
++          $form['value']['#default_value'][$key] = $form['value']['#options'][$key];
+       }
+     }
+   }
+-
++    }
+    
+     // Apply cacheability metadata, because the parent class does not.
+     // @todo Remove this once https://www.drupal.org/node/2754103 is fixed.
+-- 
+GitLab
+
+
+From 15f7af89b2e61ba56088aa88b5b9c7f9bf1c614c Mon Sep 17 00:00:00 2001
+From: Maria <mboutoudi@gmail.com>
+Date: Wed, 15 May 2024 17:57:05 +0300
+Subject: [PATCH 3/5] fix target bundle
+
+---
+ src/Plugin/views/filter/EntityReference.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/Plugin/views/filter/EntityReference.php b/src/Plugin/views/filter/EntityReference.php
+index b80ae11..183c7eb 100644
+--- a/src/Plugin/views/filter/EntityReference.php
++++ b/src/Plugin/views/filter/EntityReference.php
+@@ -172,7 +172,7 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+         '#tags' => false,
+         '#default_value' => "",
+         '#selection_settings' => [
+-          'target_bundles' => array_keys($targetBundles), 
++          'target_bundles' => array_filter($targetBundles), 
+         ],
+       ];
+ 
+-- 
+GitLab
+
+
+From 382c765fa47808b17a1f3cc00a2dc13ebd77f695 Mon Sep 17 00:00:00 2001
+From: Maria <mboutoudi@gmail.com>
+Date: Fri, 17 May 2024 12:40:55 +0300
+Subject: [PATCH 4/5] apply cs fixes
+
+---
+ src/Plugin/views/filter/EntityReference.php | 55 ++++++++++-----------
+ 1 file changed, 26 insertions(+), 29 deletions(-)
+
+diff --git a/src/Plugin/views/filter/EntityReference.php b/src/Plugin/views/filter/EntityReference.php
+index 183c7eb..94c1a39 100644
+--- a/src/Plugin/views/filter/EntityReference.php
++++ b/src/Plugin/views/filter/EntityReference.php
+@@ -139,7 +139,7 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+     // Get parent method. (Drupal\views\Plugin\views\filter\InOperator).
+     parent::buildExposeForm($form, $form_state);
+ 
+-    // Add form field to select exposed type. 
++    // Add form field to select exposed type.
+     $form['expose_type'] = [
+       '#title' => $this->t('Select expose type'),
+       '#type' => 'radios',
+@@ -154,13 +154,12 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+   /**
+    * {@inheritdoc}
+    */
+-  public function buildExposedForm(&$form, FormStateInterface $form_state) 
+-  {
++  public function buildExposedForm(&$form, FormStateInterface $form_state) {
+     // Get parent method. (Drupal\views\Plugin\views\filter\FilterPluginBase).
+     parent::buildExposedForm($form, $form_state);
+ 
+-    //  Replace field type based on configuration option.
+-    if ($this->options['expose_type'] == 'autocomplete'){
++    // Replace field type based on configuration option.
++    if ($this->options['expose_type'] == 'autocomplete') {
+ 
+       $fieldId = $this->options['id'];
+       $targetBundles = $this->options["verf_target_bundles"];
+@@ -169,10 +168,10 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+       $form[$fieldId] = [
+         '#type' => 'entity_autocomplete',
+         '#target_type' => 'taxonomy_term',
+-        '#tags' => false,
++        '#tags' => FALSE,
+         '#default_value' => "",
+         '#selection_settings' => [
+-          'target_bundles' => array_filter($targetBundles), 
++          'target_bundles' => array_filter($targetBundles),
+         ],
+       ];
+ 
+@@ -188,7 +187,7 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+ 
+     $form['show_unpublished'] = [
+       '#type' => 'checkbox',
+-      '#title' => t("Ignore access control"),
++      '#title' => $this->t("Ignore access control"),
+       '#default_value' => $this->options['show_unpublished'],
+     ];
+ 
+@@ -219,38 +218,36 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+     parent::valueForm($form, $form_state);
+ 
+     // Unset default value 'All' from autocomplete exposed type.
+-    if ($this->options['expose_type'] == 'autocomplete'){
++    // This value 'All' is set in parent method.
++    if ($this->options['expose_type'] == 'autocomplete') {
+ 
+       $exposed = $form_state->get('exposed');
+       if ($exposed) {
+         $identifier = $this->options['expose']['identifier'];
+         $user_input = $form_state->getUserInput();
+ 
+-      if ($user_input[$identifier] == "All" || $user_input[$identifier] == "") {
+-           
+-            $form_state->setUserInput([$identifier => ""]);
+-      }
+-      else {
+-
+-        if(is_numeric($user_input[$identifier])) {
+-          
++        // Replace the reference field input value with empty if it is 'All'.
++        if ($user_input[$identifier] == "All" || $user_input[$identifier] == "") {
+           $form_state->setUserInput([$identifier => ""]);
+         }
+-       
+-      }
+-      if (!is_array($form['value']['#default_value'])) {
+-
+-        $form['value']['#default_value'] = $form['value']['#options'];
+-      }
+-      else {
+-        foreach ($form['value']['#default_value'] as $key => $value) {          
++        else {
++          // Check to see if the reference field input value is an integer.
++          if (is_numeric($user_input[$identifier])) {
++            $form_state->setUserInput([$identifier => ""]);
++          }
++        }
++        // Check to see if the default value is an array or not.
++        if (!is_array($form['value']['#default_value'])) {
+ 
+-          $form['value']['#default_value'][$key] = $form['value']['#options'][$key];
++          $form['value']['#default_value'] = $form['value']['#options'];
++        }
++        else {
++          foreach ($form['value']['#default_value'] as $key => $value) {
++            $form['value']['#default_value'][$key] = $form['value']['#options'][$key];
++          }
++        }
+       }
+     }
+-  }
+-    }
+-   
+     // Apply cacheability metadata, because the parent class does not.
+     // @todo Remove this once https://www.drupal.org/node/2754103 is fixed.
+     $cacheability_metdata = CacheableMetadata::createFromObject($this);
+-- 
+GitLab
+
+
+From 44743d05f61b82e70320e56907a95709a44f58e5 Mon Sep 17 00:00:00 2001
+From: Maria <mboutoudi@gmail.com>
+Date: Mon, 20 May 2024 12:57:06 +0300
+Subject: [PATCH 5/5] Hide limit checkbox if autocomplete is selected
+
+---
+ src/Plugin/views/filter/EntityReference.php | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/Plugin/views/filter/EntityReference.php b/src/Plugin/views/filter/EntityReference.php
+index 94c1a39..07c88bc 100644
+--- a/src/Plugin/views/filter/EntityReference.php
++++ b/src/Plugin/views/filter/EntityReference.php
+@@ -149,6 +149,14 @@ class EntityReference extends InOperator implements ContainerFactoryPluginInterf
+       ],
+       '#default_value' => $this->options['expose_type'],
+     ];
++
++    // Hide 'Limit list to selected items' field
++    // only if the autocomplete exposed type is selected.
++    $form['expose']['reduce']['#states'] = [
++      'invisible' => [
++        ':input[name="options[expose_type]"]' => ['value' => 'autocomplete'],
++      ],
++    ];
+   }
+ 
+   /**
+-- 
+GitLab
+

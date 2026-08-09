@@ -1,0 +1,1 @@
+(()=>{"use strict";window.DrupalFileUploader={},function(e,i){e.behaviors.fileUploader={attach:function(e,l){i("file-uploader","div.file-uploader",e).forEach((function(e){var i=l.file_uploader[e.id];i&&(e.fileUploader=new window.DrupalFileUploader[i.provider](e,i))}))}}}(Drupal,once)})();

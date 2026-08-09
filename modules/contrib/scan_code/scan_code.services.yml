@@ -1,0 +1,4 @@
+services:
+  scan_code.settings:
+    class: Drupal\scan_code\Services\ScanCodeSettings
+    arguments: ['@config.factory']

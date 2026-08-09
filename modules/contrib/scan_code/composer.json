@@ -1,0 +1,13 @@
+{
+    "name": "drupal/scan_code",
+    "type": "drupal-module",
+    "description": "Scan code module provides Drupal different scan features for barcode.",
+    "keywords": ["Drupal", "scan_code"],
+    "license": "GPL-2.0+",
+    "homepage": "https://www.drupal.org/project/scan_code",
+    "minimum-stability": "dev",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/scan_code",
+        "source": "https://git.drupalcode.org/project/scan_code"
+    }
+}

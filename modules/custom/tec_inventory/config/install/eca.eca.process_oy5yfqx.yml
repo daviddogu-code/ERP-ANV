@@ -1,0 +1,60 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_inventory_transaction
+    - field.field.tec_inventory.tec_bom_item.field_tec_inventory
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_inventory
+    - field.field.tec_inventory.tec_line_item_bom_item.field_tec_inventory
+    - field.storage.tec_inventory.field_tec_inventory
+  module:
+    - eca_content
+id: process_oy5yfqx
+modeller: bpmn_io
+label: 'Inventory: Stock manager - Single mutation is created'
+version: '1.0'
+weight: -9
+events:
+  Event_03a7q8e:
+    plugin: 'content_entity:insert'
+    label: Event_03a7q8e
+    configuration:
+      type: 'tec_inventory tec_inventory_transaction'
+    successors:
+      -
+        id: Activity_0du2ri9
+        condition: ''
+conditions: {  }
+gateways: {  }
+actions:
+  Activity_0du2ri9:
+    plugin: eca_token_load_entity_ref
+    label: 'Load the Inventory'
+    configuration:
+      field_name_entity_ref: field_tec_inventory
+      token_name: inventoryLoaded
+      from: current
+      entity_type: taxonomy_term
+      entity_id: ''
+      revision_id: ''
+      properties: ''
+      langcode: _interface
+      latest_revision: false
+      unchanged: false
+      object: ''
+    successors:
+      -
+        id: Activity_1h513o5
+        condition: ''
+  Activity_1h513o5:
+    plugin: eca_set_field_value
+    label: 'Add Mutation to Inventory'
+    configuration:
+      field_name: field_tec_stock_mutations
+      field_value: '[entity]'
+      method: 'append:not_full'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: inventoryLoaded
+    successors: {  }

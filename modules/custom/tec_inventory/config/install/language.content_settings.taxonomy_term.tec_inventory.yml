@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_inventory
+id: taxonomy_term.tec_inventory
+target_entity_type_id: taxonomy_term
+target_bundle: tec_inventory
+default_langcode: site_default
+language_alterable: false

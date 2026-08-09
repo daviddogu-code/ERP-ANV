@@ -1,0 +1,6 @@
+services:
+  eca_vbo.subscriber:
+    class: Drupal\eca_vbo\EventSubscriber\EcaVbo
+    parent: eca.default_event_subscriber
+    tags:
+      - { name: event_subscriber }

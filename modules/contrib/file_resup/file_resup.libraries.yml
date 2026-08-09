@@ -1,0 +1,12 @@
+file_resup:
+  js:
+    js/file-resup.js: {}
+    js/resup.js: {}
+  css:
+    theme:
+      css/file-resup.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+    - core/drupal.progress

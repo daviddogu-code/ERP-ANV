@@ -1,0 +1,4 @@
+name: 'Admin Form Styles'
+type: module
+description: 'Custom CSS for admin forms'
+core_version_requirement: ^8 || ^9 || ^10

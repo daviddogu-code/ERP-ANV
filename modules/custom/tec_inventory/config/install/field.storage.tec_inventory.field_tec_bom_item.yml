@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_inventory.field_tec_bom_item
+field_name: field_tec_bom_item
+entity_type: tec_inventory
+type: entity_reference
+settings:
+  target_type: tec_inventory
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

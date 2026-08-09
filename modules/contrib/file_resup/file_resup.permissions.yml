@@ -1,0 +1,3 @@
+administer file resup:
+  title: 'Administer file resup settings'
+  restrict access: true

@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.excel_lover_button
+label: 'Excel lover button'
+description: 'Render the Flag link in difficult places, such as empty view texts.'
+targetEntityType: tec_crm
+cache: true

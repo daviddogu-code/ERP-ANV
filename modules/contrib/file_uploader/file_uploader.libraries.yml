@@ -1,0 +1,6 @@
+widget:
+  version: VERSION
+  js:
+    public/js/widget.js: { minified: true }
+  dependencies:
+    - file_uploader/base

@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * Installation file for Symfony Mailer Log module.
+ */
+
+use Drupal\Core\Field\BaseFieldDefinition;
+
+/**
+ * Adds the error message base field to symfony_mailer_log entities.
+ */
+function symfony_mailer_log_update_9100() {
+  $field_storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('Error message'))
+    ->setRequired(FALSE)
+    ->setDescription(t('The error message if sending the email failed.'))
+    ->setDisplayConfigurable('view', TRUE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('error_message', 'symfony_mailer_log', 'symfony_mailer_log', $field_storage_definition);
+}
+
+/**
+ * Install default configuration.
+ */
+function symfony_mailer_log_update_9101() {
+  /** @var \Drupal\Core\Config\ConfigInstallerInterface $config_installer */
+  $config_installer = Drupal::service('config.installer');
+  $config_installer->installDefaultConfig('module', 'symfony_mailer_log');
+}

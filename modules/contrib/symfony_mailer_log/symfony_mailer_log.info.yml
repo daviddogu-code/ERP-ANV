@@ -1,0 +1,13 @@
+name: 'Drupal Symfony Mailer log'
+description: 'Logs Drupal Symfony Mailer emails'
+package: 'Mail'
+configure: symfony_mailer_log.settings
+core_version_requirement: ^9.4 || ^10 || ^11
+type: module
+dependencies:
+  - drupal:symfony_mailer
+
+# Information added by Drupal.org packaging script on 2024-04-22
+version: '1.2.1'
+project: 'symfony_mailer_log'
+datestamp: 1713775853

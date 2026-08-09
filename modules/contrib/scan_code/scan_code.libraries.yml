@@ -1,0 +1,31 @@
+scancode_library:
+  css:
+    layout:
+      css/scan_code.css: {}
+  js:
+    js/scan_code.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - scan_code/quagga
+    - scan_code/webrtc
+
+quagga:
+  remote: https://github.com/ericblade/quagga2
+  version: 1.8.2
+  license:
+    name: MIT
+    url: https://github.com/ericblade/quagga2/blob/master/LICENSE
+    gpl-compatible: yes
+  js:
+    js/quagga.min.js: {}
+
+webrtc:
+  remote: https://github.com/webrtcHacks/adapter
+  version: 8.0.0
+  license:
+    name: BSD-3-Clause license
+    url: https://github.com/webrtcHacks/adapter/blob/main/LICENSE.md
+    gpl-compatible: yes
+  js:
+    js/adapter-latest.js: {}

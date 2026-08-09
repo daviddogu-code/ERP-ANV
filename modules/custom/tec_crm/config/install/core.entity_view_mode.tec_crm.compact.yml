@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.compact
+label: Compact
+description: 'Compact view'
+targetEntityType: tec_crm
+cache: true

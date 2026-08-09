@@ -1,0 +1,20 @@
+services:
+  commerce_pricelist.price_resolver:
+    class: Drupal\commerce_pricelist\PriceListPriceResolver
+    arguments: ['@commerce_pricelist.repository']
+    tags:
+      - { name: commerce_price.price_resolver, priority: 600 }
+
+  commerce_pricelist.repository:
+    class: Drupal\commerce_pricelist\PriceListRepository
+    arguments: ['@entity_type.manager']
+
+  commerce_pricelist.route_subscriber:
+    class: Drupal\commerce_pricelist\EventSubscriber\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  logger.channel.commerce_pricelist:
+    class: Drupal\Core\Logger\LoggerChannel
+    factory: logger.factory:get
+    arguments: ['commerce_pricelist']

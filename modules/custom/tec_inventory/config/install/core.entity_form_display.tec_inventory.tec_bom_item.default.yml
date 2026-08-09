@@ -1,0 +1,50 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - field.field.tec_inventory.tec_bom_item.ai_interpolator_status
+    - field.field.tec_inventory.tec_bom_item.field_tec_inventory
+    - field.field.tec_inventory.tec_bom_item.field_tec_production_requires_vf
+    - field.field.tec_inventory.tec_bom_item.field_tec_quantity
+    - field.field.tec_inventory.tec_bom_item.field_tec_quantity_input
+  module:
+    - select2
+    - viewfield
+id: tec_inventory.tec_bom_item.default
+targetEntityType: tec_inventory
+bundle: tec_bom_item
+mode: default
+content:
+  field_tec_inventory:
+    type: select2_entity_reference
+    weight: 0
+    region: content
+    settings:
+      width: 100%
+      autocomplete: false
+      match_operator: CONTAINS
+      match_limit: 10
+    third_party_settings: {  }
+  field_tec_production_requires_vf:
+    type: viewfield_select
+    weight: 2
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tec_quantity_input:
+    type: string_textfield
+    weight: 1
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  ai_interpolator_status: true
+  created: true
+  field_tec_quantity: true
+  langcode: true
+  status: true
+  title: true
+  uid: true

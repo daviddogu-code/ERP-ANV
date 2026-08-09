@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'CRM contact type'
+vid: tec_crm_contact_type
+description: 'Categorize contacts'
+weight: 0

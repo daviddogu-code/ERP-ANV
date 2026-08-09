@@ -1,0 +1,223 @@
+<?php
+
+/**
+ * @file
+ * Allows defining prices for specific stores, customers, quantities.
+ */
+
+use Drupal\commerce\EntityHelper;
+use Drupal\commerce\PurchasableEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\StreamWrapper\StreamWrapperManager;
+use Drupal\Core\Url;
+use Drupal\views\ViewExecutable;
+
+/**
+ * Implements hook_help().
+ */
+function commerce_pricelist_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.commerce_pricelist':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Allows defining prices for specific stores, customers, quantities using price lists.') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_entity_bundle_info().
+ */
+function commerce_pricelist_entity_bundle_info() {
+  $entity_types = \Drupal::entityTypeManager()->getDefinitions();
+  $purchasable_entity_types = array_filter($entity_types, function (EntityTypeInterface $entity_type) {
+    return $entity_type->entityClassImplements(PurchasableEntityInterface::class);
+  });
+
+  $bundles = [];
+  foreach ($purchasable_entity_types as $entity_type) {
+    $bundles['commerce_pricelist'][$entity_type->id()] = [
+      'label' => $entity_type->getLabel(),
+      'description' => t('Create a price list for @plural_label', ['@plural_label' => $entity_type->getPluralLabel()]),
+      'translatable' => FALSE,
+      'provider' => 'commerce_pricelist',
+    ];
+    $bundles['commerce_pricelist_item'][$entity_type->id()] = [
+      'label' => $entity_type->getLabel(),
+      'translatable' => FALSE,
+      'provider' => 'commerce_pricelist',
+    ];
+  }
+
+  return $bundles;
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function commerce_pricelist_entity_delete(EntityInterface $entity) {
+  if ($entity->getEntityType()->entityClassImplements(PurchasableEntityInterface::class)) {
+    // A purchasable entity was deleted. Delete all of its price list items.
+    $price_list_item_storage = \Drupal::entityTypeManager()->getStorage('commerce_pricelist_item');
+    $query = $price_list_item_storage->getQuery();
+    $query->accessCheck(FALSE);
+    $query->condition('type', $entity->getEntityTypeId());
+    $query->condition('purchasable_entity', $entity->id());
+    $result = $query->execute();
+    if (!empty($result)) {
+      // @todo This can crash due to there potentially being thousands of items.
+      $price_list_items = $price_list_item_storage->loadMultiple($result);
+      $price_list_item_storage->delete($price_list_items);
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function commerce_pricelist_theme() {
+  return [
+    'commerce_pricelist' => [
+      'render element' => 'elements',
+    ],
+    'commerce_pricelist_form' => [
+      'render element' => 'form',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function commerce_pricelist_theme_suggestions_commerce_pricelist(array $variables) {
+  return _commerce_entity_theme_suggestions('commerce_pricelist', $variables);
+}
+
+/**
+ * Prepares variables for price list templates.
+ *
+ * Default template: commerce-price-list.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing rendered fields.
+ *   - attributes: HTML attributes for the containing element.
+ */
+function template_preprocess_commerce_pricelist(array &$variables) {
+  /** @var Drupal\commerce_pricelist\Entity\PriceListInterface $price_list */
+  $price_list = $variables['elements']['#commerce_pricelist'];
+
+  $variables['price_list_entity'] = $price_list;
+  $variables['price_list'] = [];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['price_list'][$key] = $variables['elements'][$key];
+  }
+}
+
+/**
+ * Implements hook_file_download().
+ */
+function commerce_pricelist_file_download($uri) {
+  // Check if the file being downloaded is a price list CSV export.
+  $scheme = StreamWrapperManager::getScheme($uri);
+  $target = StreamWrapperManager::getTarget($uri);
+  if ($scheme == 'temporary' && strpos($target, 'pricelist-') === 0) {
+    $current_user = \Drupal::currentUser();
+    if (!$current_user->hasPermission('administer commerce_pricelist')) {
+      return -1;
+    }
+    return [
+      'Content-disposition' => 'attachment; filename="' . $target . '"',
+      'Content-type' => 'text/csv;charset=utf-8',
+    ];
+  }
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ */
+function commerce_pricelist_local_tasks_alter(&$local_tasks) {
+  // This is needed because the "base_route" cannot be guessed by the logic
+  // in \Drupal\views\Plugin\Derivative\ViewsLocalTask::alterLocalTasks().
+  // Without the following code, the "prices" local task isn't added because
+  // of the missing "base_route".
+  if (isset($local_tasks['views_view:view.commerce_product_variation_prices.page'])) {
+    $local_tasks['views_view:view.commerce_product_variation_prices.page']['base_route'] = 'entity.commerce_product_variation.edit_form';
+  }
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function commerce_pricelist_entity_operation(EntityInterface $entity) {
+  $current_user = \Drupal::currentUser();
+  $operations = [];
+  if ($entity->getEntityTypeId() === 'commerce_product_variation' &&
+    $current_user->hasPermission('administer commerce_pricelist')) {
+    $operations['prices'] = [
+      'title' => t('Prices'),
+      'url' => Url::fromRoute('view.commerce_product_variation_prices.page', [
+        'commerce_product_variation' => $entity->id(),
+        'commerce_product' => $entity->getProduct()->id(),
+      ]),
+      'weight' => 50,
+    ];
+  }
+  if ($entity->getEntityTypeId() === 'commerce_product' &&
+    $current_user->hasPermission('administer commerce_pricelist')) {
+    $operations['prices'] = [
+      'title' => t('Prices'),
+      'url' => Url::fromRoute('view.commerce_pricelist_product_prices.page', [
+        'commerce_product' => $entity->id(),
+      ]),
+      'weight' => 50,
+    ];
+  }
+
+  return $operations;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for 'views_exposed_form'.
+ *
+ * Turn the pricelist filter into a dropdown.
+ */
+function commerce_pricelist_form_views_exposed_form_alter(&$form, FormStateInterface $form_state) {
+  // Retrieve the view object.
+  $storage = $form_state->getStorage();
+  if (!isset($storage['view'])) {
+    return;
+  }
+  $view = $storage['view'];
+  // Make sure we're altering the right view.
+  $view_eligible = $view->id() === 'commerce_product_variation_prices' && $view->current_display === 'page';
+  if (!($view instanceof ViewExecutable) || !$view_eligible || !isset($form['price_list_id'])) {
+    return;
+  }
+  $price_list_filter = &$form['price_list_id'];
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $price_list_storage = $entity_type_manager->getStorage('commerce_pricelist');
+  $query = $price_list_storage->getQuery();
+  $query
+    ->condition('type', 'commerce_product_variation')
+    ->sort('weight', 'ASC')
+    ->sort('id', 'DESC');
+  $count_query = clone $query;
+  $price_lists_count = (int) $count_query->accessCheck()->count()->execute();
+
+  // Only offer a price list dropdown if there are less than 25 price lists.
+  if ($price_lists_count === 0 ||$price_lists_count > 25) {
+    return;
+  }
+  $price_list_ids = $query->accessCheck()->execute();
+  $price_lists = $price_list_storage->loadMultiple($price_list_ids);
+  $price_list_filter['#type'] = 'select';
+  $price_list_filter['#options'] = EntityHelper::extractLabels($price_lists);
+  $price_list_filter['#empty_option'] = t('- None -');
+  $price_list_filter['#multiple'] = FALSE;
+  unset($price_list_filter['#size']);
+}

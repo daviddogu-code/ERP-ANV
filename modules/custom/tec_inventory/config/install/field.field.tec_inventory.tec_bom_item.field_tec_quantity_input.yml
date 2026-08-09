@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - field.storage.tec_inventory.field_tec_quantity_input
+  module:
+    - ai_interpolator
+third_party_settings:
+  ai_interpolator:
+    interpolator_enabled: false
+id: tec_inventory.tec_bom_item.field_tec_quantity_input
+field_name: field_tec_quantity_input
+entity_type: tec_inventory
+bundle: tec_bom_item
+label: 'Production requires'
+description: 'Enter a value or a formula. E.g.: "0.10", or "1/10".'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

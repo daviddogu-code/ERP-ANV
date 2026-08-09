@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * @file
+ * The eca_vbo module file.
+ */
+
+use Drupal\eca\Entity\Eca;
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for eca config entities.
+ */
+function eca_vbo_eca_presave(Eca $eca) {
+  // Clear cached definitions if the config entity reacts on a VBO event.
+  $clear_cache = FALSE;
+  foreach (($eca->get('events') ?? []) as $event) {
+    if ($event['plugin'] === 'vbo:execute') {
+      $clear_cache = TRUE;
+      break;
+    }
+  }
+  if ($clear_cache) {
+    /** @var \Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionManager $manager */
+    $manager = \Drupal::service('plugin.manager.views_bulk_operations_action');
+    $manager->clearCachedDefinitions();
+  }
+}
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function eca_vbo_views_data_alter(&$data) {
+  $data['views']['eca_vbo_bulk_form'] = [
+    'title' => t('ECA bulk operations'),
+    'help' => t("Process entities returned by the view using ECA (based on the mechanics of Views bulk operations)."),
+    'field' => [
+      'id' => 'eca_vbo_bulk_form',
+    ],
+  ];
+}

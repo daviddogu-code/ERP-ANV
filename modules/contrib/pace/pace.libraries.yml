@@ -1,0 +1,930 @@
+pace:
+  header: true
+  js:
+    js/pace.js: { minified: false }
+
+pace-min:
+  header: true
+  js:
+    js/pace.min.js: { minified: true }
+
+# blue
+blue-barber-shop:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-barber-shop.css: {}
+blue-big-counter:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-big-counter.css: {}
+blue-bounce:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-bounce.css: {}
+blue-center-atom:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-center-atom.css: {}
+blue-center-circle:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-center-circle.css: {}
+blue-center-radar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-center-radar.css: {}
+blue-center-simple:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-center-simple.css: {}
+blue-corner-indicator:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-corner-indicator.css: {}
+blue-fill-left:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-fill-left.css: {}
+blue-flash:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-flash.css: {}
+blue-flat-top:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-flat-top.css: {}
+blue-loading-bar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-loading-bar.css: {}
+blue-mac-osx:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-mac-osx.css: {}
+blue-material:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-material.css: {}
+blue-minimal:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/blue/pace-theme-minimal.css: {}
+
+# black
+black-barber-shop:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-barber-shop.css: {}
+black-big-counter:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-big-counter.css: {}
+black-bounce:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-bounce.css: {}
+black-center-atom:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-center-atom.css: {}
+black-center-circle:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-center-circle.css: {}
+black-center-radar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-center-radar.css: {}
+black-center-simple:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-center-simple.css: {}
+black-corner-indicator:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-corner-indicator.css: {}
+black-fill-left:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-fill-left.css: {}
+black-flash:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-flash.css: {}
+black-flat-top:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-flat-top.css: {}
+black-loading-bar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-loading-bar.css: {}
+black-mac-osx:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-mac-osx.css: {}
+black-material:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-material.css: {}
+black-minimal:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/black/pace-theme-minimal.css: {}
+
+# green
+green-barber-shop:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-barber-shop.css: {}
+green-big-counter:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-big-counter.css: {}
+green-bounce:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-bounce.css: {}
+green-center-atom:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-center-atom.css: {}
+green-center-circle:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-center-circle.css: {}
+green-center-radar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-center-radar.css: {}
+green-center-simple:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-center-simple.css: {}
+green-corner-indicator:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-corner-indicator.css: {}
+green-fill-left:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-fill-left.css: {}
+green-flash:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-flash.css: {}
+green-flat-top:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-flat-top.css: {}
+green-loading-bar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-loading-bar.css: {}
+green-mac-osx:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-mac-osx.css: {}
+green-material:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-material.css: {}
+green-minimal:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/green/pace-theme-minimal.css: {}
+
+# orange
+orange-barber-shop:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-barber-shop.css: {}
+orange-big-counter:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-big-counter.css: {}
+orange-bounce:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-bounce.css: {}
+orange-center-atom:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-center-atom.css: {}
+orange-center-circle:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-center-circle.css: {}
+orange-center-radar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-center-radar.css: {}
+orange-center-simple:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-center-simple.css: {}
+orange-corner-indicator:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-corner-indicator.css: {}
+orange-fill-left:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-fill-left.css: {}
+orange-flash:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-flash.css: {}
+orange-flat-top:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-flat-top.css: {}
+orange-loading-bar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-loading-bar.css: {}
+orange-mac-osx:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-mac-osx.css: {}
+orange-material:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-material.css: {}
+orange-minimal:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/orange/pace-theme-minimal.css: {}
+
+# pink
+pink-barber-shop:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-barber-shop.css: {}
+pink-big-counter:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-big-counter.css: {}
+pink-bounce:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-bounce.css: {}
+pink-center-atom:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-center-atom.css: {}
+pink-center-circle:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-center-circle.css: {}
+pink-center-radar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-center-radar.css: {}
+pink-center-simple:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-center-simple.css: {}
+pink-corner-indicator:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-corner-indicator.css: {}
+pink-fill-left:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-fill-left.css: {}
+pink-flash:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-flash.css: {}
+pink-flat-top:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-flat-top.css: {}
+pink-loading-bar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-loading-bar.css: {}
+pink-mac-osx:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-mac-osx.css: {}
+pink-material:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-material.css: {}
+pink-minimal:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/pink/pace-theme-minimal.css: {}
+
+# purple
+purple-barber-shop:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-barber-shop.css: {}
+purple-big-counter:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-big-counter.css: {}
+purple-bounce:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-bounce.css: {}
+purple-center-atom:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-center-atom.css: {}
+purple-center-circle:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-center-circle.css: {}
+purple-center-radar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-center-radar.css: {}
+purple-center-simple:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-center-simple.css: {}
+purple-corner-indicator:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-corner-indicator.css: {}
+purple-fill-left:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-fill-left.css: {}
+purple-flash:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-flash.css: {}
+purple-flat-top:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-flat-top.css: {}
+purple-loading-bar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-loading-bar.css: {}
+purple-mac-osx:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-mac-osx.css: {}
+purple-material:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-material.css: {}
+purple-minimal:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/purple/pace-theme-minimal.css: {}
+
+# red
+red-barber-shop:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-barber-shop.css: {}
+red-big-counter:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-big-counter.css: {}
+red-bounce:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-bounce.css: {}
+red-center-atom:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-center-atom.css: {}
+red-center-circle:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-center-circle.css: {}
+red-center-radar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-center-radar.css: {}
+red-center-simple:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-center-simple.css: {}
+red-corner-indicator:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-corner-indicator.css: {}
+red-fill-left:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-fill-left.css: {}
+red-flash:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-flash.css: {}
+red-flat-top:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-flat-top.css: {}
+red-loading-bar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-loading-bar.css: {}
+red-mac-osx:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-mac-osx.css: {}
+red-material:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-material.css: {}
+red-minimal:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/red/pace-theme-minimal.css: {}
+
+# silver
+silver-barber-shop:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-barber-shop.css: {}
+silver-big-counter:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-big-counter.css: {}
+silver-bounce:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-bounce.css: {}
+silver-center-atom:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-center-atom.css: {}
+silver-center-circle:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-center-circle.css: {}
+silver-center-radar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-center-radar.css: {}
+silver-center-simple:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-center-simple.css: {}
+silver-corner-indicator:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-corner-indicator.css: {}
+silver-fill-left:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-fill-left.css: {}
+silver-flash:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-flash.css: {}
+silver-flat-top:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-flat-top.css: {}
+silver-loading-bar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-loading-bar.css: {}
+silver-mac-osx:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-mac-osx.css: {}
+silver-material:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-material.css: {}
+silver-minimal:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/silver/pace-theme-minimal.css: {}
+
+# white
+white-barber-shop:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-barber-shop.css: {}
+white-big-counter:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-big-counter.css: {}
+white-bounce:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-bounce.css: {}
+white-center-atom:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-center-atom.css: {}
+white-center-circle:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-center-circle.css: {}
+white-center-radar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-center-radar.css: {}
+white-center-simple:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-center-simple.css: {}
+white-corner-indicator:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-corner-indicator.css: {}
+white-fill-left:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-fill-left.css: {}
+white-flash:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-flash.css: {}
+white-flat-top:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-flat-top.css: {}
+white-loading-bar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-loading-bar.css: {}
+white-mac-osx:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-mac-osx.css: {}
+white-material:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-material.css: {}
+white-minimal:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/white/pace-theme-minimal.css: {}
+
+
+# yellow
+yellow-barber-shop:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-barber-shop.css: {}
+yellow-big-counter:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-big-counter.css: {}
+yellow-bounce:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-bounce.css: {}
+yellow-center-atom:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-center-atom.css: {}
+yellow-center-circle:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-center-circle.css: {}
+yellow-center-radar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-center-radar.css: {}
+yellow-center-simple:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-center-simple.css: {}
+yellow-corner-indicator:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-corner-indicator.css: {}
+yellow-fill-left:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-fill-left.css: {}
+yellow-flash:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-flash.css: {}
+yellow-flat-top:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-flat-top.css: {}
+yellow-loading-bar:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-loading-bar.css: {}
+yellow-mac-osx:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-mac-osx.css: {}
+yellow-material:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-material.css: {}
+yellow-minimal:
+  version: 1.x
+  header: true
+  css:
+    theme:
+      css/yellow/pace-theme-minimal.css: {}

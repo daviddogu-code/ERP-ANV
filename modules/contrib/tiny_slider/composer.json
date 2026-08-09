@@ -1,0 +1,17 @@
+{
+  "name": "drupal/tiny_slider",
+  "description": "Drupal integration for Tiny Slider",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/tiny_slider",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/tiny_slider"
+  },
+  "extra": {
+    "drush": {
+      "services": {
+        "drush.services.yml": "^10"
+      }
+    }
+  }
+}

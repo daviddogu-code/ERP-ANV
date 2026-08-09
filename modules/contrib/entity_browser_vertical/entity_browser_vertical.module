@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations and global functions for entity_browser_vertical.module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\entity_browser\Plugin\Field\FieldWidget\EntityReferenceBrowserWidget;
+
+/**
+ * Implements hook_field_widget_complete_WIDGET_TYPE_form_alter() for entity_browser_entity_reference().
+ */
+function entity_browser_vertical_field_widget_complete_entity_browser_entity_reference_form_alter(&$field_widget_complete_form, FormStateInterface $form_state, $context) {
+  $widget = $context['widget'] ?? NULL;
+  assert($widget instanceof EntityReferenceBrowserWidget);
+  // Adjust Entity Browser widgets where we want to see items stacked vertically
+  // instead of side-to-side.
+  if ($widget->getSetting('field_widget_display') === 'entity_browser_vertical_label') {
+    $field_widget_complete_form['widget']['current']['#attributes']['class'][] = 'entity-browser-vertical';
+    foreach ($field_widget_complete_form['widget']['current']['items'] ?? [] as $delta => $item) {
+      // Inject some additional markup for the tabledrag handle.
+      $field_widget_complete_form['widget']['current']['items'][$delta]['display']['#prefix'] = '<a href="#" title="Drag to re-order" class="tabledrag-handle"></a>';
+    }
+    // Add some helper CSS to adjust things in the front-end.
+    $field_widget_complete_form['widget']['current']['#attached']['library'][] = 'entity_browser_vertical/entity_browser_vertical';
+  }
+}

@@ -1,0 +1,34 @@
+name: 'TEC Inventory'
+description: 'Inventory management'
+type: module
+core_version_requirement: '^9.4 || ^10'
+dependencies:
+  - ai_interpolator
+  - ai_interpolator_eca
+  - eca
+  - eca_content
+  - eca_log
+  - eca_tamper
+  - eck
+  - feeds
+  - feeds_log
+  - field
+  - field_formatter_class
+  - field_group
+  - file
+  - file_resup
+  - filefield_paths
+  - flag
+  - image
+  - language
+  - layout_builder
+  - menu_ui
+  - options
+  - select2
+  - simple_popup_views
+  - taxonomy
+  - user
+  - viewfield
+  - views
+  - views_bootstrap
+version: 10.1.0

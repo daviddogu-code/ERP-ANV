@@ -1,0 +1,8 @@
+<div{{ attributes.addClass(classes) }}>
+  {{ output }}
+</div>
+{% if settings.navAsThumbnails == '1' %}
+  <ul class="thumbs-slider" data-field-id="{{ settings.uniqueFieldID }}">
+    {{ thumbs }}
+  </ul>
+{% endif %}

@@ -1,0 +1,13 @@
+name: Phone Number - Test form
+type: module
+description: Provide a custom form for testing the phone_number field.
+package: Testing
+hidden: true
+core_version_requirement: ^9.2 || ^10
+dependencies:
+  - drupal:field
+
+# Information added by Drupal.org packaging script on 2024-04-24
+version: '2.0.0-alpha6'
+project: 'phone_number'
+datestamp: 1713945773

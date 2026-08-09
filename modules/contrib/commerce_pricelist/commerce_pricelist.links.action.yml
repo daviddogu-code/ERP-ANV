@@ -1,0 +1,30 @@
+entity.commerce_pricelist.add_page:
+  route_name: entity.commerce_pricelist.add_page
+  title: 'Add price list'
+  appears_on:
+    - entity.commerce_pricelist.collection
+    - entity.commerce_pricelist.reorder
+
+entity.commerce_pricelist_item.add_form:
+  route_name: entity.commerce_pricelist_item.add_form
+  title: 'Add price'
+  appears_on:
+    - entity.commerce_pricelist_item.collection
+
+entity.commerce_pricelist_item.import_form:
+  route_name: entity.commerce_pricelist_item.import_form
+  title: 'Import prices'
+  appears_on:
+    - entity.commerce_pricelist_item.collection
+
+entity.commerce_pricelist_item.export_form:
+  route_name: entity.commerce_pricelist_item.export_form
+  title: 'Export prices'
+  appears_on:
+    - entity.commerce_pricelist_item.collection
+
+entity.commerce_product_variation.add_price_form:
+  route_name: entity.commerce_product_variation.add_price_form
+  title: 'Add price'
+  appears_on:
+    - view.commerce_product_variation_prices.page

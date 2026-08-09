@@ -1,0 +1,236 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Pricelist module.
+ */
+
+use Drupal\commerce\CommerceContentEntityStorage;
+use Drupal\commerce_pricelist\Entity\PriceList;
+use Drupal\commerce_pricelist\Entity\PriceListItem;
+use Drupal\commerce_pricelist\Event\PriceListEvent;
+use Drupal\commerce_pricelist\Event\PriceListItemEvent;
+use Drupal\commerce_pricelist\PriceListItemStorageSchema;
+use Drupal\Core\Field\BaseFieldDefinition;
+
+/**
+ * Replace the 'customer_role' field with the 'customer_roles' field.
+ */
+function commerce_pricelist_update_8201() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  // Create the customer_roles field.
+  $storage_definition = BaseFieldDefinition::create('entity_reference')
+    ->setLabel(t('Customer roles'))
+    ->setDescription(t('The customer roles for which the price list is valid.'))
+    ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
+    ->setSetting('target_type', 'user_role')
+    ->setDisplayOptions('form', [
+      'type' => 'options_buttons',
+    ]);
+  $definition_update_manager->installFieldStorageDefinition('customer_roles', 'commerce_pricelist', 'commerce_pricelist', $storage_definition);
+
+  // Seed the new field manually, because Drupal core doesn't support
+  // using setInitialValueFromField() on a multivalue field.
+  $database = \Drupal::database();
+  $role_ids = $database->select('commerce_pricelist', 'cp')
+    ->fields('cp', ['id', 'type', 'customer_role'])
+    ->where('cp.customer_role IS NOT NULL')
+    ->execute()
+    ->fetchAllAssoc('id');
+
+  $insert_query = $database->insert('commerce_pricelist__customer_roles')
+    ->fields(['bundle', 'deleted', 'entity_id', 'revision_id', 'langcode', 'delta', 'customer_roles_target_id']);
+  foreach ($role_ids as $id => $data) {
+    $insert_query->values([$data->type, 0, $id, $id, 'und', 0, $data->customer_role]);
+  }
+  $insert_query->execute();
+
+  // Remove the customer_role field.
+  $storage_definition = BaseFieldDefinition::create('entity_reference')
+    ->setName('customer_role')
+    ->setTargetEntityTypeId('commerce_pricelist')
+    ->setLabel(t('Customer role'))
+    ->setDescription(t('The customer role for which the price list is valid.'))
+    ->setSetting('target_type', 'user_role')
+    ->setDisplayOptions('form', [
+      'type' => 'options_select',
+    ]);
+  $definition_update_manager->uninstallFieldStorageDefinition($storage_definition);
+}
+
+/**
+ * Define event handlers for price list and price list items.
+ */
+function commerce_pricelist_update_8202() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = $definition_update_manager->getEntityType('commerce_pricelist');
+  $entity_type->setHandlerClass('event', PriceListEvent::class);
+  $entity_type->setHandlerClass('storage', CommerceContentEntityStorage::class);
+  $definition_update_manager->updateEntityType($entity_type);
+
+  $entity_type = $definition_update_manager->getEntityType('commerce_pricelist_item');
+  $entity_type->setHandlerClass('event', PriceListItemEvent::class);
+  $entity_type->setHandlerClass('storage', CommerceContentEntityStorage::class);
+  $definition_update_manager->updateEntityType($entity_type);
+}
+
+/**
+ * Add a 'uid' field to price lists and price list items.
+ */
+function commerce_pricelist_update_8203() {
+  /** @var \Drupal\commerce_store\StoreStorageInterface $store_storage */
+  $store_storage = \Drupal::entityTypeManager()->getStorage('commerce_store');
+  $default_store = $store_storage->loadDefault();
+  // Defaults the price list owner to the store owner.
+  $default_uid = $default_store ? $default_store->getOwnerId() : 0;
+
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $storage_definition = BaseFieldDefinition::create('entity_reference')
+    ->setLabel(t('Owner'))
+    ->setDescription(t('The user that owns this price list.'))
+    ->setSetting('target_type', 'user')
+    ->setTranslatable(FALSE)
+    ->setInitialValue($default_uid)
+    ->setDefaultValueCallback(PriceList::class . '::getDefaultEntityOwner');
+  $definition_update_manager->installFieldStorageDefinition('uid', 'commerce_pricelist', 'commerce_pricelist', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('entity_reference')
+    ->setLabel(t('Owner'))
+    ->setDescription(t('The user that owns this price list item.'))
+    ->setSetting('target_type', 'user')
+    ->setTranslatable(FALSE)
+    ->setInitialValue($default_uid)
+    ->setDefaultValueCallback(PriceListItem::class . '::getDefaultEntityOwner');
+  $definition_update_manager->installFieldStorageDefinition('uid', 'commerce_pricelist_item', 'commerce_pricelist', $storage_definition);
+
+  foreach (['commerce_pricelist', 'commerce_pricelist_item'] as $entity_type_id) {
+    $entity_type = $definition_update_manager->getEntityType($entity_type_id);
+    $keys = $entity_type->getKeys();
+    $keys['owner'] = 'uid';
+    $keys['uid'] = 'uid';
+    $entity_type->set('entity_keys', $keys);
+    $definition_update_manager->updateEntityType($entity_type);
+  }
+}
+
+/**
+ * Fix the entity definition mismatch caused by the "data_table" key removal.
+ */
+function commerce_pricelist_update_8204() {
+  /** @var \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface $last_installed_schema_repository */
+  $last_installed_schema_repository = \Drupal::service('entity.last_installed_schema.repository');
+
+  foreach (['commerce_pricelist', 'commerce_pricelist_item'] as $entity_type_id) {
+    $entity_type = $last_installed_schema_repository->getLastInstalledDefinition($entity_type_id);
+    $entity_type->set('data_table', NULL);
+    $last_installed_schema_repository->setLastInstalledDefinition($entity_type);
+  }
+}
+
+/**
+ * Replace the 'customer' field with the 'customers' field.
+ */
+function commerce_pricelist_update_8205() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  // Create the customers field.
+  $storage_definition = BaseFieldDefinition::create('entity_reference')
+    ->setLabel(t('Customers'))
+    ->setDescription(t('The customers for which the price list is valid.'))
+    ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
+    ->setSetting('target_type', 'user')
+    ->setDisplayOptions('form', [
+      'type' => 'entity_reference_autocomplete',
+      'settings' => [
+        'match_operator' => 'CONTAINS',
+        'size' => '60',
+        'placeholder' => '',
+      ],
+    ]);
+  $definition_update_manager->installFieldStorageDefinition('customers', 'commerce_pricelist', 'commerce_pricelist', $storage_definition);
+
+  // Seed the new field manually, because Drupal core doesn't support
+  // using setInitialValueFromField() on a multivalue field.
+  $database = \Drupal::database();
+  $customer_ids = $database->select('commerce_pricelist', 'cp')
+    ->fields('cp', ['id', 'type', 'customer'])
+    ->where('cp.customer IS NOT NULL')
+    ->execute()
+    ->fetchAllAssoc('id');
+
+  $insert_query = $database->insert('commerce_pricelist__customers')
+    ->fields(['bundle', 'deleted', 'entity_id', 'revision_id', 'langcode', 'delta', 'customers_target_id']);
+  foreach ($customer_ids as $id => $data) {
+    $insert_query->values([$data->type, 0, $id, $id, 'und', 0, $data->customer]);
+  }
+  $insert_query->execute();
+
+  // Remove the customer field.
+  $storage_definition = BaseFieldDefinition::create('entity_reference')
+    ->setLabel(t('Customer'))
+    ->setName('customer')
+    ->setTargetEntityTypeId('commerce_pricelist')
+    ->setDescription(t('The customer for which the price list is valid.'))
+    ->setSetting('target_type', 'user')
+    ->setSetting('handler', 'default')
+    ->setDisplayOptions('form', [
+      'type' => 'entity_reference_autocomplete',
+      'settings' => [
+        'match_operator' => 'CONTAINS',
+        'size' => '60',
+        'autocomplete_type' => 'tags',
+        'placeholder' => '',
+      ],
+    ]);
+  $definition_update_manager->uninstallFieldStorageDefinition($storage_definition);
+}
+
+/**
+ * Enforce a single price for the same quantity tier on a pricelist.
+ */
+function commerce_pricelist_update_8206() {
+  // Check if we have duplicate price list items for the same product/quantity.
+  $query = \Drupal::database()->select('commerce_pricelist_item', 'cpi');
+  $query->fields('cpi', ['price_list_id', 'purchasable_entity', 'quantity', 'price__currency_code']);
+  $query->addExpression('COUNT(*)', 'cnt');
+  $query->addExpression('GROUP_CONCAT(cpi.id)', 'ids');
+  $query
+    ->groupBy('type')
+    ->groupBy('price_list_id')
+    ->groupBy('purchasable_entity')
+    ->groupBy('quantity')
+    ->groupBy('price__currency_code')
+    ->having('cnt > 1');
+  $duplicate_ids = $query->execute()->fetchCol();
+  // We'll now proceed to deleting the duplicate prices, the duplicate prices
+  // with a higher id will be kept.
+  if (!$duplicate_ids) {
+    $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+    $entity_type = \Drupal::entityTypeManager()->getDefinition('commerce_pricelist_item')
+      ->setHandlerClass('storage_schema', PriceListItemStorageSchema::class);
+    // Regenerate entity type indexes.
+    $definition_update_manager->updateEntityType($entity_type);
+  }
+  else {
+    return t('Update to the commerce_pricelist_item schema was skipped due to duplicate prices.');
+  }
+}
+
+/**
+ * Regenerate the commerce_pricelist_item indexes/keys.
+ */
+function commerce_pricelist_update_8207() {
+  try {
+    $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+    $entity_type = \Drupal::entityTypeManager()->getDefinition('commerce_pricelist_item')
+      ->setHandlerClass('storage_schema', PriceListItemStorageSchema::class);
+    // Regenerate entity type indexes.
+    $definition_update_manager->updateEntityType($entity_type);
+  }
+  catch (\Exception $exception) {
+    return t('An error occurred while trying to update the commerce_pricelist_item: @error.', [
+      '@error' => $exception->getMessage(),
+    ]);
+  }
+}

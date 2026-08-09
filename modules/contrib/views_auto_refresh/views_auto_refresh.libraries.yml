@@ -1,0 +1,7 @@
+views_auto_refresh:
+  js:
+    js/views_auto_refresh.js: { }
+  dependencies:
+    - core/jquery
+    - core/drupalSettings
+    - core/drupal

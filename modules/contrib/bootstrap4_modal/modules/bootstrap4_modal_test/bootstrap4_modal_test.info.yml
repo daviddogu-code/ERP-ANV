@@ -1,0 +1,11 @@
+name: 'Bootstrap 4 Modal'
+type: module
+description: 'Test module for Bootstrap 4 Modal.'
+package: Testing
+dependencies:
+  - bootstrap4_modal
+
+# Information added by Drupal.org packaging script on 2024-01-25
+version: '2.1.7'
+project: 'bootstrap4_modal'
+datestamp: 1706198452

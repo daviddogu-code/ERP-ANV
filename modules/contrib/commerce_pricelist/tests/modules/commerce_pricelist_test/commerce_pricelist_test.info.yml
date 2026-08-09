@@ -1,0 +1,11 @@
+name: Commerce Pricelist Test
+type: module
+description: Provides items for testing Commerce Pricelist.
+package: Testing
+dependencies:
+  - drupal:entity_test
+
+# Information added by Drupal.org packaging script on 2024-05-27
+version: '8.x-2.13'
+project: 'commerce_pricelist'
+datestamp: 1716815629

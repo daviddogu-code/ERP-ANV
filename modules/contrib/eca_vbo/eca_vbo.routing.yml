@@ -1,0 +1,9 @@
+eca_vbo.confirm:
+  path: '/views-bulk-operations/eca-vbo-confirm/{view_id}/{display_id}'
+  defaults:
+    _form: '\Drupal\eca_vbo\Form\EcaVboConfirm'
+    _title: 'Confirm execution'
+  requirements:
+    _views_bulk_operation_access: 'TRUE'
+  options:
+    _admin_route: TRUE

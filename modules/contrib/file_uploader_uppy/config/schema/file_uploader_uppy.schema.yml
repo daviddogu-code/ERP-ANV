@@ -1,0 +1,71 @@
+field.widget.settings.file_uploader_uppy:
+  type: mapping
+  label: 'File uploader by Uppy display format settings'
+  mapping:
+    options:
+      type: mapping
+      label: 'Options'
+      mapping:
+        instance:
+          type: mapping
+          label: 'Instance'
+          mapping:
+            autoProceed:
+              type: boolean
+              label: 'Auto proceed'
+        plugin:
+          type: mapping
+          label: 'Plugin'
+          mapping:
+            showProgressDetails:
+              type: boolean
+              label: 'Show progress details'
+            hideCancelButton:
+              type: boolean
+              label: 'Hide cancel button'
+            hideProgressAfterFinish:
+              type: boolean
+              label: 'Hide progress after finish'
+            singleFileFullScreen:
+              type: boolean
+              label: 'Single file fullscreen'
+            disableStatusBar:
+              type: boolean
+              label: 'Disable status bar'
+            disableInformer:
+              type: boolean
+              label: 'Disable informer'
+            disableThumbnailGenerator:
+              type: boolean
+              label: 'Disable thumbnail generator'
+            waitForThumbnailsBeforeUpload:
+              type: boolean
+              label: 'Wait for thumbnails before upload'
+            thumbnailWidth:
+              type: integer
+              label: 'Thumbnail width'
+            enableImageEditor:
+              type: boolean
+              label: 'Enable image editor'
+            autoOpenFileEditor:
+              type: boolean
+              label: 'Auto open image editor'
+            imageEditor:
+              type: mapping
+              mapping:
+                actions:
+                  type: sequence
+                  label: 'Image editor actions'
+            thumbnailHeight:
+              type: integer
+              label: 'Thumbnail height'
+            theme:
+              type: string
+              label: 'Theme'
+        uploader:
+          type: mapping
+          label: 'Uploader'
+          mapping:
+            method:
+              type: string
+              label: 'Upload method'

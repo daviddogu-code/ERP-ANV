@@ -1,0 +1,11 @@
+ief_popup:
+  version: 1.x
+  css:
+    theme:
+      css/ief_popup.css: {}
+  js:
+    js/ief_popup.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupal.dialog

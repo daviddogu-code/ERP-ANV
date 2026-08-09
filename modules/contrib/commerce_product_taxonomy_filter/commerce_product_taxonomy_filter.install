@@ -1,0 +1,81 @@
+<?php
+
+/**
+ * @file
+ * Install, uninstall, update and schema functions.
+ */
+
+use Drupal\commerce_product\Entity\Product;
+
+/**
+ * Implements hook_uninstall().
+ */
+function commerce_product_taxonomy_filter_uninstall() {
+  \Drupal::database()->schema()->dropTable('commerce_product_taxonomy_index');
+}
+
+/**
+ * Implements hook_install().
+ */
+function commerce_product_taxonomy_filter_install() {
+  $query = \Drupal::entityQuery('commerce_product')
+    ->accessCheck(TRUE);
+  $product_ids = $query->execute();
+  foreach ($product_ids as $key => $product_id) {
+    $commerce_product = Product::load($product_id);
+    commerce_product_taxonomy_filter_build_commerce_product_index($commerce_product);
+  }
+
+}
+
+/**
+ * Implements hook_schema().
+ */
+function commerce_product_taxonomy_filter_schema() {
+  $schema['commerce_product_taxonomy_index'] = [
+    'description' => 'Maintains denormalized information about commerce_product/term relationships.',
+    'fields' => [
+      'product_id' => [
+        'description' => 'The {commerce_product}.product_id this record tracks.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'tid' => [
+        'description' => 'The term ID.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'status' => [
+        'description' => 'Boolean indicating whether the commerce_product is published (visible to non-administrators).',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ],
+      'created' => [
+        'description' => 'The Unix timestamp when the commerce_product was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['product_id', 'tid'],
+    'indexes' => [
+      'term_commerce_product' => ['tid', 'status', 'created'],
+    ],
+    'foreign keys' => [
+      'tracked_commerce_product' => [
+        'table' => 'commerce_product',
+        'columns' => ['product_id' => 'product_id'],
+      ],
+      'term' => [
+        'table' => 'taxonomy_term_data',
+        'columns' => ['tid' => 'tid'],
+      ],
+    ],
+  ];
+  return $schema;
+}

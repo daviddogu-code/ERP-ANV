@@ -1,0 +1,22 @@
+{
+    "name": "drupal/views_auto_refresh",
+    "type": "drupal-module",
+    "description": "Allows for auto-refreshing of Ajax-enabled views.",
+    "homepage": "https://drupal.org/project/views_auto_refresh",
+    "authors": [
+        {
+            "name": "George Anderson (geoanders)",
+            "homepage": "https://www.drupal.org/u/geoanders",
+            "role": "Maintainer"
+        }
+    ],
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/views_auto_refresh",
+        "source": "https://git.drupalcode.org/project/views_auto_refresh"
+    },
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "drupal/core": "^8.8 || ^9 || ^10"
+    },
+    "minimum-stability": "dev"
+}

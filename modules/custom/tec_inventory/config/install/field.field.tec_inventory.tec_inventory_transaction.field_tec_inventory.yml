@@ -1,0 +1,28 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_inventory_transaction
+    - field.storage.tec_inventory.field_tec_inventory
+    - taxonomy.vocabulary.tec_inventory
+id: tec_inventory.tec_inventory_transaction.field_tec_inventory
+field_name: field_tec_inventory
+entity_type: tec_inventory
+bundle: tec_inventory_transaction
+label: 'Inventory material'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tec_inventory: tec_inventory
+    sort:
+      field: name
+      direction: asc
+    auto_create: true
+    auto_create_bundle: ''
+field_type: entity_reference

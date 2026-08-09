@@ -1,0 +1,12 @@
+/**
+ * Temporary accent for the top black menu.
+ * Mirrored in admin-forms.css — remove both when no longer needed.
+ */
+.dxpr-theme-header,
+.dxpr-theme-header--top,
+.region-secondary-header,
+.toolbar-bar,
+.gin-secondary-toolbar {
+  border-bottom: 3px solid #39ff14 !important;
+  box-shadow: 0 3px 10px rgba(57, 255, 20, 0.5);
+}

@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Presets PACE theme to minimal upon installation.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function pace_uninstall() {
+  \Drupal::configFactory()->getEditable('pace.settings')->delete();
+}
+
+/**
+ * Remove manual color setting from the UI.
+ */
+function pace_update_8101() {
+  \Drupal::configFactory()->getEditable('pace.settings.pace_custom_color_enabled')->delete();
+  \Drupal::configFactory()->getEditable('pace.settings.pace_custom_color_value')->delete();
+}
+
+/**
+ * Add colored PACE themes.
+ */
+function pace_update_8102() {
+  $message = 'Your PACE settings have been reset to the "minimal" theme!';
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('pace.settings');
+  $config->set('pace_theme', 'minimal');
+  $config->set('pace_color', 'blue');
+  $config->save(TRUE);
+  return $message;
+}

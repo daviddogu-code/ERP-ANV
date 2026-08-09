@@ -1,0 +1,5 @@
+services:
+  batch_jobs_example.commands:
+    class: \Drupal\batch_jobs_example\Commands\BatchJobsExample
+    tags:
+      - { name: drush.command }

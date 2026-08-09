@@ -1,0 +1,11 @@
+name: 'Views Auto Refresh'
+type: module
+description: 'Allows for auto-refreshing of Ajax-enabled views.'
+core_version_requirement: ^8.8 || ^9 || ^10
+dependencies:
+  - drupal:views
+
+# Information added by Drupal.org packaging script on 2022-08-08
+version: '1.0.2'
+project: 'views_auto_refresh'
+datestamp: 1659976558

@@ -1,0 +1,12 @@
+scan_code.admin_config:
+  title: 'Scan code'
+  parent: system.admin_config
+  route_name: scan_code.admin_config
+  weight: -60
+
+scan_code.configuration:
+  title: 'Barcode Scanning'
+  parent: scan_code.admin_config
+  description: 'Configure the barcode scanning options.'
+  route_name: scan_code.settings
+  weight: 25

@@ -1,0 +1,34 @@
+# Global menu accent (CSS only, no JS).
+menu-accent:
+  css:
+    theme:
+      css/menu-accent.css: {}
+
+# This is your existing library for the stock mutation pop-up
+form-styles:
+  css:
+    theme:
+      css/admin-forms.css: {}
+  js:
+    js/stock-display.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+
+# --- ADDED: NEW LIBRARY DEFINITION ---
+# This library is ONLY for the cost calculator on the main inventory edit form.
+inventory-calculator:
+  version: 1.x
+  js:
+    js/inventory-calculator.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+purchase_order_calculator:
+  js:
+    js/purchase-order-calculator.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal

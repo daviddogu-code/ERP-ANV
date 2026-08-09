@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+name: Brands
+vid: tec_brands
+description: 'Collection of Brands'
+weight: 0

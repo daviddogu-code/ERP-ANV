@@ -1,0 +1,35 @@
+name: 'TEC Brands'
+description: 'Manage brands'
+type: module
+core_version_requirement: '^9.4 || ^10'
+dependencies:
+  - ai_interpolator
+  - coffee
+  - comment
+  - draggableviews
+  - eck
+  - eck_bundle_permissions
+  - editablefields
+  - entity_browser
+  - feeds
+  - feeds_log
+  - field
+  - file
+  - file_resup
+  - filefield_paths
+  - filter
+  - flag
+  - image
+  - language
+  - manage_display
+  - masquerade
+  - media
+  - node
+  - shortcut
+  - system
+  - taxonomy
+  - tec_crm
+  - text
+  - user
+  - views_bulk_edit
+version: 1.0.0

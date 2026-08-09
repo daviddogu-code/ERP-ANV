@@ -1,0 +1,85 @@
+From 8d048c769d8798865eebfb692b88554e4bcfcea3 Mon Sep 17 00:00:00 2001
+From: Bohdan Mykhalchuk <bohdan.mykhalchuk@lembergsolutions.com>
+Date: Fri, 5 Apr 2024 12:24:39 +0300
+Subject: [PATCH] Issue #3336839 by rollins: FlagCountManager: Call to a member
+ function id() on null
+
+---
+ src/FlagCountManager.php | 60 +++++++++++++++++++++++++++++++---------
+ 1 file changed, 47 insertions(+), 13 deletions(-)
+
+diff --git a/src/FlagCountManager.php b/src/FlagCountManager.php
+index b726a7e..f0979cf 100644
+--- a/src/FlagCountManager.php
++++ b/src/FlagCountManager.php
+@@ -196,20 +196,54 @@ class FlagCountManager implements FlagCountManagerInterface, EventSubscriberInte
+     $flag = $flagging->getFlag();
+     $entity = $flagging->getFlaggable();
+ 
+-    $this->connection->merge('flag_counts')
+-      ->keys([
+-        'flag_id' => $flag->id(),
+-        'entity_id' => $entity->id(),
+-        'entity_type' => $entity->getEntityTypeId(),
+-      ])
+-      ->fields([
+-        'last_updated' => $this->dateTime->getRequestTime(),
+-        'count' => 1,
+-      ])
+-      ->expression('count', 'count + :inc', [':inc' => 1])
+-      ->execute();
++    if (!empty($entity) && !empty($flag)) {
++      $this->connection->merge('flag_counts')
++        ->key([
++          'flag_id' => $flag->id(),
++          'entity_id' => $entity->id(),
++          'entity_type' => $entity->getEntityTypeId(),
++        ])
++        ->fields([
++          'last_updated' => $this->dateTime->getRequestTime(),
++          'count' => 1,
++        ])
++        ->expression('count', 'count + :inc', [':inc' => 1])
++        ->execute();
++
++      $this->resetLoadedCounts($entity, $flag);
++    }
++    else {
++      $entity_type = $flagging->entity_type->value;
++      $entity_id = $flagging->entity_id->value;
++      $flag_id = $flag->id();
++
++      $existing_entity = $this->connection->select('flag_counts')
++        ->fields('flag_counts', ['count'])
++        ->condition('entity_type', $entity_type)
++        ->condition('entity_id', $entity_id)
++        ->execute()
++        ->fetch();
+ 
+-    $this->resetLoadedCounts($entity, $flag);
++      if ($existing_entity) {
++        $count = $existing_entity->count + 1;
++
++        $this->connection->update('flag_counts')
++          ->fields(['count' => $count])
++          ->condition('entity_type', $entity_type)
++          ->condition('entity_id', $entity_id)
++          ->execute();
++      } else {
++        // Entity does not exist, so insert a new row
++        $this->connection->insert('flag_counts')
++          ->fields([
++            'flag_id' => $flag_id,
++            'entity_type' => $entity_type,
++            'entity_id' => $entity_id,
++            'count' => 1
++          ])
++          ->execute();
++      }
++    }
+   }
+ 
+   /**
+-- 
+GitLab
+

@@ -1,0 +1,7 @@
+file_uploader.xhr:
+  path: "/file-uploader/upload"
+  defaults:
+    _controller: Drupal\file_uploader\Controller\FileUploaderController::upload
+  requirements:
+    _custom_access: Drupal\file_uploader\Controller\FileUploaderController::access
+    _csrf_token: "TRUE"

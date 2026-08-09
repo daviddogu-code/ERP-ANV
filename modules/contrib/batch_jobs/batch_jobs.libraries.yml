@@ -1,0 +1,14 @@
+batch_jobs:
+  version: VERSION
+  css:
+    theme:
+      css/batch_jobs.css: {}
+  js:
+    js/batch_jobs.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - core/drupal.form
+    - core/drupalSettings
+    - jquery_ui_progressbar/progressbar

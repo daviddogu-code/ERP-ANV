@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * @file
+ * File uploader by Uppy.
+ */
+
+use Drupal\file_uploader_uppy\UppyLocaleMapper;
+
+/**
+ * Implements hook_theme().
+ */
+function file_uploader_uppy_theme($existing, $type, $theme, $path): array {
+  return [
+    'file_uploader_uppy' => [
+      'render element' => 'element',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_library_info_build().
+ */
+function file_uploader_uppy_library_info_build(): array {
+  $libraries = [];
+
+  // Adds Uppy locale libraries.
+  foreach (UppyLocaleMapper::getMap() as $language => $filename) {
+    $libraries["locale.$language"] = [
+      'js' => [
+        UppyLocaleMapper::getUrl($language) => [
+          'type' => 'external',
+          'minified' => TRUE,
+        ],
+      ],
+      'dependencies' => ['file_uploader_uppy/global'],
+    ];
+  }
+
+  return $libraries;
+}

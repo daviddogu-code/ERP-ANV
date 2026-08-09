@@ -1,0 +1,17 @@
+{
+  "name": "drupal/batch_jobs_example",
+  "description": "An example drush command for running a batch job.",
+  "type": "drupal-module",
+  "autoload": {
+    "psr-4": {
+      "Drupal\\batch_jobs_example\\": "src/"
+    }
+  },
+  "extra": {
+    "drush": {
+      "services": {
+        "drush.services.yml": "^9"
+      }
+    }
+  }
+}

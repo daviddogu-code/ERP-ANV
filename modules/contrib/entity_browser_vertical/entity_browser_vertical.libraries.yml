@@ -1,0 +1,9 @@
+entity_browser_vertical:
+  css:
+    theme:
+      css/entity_browser_vertical.css: {}
+  js:
+    js/entity_browser_vertical.js: {}
+  dependencies:
+    - core/tabledrag
+    - core/once

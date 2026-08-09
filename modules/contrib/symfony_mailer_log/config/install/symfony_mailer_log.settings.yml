@@ -1,0 +1,3 @@
+log_expiry:
+  max_age: null
+  batch_size: 100

@@ -1,0 +1,144 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_bom_item
+    - field.field.tec_inventory.tec_bom_item.field_tec_inventory
+    - field.field.tec_inventory.tec_bom_item.field_tec_quantity
+    - field.field.tec_inventory.tec_bom_item.field_tec_quantity_input
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_inventory
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_quantity
+    - field.field.tec_inventory.tec_line_item_bom_item.field_tec_inventory
+    - field.field.tec_inventory.tec_line_item_bom_item.field_tec_quantity
+    - field.storage.tec_inventory.field_tec_inventory
+    - field.storage.tec_inventory.field_tec_quantity
+    - field.storage.tec_inventory.field_tec_quantity_input
+  module:
+    - ai_interpolator_eca
+    - eca_content
+id: process_p2q045n
+modeller: bpmn_io
+label: 'TEC Inventory: Set Bom Item data'
+version: '0.1'
+weight: -8
+events:
+  Event_1u4dhan:
+    plugin: 'content_entity:update'
+    label: Update
+    configuration:
+      type: 'tec_inventory tec_bom_item'
+    successors:
+      -
+        id: Gateway_08mh5x7
+        condition: ''
+      -
+        id: Gateway_0q8bfy1
+        condition: Flow_0b3e6ol
+  Event_0ble8kd:
+    plugin: 'content_entity:insert'
+    label: Insert
+    configuration:
+      type: 'tec_inventory tec_bom_item'
+    successors:
+      -
+        id: Activity_1kfpox7
+        condition: ''
+conditions:
+  Flow_1wozo14:
+    plugin: eca_entity_field_value_changed
+    configuration:
+      negate: false
+      field_name: field_product_name
+      entity: ''
+  Flow_0qyud9f:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: title
+      entity: ''
+  Flow_0ei4mw8:
+    plugin: eca_entity_field_value_changed
+    configuration:
+      negate: false
+      field_name: field_tec_quantity_input
+      entity: ''
+  Flow_0b3e6ol:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      negate: false
+      field_name: field_tec_quantity_input
+      entity: ''
+  Flow_0q3in3s:
+    plugin: eca_entity_field_value_empty
+    configuration:
+      field_name: field_tec_quantity
+      negate: true
+      entity: ''
+gateways:
+  Gateway_08mh5x7:
+    type: 0
+    successors:
+      -
+        id: Activity_1kfpox7
+        condition: Flow_1wozo14
+      -
+        id: Gateway_19gy5j0
+        condition: ''
+  Gateway_19gy5j0:
+    type: 0
+    successors:
+      -
+        id: Activity_1kfpox7
+        condition: Flow_0qyud9f
+      -
+        id: Gateway_1p4bf5k
+        condition: ''
+  Gateway_1p4bf5k:
+    type: 0
+    successors:
+      -
+        id: Activity_1i1b9rr
+        condition: Flow_0ei4mw8
+  Gateway_0q8bfy1:
+    type: 0
+    successors:
+      -
+        id: Activity_0zhizzb
+        condition: Flow_0q3in3s
+actions:
+  Activity_1kfpox7:
+    plugin: eca_set_field_value
+    label: 'Set the title field'
+    configuration:
+      field_name: title
+      field_value: '[entity:field_tec_inventory:entity:name]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors:
+      -
+        id: Activity_1i1b9rr
+        condition: ''
+  Activity_1i1b9rr:
+    plugin: eca_ai_interpolator_rule
+    label: 'Interpolate quantity and save'
+    configuration:
+      rule_name: tec_inventory--tec_bom_item--field_tec_quantity
+      overwrite: 1
+      save_entity: 1
+      object: ''
+    successors: {  }
+  Activity_0zhizzb:
+    plugin: eca_set_field_value
+    label: 'Copy the quantity'
+    configuration:
+      field_name: field_tec_quantity_input
+      field_value: '[entity:field_tec_quantity]'
+      method: 'set:clear'
+      strip_tags: false
+      trim: false
+      save_entity: true
+      object: ''
+    successors: {  }

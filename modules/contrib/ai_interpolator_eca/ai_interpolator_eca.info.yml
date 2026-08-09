@@ -1,0 +1,14 @@
+name: AI Interpolator ECA
+description: Use your AI Interpolator rules in an ECA workflow.
+package: AI Interpolator
+type: module
+core_version_requirement: ^9.2 || ^10
+
+dependencies:
+  - ai_interpolator:ai_interpolator
+  - eca:eca
+
+# Information added by Drupal.org packaging script on 2024-04-26
+version: '1.0.0-beta2'
+project: 'ai_interpolator_eca'
+datestamp: 1714122404

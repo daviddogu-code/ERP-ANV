@@ -1,0 +1,11 @@
+name: Scan code - Barcode
+type: module
+description: Allow users to scan information from a barcode image.
+package: Custom
+configure: scan_code.admin_config
+core_version_requirement: ^8 || ^9 || ^10 || ^11
+
+# Information added by Drupal.org packaging script on 2024-06-03
+version: '8.x-1.0-beta4'
+project: 'scan_code'
+datestamp: 1717432722

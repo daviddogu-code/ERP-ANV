@@ -1,0 +1,6 @@
+services:
+  file_resup.build_form:
+    class: Drupal\file_resup\EventSubscriber\BuildForm
+    arguments: ['@form_builder', '@entity_type.manager']
+    tags:
+      - { name: event_subscriber }

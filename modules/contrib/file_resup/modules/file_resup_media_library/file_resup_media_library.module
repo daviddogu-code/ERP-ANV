@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Adds Media Library support for the File Resup module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\file_resup_media_library\Form\MediaLibraryAddFormUploadAlter;
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function file_resup_form_media_library_add_form_upload_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $media_library_form_alter = \Drupal::classResolver(MediaLibraryAddFormUploadAlter::class);
+  $media_type_id = $form_state->get('media_library_state')->get('media_library_selected_type');
+  $media_type = \Drupal::entityTypeManager()->getStorage('media_type')->load($media_type_id);
+  $field_definition = $media_type->getSource()->getSourceFieldDefinition($media_type);
+  if ($media_library_form_alter->isEnabled($field_definition)) {
+    $media_library_form_alter->formAlter($form, $form_state, $field_definition, $form['container']['upload'], 0, 'media', $media_type_id);
+  }
+}

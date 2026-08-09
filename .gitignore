@@ -1,0 +1,17 @@
+# Baseline safety-net repo created 2026-08-09 before tec_inventory redesign work.
+# Core and vendor are Composer-managed (see composer.lock) and reproducible via
+# `composer install`, so they are excluded to keep the repo fast and focused on
+# custom code/config that we actually change.
+/core
+/vendor/
+
+# Configuration files that may contain sensitive information.
+sites/*/settings*.php
+sites/*/services*.yml
+
+# User-generated content / private files.
+sites/*/files
+sites/*/private
+
+# Multi-site test environment.
+sites/simpletest

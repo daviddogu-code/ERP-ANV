@@ -1,0 +1,14 @@
+{
+  "name": "drupal/eca_vbo",
+  "license": "GPL-2.0-or-later",
+  "type": "drupal-module",
+  "description": "Integrates ECA: Event - Condition - Action with Views Bulk Operations (VBO).",
+  "support": {
+    "issues": "https://drupal.org/project/issues/eca_vbo",
+    "source": "https://drupal.org/project/eca_vbo"
+  },
+  "require": {
+    "drupal/eca": "^1.0",
+    "drupal/views_bulk_operations": "^4.2"
+  }
+}

@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_crm
+name: 'Contact: Organization'
+type: tec_contact_organization
+description: ''

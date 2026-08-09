@@ -1,0 +1,112 @@
+.ief-popup-overlay.ui-widget-overlay {
+  z-index: 998;
+}
+
+.ief-popup-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed!important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  z-index: 999!important;
+}
+
+.ief-popup-wrapper div,
+.ief-popup-wrapper fieldset {
+  position: relative;
+}
+
+.ief-popup-wrapper > div,
+.ief-popup-wrapper > fieldset {
+  margin: 0!important;
+  padding: 0!important;
+  border: none!important;
+  position: fixed!important;
+  z-index: 1000;
+  /*
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  zoom: 96%;
+   */
+  background-color: transparent!important;
+  max-height: 90vh;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ief-popup-wrapper > fieldset > div {
+  margin: 0;
+}
+
+@media (max-width: 48em) {
+  .ief-popup-wrapper.ui-dialog {
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .ief-popup-wrapper > div,
+  .ief-popup-wrapper > fieldset {
+    max-height: 100vh!important;
+    max-width: 100% !important;
+  }
+}
+
+.ief-popup-wrapper .ui-dialog-content {
+  background-color: #fff;
+  max-height: 70vh;
+  padding: 1.5rem!important;
+  overflow: auto!important;
+}
+
+.ief-popup-wrapper-existing .ief-form {
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+.ief-popup-wrapper-existing .fieldset__wrapper {
+  margin: 0;
+}
+
+.ui-autocomplete {
+  z-index: 1001!important;
+}
+
+.ief-popup-actions {
+  background-color: #f5f5f2;
+  padding: 1.5rem;
+  padding-bottom: .55rem;
+  padding-top: .55rem;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.ief-popup-actions input {
+  margin-top: .65rem;
+  margin-bottom: .65rem;
+}
+
+.ief-popup-close {
+  right: .75rem;
+  position: absolute;
+  color: #fff;
+  text-decoration: none;
+  border-bottom: none!important;
+  top: 50%;
+  transform: translate(-50%,-50%);
+}
+
+
+.ief-popup-close:hover {
+  color: inherit;
+}
+
+/* little fix to show tabs "under" dialog */
+.vertical-tabs__menu-item.ief-open:after {
+  z-index: 0;
+}

@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * views_auto_refresh module file.
+ */
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function views_auto_refresh_views_data_alter(array &$data) {
+  $data['views']['auto_refresh'] = [
+    'title' => t('Auto Refresh'),
+    'help' => t('Enable Auto Refresh for this view. NOTE: This will automatically turn AJAX support ON.'),
+    'area' => [
+      'id' => 'views_auto_refresh_area',
+    ],
+  ];
+}

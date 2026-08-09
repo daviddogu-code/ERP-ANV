@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * JavaScript file uploader framework.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function file_uploader_theme($existing, $type, $theme, $path): array {
+  return [
+    'file_uploader' => [
+      'render element' => 'element',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function file_uploader_theme_suggestions_file_uploader(array $variables): array {
+  $suggestions = [];
+  $suggestions[] = $variables['element']['#upload_provider'];
+  return $suggestions;
+}
