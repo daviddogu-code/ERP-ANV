@@ -21,9 +21,6 @@ const TEC_CRM_UX_TYPE_SUPPLIER = 1396;
 
 /**
  * Field types a URL is allowed to prefill.
- *
- * Free text is deliberately absent: a link should be able to say "this new
- * contact is a supplier", not to write arbitrary content on someone's behalf.
  */
 const TEC_CRM_UX_PREFILL_TYPES = [
   'boolean',
@@ -60,13 +57,100 @@ function tec_crm_ux_tipo_tid(): ?int {
 }
 
 /**
+ * Human label for the tipo query param.
+ */
+function tec_crm_ux_tipo_label(): ?string {
+  return match (strtolower((string) \Drupal::request()->query->get('tipo', ''))) {
+    'supplier' => 'Supplier',
+    'customer' => 'Customer',
+    default => NULL,
+  };
+}
+
+/**
+ * Collect contact-type tids requested via the URL / entity for a new entity.
+ */
+function tec_crm_ux_requested_contact_type_tids(?FieldableEntityInterface $entity = NULL): array {
+  $tids = [];
+  if ($entity && $entity->hasField('field_tec_contact_type')) {
+    foreach ($entity->get('field_tec_contact_type') as $item) {
+      if ($item->target_id) {
+        $tids[] = (int) $item->target_id;
+      }
+    }
+  }
+  if (!$tids && ($tid = tec_crm_ux_tipo_tid())) {
+    $tids[] = $tid;
+  }
+  $prefill = \Drupal::request()->query->all()['prefill'] ?? [];
+  if (!$tids && is_array($prefill) && !empty($prefill['field_tec_contact_type'])) {
+    foreach ((array) $prefill['field_tec_contact_type'] as $raw) {
+      if (is_scalar($raw) && (int) $raw > 0) {
+        $tids[] = (int) $raw;
+      }
+    }
+  }
+  return array_values(array_unique($tids));
+}
+
+/**
+ * Force Contact type checkbox / checkboxes widget to the given term ids.
+ */
+function tec_crm_ux_force_contact_type_widget(array &$widget, array $tids): void {
+  if (!$tids) {
+    return;
+  }
+  $widget['#default_value'] = $tids;
+  foreach ($tids as $tid) {
+    foreach ([$tid, (string) $tid] as $key) {
+      if (isset($widget[$key]) && is_array($widget[$key])) {
+        $widget[$key]['#default_value'] = $tid;
+        $widget[$key]['#checked'] = TRUE;
+        $widget[$key]['#attributes']['checked'] = 'checked';
+      }
+    }
+  }
+}
+
+/**
+ * Inline script: no Drupal.behaviors / once dependency.
+ */
+function tec_crm_ux_inline_prefill_script(array $tids): array {
+  $json = json_encode(array_map('strval', $tids));
+  return [
+    '#type' => 'html_tag',
+    '#tag' => 'script',
+    '#value' => <<<JS
+(function () {
+  var tids = {$json};
+  function apply() {
+    tids.forEach(function (tid) {
+      var box = document.querySelector('input[type="checkbox"][name="field_tec_contact_type[' + tid + ']"]');
+      if (box && !box.checked) {
+        box.checked = true;
+        box.setAttribute('checked', 'checked');
+        box.dispatchEvent(new Event('input', { bubbles: true }));
+        box.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', apply);
+  } else {
+    apply();
+  }
+  // Run again shortly in case a theme script resets inputs.
+  setTimeout(apply, 100);
+  setTimeout(apply, 500);
+})();
+JS
+    ,
+    '#weight' => 1000,
+  ];
+}
+
+/**
  * Implements hook_entity_prepare_form().
- *
- * Supports:
- *   ?prefill[field_tec_contact_type]=1396
- *   ?prefill[field_tec_works_at]=123
- *   ?tipo=supplier|customer   (shorthand for contact type)
- *   ?works_at=123             (shorthand for Works at)
  */
 function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, FormStateInterface $form_state) {
   if (!$entity instanceof FieldableEntityInterface || !$entity->isNew()) {
@@ -75,13 +159,11 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
 
   $query = \Drupal::request()->query->all();
 
-  // Shorthand used by the Customers / Suppliers landing buttons.
   if ($entity->getEntityTypeId() === 'tec_crm'
     && $entity->hasField('field_tec_contact_type')
     && $entity->get('field_tec_contact_type')->isEmpty()) {
     $tid = tec_crm_ux_tipo_tid();
     if ($tid) {
-      // Explicit target_id structure so options_buttons pick it up.
       $entity->set('field_tec_contact_type', [['target_id' => $tid]]);
     }
   }
@@ -108,7 +190,6 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
     if (!is_string($field_name) || !$entity->hasField($field_name)) {
       continue;
     }
-
     $definition = $entity->getFieldDefinition($field_name);
     if (!in_array($definition->getType(), TEC_CRM_UX_PREFILL_TYPES, TRUE)) {
       continue;
@@ -116,17 +197,14 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
     if (!$entity->get($field_name)->isEmpty()) {
       continue;
     }
-
     $values = array_filter((array) $value, 'is_scalar');
     if (!$values) {
       continue;
     }
-
     $cardinality = $definition->getFieldStorageDefinition()->getCardinality();
     if ($cardinality !== FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED) {
       $values = array_slice($values, 0, $cardinality);
     }
-
     if ($definition->getType() === 'entity_reference') {
       $entity->set($field_name, array_map(
         static fn($id) => ['target_id' => $id],
@@ -140,45 +218,29 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
 }
 
 /**
- * Collect contact-type tids requested via the URL for a new entity.
+ * Implements hook_field_widget_complete_form_alter().
+ *
+ * Runs while the Contact type widget is being built, so #default_value is in
+ * place before Checkboxes::processCheckboxes creates the child boxes.
  */
-function tec_crm_ux_requested_contact_type_tids(FieldableEntityInterface $entity): array {
-  $tids = [];
-  foreach ($entity->get('field_tec_contact_type') as $item) {
-    if ($item->target_id) {
-      $tids[] = (int) $item->target_id;
-    }
-  }
-  if (!$tids && ($tid = tec_crm_ux_tipo_tid())) {
-    $tids[] = $tid;
-  }
-  $prefill = \Drupal::request()->query->all()['prefill'] ?? [];
-  if (!$tids && is_array($prefill) && !empty($prefill['field_tec_contact_type'])) {
-    foreach ((array) $prefill['field_tec_contact_type'] as $raw) {
-      if (is_scalar($raw) && (int) $raw > 0) {
-        $tids[] = (int) $raw;
-      }
-    }
-  }
-  return array_values(array_unique($tids));
-}
-
-/**
- * Force Contact type checkbox widgets to the given term ids.
- */
-function tec_crm_ux_force_contact_type_widget(array &$form, array $tids): void {
-  if (!$tids || !isset($form['field_tec_contact_type']['widget'])) {
+function tec_crm_ux_field_widget_complete_form_alter(&$field_widget_complete_form, FormStateInterface $form_state, $context) {
+  if (($context['items']->getName() ?? '') !== 'field_tec_contact_type') {
     return;
   }
-  $form['field_tec_contact_type']['widget']['#default_value'] = $tids;
-  foreach ($tids as $tid) {
-    // Keys may be int or string depending on PHP/array casting.
-    foreach ([$tid, (string) $tid] as $key) {
-      if (isset($form['field_tec_contact_type']['widget'][$key])) {
-        $form['field_tec_contact_type']['widget'][$key]['#default_value'] = $tid;
-        $form['field_tec_contact_type']['widget'][$key]['#checked'] = TRUE;
-      }
-    }
+  $entity = $context['items']->getEntity();
+  if (!$entity || !$entity->isNew() || $entity->getEntityTypeId() !== 'tec_crm') {
+    return;
+  }
+  $tids = tec_crm_ux_requested_contact_type_tids($entity);
+  if (!$tids) {
+    return;
+  }
+  $entity->set('field_tec_contact_type', array_map(
+    static fn($tid) => ['target_id' => $tid],
+    $tids
+  ));
+  if (isset($field_widget_complete_form['widget'])) {
+    tec_crm_ux_force_contact_type_widget($field_widget_complete_form['widget'], $tids);
   }
 }
 
@@ -191,15 +253,54 @@ function tec_crm_ux_contact_form_after_build(array $form, FormStateInterface $fo
   $entity = $form_object->getEntity();
   if ($entity->isNew() && !$form_state->isSubmitted()) {
     $tids = tec_crm_ux_requested_contact_type_tids($entity);
-    if ($tids) {
+    if ($tids && isset($form['field_tec_contact_type']['widget'])) {
       $entity->set('field_tec_contact_type', array_map(
         static fn($tid) => ['target_id' => $tid],
         $tids
       ));
-      tec_crm_ux_force_contact_type_widget($form, $tids);
+      tec_crm_ux_force_contact_type_widget($form['field_tec_contact_type']['widget'], $tids);
     }
   }
   return $form;
+}
+
+/**
+ * Validation: never lose the URL-selected contact type on save.
+ */
+function tec_crm_ux_contact_form_validate(array &$form, FormStateInterface $form_state): void {
+  $tid = tec_crm_ux_tipo_tid();
+  if (!$tid) {
+    return;
+  }
+  $values = $form_state->getValue('field_tec_contact_type') ?? [];
+  $selected = [];
+  foreach ((array) $values as $delta => $item) {
+    if (is_array($item) && !empty($item['target_id'])) {
+      $selected[] = (int) $item['target_id'];
+    }
+    elseif (is_scalar($item) && (int) $item > 0 && !in_array($delta, ['add_more'], TRUE)) {
+      // Checkboxes widget may submit as tid => tid|0.
+      if ((int) $item === (int) $delta || (int) $item > 0) {
+        $selected[] = (int) ($item ?: $delta);
+      }
+    }
+  }
+  // Options checkboxes often look like [1396 => '1396', 1395 => 0].
+  if (isset($values[1396]) || isset($values['1396']) || isset($values[1395]) || isset($values['1395'])) {
+    $selected = [];
+    foreach ($values as $key => $val) {
+      if (is_numeric($key) && (string) $val === (string) $key) {
+        $selected[] = (int) $key;
+      }
+    }
+  }
+  if (!in_array($tid, $selected, TRUE)) {
+    $selected[] = $tid;
+    $form_state->setValue('field_tec_contact_type', array_map(
+      static fn($id) => ['target_id' => $id],
+      array_values(array_unique($selected))
+    ));
+  }
 }
 
 /**
@@ -220,15 +321,12 @@ function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $fo
   $form['#attributes']['class'][] = 'tec-crm-contact-form';
   $form['#attached']['library'][] = 'tec_crm_ux/prefill';
   $form['#after_build'][] = 'tec_crm_ux_contact_form_after_build';
-  // Never serve a cached copy of this form that ignored ?tipo=.
+  $form['#validate'][] = 'tec_crm_ux_contact_form_validate';
   $form['#cache']['max-age'] = 0;
   $form['#cache']['contexts'][] = 'url.query_args:tipo';
   $form['#cache']['contexts'][] = 'url.query_args:prefill';
   $form['#cache']['contexts'][] = 'url.query_args:works_at';
 
-  // Belt-and-braces: force the checkbox widget default from the URL / entity
-  // after the form array is built. prepare_form alone is not always enough
-  // for options_buttons on a fresh ECK entity.
   if ($entity->isNew() && !$form_state->isSubmitted()) {
     $tids = tec_crm_ux_requested_contact_type_tids($entity);
     if ($tids) {
@@ -236,13 +334,20 @@ function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $fo
         static fn($tid) => ['target_id' => $tid],
         $tids
       ));
-      tec_crm_ux_force_contact_type_widget($form, $tids);
-      $form['field_tec_contact_type']['#prefix'] =
-        '<!-- tec_crm_ux prefill tids=' . implode(',', $tids) . ' tipo=' . (\Drupal::request()->query->get('tipo') ?? '') . ' -->';
+      if (isset($form['field_tec_contact_type']['widget'])) {
+        tec_crm_ux_force_contact_type_widget($form['field_tec_contact_type']['widget'], $tids);
+      }
+
+      $label = tec_crm_ux_tipo_label() ?? 'selected type';
+      $form['tec_crm_ux_prefill_notice'] = [
+        '#type' => 'markup',
+        '#markup' => '<div class="messages messages--status" role="status" style="margin-bottom:1rem;"><strong>Contact type:</strong> ' . $label . ' (preselected from the page you came from). You can still change it below.</div>',
+        '#weight' => -100,
+      ];
+      $form['tec_crm_ux_prefill_js'] = tec_crm_ux_inline_prefill_script($tids);
     }
   }
 
-  // Works at autocomplete from ?works_at=.
   if ($entity->isNew()
     && $form_id === 'tec_crm_tec_contact_person_form'
     && isset($form['field_tec_works_at']['widget'][0]['target_id'])
