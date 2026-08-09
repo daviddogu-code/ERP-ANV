@@ -1,0 +1,5 @@
+name: 'TEC CRM UX'
+type: module
+description: 'Usability fixes for the CRM contact forms.'
+package: TEC
+core_version_requirement: ^10 || ^11

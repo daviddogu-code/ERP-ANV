@@ -1,0 +1,75 @@
+<?php
+
+/**
+ * @file
+ * Usability fixes for the CRM contact forms.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Field types a URL is allowed to prefill.
+ *
+ * Free text is deliberately absent: a link should be able to say "this new
+ * contact is a supplier", not to write arbitrary content on someone's behalf.
+ */
+const TEC_CRM_UX_PREFILL_TYPES = [
+  'boolean',
+  'entity_reference',
+  'list_float',
+  'list_integer',
+  'list_string',
+];
+
+/**
+ * Implements hook_entity_prepare_form().
+ *
+ * Fills fields of a new entity from a "prefill" query parameter, so that
+ * /admin/content/tec_crm/add/tec_contact_organization?prefill[field_tec_contact_type]=1396
+ * opens the form with Supplier already ticked.
+ *
+ * The contrib prepopulate module cannot do this here. It walks the render
+ * array looking for a widget structure, so the parameter has to match the
+ * widget currently in use, and it deliberately refuses to touch checkboxes.
+ * Writing to the entity before the form is built works whatever the widget is.
+ */
+function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, FormStateInterface $form_state) {
+  if (!$entity instanceof FieldableEntityInterface || !$entity->isNew()) {
+    return;
+  }
+
+  $query = \Drupal::request()->query->all();
+  if (empty($query['prefill']) || !is_array($query['prefill'])) {
+    return;
+  }
+
+  foreach ($query['prefill'] as $field_name => $value) {
+    if (!is_string($field_name) || !$entity->hasField($field_name)) {
+      continue;
+    }
+
+    $definition = $entity->getFieldDefinition($field_name);
+    if (!in_array($definition->getType(), TEC_CRM_UX_PREFILL_TYPES, TRUE)) {
+      continue;
+    }
+    // Never overwrite a value the entity already carries.
+    if (!$entity->get($field_name)->isEmpty()) {
+      continue;
+    }
+
+    $values = array_filter((array) $value, 'is_scalar');
+    if (!$values) {
+      continue;
+    }
+
+    $cardinality = $definition->getFieldStorageDefinition()->getCardinality();
+    if ($cardinality !== FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED) {
+      $values = array_slice($values, 0, $cardinality);
+    }
+
+    $entity->set($field_name, array_values($values));
+  }
+}

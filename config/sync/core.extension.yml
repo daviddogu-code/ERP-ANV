@@ -112,7 +112,6 @@ module:
   layout_builder: 0
   layout_builder_blocks: 0
   layout_builder_component_attributes: 0
-  layout_builder_expose_all_field_blocks: 0
   layout_builder_tabs: 0
   layout_custom_section_classes: 0
   layout_discovery: 0
@@ -169,6 +168,7 @@ module:
   tamper: 0
   taxonomy: 0
   taxonomy_unique: 0
+  tec_crm_ux: 0
   tec_inventory: 0
   text: 0
   token: 0
