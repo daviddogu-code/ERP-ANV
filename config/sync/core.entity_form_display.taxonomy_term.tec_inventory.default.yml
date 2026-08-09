@@ -70,9 +70,9 @@ third_party_settings:
   field_group:
     group_row_1:
       children:
-        - group_general_info
-        - group_uom
-      label: 'Row 1'
+        - group_col_left
+        - group_col_right
+      label: 'Card columns'
       region: content
       parent_name: ''
       weight: 0
@@ -89,12 +89,54 @@ third_party_settings:
         effect: none
         speed: fast
         required_fields: true
+    group_col_left:
+      children:
+        - group_general_info
+        - group_costs
+      label: 'Left column'
+      region: content
+      parent_name: group_row_1
+      weight: 0
+      format_type: html_element
+      format_settings:
+        classes: tec-card-stack
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_col_right:
+      children:
+        - group_uom
+        - group_reorder_rules
+      label: 'Right column'
+      region: content
+      parent_name: group_row_1
+      weight: 1
+      format_type: html_element
+      format_settings:
+        classes: tec-card-stack
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
     group_general_info:
       children:
         - group_general_cols
       label: 'General Information'
       region: content
-      parent_name: group_row_1
+      parent_name: group_col_left
       weight: 0
       format_type: html_element
       format_settings:
@@ -186,8 +228,8 @@ third_party_settings:
         - field_tec_unit_use
       label: 'Units of Measure & Conversions'
       region: content
-      parent_name: group_row_1
-      weight: 1
+      parent_name: group_col_right
+      weight: 0
       format_type: html_element
       format_settings:
         classes: 'tec-card tec-card--pairs'
@@ -201,27 +243,6 @@ third_party_settings:
         effect: none
         speed: fast
         required_fields: true
-    group_row_2:
-      children:
-        - group_costs
-        - group_reorder_rules
-      label: 'Row 2'
-      region: content
-      parent_name: ''
-      weight: 1
-      format_type: html_element
-      format_settings:
-        classes: tec-card-row
-        show_empty_fields: false
-        id: ''
-        element: div
-        show_label: false
-        label_element: h3
-        label_element_classes: ''
-        attributes: ''
-        effect: none
-        speed: fast
-        required_fields: true
     group_costs:
       children:
         - field_tec_cost
@@ -229,8 +250,8 @@ third_party_settings:
         - field_tec_price
       label: 'Costs & Pricing'
       region: content
-      parent_name: group_row_2
-      weight: 0
+      parent_name: group_col_left
+      weight: 1
       format_type: html_element
       format_settings:
         classes: 'tec-card tec-card--inline-fields'
@@ -254,7 +275,7 @@ third_party_settings:
         - field_tec_volume_cbm
       label: 'Reorder & Safety Stock Rules'
       region: content
-      parent_name: group_row_2
+      parent_name: group_col_right
       weight: 1
       format_type: html_element
       format_settings:

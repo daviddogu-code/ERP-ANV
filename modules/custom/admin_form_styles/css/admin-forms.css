@@ -391,7 +391,7 @@ body .page-wrapper .costs-row {
    classes so the two never fight over the same elements.
    ========================================================================== */
 
-/* Two cards per row. minmax(0, 1fr) is what stops the wide select2 controls
+/* Two columns of cards. minmax(0, 1fr) is what stops the wide select2 controls
    from pushing the whole page into horizontal scroll. */
 .tec-card-row {
   display: grid;
@@ -399,6 +399,15 @@ body .page-wrapper .costs-row {
   align-items: start;
   gap: 20px;
   margin-bottom: 20px;
+}
+
+/* Each column packs its own cards. Laying the cards out as rows instead would
+   stretch every row to its tallest card, leaving a gap under the short one. */
+.tec-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
 }
 
 .tec-card {
