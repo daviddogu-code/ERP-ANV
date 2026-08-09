@@ -14,7 +14,7 @@ id: taxonomy_term.tec_inventory.field_tec_units
 field_name: field_tec_units
 entity_type: taxonomy_term
 bundle: tec_inventory
-label: 'Nr. of units UoP to UoS conversion formula'
+label: 'Purchase to Inventory Factor'
 description: ''
 required: true
 translatable: false

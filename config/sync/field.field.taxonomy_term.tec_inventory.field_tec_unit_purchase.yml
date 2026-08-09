@@ -17,7 +17,7 @@ id: taxonomy_term.tec_inventory.field_tec_unit_purchase
 field_name: field_tec_unit_purchase
 entity_type: taxonomy_term
 bundle: tec_inventory
-label: 'Unit of Purchase (UoP)'
+label: 'Purchase UoM'
 description: ''
 required: true
 translatable: false

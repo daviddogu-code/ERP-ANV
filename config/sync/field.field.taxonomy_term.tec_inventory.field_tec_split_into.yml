@@ -14,7 +14,7 @@ id: taxonomy_term.tec_inventory.field_tec_split_into
 field_name: field_tec_split_into
 entity_type: taxonomy_term
 bundle: tec_inventory
-label: 'UoS to UoU conversion formula'
+label: 'Inventory to Consumption Factor'
 description: ''
 required: true
 translatable: false
