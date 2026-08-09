@@ -140,6 +140,69 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
 }
 
 /**
+ * Collect contact-type tids requested via the URL for a new entity.
+ */
+function tec_crm_ux_requested_contact_type_tids(FieldableEntityInterface $entity): array {
+  $tids = [];
+  foreach ($entity->get('field_tec_contact_type') as $item) {
+    if ($item->target_id) {
+      $tids[] = (int) $item->target_id;
+    }
+  }
+  if (!$tids && ($tid = tec_crm_ux_tipo_tid())) {
+    $tids[] = $tid;
+  }
+  $prefill = \Drupal::request()->query->all()['prefill'] ?? [];
+  if (!$tids && is_array($prefill) && !empty($prefill['field_tec_contact_type'])) {
+    foreach ((array) $prefill['field_tec_contact_type'] as $raw) {
+      if (is_scalar($raw) && (int) $raw > 0) {
+        $tids[] = (int) $raw;
+      }
+    }
+  }
+  return array_values(array_unique($tids));
+}
+
+/**
+ * Force Contact type checkbox widgets to the given term ids.
+ */
+function tec_crm_ux_force_contact_type_widget(array &$form, array $tids): void {
+  if (!$tids || !isset($form['field_tec_contact_type']['widget'])) {
+    return;
+  }
+  $form['field_tec_contact_type']['widget']['#default_value'] = $tids;
+  foreach ($tids as $tid) {
+    // Keys may be int or string depending on PHP/array casting.
+    foreach ([$tid, (string) $tid] as $key) {
+      if (isset($form['field_tec_contact_type']['widget'][$key])) {
+        $form['field_tec_contact_type']['widget'][$key]['#default_value'] = $tid;
+        $form['field_tec_contact_type']['widget'][$key]['#checked'] = TRUE;
+      }
+    }
+  }
+}
+
+/**
+ * #after_build callback: re-apply URL prefill after widgets/field_group run.
+ */
+function tec_crm_ux_contact_form_after_build(array $form, FormStateInterface $form_state): array {
+  /** @var \Drupal\Core\Entity\EntityFormInterface $form_object */
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object->getEntity();
+  if ($entity->isNew() && !$form_state->isSubmitted()) {
+    $tids = tec_crm_ux_requested_contact_type_tids($entity);
+    if ($tids) {
+      $entity->set('field_tec_contact_type', array_map(
+        static fn($tid) => ['target_id' => $tid],
+        $tids
+      ));
+      tec_crm_ux_force_contact_type_widget($form, $tids);
+    }
+  }
+  return $form;
+}
+
+/**
  * Implements hook_form_alter().
  */
 function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
@@ -154,38 +217,28 @@ function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $fo
   $form_object = $form_state->getFormObject();
   $entity = $form_object->getEntity();
 
+  $form['#attributes']['class'][] = 'tec-crm-contact-form';
+  $form['#attached']['library'][] = 'tec_crm_ux/prefill';
+  $form['#after_build'][] = 'tec_crm_ux_contact_form_after_build';
+  // Never serve a cached copy of this form that ignored ?tipo=.
+  $form['#cache']['max-age'] = 0;
+  $form['#cache']['contexts'][] = 'url.query_args:tipo';
+  $form['#cache']['contexts'][] = 'url.query_args:prefill';
+  $form['#cache']['contexts'][] = 'url.query_args:works_at';
+
   // Belt-and-braces: force the checkbox widget default from the URL / entity
   // after the form array is built. prepare_form alone is not always enough
   // for options_buttons on a fresh ECK entity.
-  if ($entity->isNew() && isset($form['field_tec_contact_type']['widget'])) {
-    $tids = [];
-    foreach ($entity->get('field_tec_contact_type') as $item) {
-      if ($item->target_id) {
-        $tids[] = (int) $item->target_id;
-      }
-    }
-    if (!$tids && ($tid = tec_crm_ux_tipo_tid())) {
-      $tids[] = $tid;
-      $entity->set('field_tec_contact_type', [['target_id' => $tid]]);
-    }
-    // Also honour ?prefill[field_tec_contact_type]=1396.
-    $prefill = \Drupal::request()->query->all()['prefill'] ?? [];
-    if (!$tids && is_array($prefill) && !empty($prefill['field_tec_contact_type'])) {
-      foreach ((array) $prefill['field_tec_contact_type'] as $raw) {
-        if (is_scalar($raw) && (int) $raw > 0) {
-          $tids[] = (int) $raw;
-        }
-      }
-    }
-
+  if ($entity->isNew() && !$form_state->isSubmitted()) {
+    $tids = tec_crm_ux_requested_contact_type_tids($entity);
     if ($tids) {
-      $form['field_tec_contact_type']['widget']['#default_value'] = $tids;
-      foreach ($tids as $tid) {
-        if (isset($form['field_tec_contact_type']['widget'][$tid])) {
-          $form['field_tec_contact_type']['widget'][$tid]['#default_value'] = $tid;
-          $form['field_tec_contact_type']['widget'][$tid]['#checked'] = TRUE;
-        }
-      }
+      $entity->set('field_tec_contact_type', array_map(
+        static fn($tid) => ['target_id' => $tid],
+        $tids
+      ));
+      tec_crm_ux_force_contact_type_widget($form, $tids);
+      $form['field_tec_contact_type']['#prefix'] =
+        '<!-- tec_crm_ux prefill tids=' . implode(',', $tids) . ' tipo=' . (\Drupal::request()->query->get('tipo') ?? '') . ' -->';
     }
   }
 
