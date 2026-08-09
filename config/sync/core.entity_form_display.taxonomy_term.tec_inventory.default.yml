@@ -56,6 +56,7 @@ dependencies:
     - field.field.taxonomy_term.tec_inventory.field_tec_uou_uop_pu
     - field.field.taxonomy_term.tec_inventory.field_tec_uou_uos
     - field.field.taxonomy_term.tec_inventory.field_tec_vendor
+    - field.field.taxonomy_term.tec_inventory.field_tec_volume_cbm
     - field.field.taxonomy_term.tec_inventory.field_uop_to_uos
     - field.field.taxonomy_term.tec_inventory.layout_builder__layout
     - taxonomy.vocabulary.tec_inventory
@@ -370,6 +371,7 @@ third_party_settings:
         - field_tec_moq_quantity
         - field_tec_lead_time_days
         - field_tec_scrap_margin
+        - field_tec_volume_cbm
       label: 'Reorder & Safety Stock Rules'
       region: content
       parent_name: ''
@@ -601,6 +603,13 @@ content:
       autocomplete: false
       match_operator: CONTAINS
       match_limit: 10
+    third_party_settings: {  }
+  field_tec_volume_cbm:
+    type: number
+    weight: 45
+    region: content
+    settings:
+      placeholder: ''
     third_party_settings: {  }
   group_usage:
     weight: 48

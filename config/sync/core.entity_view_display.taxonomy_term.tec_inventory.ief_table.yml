@@ -57,6 +57,7 @@ dependencies:
     - field.field.taxonomy_term.tec_inventory.field_tec_uou_uop_pu
     - field.field.taxonomy_term.tec_inventory.field_tec_uou_uos
     - field.field.taxonomy_term.tec_inventory.field_tec_vendor
+    - field.field.taxonomy_term.tec_inventory.field_tec_volume_cbm
     - field.field.taxonomy_term.tec_inventory.field_uop_to_uos
     - field.field.taxonomy_term.tec_inventory.layout_builder__layout
     - taxonomy.vocabulary.tec_inventory
@@ -144,6 +145,7 @@ hidden:
   field_tec_uou_uop_pu: true
   field_tec_uou_uos: true
   field_tec_vendor: true
+  field_tec_volume_cbm: true
   field_uop_to_uos: true
   langcode: true
   layout_builder__layout: true
