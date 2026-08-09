@@ -48,6 +48,18 @@ function tec_crm_ux_supplier_field_names(): array {
 }
 
 /**
+ * Resolve contact-type term ID from ?tipo=supplier|customer.
+ */
+function tec_crm_ux_tipo_tid(): ?int {
+  $tipo = strtolower((string) \Drupal::request()->query->get('tipo', ''));
+  return match ($tipo) {
+    'supplier' => TEC_CRM_UX_TYPE_SUPPLIER,
+    'customer' => TEC_CRM_UX_TYPE_CUSTOMER,
+    default => NULL,
+  };
+}
+
+/**
  * Implements hook_entity_prepare_form().
  *
  * Supports:
@@ -66,16 +78,11 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
   // Shorthand used by the Customers / Suppliers landing buttons.
   if ($entity->getEntityTypeId() === 'tec_crm'
     && $entity->hasField('field_tec_contact_type')
-    && $entity->get('field_tec_contact_type')->isEmpty()
-    && !empty($query['tipo'])) {
-    $tipo = strtolower((string) $query['tipo']);
-    $tid = match ($tipo) {
-      'supplier' => TEC_CRM_UX_TYPE_SUPPLIER,
-      'customer' => TEC_CRM_UX_TYPE_CUSTOMER,
-      default => NULL,
-    };
+    && $entity->get('field_tec_contact_type')->isEmpty()) {
+    $tid = tec_crm_ux_tipo_tid();
     if ($tid) {
-      $entity->set('field_tec_contact_type', [$tid]);
+      // Explicit target_id structure so options_buttons pick it up.
+      $entity->set('field_tec_contact_type', [['target_id' => $tid]]);
     }
   }
 
@@ -88,7 +95,7 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
     if ($works_at > 0) {
       $org = \Drupal::entityTypeManager()->getStorage('tec_crm')->load($works_at);
       if ($org && $org->bundle() === 'tec_contact_organization') {
-        $entity->set('field_tec_works_at', $works_at);
+        $entity->set('field_tec_works_at', [['target_id' => $works_at]]);
       }
     }
   }
@@ -120,7 +127,15 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
       $values = array_slice($values, 0, $cardinality);
     }
 
-    $entity->set($field_name, array_values($values));
+    if ($definition->getType() === 'entity_reference') {
+      $entity->set($field_name, array_map(
+        static fn($id) => ['target_id' => $id],
+        array_values($values)
+      ));
+    }
+    else {
+      $entity->set($field_name, array_values($values));
+    }
   }
 }
 
@@ -133,6 +148,60 @@ function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $fo
     'tec_crm_tec_contact_person_form',
   ], TRUE)) {
     return;
+  }
+
+  /** @var \Drupal\Core\Entity\EntityFormInterface $form_object */
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object->getEntity();
+
+  // Belt-and-braces: force the checkbox widget default from the URL / entity
+  // after the form array is built. prepare_form alone is not always enough
+  // for options_buttons on a fresh ECK entity.
+  if ($entity->isNew() && isset($form['field_tec_contact_type']['widget'])) {
+    $tids = [];
+    foreach ($entity->get('field_tec_contact_type') as $item) {
+      if ($item->target_id) {
+        $tids[] = (int) $item->target_id;
+      }
+    }
+    if (!$tids && ($tid = tec_crm_ux_tipo_tid())) {
+      $tids[] = $tid;
+      $entity->set('field_tec_contact_type', [['target_id' => $tid]]);
+    }
+    // Also honour ?prefill[field_tec_contact_type]=1396.
+    $prefill = \Drupal::request()->query->all()['prefill'] ?? [];
+    if (!$tids && is_array($prefill) && !empty($prefill['field_tec_contact_type'])) {
+      foreach ((array) $prefill['field_tec_contact_type'] as $raw) {
+        if (is_scalar($raw) && (int) $raw > 0) {
+          $tids[] = (int) $raw;
+        }
+      }
+    }
+
+    if ($tids) {
+      $form['field_tec_contact_type']['widget']['#default_value'] = $tids;
+      foreach ($tids as $tid) {
+        if (isset($form['field_tec_contact_type']['widget'][$tid])) {
+          $form['field_tec_contact_type']['widget'][$tid]['#default_value'] = $tid;
+          $form['field_tec_contact_type']['widget'][$tid]['#checked'] = TRUE;
+        }
+      }
+    }
+  }
+
+  // Works at autocomplete from ?works_at=.
+  if ($entity->isNew()
+    && $form_id === 'tec_crm_tec_contact_person_form'
+    && isset($form['field_tec_works_at']['widget'][0]['target_id'])
+    && $entity->get('field_tec_works_at')->isEmpty()) {
+    $works_at = (int) \Drupal::request()->query->get('works_at', 0);
+    if ($works_at > 0) {
+      $org = \Drupal::entityTypeManager()->getStorage('tec_crm')->load($works_at);
+      if ($org && $org->bundle() === 'tec_contact_organization') {
+        $entity->set('field_tec_works_at', [['target_id' => $works_at]]);
+        $form['field_tec_works_at']['widget'][0]['target_id']['#default_value'] = $org;
+      }
+    }
   }
 
   $selector = ':input[name="field_tec_contact_type[' . TEC_CRM_UX_TYPE_SUPPLIER . ']"]';
