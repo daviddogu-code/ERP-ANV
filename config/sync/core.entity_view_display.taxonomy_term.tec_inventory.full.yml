@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - core.base_field_override.taxonomy_term.tec_inventory.name
     - core.entity_view_mode.taxonomy_term.full
     - field.field.taxonomy_term.tec_inventory.feeds_item
     - field.field.taxonomy_term.tec_inventory.field_1_uou_uos_pu
@@ -10,7 +11,9 @@ dependencies:
     - field.field.taxonomy_term.tec_inventory.field_tec_colors
     - field.field.taxonomy_term.tec_inventory.field_tec_cost
     - field.field.taxonomy_term.tec_inventory.field_tec_importer_item_id
+    - field.field.taxonomy_term.tec_inventory.field_tec_internal_sku
     - field.field.taxonomy_term.tec_inventory.field_tec_inventory_image
+    - field.field.taxonomy_term.tec_inventory.field_tec_lead_time_days
     - field.field.taxonomy_term.tec_inventory.field_tec_material_type
     - field.field.taxonomy_term.tec_inventory.field_tec_moq_package
     - field.field.taxonomy_term.tec_inventory.field_tec_moq_quantity
@@ -27,6 +30,9 @@ dependencies:
     - field.field.taxonomy_term.tec_inventory.field_tec_price_uos
     - field.field.taxonomy_term.tec_inventory.field_tec_price_uou
     - field.field.taxonomy_term.tec_inventory.field_tec_purchasing_moq
+    - field.field.taxonomy_term.tec_inventory.field_tec_reorder_point
+    - field.field.taxonomy_term.tec_inventory.field_tec_safety_stock
+    - field.field.taxonomy_term.tec_inventory.field_tec_scrap_margin
     - field.field.taxonomy_term.tec_inventory.field_tec_split_into
     - field.field.taxonomy_term.tec_inventory.field_tec_split_inventory
     - field.field.taxonomy_term.tec_inventory.field_tec_split_unit
@@ -34,6 +40,7 @@ dependencies:
     - field.field.taxonomy_term.tec_inventory.field_tec_stock_mutations
     - field.field.taxonomy_term.tec_inventory.field_tec_stock_unit_check
     - field.field.taxonomy_term.tec_inventory.field_tec_suppliers
+    - field.field.taxonomy_term.tec_inventory.field_tec_tags
     - field.field.taxonomy_term.tec_inventory.field_tec_traceability
     - field.field.taxonomy_term.tec_inventory.field_tec_unit_purchase
     - field.field.taxonomy_term.tec_inventory.field_tec_unit_use
@@ -52,6 +59,7 @@ dependencies:
     - field.field.taxonomy_term.tec_inventory.field_tec_uou_uos
     - field.field.taxonomy_term.tec_inventory.field_tec_vendor
     - field.field.taxonomy_term.tec_inventory.field_uop_to_uos
+    - field.field.taxonomy_term.tec_inventory.layout_builder__layout
     - taxonomy.vocabulary.tec_inventory
     - views.view.tec_controls_taxonomy
     - views.view.tec_inventory_transactions
@@ -1826,6 +1834,8 @@ hidden:
   feeds_item: true
   field_1_uou_uos_pu: true
   field_tec_ai_color: true
+  field_tec_internal_sku: true
+  field_tec_lead_time_days: true
   field_tec_moq_package: true
   field_tec_moq_quantity: true
   field_tec_moq_unit: true
@@ -1839,10 +1849,14 @@ hidden:
   field_tec_price_by_package: true
   field_tec_price_uos: true
   field_tec_price_uou: true
+  field_tec_reorder_point: true
+  field_tec_safety_stock: true
+  field_tec_scrap_margin: true
   field_tec_split_into: true
   field_tec_split_inventory: true
   field_tec_split_unit: true
   field_tec_stock_unit_check: true
+  field_tec_tags: true
   field_tec_units: true
   field_tec_uop_pu_uou: true
   field_tec_uop_uou: true
@@ -1858,3 +1872,4 @@ hidden:
   field_tec_uou_uos: true
   field_uop_to_uos: true
   langcode: true
+  layout_builder__layout: true

@@ -1,0 +1,20 @@
+uuid: 18cdcfed-5891-43fb-83db-ccfcc9c76eee
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_tec_lead_time_days
+field_name: field_tec_lead_time_days
+entity_type: taxonomy_term
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

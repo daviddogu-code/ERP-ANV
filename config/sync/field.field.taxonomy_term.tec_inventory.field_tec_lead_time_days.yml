@@ -1,0 +1,23 @@
+uuid: de41d397-8f18-4d4c-b550-5ff0e2408d5d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_lead_time_days
+    - taxonomy.vocabulary.tec_inventory
+id: taxonomy_term.tec_inventory.field_tec_lead_time_days
+field_name: field_tec_lead_time_days
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'Supplier Lead Time (Days)'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

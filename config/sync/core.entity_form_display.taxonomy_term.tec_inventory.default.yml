@@ -9,7 +9,9 @@ dependencies:
     - field.field.taxonomy_term.tec_inventory.field_tec_colors
     - field.field.taxonomy_term.tec_inventory.field_tec_cost
     - field.field.taxonomy_term.tec_inventory.field_tec_importer_item_id
+    - field.field.taxonomy_term.tec_inventory.field_tec_internal_sku
     - field.field.taxonomy_term.tec_inventory.field_tec_inventory_image
+    - field.field.taxonomy_term.tec_inventory.field_tec_lead_time_days
     - field.field.taxonomy_term.tec_inventory.field_tec_material_type
     - field.field.taxonomy_term.tec_inventory.field_tec_moq_package
     - field.field.taxonomy_term.tec_inventory.field_tec_moq_quantity
@@ -26,6 +28,9 @@ dependencies:
     - field.field.taxonomy_term.tec_inventory.field_tec_price_uos
     - field.field.taxonomy_term.tec_inventory.field_tec_price_uou
     - field.field.taxonomy_term.tec_inventory.field_tec_purchasing_moq
+    - field.field.taxonomy_term.tec_inventory.field_tec_reorder_point
+    - field.field.taxonomy_term.tec_inventory.field_tec_safety_stock
+    - field.field.taxonomy_term.tec_inventory.field_tec_scrap_margin
     - field.field.taxonomy_term.tec_inventory.field_tec_split_into
     - field.field.taxonomy_term.tec_inventory.field_tec_split_inventory
     - field.field.taxonomy_term.tec_inventory.field_tec_split_unit
@@ -33,6 +38,7 @@ dependencies:
     - field.field.taxonomy_term.tec_inventory.field_tec_stock_mutations
     - field.field.taxonomy_term.tec_inventory.field_tec_stock_unit_check
     - field.field.taxonomy_term.tec_inventory.field_tec_suppliers
+    - field.field.taxonomy_term.tec_inventory.field_tec_tags
     - field.field.taxonomy_term.tec_inventory.field_tec_traceability
     - field.field.taxonomy_term.tec_inventory.field_tec_unit_purchase
     - field.field.taxonomy_term.tec_inventory.field_tec_unit_use
@@ -66,6 +72,7 @@ third_party_settings:
         - name
         - description
         - field_tec_inventory_image
+        - field_tec_internal_sku
       label: 'Left 1'
       region: content
       parent_name: ''
@@ -89,6 +96,7 @@ third_party_settings:
         - field_tec_colors
         - field_tec_vendor
         - field_tec_traceability
+        - field_tec_tags
       label: 'Right 1'
       region: content
       parent_name: ''
@@ -233,7 +241,6 @@ third_party_settings:
     group_excluded:
       children:
         - field_tec_moq_package
-        - field_tec_moq_quantity
         - field_tec_placeholder_3
         - field_tec_placeholder_5
         - field_tec_stock_level
@@ -356,6 +363,30 @@ third_party_settings:
         effect: none
         speed: fast
         required_fields: true
+    group_reorder_rules:
+      children:
+        - field_tec_safety_stock
+        - field_tec_reorder_point
+        - field_tec_moq_quantity
+        - field_tec_lead_time_days
+        - field_tec_scrap_margin
+      label: 'Reorder & Safety Stock Rules'
+      region: content
+      parent_name: ''
+      weight: 20
+      format_type: html_element
+      format_settings:
+        classes: 'tec-gui-card reorder-rules'
+        show_empty_fields: false
+        id: reorder-rules
+        element: div
+        show_label: true
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
 id: taxonomy_term.tec_inventory.default
 targetEntityType: taxonomy_term
 bundle: tec_inventory
@@ -386,9 +417,17 @@ content:
     settings:
       placeholder: ''
     third_party_settings: {  }
+  field_tec_internal_sku:
+    type: string_textfield
+    weight: 7
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
   field_tec_inventory_image:
     type: file_uploader_uppy
-    weight: 7
+    weight: 8
     region: content
     settings:
       options:
@@ -414,6 +453,13 @@ content:
           method: xhr
       progress_indicator: throbber
     third_party_settings: {  }
+  field_tec_lead_time_days:
+    type: number
+    weight: 43
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
   field_tec_material_type:
     type: select2_entity_reference
     weight: 7
@@ -423,6 +469,13 @@ content:
       autocomplete: false
       match_operator: CONTAINS
       match_limit: 10
+    third_party_settings: {  }
+  field_tec_moq_quantity:
+    type: number
+    weight: 42
+    region: content
+    settings:
+      placeholder: ''
     third_party_settings: {  }
   field_tec_price:
     type: number
@@ -435,6 +488,27 @@ content:
   field_tec_price_uos:
     type: number
     weight: 7
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_reorder_point:
+    type: number
+    weight: 41
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_safety_stock:
+    type: number
+    weight: 40
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_tec_scrap_margin:
+    type: number
+    weight: 44
     region: content
     settings:
       placeholder: ''
@@ -463,6 +537,16 @@ content:
       collapsed: false
       revision: false
       removed_reference: optional
+    third_party_settings: {  }
+  field_tec_tags:
+    type: select2_entity_reference
+    weight: 11
+    region: content
+    settings:
+      width: 100%
+      autocomplete: true
+      match_operator: CONTAINS
+      match_limit: 10
     third_party_settings: {  }
   field_tec_traceability:
     type: boolean_checkbox
@@ -538,7 +622,6 @@ hidden:
   field_tec_ai_color: true
   field_tec_importer_item_id: true
   field_tec_moq_package: true
-  field_tec_moq_quantity: true
   field_tec_moq_unit: true
   field_tec_package_units: true
   field_tec_packaging: true

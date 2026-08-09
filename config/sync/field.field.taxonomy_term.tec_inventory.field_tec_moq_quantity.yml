@@ -14,7 +14,7 @@ id: taxonomy_term.tec_inventory.field_tec_moq_quantity
 field_name: field_tec_moq_quantity
 entity_type: taxonomy_term
 bundle: tec_inventory
-label: MoQ
+label: 'Minimum Order Quantity (MOQ)'
 description: ''
 required: false
 translatable: false

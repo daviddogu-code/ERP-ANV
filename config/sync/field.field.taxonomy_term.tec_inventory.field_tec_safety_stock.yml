@@ -1,0 +1,23 @@
+uuid: 091515a8-2e8b-467a-a720-cbacadde69f2
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_safety_stock
+    - taxonomy.vocabulary.tec_inventory
+id: taxonomy_term.tec_inventory.field_tec_safety_stock
+field_name: field_tec_safety_stock
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: 'Safety Stock Qty'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 0.0
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal
