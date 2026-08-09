@@ -179,82 +179,22 @@ third_party_settings:
         required_fields: true
     group_uom:
       children:
-        - group_uom_cols
+        - field_tec_unit_purchase
+        - field_tec_units
+        - field_tec_uos
+        - field_tec_split_into
+        - field_tec_unit_use
       label: 'Units of Measure & Conversions'
       region: content
       parent_name: group_row_1
       weight: 1
       format_type: html_element
       format_settings:
-        classes: tec-card
+        classes: 'tec-card tec-card--pairs'
         show_empty_fields: false
         id: units-of-measure
         element: div
         show_label: true
-        label_element: h3
-        label_element_classes: ''
-        attributes: ''
-        effect: none
-        speed: fast
-        required_fields: true
-    group_uom_cols:
-      children:
-        - group_uom_left
-        - group_uom_right
-      label: 'UoM columns'
-      region: content
-      parent_name: group_uom
-      weight: 0
-      format_type: html_element
-      format_settings:
-        classes: tec-card-cols
-        show_empty_fields: false
-        id: ''
-        element: div
-        show_label: false
-        label_element: h3
-        label_element_classes: ''
-        attributes: ''
-        effect: none
-        speed: fast
-        required_fields: true
-    group_uom_left:
-      children:
-        - field_tec_unit_purchase
-        - field_tec_uos
-        - field_tec_unit_use
-      label: 'UoM left'
-      region: content
-      parent_name: group_uom_cols
-      weight: 0
-      format_type: html_element
-      format_settings:
-        classes: tec-card-col
-        show_empty_fields: false
-        id: ''
-        element: div
-        show_label: false
-        label_element: h3
-        label_element_classes: ''
-        attributes: ''
-        effect: none
-        speed: fast
-        required_fields: true
-    group_uom_right:
-      children:
-        - field_tec_units
-        - field_tec_split_into
-      label: 'UoM right'
-      region: content
-      parent_name: group_uom_cols
-      weight: 1
-      format_type: html_element
-      format_settings:
-        classes: tec-card-col
-        show_empty_fields: false
-        id: ''
-        element: div
-        show_label: false
         label_element: h3
         label_element_classes: ''
         attributes: ''
@@ -477,7 +417,7 @@ content:
     third_party_settings: {  }
   field_tec_split_into:
     type: number
-    weight: 1
+    weight: 3
     region: content
     settings:
       placeholder: ''
@@ -529,7 +469,7 @@ content:
     third_party_settings: {  }
   field_tec_unit_use:
     type: select2_entity_reference
-    weight: 2
+    weight: 4
     region: content
     settings:
       width: 100%
@@ -539,14 +479,14 @@ content:
     third_party_settings: {  }
   field_tec_units:
     type: number
-    weight: 0
+    weight: 1
     region: content
     settings:
-      placeholder: 'Nr of units'
+      placeholder: ''
     third_party_settings: {  }
   field_tec_uos:
     type: select2_entity_reference
-    weight: 1
+    weight: 2
     region: content
     settings:
       width: 100%
