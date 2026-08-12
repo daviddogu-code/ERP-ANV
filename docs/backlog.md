@@ -36,8 +36,27 @@ por error algo que estaba puesto a propósito.
 
 ## 3. Antes de que entren los empleados
 
-Lista de "no publicar sin esto". Casi todo es trabajo técnico durante el despliegue y no
-requiere decisiones del dueño, salvo los tres puntos de correo y el de las cuentas.
+Esto va en dos fases, decidido el 12 de agosto. **Primero entra solo Lukpla, y no a trabajar
+sino a revisar**: tiene que ver el ERP entero y proponer cambios antes de que se empiece a usar,
+porque hay partes del negocio, compras sobre todo, cuya lógica conoce ella y no el dueño. Ese es
+el motivo de querer publicarlo cuanto antes. Después, ya con sus cambios hechos, entran los tres
+empleados a usarlo de verdad.
+
+Para la primera fase el listón baja mucho. Lo único que no se puede saltar son **los tres
+ajustes de `settings.php`**, y eso no depende de cuánta gente entre: en cuanto la máquina está
+en internet, está expuesta al mundo entero. El correo puede esperar, porque si Lukpla olvida la
+contraseña se la cambia el dueño. La limpieza de datos puede esperar, y de hecho conviene que
+espere, porque ella es quien va a opinar sobre qué falta. Y las cuentas de los otros empleados
+no hacen falta todavía.
+
+Dos cosas sí hay que preparar para que su revisión sirva de algo: **un sitio donde apunte lo que
+vea**, aunque sea una hoja de cálculo compartida, porque por chat se evapora en tres días; y
+**un encargo concreto**, empezando por compras, en vez de un "míralo a ver qué te parece". Queda
+por confirmar si se maneja en inglés, que es el idioma en el que está el ERP entero.
+
+El resto de la lista es el "no publicar sin esto" de la segunda fase. Casi todo es trabajo
+técnico durante el despliegue y no requiere decisiones del dueño, salvo los tres puntos de
+correo y el de las cuentas.
 
 - **Configurar el servidor**: Ubuntu, Apache, PHP, MySQL, cortafuegos y acceso solo por
   llave criptográfica.
@@ -84,36 +103,40 @@ requiere decisiones del dueño, salvo los tres puntos de correo y el de las cuen
 
 ### Limpieza de datos y arreglo del importador
 
-El ERP nunca llegó a usarse, así que lo que hay dentro es en parte catálogo aprovechable y en
-parte relleno de pruebas. No se puede abrir a los empleados sin separar una cosa de otra.
+**Todo el contenido que hay dentro es de prueba y se borra entero.** Decisión del dueño del 12
+de agosto, y anula cualquier duda anterior sobre qué se rescataba: el ERP nunca se usó, así que
+no hay nada dentro que valga la pena conservar. Se vacía y se empieza con datos reales.
 
-Recuento del 12 de agosto. **Catálogo**: 869 materiales, 13 productos reales (con 83
-variaciones de color y 118 de talla colgando de ellos), 37 colores, 23 tipos de producto, 23
-tipos de material, 14 tallas, 13 unidades, 12 marcas y 11 patrones. **Movimientos**: 122
-pedidos, 563 líneas de pedido, 22 fichas de cliente y 12 registros de producción.
+Lo que se borra, con el recuento del 12 de agosto:
 
-Decidido ya:
+- **110 órdenes de compra** con 522 líneas, y **13 pedidos de venta** con 61 líneas.
+- **869 materiales**, con los 13.615 movimientos de inventario que cuelgan de ellos.
+- **13 productos**, con sus 83 variaciones de color y 118 de talla.
+- **22 fichas de cliente** y **12 registros de producción.**
 
-- **Tipos de producto (23) y unidades (13): correctos.** No se tocan.
-- **Patrones (11): borrar.** Comprobado que ningún producto usa ninguno; es un trozo del ERP
-  que quedó a medias. Aparte habrá que retirar la estructura vacía que deja atrás: el campo
-  en productos, sus dos vistas y los campos propios del vocabulario.
-- **Marcas (12): borrar, pero sabiendo esto.** No están sueltas como los patrones: los 13
-  productos reales tienen marca asignada, así que borrarlas los deja sin ella.
-- **Tallas (14): revisar**, y crearles un acceso directo desde la portada como el que ya
-  tienen tipos de producto y unidades.
-- **Colores (37): revisar en detalle.** No son lo mismo que las variaciones de color, que fue
-  la duda que surgió: los 37 colores son la paleta, y una variación es un producto concreto
-  pintado con uno de ellos. Importa porque la paleta es transversal: la usan 83 variaciones
-  de producto **y 300 materiales**, así que tocarla afecta al catálogo de materiales.
-- **Materiales (869): se conservan.** Los nombres son correctos; lo que está mal es el resto
-  de la información de cada uno.
+Lo que se queda, porque son listas de configuración y no datos: **tipos de producto (23),
+unidades (13), tallas (14), tipos de material (23) y colores (37)**. Son las listas de las que
+tiran luego los materiales y los productos de verdad, y están bien. La revisión pendiente de
+los colores deja de ser delicada: lo que la hacía arriesgada era que 300 materiales colgaban de
+esa paleta, y esos materiales se van.
 
-Sin decidir: qué se hace con los 13 productos y sus 201 variaciones, con los 122 pedidos y con
-las 22 fichas de cliente, que tienen pinta de ser de prueba.
+Dos vocabularios sí se van, decidido antes y sin cambios:
 
-**El importador de materiales** existe (`tec_inventory_csv_importer`), y por él entraron 470 de
-los 869 materiales, pero está a medio hacer:
+- **Patrones (11)**: un trozo del ERP que quedó a medias y que ningún producto usa. Al
+  quitarlos hay que retirar también la estructura vacía que dejan atrás: el campo en productos,
+  sus dos vistas y los campos propios del vocabulario.
+- **Marcas (12)**: se van con los productos de prueba que las usaban.
+
+Dos avisos para cuando se ejecute. El borrado **tiene un orden obligado**, porque unas cosas
+cuelgan de otras: primero movimientos de inventario y líneas, después pedidos, productos y
+materiales, y al final los vocabularios. Y son casi 15.000 registros, así que va en un script,
+no a mano desde la pantalla. Queda pendiente de montar, aparte, el acceso directo desde la
+portada para las tallas, como el que ya tienen tipos de producto y unidades.
+
+**El importador de materiales** pasa a ser la pieza central del arranque: con el borrado ya no
+sirve para corregir lo que hay, sino para meter el catálogo real de golpe. Existe
+(`tec_inventory_csv_importer`) y por él entraron 470 de los 869 materiales de prueba, pero está
+a medio hacer:
 
 - **Rellena 5 de los 56 campos** de un material: nombre, descripción, trazabilidad, unidad de
   uso y tipo de material. Precios, unidades de compra y de stock, factores de conversión,
@@ -135,13 +158,14 @@ los 869 materiales, pero está a medio hacer:
 - Arrastra además una docena de columnas declaradas y sin usar, restos de pruebas, que
   enredan a la hora de entender qué espera el fichero.
 
-Lo bueno es que identifica cada material por su nombre y está configurado para actualizar los
-que ya existen. **No hay que borrar nada para arreglar los datos**: con una plantilla nueva
-bien hecha se corrigen los 869 en el sitio, sin perder lo que cuelga de ellos.
+El trabajo es: elegir el campo de proveedor, mapear los campos que faltan, limpiar las columnas
+sobrantes y generar la plantilla de Excel con una columna por dato y los nombres exactos que el
+importador espera.
 
-El trabajo, entonces, es: elegir el campo de proveedor, mapear los campos que faltan, limpiar
-las columnas sobrantes y generar la plantilla de Excel con una columna por dato y los nombres
-exactos que el importador espera.
+**Se arregla antes del borrado, no después.** Así el ERP no se queda ni un solo día vacío y sin
+manera de rellenarlo. Y de paso la plantilla se puede ensayar sobre los materiales de prueba,
+que para eso siguen ahí: el importador reconoce cada material por su nombre y actualiza los que
+ya existen, así que se ve enseguida si los 56 campos entran donde deben.
 
 ## 4. Cuando el ERP nuevo ya funcione
 
