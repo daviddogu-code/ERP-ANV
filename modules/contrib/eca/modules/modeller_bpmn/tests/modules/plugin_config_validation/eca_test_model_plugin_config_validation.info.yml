@@ -1,0 +1,10 @@
+name: 'ECA model test: Validate plugin configuration'
+type: module
+description: 'This module contains a model test for saving a new entity.'
+package: Testing
+dependencies:
+  - eca:eca_base
+
+config_devel:
+  - eca.eca.eca_test_0011
+  - eca.model.eca_test_0011

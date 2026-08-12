@@ -1,0 +1,7 @@
+services:
+
+  eca_commerce.subscriber:
+    class: Drupal\eca_commerce\EventSubscriber\EcaEventSubscriber
+    parent: eca.default_event_subscriber
+    tags:
+      - { name: event_subscriber }

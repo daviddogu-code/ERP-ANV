@@ -1,0 +1,7 @@
+name: 'ECA Config'
+type: module
+description: 'Config events.'
+core_version_requirement: ^9 || ^10
+package: ECA
+dependencies:
+  - eca:eca

@@ -1,0 +1,7 @@
+name: 'ECA Development'
+type: module
+description: 'Internal development services only, not for production sites.'
+core_version_requirement: ^9 || ^10
+hidden: true
+dependencies:
+  - eca:eca

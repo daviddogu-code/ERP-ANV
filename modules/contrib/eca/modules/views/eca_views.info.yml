@@ -1,0 +1,8 @@
+name: 'ECA Views'
+type: module
+description: 'Execute and export Views query results within ECA.'
+core_version_requirement: ^9 || ^10
+package: ECA
+dependencies:
+  - drupal:views
+  - eca:eca

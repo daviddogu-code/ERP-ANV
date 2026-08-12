@@ -1,0 +1,7 @@
+name: 'ECA Log'
+type: module
+description: 'Events and actions for Drupal log messages.'
+core_version_requirement: ^9 || ^10
+package: ECA
+dependencies:
+  - eca:eca

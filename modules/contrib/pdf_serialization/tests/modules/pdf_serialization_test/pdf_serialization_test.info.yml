@@ -1,0 +1,7 @@
+name: 'PDF serialization test views'
+type: module
+description: 'Provides default views for pdf serialization tests.'
+package: Testing
+core_version_requirement: ^8.8 || ^9
+dependencies:
+  - pdf_serialization:pdf_serialization

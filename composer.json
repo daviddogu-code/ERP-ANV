@@ -173,6 +173,9 @@
             "oomphinc/composer-installers-extender": true
         },
         "sort-packages": true,
+        "preferred-install": {
+            "*": "dist"
+        },
         "audit": {
             "block-insecure": false
         }

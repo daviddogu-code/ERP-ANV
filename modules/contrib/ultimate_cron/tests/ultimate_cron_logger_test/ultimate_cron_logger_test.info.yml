@@ -1,0 +1,6 @@
+name: Ultimate Cron Logger Test
+type: module
+description: Ultimate Cron Logger Test
+package: Testing
+dependencies:
+  - ultimate_cron

@@ -1,0 +1,6 @@
+name: 'Feeds Tamper test'
+description: Test module for Feeds Tamper.
+type: module
+package: Testing
+dependencies:
+  - feeds_tamper:feeds_tamper

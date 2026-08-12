@@ -1,0 +1,7 @@
+name: 'ECA Form'
+type: module
+description: 'Form API events, conditions and actions.'
+core_version_requirement: ^9 || ^10
+package: ECA
+dependencies:
+  - eca:eca

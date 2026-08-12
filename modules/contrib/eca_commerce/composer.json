@@ -1,0 +1,15 @@
+{
+  "name": "drupal/eca_commerce",
+  "license": "GPL-2.0-or-later",
+  "type": "drupal-module",
+  "description": "Integrate ECA with the Commerce module and its plugins.",
+  "support": {
+    "issues": "https://drupal.org/project/issues/eca_commerce",
+    "source": "https://drupal.org/project/eca_commerce"
+  },
+  "require": {
+    "php": ">=7.4",
+    "drupal/eca": "^1.0",
+    "drupal/commerce": "^2"
+  }
+}

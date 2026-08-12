@@ -1,0 +1,7 @@
+name: 'ECA BPMN'
+type: module
+description: 'Common functionality for all BPMN based modeller implementations.'
+core_version_requirement: ^9 || ^10
+package: ECA
+dependencies:
+  - eca:eca_ui

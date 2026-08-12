@@ -1,0 +1,7 @@
+name: 'Views Entity Form Field'
+type: module
+description: 'Add entity form field widgets to a view.'
+core_version_requirement: ^9.4 || ^10
+package: 'Views'
+dependencies:
+  - drupal:views

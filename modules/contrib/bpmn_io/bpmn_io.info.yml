@@ -1,0 +1,7 @@
+name: 'BPMN.iO for ECA'
+type: module
+description: 'BPMN modeller for ECA, integrated into Drupal''s admin UI.'
+core_version_requirement: ^9 || ^10
+package: ECA
+dependencies:
+  - eca:eca_modeller_bpmn

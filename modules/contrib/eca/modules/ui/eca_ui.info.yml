@@ -1,0 +1,12 @@
+name: 'ECA UI'
+type: module
+description: 'Provides a user interface for managing ECA models.'
+core_version_requirement: ^9 || ^10
+package: ECA
+configure: entity.eca.collection
+dependencies:
+  - eca:eca
+
+config_devel:
+  optional:
+    - views.view.eca_log

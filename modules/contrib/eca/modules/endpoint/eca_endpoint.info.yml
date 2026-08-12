@@ -1,0 +1,7 @@
+name: 'ECA Endpoint'
+type: module
+description: 'A URL endpoint whose contents are served by ECA.'
+core_version_requirement: ^9 || ^10
+package: ECA
+dependencies:
+  - eca:eca

@@ -1,0 +1,7 @@
+name: 'ECA Base'
+type: module
+description: 'Base events, conditions and actions'
+core_version_requirement: ^9 || ^10
+package: ECA
+dependencies:
+  - eca:eca

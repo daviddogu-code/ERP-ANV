@@ -1,0 +1,5 @@
+type: module
+name: "Ultimate Cron"
+description: "Runs cron jobs individually in parallel using configurable rules, pool management and load balancing."
+core_version_requirement: ^10.1 || ^11
+configure: entity.ultimate_cron_job.collection

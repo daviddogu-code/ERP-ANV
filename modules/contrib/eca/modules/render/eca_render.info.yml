@@ -1,0 +1,7 @@
+name: 'ECA Render'
+type: module
+description: 'Rendering capabilities for ECA, such as blocks and links.'
+core_version_requirement: ^9 || ^10
+package: ECA
+dependencies:
+  - eca:eca

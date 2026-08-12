@@ -1,0 +1,7 @@
+name: 'ECA Miscellaneous'
+type: module
+description: 'Miscellaneous events and conditions from Drupal core and the kernel.'
+core_version_requirement: ^9 || ^10
+package: ECA
+dependencies:
+  - eca:eca
