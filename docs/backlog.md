@@ -281,9 +281,13 @@ copias diarias incluidas, que se hacen de 3 a 7 de la madrugada hora de Tailandi
 
 Se entra con llave SSH, sin contraseñas. La llave se creó ese mismo día en el PC del dueño
 (`C:\Users\Acer\.ssh\id_ed25519`, tipo ed25519, sin frase de paso para que los despliegues no
-pidan teclear nada). La mitad privada no tiene copia todavía: **si se pierde ese archivo se
-pierde el acceso al servidor**, y recuperarlo obliga a pasar por el panel de DigitalOcean.
-Hay que resolverlo durante la configuración.
+pidan teclear nada). Hay copia de la mitad privada en LastPass, en una nota segura llamada
+"Llave SSH - servidor ERP (erp-anv-sgp1)", así que perder el ordenador ya no significa perder
+el acceso al servidor.
+
+Conviene saber además que perder la llave nunca sería fatal: como la cuenta de DigitalOcean es
+del dueño, siempre se puede entrar por la consola web del panel, restablecer el acceso y
+registrar una llave nueva. Sería un rato de incordio, no un desastre.
 
 La razón de todo el traslado quedó medida: desde el PC de la fábrica, el servidor de Singapur
 responde en **33 milisegundos**, frente a los 250 del de Nueva York. Siete veces más rápido,
