@@ -67,9 +67,20 @@ requiere decisiones del dueño, salvo los tres puntos de correo y el de las cuen
   contraseña siguen sin llegar. Y mientras no funcionen, un empleado que olvide su clave
   depende de que alguien se la restablezca desde la línea de comandos.
 
-- **Repasar las cuentas de usuario.** Hay seis y solo dos se han usado alguna vez. Hay que
-  crear las de los tres empleados, revisar para qué sirven las otras y cambiar la contraseña
-  del superusuario (`uid 1`), que tiene todos los permisos del sistema.
+- **Repasar las cuentas de usuario.** Hay seis, ninguna usada desde 2024 y todas bloqueadas
+  salvo una. Además de crear las de los tres empleados, el repaso del 12 de agosto dejó tres
+  cosas concretas:
+
+  - **El superusuario (`uid 1`) se llama `drusphere`**, el nombre de la empresa del
+    programador anterior. La cuenta sí es del dueño, porque el correo asociado es su gmail
+    personal, y es la única activa del sistema. Hay que renombrarla y cambiarle la contraseña.
+  - **`devT` (`uid 7`) tiene rol de administrador**, es decir permisos totales, con un correo
+    en un dominio que parece una errata del suyo (`drupshere.com`). Está bloqueada, así que no
+    es urgente, pero es una segunda llave maestra que no es del dueño: lo suyo es borrarla, no
+    dejarla bloqueada.
+  - **Cuentas muertas por revisar y probablemente borrar**: `manager`, `executive` (la de
+    Oscar, bloqueada el 12 de agosto), `rat` con correo en `actafight.com`, y una llamada
+    `David` que es del dueño pero está bloqueada.
 
 ### Limpieza de datos y arreglo del importador
 
