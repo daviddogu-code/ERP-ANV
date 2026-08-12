@@ -7,7 +7,6 @@ dependencies:
     - media.type.audio
   module:
     - file
-    - file_resup
     - filefield_paths
 third_party_settings:
   filefield_paths:
@@ -27,10 +26,6 @@ third_party_settings:
     redirect: false
     retroactive_update: false
     active_updating: false
-  file_resup:
-    enabled: 0
-    max_upload_size: ''
-    auto_upload: 0
 _core:
   default_config_hash: UlZPIbHcLyNqGY5bvydCTijGcKDmwn4Fo8oYZT85wlk
 id: media.audio.field_media_audio_file

@@ -6,11 +6,7 @@ dependencies:
     - field.storage.taxonomy_term.field_tec_uou_control
     - taxonomy.vocabulary.tec_inventory
   module:
-    - ai_interpolator
     - options
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
 id: taxonomy_term.tec_inventory.field_tec_uou_control
 field_name: field_tec_uou_control
 entity_type: taxonomy_term

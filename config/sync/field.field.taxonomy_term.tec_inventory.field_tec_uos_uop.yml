@@ -6,14 +6,11 @@ dependencies:
     - field.storage.taxonomy_term.field_tec_uos_uop
     - taxonomy.vocabulary.tec_inventory
   module:
-    - ai_interpolator
     - epp
 third_party_settings:
   epp:
     value: '1'
     on_update: 0
-  ai_interpolator:
-    interpolator_enabled: false
 id: taxonomy_term.tec_inventory.field_tec_uos_uop
 field_name: field_tec_uos_uop
 entity_type: taxonomy_term

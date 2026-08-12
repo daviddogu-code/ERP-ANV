@@ -5,11 +5,6 @@ dependencies:
   config:
     - eck.eck_type.tec_inventory.tec_bom_item
     - field.storage.tec_inventory.field_tec_imported_item_id
-  module:
-    - ai_interpolator
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
 id: tec_inventory.tec_bom_item.field_tec_imported_item_id
 field_name: field_tec_imported_item_id
 entity_type: tec_inventory

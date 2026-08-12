@@ -39,7 +39,6 @@ dependencies:
     - user.role.tec_supervisor
   module:
     - coffee
-    - comment
     - draggableviews
     - eck
     - eck_bundle_permissions
@@ -179,7 +178,6 @@ permissions:
   - 'edit any tec_product entities of bundle tec_size_variation'
   - 'edit any video media'
   - 'edit own audio media'
-  - 'edit own comments'
   - 'edit own document media'
   - 'edit own image media'
   - 'edit own remote_video media'

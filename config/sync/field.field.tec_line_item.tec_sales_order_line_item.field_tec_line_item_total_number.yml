@@ -5,11 +5,6 @@ dependencies:
   config:
     - eck.eck_type.tec_line_item.tec_sales_order_line_item
     - field.storage.tec_line_item.field_tec_line_item_total_number
-  module:
-    - ai_interpolator
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
 id: tec_line_item.tec_sales_order_line_item.field_tec_line_item_total_number
 field_name: field_tec_line_item_total_number
 entity_type: tec_line_item

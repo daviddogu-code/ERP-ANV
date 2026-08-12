@@ -6,11 +6,6 @@ dependencies:
     - field.storage.taxonomy_term.field_tec_unit_use
     - taxonomy.vocabulary.tec_inventory
     - taxonomy.vocabulary.tec_units
-  module:
-    - ai_interpolator
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
 _core:
   default_config_hash: vDD3EDz6vqke8xghBMwmANd2MqgX5npAPrZWQPJ4l1I
 id: taxonomy_term.tec_inventory.field_tec_unit_use

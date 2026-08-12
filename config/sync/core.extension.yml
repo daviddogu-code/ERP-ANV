@@ -5,16 +5,10 @@ module:
   admin_form_styles: 0
   admin_toolbar: 0
   admin_toolbar_tools: 0
-  ai_interpolator: 0
-  ai_interpolator_eca: 0
   ajax_loader: 0
   antibot: 0
   asset_injector: 0
-  autocomplete_deluxe: 0
-  automated_cron: 0
   backup_migrate: 0
-  base_field_override_ui: 0
-  batch_jobs: 0
   better_exposed_filters: 0
   big_pipe: 0
   block: 0
@@ -28,10 +22,8 @@ module:
   coffee: 0
   color: 0
   color_field: 0
-  comment: 0
   conditional_fields: 0
   config: 0
-  config_update: 0
   context: 0
   contextual: 0
   csv_serialization: 0
@@ -41,22 +33,13 @@ module:
   dxpr_theme_helper: 0
   dynamic_page_cache: 0
   eca: 0
-  eca_access: 0
   eca_base: 0
-  eca_cache: 0
-  eca_config: 0
   eca_content: 0
   eca_flag: 0
-  eca_form: 0
   eca_log: 0
-  eca_misc: 0
   eca_modeller_bpmn: 0
-  eca_queue: 0
-  eca_render: 0
   eca_tamper: 0
   eca_ui: 0
-  eca_user: 0
-  eca_vbo: 0
   eca_views: 0
   eck: 0
   eck_bundle_permissions: 0
@@ -64,13 +47,9 @@ module:
   editor: 0
   entity: 0
   entity_browser: 0
-  entity_browser_enhanced: 0
   entity_browser_entity_form: 0
   entity_browser_vertical: 0
-  entity_reference_modal: 0
-  entity_reference_revisions: 0
   epp: 0
-  features: 0
   feeds: 0
   feeds_log: 0
   feeds_tamper: 0
@@ -79,11 +58,8 @@ module:
   field_group: 0
   field_label: 0
   field_permissions: 0
-  field_tools: 0
   field_ui: 0
   file: 0
-  file_resup: 0
-  file_resup_media_library: 0
   file_uploader: 0
   file_uploader_uppy: 0
   filefield_paths: 0
@@ -93,22 +69,15 @@ module:
   flood_control: 0
   gin_login: 0
   gin_toolbar: 0
-  history: 0
   ief_table_view_mode: 0
   image: 0
   inline_entity_form: 0
   jquery_ui: 0
   jquery_ui_autocomplete: 0
-  jquery_ui_datepicker: 0
   jquery_ui_menu: 0
-  jquery_ui_progressbar: 0
-  jquery_ui_slider: 0
-  jquery_ui_touch_punch: 0
   language: 0
   layout_builder: 0
-  layout_builder_blocks: 0
   layout_builder_component_attributes: 0
-  layout_builder_tabs: 0
   layout_custom_section_classes: 0
   layout_discovery: 0
   link: 0
@@ -129,20 +98,13 @@ module:
   name: 0
   node: 0
   options: 0
-  pace: 0
   path: 0
   path_alias: 0
   pdf_serialization: 0
   phone_number: 0
-  physical: 0
-  prepopulate: 0
-  profile: 0
   pwa: 0
   pwa_a2hs: 0
-  pwa_extras: 0
   pwa_service_worker: 0
-  queue_ui: 0
-  quicklink: 0
   quicktabs: 0
   r4032login: 0
   redirect: 0
@@ -150,12 +112,10 @@ module:
   scan_code: 0
   select2: 0
   serialization: 0
-  shield: 0
   shortcut: 0
   simple_popup_views: 0
   smtp: 0
   standard: 0
-  state_machine: 0
   syslog: 0
   system: 0
   tamper: 0
@@ -182,13 +142,10 @@ module:
   views_infinite_scroll: 0
   views_simple_math_field: 0
   views_ui: 0
-  workflows: 0
   xls_serialization: 0
   ds: 1
   extlink: 1
   pathauto: 1
-  selective_better_exposed_filters: 1
-  ds_extras: 2
   views: 10
 theme:
   olivero: 0

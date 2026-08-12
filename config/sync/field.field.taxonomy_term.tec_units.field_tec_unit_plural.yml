@@ -5,23 +5,6 @@ dependencies:
   config:
     - field.storage.taxonomy_term.field_tec_unit_plural
     - taxonomy.vocabulary.tec_units
-  module:
-    - ai_interpolator
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
-    interpolator_rule: ai_interpolator_openai_string
-    interpolator_mode: base
-    interpolator_base_field: name
-    interpolator_prompt: "Based on the context, return the plural name. Return only the plural name. Do not wrap your answer inside quote marks.\r\nContext:\r\n{{ context }}"
-    interpolator_token: ''
-    interpolator_edit_mode: 0
-    interpolator_weight: '100'
-    interpolator_worker_type: direct
-    interpolator_openai_model: gpt-3.5-turbo
-    interpolator_openai_vision_images: ''
-    interpolator_openai_role: ''
-    interpolator_openai_moderation: 0
 id: taxonomy_term.tec_units.field_tec_unit_plural
 field_name: field_tec_unit_plural
 entity_type: taxonomy_term

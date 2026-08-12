@@ -5,11 +5,6 @@ dependencies:
   config:
     - eck.eck_type.tec_product.tec_size_variation
     - field.storage.tec_product.field_tec_price
-  module:
-    - ai_interpolator
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
 id: tec_product.tec_size_variation.field_tec_price
 field_name: field_tec_price
 entity_type: tec_product

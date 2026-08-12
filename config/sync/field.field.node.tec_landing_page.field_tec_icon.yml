@@ -6,8 +6,6 @@ dependencies:
     - field.storage.node.field_tec_icon
     - node.type.tec_landing_page
   module:
-    - ai_interpolator
-    - file_resup
     - filefield_paths
     - image
 third_party_settings:
@@ -28,12 +26,6 @@ third_party_settings:
     redirect: true
     retroactive_update: true
     active_updating: false
-  ai_interpolator:
-    interpolator_enabled: false
-  file_resup:
-    enabled: 1
-    max_upload_size: ''
-    auto_upload: 1
 id: node.tec_landing_page.field_tec_icon
 field_name: field_tec_icon
 entity_type: node

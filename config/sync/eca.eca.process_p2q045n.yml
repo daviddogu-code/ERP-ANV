@@ -15,7 +15,6 @@ dependencies:
     - field.storage.tec_inventory.field_tec_quantity
     - field.storage.tec_inventory.field_tec_quantity_input
   module:
-    - ai_interpolator_eca
     - eca_content
 _core:
   default_config_hash: XnVI0EFiPWey9CaAL3y-56MLUZw5K1BPhh0g3I_VjEY
@@ -58,12 +57,6 @@ conditions:
     configuration:
       negate: false
       field_name: title
-      entity: ''
-  Flow_0ei4mw8:
-    plugin: eca_entity_field_value_changed
-    configuration:
-      negate: false
-      field_name: field_tec_quantity_input
       entity: ''
   Flow_0b3e6ol:
     plugin: eca_entity_field_value_empty
@@ -116,15 +109,6 @@ actions:
       strip_tags: false
       trim: false
       save_entity: true
-      object: ''
-    successors: {  }
-  Activity_1i1b9rr:
-    plugin: eca_ai_interpolator_rule
-    label: 'Interpolate quantity and save (disabled — local parse)'
-    configuration:
-      rule_name: tec_inventory--tec_bom_item--field_tec_quantity
-      overwrite: 1
-      save_entity: 1
       object: ''
     successors: {  }
   Activity_0zhizzb:

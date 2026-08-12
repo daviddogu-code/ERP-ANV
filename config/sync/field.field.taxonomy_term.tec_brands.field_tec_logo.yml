@@ -6,8 +6,6 @@ dependencies:
     - field.storage.taxonomy_term.field_tec_logo
     - taxonomy.vocabulary.tec_brands
   module:
-    - ai_interpolator
-    - file_resup
     - filefield_paths
     - image
 third_party_settings:
@@ -28,12 +26,6 @@ third_party_settings:
     redirect: true
     retroactive_update: true
     active_updating: false
-  ai_interpolator:
-    interpolator_enabled: false
-  file_resup:
-    enabled: 0
-    max_upload_size: ''
-    auto_upload: 0
 id: taxonomy_term.tec_brands.field_tec_logo
 field_name: field_tec_logo
 entity_type: taxonomy_term

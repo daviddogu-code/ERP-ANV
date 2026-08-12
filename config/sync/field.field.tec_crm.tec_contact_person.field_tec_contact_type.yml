@@ -6,11 +6,6 @@ dependencies:
     - eck.eck_type.tec_crm.tec_contact_person
     - field.storage.tec_crm.field_tec_contact_type
     - taxonomy.vocabulary.tec_crm_contact_type
-  module:
-    - ai_interpolator
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
 id: tec_crm.tec_contact_person.field_tec_contact_type
 field_name: field_tec_contact_type
 entity_type: tec_crm

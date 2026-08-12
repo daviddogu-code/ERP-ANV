@@ -4,7 +4,6 @@ status: true
 dependencies:
   config:
     - eck.eck_type.tec_inventory.tec_bom_item
-    - field.field.tec_inventory.tec_bom_item.ai_interpolator_status
     - field.field.tec_inventory.tec_bom_item.feeds_item
     - field.field.tec_inventory.tec_bom_item.field_tec_color_swatch_vf
     - field.field.tec_inventory.tec_bom_item.field_tec_imported_item_id
@@ -41,7 +40,6 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
-  ai_interpolator_status: true
   created: true
   feeds_item: true
   field_tec_color_swatch_vf: true

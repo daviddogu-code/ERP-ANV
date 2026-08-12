@@ -5,11 +5,6 @@ dependencies:
   config:
     - field.storage.taxonomy_term.field_1_uou_uos_pu
     - taxonomy.vocabulary.tec_inventory
-  module:
-    - ai_interpolator
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
 id: taxonomy_term.tec_inventory.field_1_uou_uos_pu
 field_name: field_1_uou_uos_pu
 entity_type: taxonomy_term

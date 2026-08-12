@@ -3,8 +3,6 @@ description: 'Inventory management'
 type: module
 core_version_requirement: '^9.4 || ^10'
 dependencies:
-  - ai_interpolator
-  - ai_interpolator_eca
   - eca
   - eca_content
   - eca_log
@@ -16,7 +14,6 @@ dependencies:
   - field_formatter_class
   - field_group
   - file
-  - file_resup
   - filefield_paths
   - flag
   - image

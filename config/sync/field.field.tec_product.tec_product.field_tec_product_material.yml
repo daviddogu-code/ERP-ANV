@@ -6,11 +6,7 @@ dependencies:
     - eck.eck_type.tec_product.tec_product
     - field.storage.tec_product.field_tec_product_material
   module:
-    - ai_interpolator
     - options
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
 id: tec_product.tec_product.field_tec_product_material
 field_name: field_tec_product_material
 entity_type: tec_product

@@ -5,8 +5,6 @@ dependencies:
   config:
     - core.base_field_override.tec_inventory.tec_bom_item.title
     - eck.eck_type.tec_inventory.tec_bom_item
-    - field.field.tec_inventory.tec_bom_item.field_tec_inventory
-    - field.field.tec_inventory.tec_bom_item.field_tec_quantity_input
     - field.field.tec_inventory.tec_bom_item.field_tec_size_variation
   module:
     - eck
@@ -61,6 +59,8 @@ processor_configuration:
   update_existing: 2
   update_non_existent: _delete
   skip_hash_check: true
+  skip_validation: false
+  skip_validation_types: {  }
   authorize: false
   revision: false
   expire: -1
@@ -127,23 +127,6 @@ mappings:
       reference_by: id
       autocreate: 0
       autocreate_bundle: tec_size_variation
-  -
-    target: field_tec_inventory
-    map:
-      target_id: material1
-    settings:
-      language: ''
-      reference_by: name
-      feeds_item: guid
-      autocreate: 0
-      autocreate_bundle: false
-  -
-    target: field_tec_quantity_input
-    map:
-      value: requires1
-    settings:
-      language: null
-    unique: {  }
   -
     target: title
     map:

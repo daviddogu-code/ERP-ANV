@@ -6,8 +6,6 @@ dependencies:
     - eck.eck_type.tec_product.tec_color_variation
     - field.storage.tec_product.field_tec_images
   module:
-    - ai_interpolator
-    - file_resup
     - filefield_paths
     - image
 third_party_settings:
@@ -28,12 +26,6 @@ third_party_settings:
     redirect: true
     retroactive_update: true
     active_updating: false
-  ai_interpolator:
-    interpolator_enabled: false
-  file_resup:
-    enabled: 0
-    max_upload_size: '8 MB'
-    auto_upload: 1
 id: tec_product.tec_color_variation.field_tec_images
 field_name: field_tec_images
 entity_type: tec_product

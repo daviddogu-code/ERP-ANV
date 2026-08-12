@@ -5,7 +5,6 @@ dependencies:
   config:
     - core.entity_view_mode.tec_inventory.magic_edit
     - eck.eck_type.tec_inventory.tec_bom_item
-    - field.field.tec_inventory.tec_bom_item.ai_interpolator_status
     - field.field.tec_inventory.tec_bom_item.feeds_item
     - field.field.tec_inventory.tec_bom_item.field_tec_color_swatch_vf
     - field.field.tec_inventory.tec_bom_item.field_tec_imported_item_id
@@ -79,7 +78,6 @@ content:
     weight: 1
     region: second
 hidden:
-  ai_interpolator_status: true
   changed: true
   created: true
   feeds_item: true

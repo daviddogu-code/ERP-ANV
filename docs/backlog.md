@@ -4,7 +4,7 @@
 > Escrito en español porque el lector principal es el dueño del proyecto.
 > Las otras notas de `docs/` están en inglés y son documentación técnica; esta no.
 >
-> Última actualización: 2026-08-12.
+> Última actualización: 2026-08-13.
 
 ## Cómo usar este archivo
 
@@ -27,9 +27,19 @@ por error algo que estaba puesto a propósito.
 El ERP ya está publicado en `https://erp.anvfightgear.com` desde el 12 de agosto. Lo que
 queda para que la revisión de Lukpla pueda empezar:
 
-- **Crear la cuenta de Lukpla.** Hacen falta tres datos del dueño: su correo, el nombre de
-  usuario y el rol. La recomendación es *manager* — lleva producción, compras y pedidos pero
-  no la configuración del sistema — y subirla a *executive* si se queda corta.
+- ~~**Crear la cuenta de Lukpla.**~~ Hecha, con rol *supervisor*, directamente en el servidor.
+- **Llevar al servidor la limpieza de módulos del 13 de agosto**, con un cuidado que antes no
+  hacía falta. **Local y servidor ya no son la misma cosa**: la cuenta de Lukpla existe allí y
+  no aquí, y si ella ha empezado a revisar puede haber tocado vistas o pantallas. Los usuarios
+  son contenido y no corren peligro, pero **la configuración sí**: un `drush cim` desde local
+  machacaría cualquier cambio que ella haya hecho. Antes de desplegar hay que ejecutar
+  `drush config:status` **en el servidor** y mirar si ha divergido. Si ha divergido, primero se
+  traen sus cambios, y luego se sube la limpieza.
+
+  Y una comprobación más, por lo que pasó al quitar los módulos de IA: **contar los procesos de
+  ECA en el servidor antes y después** de desplegar. Deben ser 36. Al desinstalar en local,
+  Drupal borró nueve procesos en cascada sin avisar, y la cuenta de módulos salía bien igual.
+  `drush sql:query "SELECT COUNT(*) FROM config WHERE name LIKE 'eca.eca.%'"`.
 - **Preparar dónde apunta lo que vea**, aunque sea una hoja de cálculo compartida. Por chat
   se evapora en tres días.
 - **Darle un encargo concreto**, empezando por compras, en vez de un "míralo a ver qué te
@@ -115,11 +125,25 @@ Dos vocabularios sí se van, decidido antes y sin cambios:
   sus dos vistas y los campos propios del vocabulario.
 - **Marcas (12)**: se van con los productos de prueba que las usaban.
 
-Dos avisos para cuando se ejecute. El borrado **tiene un orden obligado**, porque unas cosas
+Tres avisos para cuando se ejecute. El borrado **tiene un orden obligado**, porque unas cosas
 cuelgan de otras: primero movimientos de inventario y líneas, después pedidos, productos y
 materiales, y al final los vocabularios. Y son casi 15.000 registros, así que va en un script,
 no a mano desde la pantalla. Queda pendiente de montar, aparte, el acceso directo desde la
 portada para las tallas, como el que ya tienen tipos de producto y unidades.
+
+El tercer aviso es nuevo, del 13 de agosto, y es el más peligroso porque falla en silencio.
+**El vocabulario de tipos de contacto no se toca bajo ningún concepto.** El módulo
+`tec_crm_ux` lleva grabados a fuego los dos identificadores en su código:
+
+    const TEC_CRM_UX_TYPE_CUSTOMER = 1395;
+    const TEC_CRM_UX_TYPE_SUPPLIER = 1396;
+
+De esos dos números depende que el ERP sepa si una ficha es de un cliente o de un proveedor, y
+eso decide qué campos se le enseñan a cada uno. Si esos términos se borran y se vuelven a
+crear, los nuevos tendrán otros identificadores y el sistema dejará de distinguirlos **sin dar
+ningún error**: empezará a enseñar campos de proveedor en las fichas de cliente. Si alguna vez
+hay que recrearlos, hay que actualizar esas dos líneas de
+`modules/custom/tec_crm_ux/tec_crm_ux.module` a la vez.
 
 **El importador de materiales** pasa a ser la pieza central del arranque: con el borrado ya no
 sirve para corregir lo que hay, sino para meter el catálogo real de golpe. Existe
@@ -192,8 +216,14 @@ plazo.
   aparcamiento, simplemente **no tiene ningún registro A**, ni él ni `www`. No hay nada roto
   que arreglar.
 - **Portal de clientes**: que entren con su cuenta, vean sus productos y hagan sus propios
-  pedidos. **Este sí depende del ERP** y no debe empezarse hasta que el modelo de datos esté
-  asentado, después de la limpieza y de los cambios que proponga Lukpla.
+  pedidos. Los requisitos completos están escritos en **`docs/customer-portal.md`**: el
+  recorrido del cliente, lo que no puede ver, los estados que se le enseñan y las decisiones
+  que faltan por cerrar. **Este sí depende del ERP** y no debe empezarse hasta que
+  el modelo de datos esté asentado, después de la limpieza y de los cambios que proponga
+  Lukpla. Dos avisos de ese documento que conviene no perder de vista: falta el enlace entre
+  la cuenta de usuario y la empresa del cliente, sin el cual no hay portal posible, y el rol
+  Customer **hay que vaciarlo y rehacerlo** antes de crear la primera cuenta, porque hoy
+  permite crear productos y meter movimientos de inventario.
 - **Agentes.** Atención al cliente en los grupos de WhatsApp y en el correo. Pedidos
   automáticos a proveedores locales por los grupos de LINE.
 
@@ -295,26 +325,186 @@ Se hizo sobre Windows y por HTTP, así que esto sigue sin verificar: HTTPS, la p
 del cron, el envío de correo, los permisos de las carpetas de archivos y el ajuste de
 `opcache`.
 
-## 8. Deuda técnica
+## 8. Subir a Drupal 11
+
+Auditado el 13 de agosto por cuatro revisiones en paralelo. El sitio corre **Drupal 10.2.4, que
+ya no tiene soporte**.
+
+Ese mismo día, un diagnóstico con las herramientas de Composer añadió dos datos que cambian la
+urgencia. El primero: `composer audit` encuentra **82 avisos de seguridad conocidos en 10
+paquetes**, y 42 de ellos son del propio núcleo de Drupal, con varios de gravedad *crítica*. Son
+dos años y medio de parches sin aplicar. Esto ya no es una tarea de "antes de que cumpla un
+año": es lo más urgente de la lista técnica en cuanto el ERP tenga datos reales dentro.
+
+El segundo dato es la buena noticia, y es grande: **la subida del núcleo resuelve limpia**. Ver
+el punto 3.
+
+**No se puede saltar de 10.2.4 a Drupal 11 directamente.** Hay que pasar antes por 10.3 o
+superior, porque Drupal 11 borró todos los guiones de actualización anteriores a esa versión. Es
+una puerta obligatoria, no una recomendación. PHP 8.3, que es lo que ya corremos, sirve.
+
+### El orden
+
+1. **Meter en Composer los módulos sueltos y reconciliar las versiones.** Los sueltos son
+   dieciocho de los activos, y los descuadrados **no son cinco sino veinticuatro**, medidos el 13
+   de agosto comparando uno a uno el disco contra el `lock`. Entre ellos `ds` (3.22 en disco
+   frente a 3.19.0 en el `lock`), `token`, `gin_login`, `jquery_ui`, `better_exposed_filters`,
+   `smtp`, `feeds` y `ief_table_view_mode`, este último con una rama de desarrollo en disco
+   donde el `lock` pide una versión estable.
+
+   **Por qué Composer no lo detecta**, que es lo que hacía invisible el problema: Composer no
+   mira los ficheros de los módulos, se fía de su propia contabilidad en
+   `vendor/composer/installed.json`. Ahí sigue apuntado `ds` 3.19.0 aunque en disco haya un 3.22.
+   Por eso `composer install --dry-run` dice tan tranquilo "nada que hacer": para él todo cuadra.
+   Alguien actualizó esos módulos copiando ficheros por encima y la contabilidad se quedó atrás.
+
+   **Cuándo estalla.** Hoy no, mientras la carpeta `vendor` siga viva. Pero `vendor` está
+   excluida del repositorio y `modules/contrib` no, así que en una reconstrucción del servidor
+   desde cero —o si alguien borra `vendor` y lanza `composer install`— Composer escribiría las
+   versiones del `lock` encima de las del disco. Y hay una consecuencia peor: **volvería a
+   instalar en disco todo lo que quitamos**, incluidos `ai_interpolator`, `ai_interpolator_openai`,
+   `openai`, los diez paquetes de Commerce, `shield` y `quicklink`. Desinstalados en la base de
+   datos seguirían, pero el código volvería.
+2. **Resolver los dos bloqueantes que quedan.** Tras la limpieza del 13 de agosto solo quedan
+   dos módulos activos sin ninguna versión para Drupal 11:
+   - `pdf_serialization`, que genera los PDF de las órdenes de compra. Está sin soporte desde
+     2023. El sustituto es Entity Print, pero no es un recambio directo: cambia la forma de
+     generar el documento.
+   - `simple_popup_views`, sin sucesor oficial y sin actividad desde noviembre de 2022. Hay que
+     inventariar qué vistas lo usan (superbom, productos, líneas de pedido y patrones) antes de
+     decidir con qué se sustituye.
+3. **Subir el núcleo, que resuelve limpio y llega más lejos de lo que pensábamos.** Simulado el
+   13 de agosto con `composer update drupal/core-recommended --with-all-dependencies --dry-run`:
+   **no da ni un conflicto**, y no se queda en la 10.3 sino que llega a la **10.6.15**, la última
+   de la rama 10. Son 22 actualizaciones y 3 retiradas, y **no toca ni un solo módulo contribuido**:
+   solo el núcleo y sus dependencias internas (Twig, Guzzle, los polyfills de Symfony).
+
+   Esto tumba la idea de que "en este proyecto no se puede actualizar". No se puede lanzar un
+   `composer update` a pelo, que es otra cosa; una actualización dirigida del núcleo sí.
+
+   Dos avisos para no confiarse. Que Composer resuelva **no significa que el sitio funcione**:
+   eso lo dicen los módulos y el código, y hay que pasar antes el informe de `upgrade_status` y
+   probar a fondo. Y conviene hacerlo **después** del punto 1, porque si no se reconcilian antes
+   las versiones, la actualización arrastra los veinticuatro descuadres.
+
+   A cambio se llevan por delante la mayoría de los 82 avisos de seguridad, porque el núcleo,
+   Twig, Guzzle y los polyfills están todos en la lista de lo que sube. Quedarían pendientes
+   solo cuatro paquetes: `eca`, `entity_browser`, `mail_login` y `psy/psysh`. Y aquí
+   `views_aggregator` deja de dar problemas solo.
+4. **ECA, de la rama 1 a la 2**, con sus submódulos y con `bpmn_io` de la 1 a la 2. Es un salto
+   de versión mayor y mueve las transacciones de inventario, así que es la parte que más hay
+   que probar. Importante: **no ir a ECA 3**, que exige Drupal 11.2 o más.
+5. **Los temas, que son la parte cara.** `dxpr_theme` va de la versión 5 a la 8, y su rama
+   actual lleva congelada desde enero de 2024. Encima declara que necesita `color`, que
+   desapareció del núcleo, y sobrescribe Modernizr y Classy, que tampoco existen ya. Su tema
+   base, `bootstrap5`, va de la 3 a la 4. Y Gin, el de administración, de la 3 a la 4.
+6. **El resto de módulos**, empezando por `field_permissions`, cuya versión instalada
+   **prohíbe expresamente** Drupal 11, y por los que cambian de versión mayor: `select2`,
+   `field_group`, Better Exposed Filters, `flag`, `mimemail`, `module_filter`, `mail_login`,
+   `quicklink`, `coffee`, `flood_control`, `views_bulk_edit` y `xls_serialization`.
+7. **Entonces sí**, `drupal/core-recommended` a la 11 y Drush de la 12 a la 13.
+
+### Lo nuestro está bien
+
+El código propio **no es el problema**, y esa fue la sorpresa agradable de la auditoría. Los
+cuatro módulos nuestros no usan ni una sola de las funciones que Drupal 11 elimina. Todo lo que
+hace falta son cinco líneas: el `core_version_requirement` de `tec_crm_ux`, `tec_inventory`,
+`admin_form_styles`, `tec_brands` y `tec_crm`, que dicen `^10` y tienen que decir `^10 || ^11`.
+`tec_production`, que es el módulo más grande, ya está listo. Una o dos horas contando pruebas.
+
+Quedan además tres cosas menores que funcionan en Drupal 11 pero desaparecerán en el 12: dos
+anotaciones de plugin que habrá que pasar a atributos de PHP 8, un `{% import _self %}` en una
+plantilla, y un parámetro que PHP 8.4 quiere ver escrito como `?FieldItemListInterface`.
+
+### `minimum-stability: dev`
+
+Sigue puesto en `composer.json`, y no es teórico: hay diez paquetes corriendo sobre ramas de
+desarrollo en lugar de versiones publicadas, entre ellos ECA, `eck`, `bpmn_io`, `mimemail` y
+`ultimate_cron`. Eso hace que la instalación no sea reproducible y que pueda colarse código sin
+aviso de seguridad. Cuando toque tocar Composer, hay que pasarlo a `stable` y marcar la
+excepción solo en los que de verdad no tengan versión estable.
+
+### Dos carpetas de más
+
+En `modules/custom` hay **seis** carpetas y solo cuatro módulos activos. `tec_brands` y
+`tec_crm` están en disco, sin código PHP, solo con configuración, y desinstalados desde hace
+tiempo. Se pueden borrar del repositorio.
+
+## 9. Deuda técnica
 
 Nada de esto corre prisa, pero conviene que esté escrito para que no se descubra por sorpresa.
 
-- **Desinstalar del todo los cinco módulos de IA** (`ai`, `ai_interpolator`,
-  `ai_interpolator_eca`, `ai_interpolator_openai`, `openai` y `openai_eca`). Hoy están
-  instalados pero sin credenciales y con todos los interpoladores apagados, así que no hacen
-  nada. Quitarlos del todo requiere planificarlo, porque `ai_interpolator` metió campos
-  obligatorios en materiales, colores y unidades, y arrancarlos a lo bruto rompe cosas.
-- **`views_aggregator` 2.1.1 dice que necesita Drupal 10.3 u 11** y el sitio corre 10.2.4,
-  así que el informe de estado lo marca como incompatible. Hoy funciona, pero es uno de los
-  módulos instalados a mano y conviene resolverlo antes de que sea un incidente.
-- **`composer update` no se puede ejecutar en este proyecto.** Hay conflictos entre
-  dependencias fijadas a Drupal 10.2.4 y otras que ya piden 10.3 u 11. Un intento llegó a
-  desinstalar `drupal/inline_entity_form` por su cuenta. Hoy se sortea usando solo
-  `composer install` y operaciones dirigidas. Algún día habrá que sanearlo.
-- **Cuatro módulos viven fuera de Composer**: `pdf_serialization`, `views_entity_form_field`,
-  `quicktabs` e `integer_to_decimal`. No están en `composer.json` ni en `composer.lock`, se
-  descargaron a mano. Llegan al servidor solo a través del repositorio. Dos de ellos llevan
-  parches aplicados a mano (ver "Hecho").
+- **Borrar un material en uso avería en silencio las líneas que lo usan.** Descubierto el 13 de
+  agosto durante la prueba funcional. Cuando una línea de pedido tiene en su escandallo un
+  material que ya no existe, el proceso de ECA que calcula el total arranca, se para en seco al
+  intentar cargar ese material y **deja puesta la bandera de bloqueo**. No da error ni aviso: el
+  total simplemente deja de actualizarse, y como la bandera se queda puesta, esa línea no
+  vuelve a recalcular nunca más aunque se arregle el material. Hoy hay cinco líneas así (1567,
+  4076, 4077, 4078 y 4079) y 2.459 referencias rotas en total, apuntando a 88 materiales
+  borrados. **El borrado de datos de prueba se lleva por delante esas referencias, pero no el
+  fallo**, que volverá a aparecer el día que alguien borre un material que esté en uso con
+  datos reales. Hacen falta dos cosas: impedir el borrado de un material referenciado (o
+  avisar), y que el proceso, si no encuentra el material, se salte ese elemento y siga en vez de
+  morirse. Mientras tanto, la señal para detectarlo es que queden banderas `%lock%` puestas:
+  `SELECT flag_id, COUNT(*) FROM flagging WHERE flag_id LIKE '%lock%' GROUP BY flag_id`. En
+  reposo solo debe salir `tec_eca_gui_lock` con una.
+- **Una errata mete "emergencias" falsas en el registro.** El proceso `process_rxuimsq` ("TEC
+  Inventory: Calculation data") escribe su mensaje de arranque con nivel **0, que es
+  *Emergencia*, el más grave que existe**, mientras que el de fin lo escribe con nivel 7, que es
+  *depuración*. Es evidente que se tecleó un `0` donde iba un `7`. El mensaje en sí es
+  inofensivo, dice solo "Running: ...", pero entra una emergencia falsa en el registro cada vez
+  que se guarda un inventario. Ensucia el registro y engañaría a cualquier alerta que se monte
+  el día de mañana. Se arregla cambiando un carácter en
+  `config/sync/eca.eca.process_rxuimsq.yml`, línea 166. No se ha tocado para no meter cambios de
+  configuración no pedidos justo antes del despliegue al servidor.
+- **`views_aggregator` no es lo que parecía.** El informe de estado lo marca como incompatible
+  y de ahí salió la idea de que era un problema. Es al revés: la versión instalada, la 2.1.1,
+  ya vale para Drupal 10.3 y 11, y falla porque es **demasiado nueva** para el 10.2.4 que
+  corremos. Subir de versión no lo rompe, lo arregla. Se usa en una sola vista, el resumen de
+  cálculo de materiales de un pedido, y ahí tiene un fallo real: cuando un campo viene vacío,
+  la página del pedido devuelve un error 500. Comprobado el 13 de agosto en el pedido 348, que
+  es de los antiguos; los ocho pedidos siguientes cargan bien. Se resuelve solo al subir a
+  Drupal 10.3.
+- **`composer update` a pelo no se puede ejecutar; dirigido sí.** Matizado el 13 de agosto. Lo
+  que no se puede es lanzar un `composer update` sin argumentos: un intento llegó a desinstalar
+  `drupal/inline_entity_form` por su cuenta. Pero una actualización dirigida del núcleo sí
+  resuelve limpia (ver el apartado 8), así que el proyecto no está tan bloqueado como creíamos.
+  Lo que sigue pendiente es sanear el fichero para que un `update` general deje de ser peligroso.
+- **`composer.json` pide 38 paquetes que no están instalados.** Toda la suite de Commerce (diez
+  paquetes), `search_api`, `features`, `memcache`, `symfony_mailer`, `taxonomy_manager`, `shs`,
+  `image_effects`, `geofield_map`, y los que desinstalamos nosotros: `shield`, `quicklink`,
+  `eca_vbo` y `ai_interpolator_openai`. No hacen daño estando ahí, pero **participan en el
+  cálculo de dependencias** y de ahí sale buena parte de los conflictos. Quitarlos es lo que más
+  simplifica el problema: de 15 comodines `*` y 11 ramas de desarrollo se pasa a 4 y 7.
+- **Dos módulos críticos entran por la puerta de atrás.** `inline_entity_form`, que además
+  **lleva un parche nuestro**, no aparece en `require`: llega como dependencia de
+  `ief_table_view_mode`. Y `flag`, del que depende todo el mecanismo de bloqueo de ECA, llega a
+  través de `eca_flag`. Esto explica el incidente en que un `composer update` desinstaló
+  `inline_entity_form`: nada se lo impedía. Hay que anclarlos explícitamente, y hacerlo **antes**
+  de borrar los 38 muertos, porque dos de ellos (`ief_popup` e `ief_complex_open`) son los que
+  arrastran `inline_entity_form`.
+- **El `merge-plugin` apunta a un fichero que no existe**:
+  `modules/contrib/charts/modules/charts_billboard/composer.json`. Esa carpeta no está en el
+  proyecto. Es una mina enterrada en la configuración de Composer.
+- **No son cuatro los módulos que viven fuera de Composer, son veintitrés.** Corregido el 13 de
+  agosto; lo que decía antes esta línea se quedaba muy corto. Los que están activos y no
+  aparecen en `composer.lock` son: `ai_interpolator_eca`, `base_field_override_ui`,
+  `csv_serialization`, `draggableviews`, `entity_browser_enhanced`, `entity_browser_vertical`,
+  `entity_reference_modal`, `epp`, `field_label`, `file_uploader`, `file_uploader_uppy`,
+  `float_labels`, `markup`, `pdf_serialization`, `quicktabs`, `simple_popup_views`, `verf`,
+  `views_aggregator`, `views_conditional`, `views_data_export`, `views_entity_form_field` y
+  `xls_serialization`. Llegan al servidor solo a través del repositorio. Dos llevan parches
+  hechos a mano (ver "Hecho"). Hay que meterlos en Composer **antes** de intentar cualquier
+  actualización, porque mientras estén fuera cualquier `composer update` los pisa o los ignora.
+- **En cinco módulos el disco va por delante de `composer.lock`**: `ds`, `gin_login`, `shield`,
+  `smtp` y `feeds`. Alguien los actualizó copiando ficheros en vez de con Composer. Esto
+  importa hoy y no dentro de seis meses, porque el procedimiento de despliegue ejecuta
+  `composer install` en el servidor y ese comando instala la versión que dice el `lock`, no la
+  del disco. O el servidor está corriendo versiones más viejas que local sin que lo sepamos, o
+  el próximo despliegue las degrada en silencio. **Hay que comprobarlo.**
+- **El `composer.lock` está incoherente**: el núcleo figura en 10.2.4 pero una de sus piezas,
+  `core-composer-scaffold`, en 10.6.15. Es el rastro de una actualización que se quedó a medias
+  y probablemente parte de la causa de que `composer update` no funcione.
 - **Estudiar `composer-exit-on-patch-failure`** en `composer.json`, para que un parche que no
   se aplica corte la instalación en voz alta en lugar de pasar desapercibido.
 - **El editor guarda a veces en UTF-16 en vez de UTF-8**, y eso rompe cualquier fichero PHP,
@@ -342,6 +532,16 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   Pendiente de decidir: montar un *hook* de Cursor del tipo `afterFileEdit` que detecte el
   UTF-16 y lo convierta solo. No arregla el fallo, pero lo vuelve indoloro y protege del caso
   grave, que es un `.php` mal guardado tumbando el ERP sin motivo aparente.
+- **Queda el código de la IA en el disco**, aunque los módulos estén desinstalados desde el 13 de
+  agosto: `modules/contrib/ai_interpolator`, `ai_interpolator_eca` y `ai_interpolator_openai`.
+  No se borran a mano porque `composer.json` todavía pide `drupal/ai_interpolator_openai`, y la
+  forma correcta de quitarlo es `composer remove`, que en este proyecto no se puede ejecutar sin
+  riesgo hasta sanear los conflictos. Va con esa tarea, no antes. No molesta: código
+  desinstalado no se ejecuta.
+- **Referencias muertas en las carpetas `config/install` de nuestros módulos.** Unos quince
+  ficheros dentro de `tec_inventory`, `tec_brands` y `tec_crm` siguen declarando dependencias de
+  `ai_interpolator`. Solo se leen al instalar un módulo, así que hoy no hacen nada, pero si
+  algún día se reinstalara uno de ellos fallaría. Es limpieza cosmética, sin prisa.
 - **Limpiar carpetas sobrantes** dentro del proyecto:
   `config/sync.pre-restore-20260810023747` (1.248 archivos) y
   `modules/custom.pre-restore-20260810023746` (134 archivos), restos de una restauración del
@@ -362,6 +562,209 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-13 — Diagnóstico de Composer: el bloqueo era menor de lo que creíamos, y el descuadre mayor
+
+Cuatro comandos de solo lectura, ninguno modificó un fichero (comprobado por huella digital
+antes y después). Tres conclusiones que cambian el plan:
+
+**La subida del núcleo no está bloqueada.** Simulada con `composer update drupal/core-recommended
+--with-all-dependencies --dry-run`, resuelve sin un solo conflicto y llega hasta la **10.6.15**,
+no solo la 10.3. Son 22 actualizaciones y 3 retiradas, y no toca ningún módulo contribuido.
+Llevábamos meses creyendo que el proyecto estaba atascado; lo que está atascado es el `update`
+general, no una actualización dirigida.
+
+**El descuadre de versiones es de 24 módulos, no de 5.** Y lo importante es *por qué* nadie lo
+vio: Composer no lee los ficheros de los módulos, se fía de su contabilidad interna en
+`vendor/composer/installed.json`, que sigue diciendo `ds` 3.19.0 cuando en disco hay un 3.22.
+Por eso `composer install --dry-run` responde "nada que hacer" con total tranquilidad. El
+detalle está en el apartado 8.
+
+**Hay 82 avisos de seguridad conocidos**, 42 de ellos del núcleo y varios críticos, más Twig
+(16), Guzzle (9 más 4 de `psr7`), y uno suelto en `eca`, `entity_browser` y `mail_login`. La
+subida del núcleo se lleva por delante casi todos.
+
+De paso, `composer validate` confirmó que **el `lock` no está sincronizado con `composer.json`**,
+y catalogó los 15 comodines `*` y las 11 ramas de desarrollo.
+
+### 2026-08-13 — Prueba funcional tras la limpieza: el ERP está intacto, y un problema viejo que salió a la luz
+
+Después de quitar 43 módulos y tocar los procesos de ECA, la pregunta era simple: ¿el ERP hace
+lo mismo que antes? **Sí.** Se probaron seis automatismos creando entidades de verdad y
+comprobando si reaccionaban. Los seis funcionan:
+
+- Un artículo de escandallo nuevo **se pone el título solo** a partir del material.
+- Al modificarlo, **copia la cantidad** al campo de entrada.
+- Si lleva talla, **se engancha solo a la variación de talla** (la talla pasó de 24 a 25).
+- Un movimiento de inventario **se engancha solo al material** (pasó de 2 a 3 movimientos).
+- Una variación de color **se pone el título sola** a partir del color.
+- Una línea de pedido **recalcula su total**: 1.200 × 2 dio 2.400.
+
+Todo lo creado durante la prueba se borró después, y la comprobación final lo confirma.
+
+**La prueba de que no se ha perdido nada.** Se cargó la copia de las 02:58 —anterior a que se
+tocara el primer módulo— en una base de datos aparte y se compararon los recuentos de todas las
+tablas de contenido contra las de ahora: **cero diferencias**. Los 4.773 artículos de
+escandallo, los 178 elementos de escandallo de línea, las 85 líneas de venta, los 869
+materiales, los 315 ficheros, los 7 usuarios y hasta las banderas, todo igual. La base de datos
+de pruebas se eliminó al terminar.
+
+**Lo que salió por el camino, y que es anterior a nosotros.** Una de las siete comprobaciones
+falló al principio, y perseguirla destapó un problema viejo que conviene conocer:
+
+De 85 líneas de venta, elegí la 1567 al azar y resultó ser una de las cinco averiadas. Al
+cambiarle la cantidad, el proceso arranca, escribe *"Running"* en el registro y **se para en
+seco**: sin error, sin excepción, sin aviso. El total no se recalcula y, peor, **la bandera de
+bloqueo se queda puesta**. Esa bandera existe para que el proceso no entre en bucle al
+guardarse a sí mismo, y mientras esté puesta ese proceso no volverá a ejecutarse nunca para esa
+línea. Falla en silencio y se queda averiado para siempre.
+
+La causa: la línea 1567 tiene 24 elementos de escandallo, y **cuatro de ellos apuntan a
+materiales que ya no existen** (los términos 2321, 2456 y 2524). El proceso recorre el
+escandallo, intenta cargar el material fantasma, no lo encuentra y muere ahí.
+
+Y el alcance es mayor de lo que parecía: **2.439 de los 4.773 artículos de escandallo apuntan a
+materiales borrados**, 88 materiales fantasma en total, más 12 movimientos de inventario y 8
+elementos de escandallo de línea. Alguien borró esos 88 materiales en su día sin limpiar las
+2.459 referencias que apuntaban a ellos.
+
+**No es cosa nuestra, y está demostrado.** En la copia de las 02:58, anterior a toda la
+limpieza, esos tres términos ya no existían, los mismos cuatro elementos ya apuntaban a ellos,
+la línea 1567 ya tenía cantidad 10 y total 9.500, y ya había exactamente 44 líneas con total.
+Nunca hemos borrado términos de taxonomía: desinstalar un módulo se lleva campos y
+configuración, no contenido.
+
+Dos cosas que quedan apuntadas de aquí: el borrado de datos de prueba se lleva por delante casi
+todo esto, pero **el fallo silencioso no**, y volverá a morder con datos reales el día que
+alguien borre un material que esté en uso. Está en deuda técnica.
+
+Una nota para el futuro: los mensajes que ECA escribe en el registro **no son errores** aunque
+algunos aparezcan como tales. Son mensajes de traza con los que los procesos van contando por
+dónde van, y casi todos están puestos en nivel *depuración*. Ver "Running: ..." en el registro
+es normal. La excepción, que es una errata, está apuntada en deuda técnica.
+
+### 2026-08-13 — Fuera la IA: de 148 a 146, y una cascada que casi se lleva nueve automatismos
+
+Quedaban dos módulos de la aventura de la inteligencia artificial del programador anterior,
+`ai_interpolator` y `ai_interpolator_eca`. Ya no están. El ERP se queda en **146 módulos**.
+
+Lo que bloqueaba quitarlos eran cuatro procesos de ECA que, sobre el papel, llamaban a la IA.
+Al leerlos apareció lo que de verdad pasaba: **la IA ya estaba muerta desde hacía tiempo, solo
+que nadie lo había rematado.**
+
+- En los dos procesos que estaban encendidos, `process_p2q045n` (poner los datos de un artículo
+  de escandallo) y `process_uhiwdqa` (importar artículos de escandallo), la acción de IA seguía
+  en el fichero pero **no la apuntaba nadie**: le habían cortado todas las conexiones de
+  entrada. Alguien incluso las había renombrado a mano a "(disabled)" y "(disabled — local
+  parse)". Ese "local parse" sugiere que el cálculo se sustituyó por uno hecho en el propio
+  servidor, sin IA.
+- Los otros dos, `process_utltgmh` y `process_lygeesg`, eran **clones apagados**, las versiones
+  1.3 y 1.4 de un proceso cuya versión viva es la 0.1. Nunca se activaron. Se han borrado
+  enteros por decisión del dueño; quedan en el historial de Git y en las copias.
+
+El campo propio de la IA, `ai_interpolator_status`, tenía 4.651 filas y ni un dato de negocio:
+4.579 decían `pending` y 72 `finished`. Es decir, se lanzó sobre 4.651 artículos y se abandonó
+habiendo terminado 72. Desapareció solo al desinstalar.
+
+**Una trampa que había que desactivar antes.** En ECA cada proceso vive por duplicado: el
+diagrama que se dibuja en el editor visual y la configuración compilada que es la que de verdad
+se ejecuta. Aquí **no coincidían**: en la compilada la IA estaba desconectada, pero en el
+diagrama seguía enchufada, porque quien la desactivó editó el YAML a mano y no tocó el dibujo.
+Con el editor visual instalado, como lo está, habría bastado que alguien abriera ese proceso y
+le diera a guardar para que la IA volviera. Se ha limpiado también el BPMN de los dos diagramas
+y ahora dibujo y ejecución dicen lo mismo.
+
+**El susto de la noche.** Al desinstalar, Drupal borró **nueve procesos de ECA** que no tenían
+nada que ver con la IA: duplicar producto, duplicar color, duplicar talla, los datos de línea de
+pedido, el gestor de mutaciones de stock y tres más. El mecanismo es el que hay que recordar:
+esos procesos dependen de campos como `field_tec_inventory` o `field_tec_colors`, y esos campos
+llevaban ajustes del módulo de IA colgando. Drupal arregló los campos, pero **arrastró en
+cascada y borró entero todo lo que dependía de ellos**. Se recuperaron los nueve importando solo
+esos ficheros desde `config/sync` con `--partial`, que no borra nada de lo demás. Verificado
+después: 36 procesos en base de datos y 36 en disco, los mismos que había menos los dos clones.
+
+**La lección, para la próxima vez que se desinstale un módulo con muchos tentáculos:** mirar
+antes qué configuración depende de la que va a cambiar, y contar los procesos de ECA antes y
+después. La cuenta de módulos sale bien aunque por debajo se hayan perdido automatismos.
+
+Comprobado al terminar: cero rastro de `ai_interpolator` en la configuración y en la base de
+datos, configuración y disco sincronizados, ningún error nuevo en el registro, y las páginas
+`/`, `/o/queue`, `/stock`, `/production/log` y el listado y el editor de ECA cargando bien. Hizo
+falta, otra vez, vaciar las tablas de caché a mano: el editor visual siguió ofreciendo la acción
+de IA en su paleta hasta que se vaciaron.
+
+Copia previa en `c:\laragon\backups\pre-quitar-ia-20260813.sql.gz`, y los nueve procesos
+rescatados en `c:\laragon\backups\eca-restaurar-20260813`.
+
+### 2026-08-13 — Cuarenta y un módulos fuera: de 189 a 148
+
+El ERP tenía 189 módulos activos. Ahora tiene 148. Ninguna pantalla se ha resentido.
+
+La pregunta de partida era cuánto de lo que dejó instalado el programador anterior no servía
+para nada. Para responderla se lanzaron cuatro revisiones en paralelo: una construyó el árbol
+de qué módulo depende de cuál, otra buscó pruebas de uso real de cada uno de los 189, otra
+comprobó en drupal.org la compatibilidad de cada uno con Drupal 11, y la cuarta revisó nuestro
+propio código.
+
+**Cruzar las cuatro fue lo que evitó tres estropicios.** Por separado, la revisión de uso daba
+por muertos a `csv_serialization` y a `media_library_form_element`, y el árbol de dependencias
+demostró que el primero lo necesita `views_data_export` —que genera los PDF y los Excel— y el
+segundo lo necesita `bootstrap_styles`. Y daba por muerto a `smtp` porque está apagado; lo
+está, pero porque **todavía no lo hemos configurado**, y es justo lo que hace falta para que
+funcionen las recuperaciones de contraseña. Los tres se quedaron.
+
+Lo que se fue, en cuatro tandas y de uno en uno:
+
+- **Veintiuno muertos del todo**, sin nadie que dependiera de ellos ni configuración que los
+  citara: `autocomplete_deluxe`, `state_machine`, `physical`, `workflows`, `profile`,
+  `batch_jobs`, `queue_ui`, `entity_reference_modal`, `entity_reference_revisions`,
+  `field_tools`, `base_field_override_ui`, `layout_builder_tabs`, `layout_builder_blocks`,
+  `prepopulate`, `comment`, `history`, `selective_better_exposed_filters` y los cuatro de
+  `jquery_ui` que no usaba nadie.
+- **Nueve submódulos de ECA** que no aportaban ni un plugin a los 38 procesos montados:
+  `eca_access`, `eca_cache`, `eca_config`, `eca_form`, `eca_misc`, `eca_queue`, `eca_render`,
+  `eca_user` y `eca_vbo`.
+- **Siete instalados y apagados a mano**: `shield`, `automated_cron`, `pwa_extras`, `quicklink`,
+  `entity_browser_enhanced`, `ds_extras` y `file_resup_media_library`. El caso de `quicklink`
+  resume bien el conjunto: estaba configurado para no ejecutarse ni con el usuario identificado
+  ni en rutas de administración, o sea, nunca, porque en un ERP eso es el cien por cien del
+  tiempo.
+- **Cuatro que necesitaban un paso previo**: `features` antes que `config_update`, `pace`, y
+  `file_resup`, que hubo que liberar antes borrando su línea en `tec_inventory.info.yml`.
+
+**Ese último detalle merece quedar escrito.** Nuestro propio módulo de inventario declaraba
+como dependencias obligatorias tres experimentos del programador anterior: `ai_interpolator`,
+`ai_interpolator_eca` y `file_resup`. Por eso Drupal se negaba a desinstalarlos. No es que el
+inventario los usara; es que alguien escribió que los necesitaba. La línea de `file_resup` se
+quitó ese día y las dos de la IA esa misma noche, al desinstalar los dos módulos (ver la entrada
+anterior). También las declaraban `tec_brands` y `tec_crm`, pero esos dos módulos no están
+instalados, así que no estorbaban.
+
+**Dos sustos, los dos resueltos.** El primero: nada más terminar, el sitio devolvía error 500
+al entrar. La causa era la caché rancia del servidor web, que seguía llamando al módulo de
+comentarios recién desinstalado; se arregló vaciando las dieciocho tablas de caché
+directamente en la base de datos, que es el mismo remedio que hizo falta la vez anterior que se
+tocaron módulos.
+
+El segundo fue más instructivo. Un pedido de venta, el 348, seguía dando error 500 después de
+la limpieza. En lugar de suponer, se restauró la copia de seguridad **anterior** a la limpieza
+y se cargó ese mismo pedido: **también fallaba antes**. O sea que el error ya estaba ahí y no lo
+había provocado la limpieza. Es el fallo de `views_aggregator` descrito en la sección 9. Los
+otros ocho pedidos de venta que se probaron cargan bien.
+
+Comprobado al terminar: los 38 procesos de ECA intactos, la configuración exportada sin
+diferencias con la base de datos, y nueve pantallas más seis fichas de datos cargando sin un
+solo error, entre ellas la cola de producción, el tablero de stock, el registro de producción,
+un producto, un pedido, una orden de compra, un material y las fichas de un cliente y un
+proveedor.
+
+Las copias de seguridad de antes y después están en `c:\laragon\backups`, como
+`pre-limpieza-modulos-20260813.sql` y `post-limpieza-modulos-20260813.sql`.
+
+**Falta llevarlo al servidor**, y hay un orden obligado: primero sube solo la configuración, con
+el código de los módulos todavía presente, para que Drupal pueda ejecutar sus rutinas de
+desinstalación; y solo después, en un segundo viaje, se borra el código. Al revés dejaría restos
+en la base de datos.
 
 ### 2026-08-12 — El ERP, publicado en internet
 

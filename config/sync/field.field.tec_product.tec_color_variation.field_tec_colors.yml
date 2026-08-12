@@ -6,11 +6,6 @@ dependencies:
     - eck.eck_type.tec_product.tec_color_variation
     - field.storage.tec_product.field_tec_colors
     - taxonomy.vocabulary.tec_colors
-  module:
-    - ai_interpolator
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
 id: tec_product.tec_color_variation.field_tec_colors
 field_name: field_tec_colors
 entity_type: tec_product

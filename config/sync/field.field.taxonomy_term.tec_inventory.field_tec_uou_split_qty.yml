@@ -5,11 +5,6 @@ dependencies:
   config:
     - field.storage.taxonomy_term.field_tec_uou_split_qty
     - taxonomy.vocabulary.tec_inventory
-  module:
-    - ai_interpolator
-third_party_settings:
-  ai_interpolator:
-    interpolator_enabled: false
 id: taxonomy_term.tec_inventory.field_tec_uou_split_qty
 field_name: field_tec_uou_split_qty
 entity_type: taxonomy_term

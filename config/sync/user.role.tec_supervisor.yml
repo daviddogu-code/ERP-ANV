@@ -35,7 +35,6 @@ dependencies:
     - user.role.tec_customer
   module:
     - coffee
-    - comment
     - draggableviews
     - eck
     - eck_bundle_permissions
@@ -133,7 +132,6 @@ permissions:
   - 'edit any tec_order entities'
   - 'edit any tec_product entities'
   - 'edit own audio media'
-  - 'edit own comments'
   - 'edit own document media'
   - 'edit own image media'
   - 'edit own remote_video media'

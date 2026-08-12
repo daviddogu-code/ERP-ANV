@@ -7,7 +7,6 @@ dependencies:
     - field.field.tec_inventory.tec_bom_item.field_tec_size_variation
     - field.storage.tec_inventory.field_tec_size_variation
   module:
-    - ai_interpolator_eca
     - eca_content
     - eca_log
 id: process_uhiwdqa
@@ -32,18 +31,6 @@ conditions:
       field_name: field_tec_size_variation
       negate: true
       entity: ''
-  Flow_0birar7:
-    plugin: eca_entity_field_value_empty
-    configuration:
-      negate: false
-      field_name: field_tec_quantity
-      entity: ''
-  Flow_0izr0fb:
-    plugin: eca_entity_field_value_empty
-    configuration:
-      field_name: field_tec_quantity_input
-      negate: true
-      entity: ''
 gateways:
   Gateway_031mjgn:
     type: 0
@@ -51,9 +38,6 @@ gateways:
       -
         id: Activity_0lq4n16
         condition: ''
-  Gateway_1bspm76:
-    type: 0
-    successors: {  }
 actions:
   Activity_1meagnj:
     plugin: eca_write_log_message
@@ -107,13 +91,4 @@ actions:
       channel: ''
       severity: '7'
       message: 'Finished: "TEC Inventory: Import BoM item" ECA Model.'
-    successors: {  }
-  Activity_1v75f7b:
-    plugin: eca_ai_interpolator_rule
-    label: 'Interpolate the Quantity (disabled)'
-    configuration:
-      rule_name: tec_inventory--tec_bom_item--field_tec_quantity
-      overwrite: 1
-      save_entity: 1
-      object: ''
     successors: {  }
