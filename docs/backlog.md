@@ -71,6 +71,67 @@ requiere decisiones del dueño, salvo los tres puntos de correo y el de las cuen
   crear las de los tres empleados, revisar para qué sirven las otras y cambiar la contraseña
   del superusuario (`uid 1`), que tiene todos los permisos del sistema.
 
+### Limpieza de datos y arreglo del importador
+
+El ERP nunca llegó a usarse, así que lo que hay dentro es en parte catálogo aprovechable y en
+parte relleno de pruebas. No se puede abrir a los empleados sin separar una cosa de otra.
+
+Recuento del 12 de agosto. **Catálogo**: 869 materiales, 13 productos reales (con 83
+variaciones de color y 118 de talla colgando de ellos), 37 colores, 23 tipos de producto, 23
+tipos de material, 14 tallas, 13 unidades, 12 marcas y 11 patrones. **Movimientos**: 122
+pedidos, 563 líneas de pedido, 22 fichas de cliente y 12 registros de producción.
+
+Decidido ya:
+
+- **Tipos de producto (23) y unidades (13): correctos.** No se tocan.
+- **Patrones (11): borrar.** Comprobado que ningún producto usa ninguno; es un trozo del ERP
+  que quedó a medias. Aparte habrá que retirar la estructura vacía que deja atrás: el campo
+  en productos, sus dos vistas y los campos propios del vocabulario.
+- **Marcas (12): borrar, pero sabiendo esto.** No están sueltas como los patrones: los 13
+  productos reales tienen marca asignada, así que borrarlas los deja sin ella.
+- **Tallas (14): revisar**, y crearles un acceso directo desde la portada como el que ya
+  tienen tipos de producto y unidades.
+- **Colores (37): revisar en detalle.** No son lo mismo que las variaciones de color, que fue
+  la duda que surgió: los 37 colores son la paleta, y una variación es un producto concreto
+  pintado con uno de ellos. Importa porque la paleta es transversal: la usan 83 variaciones
+  de producto **y 300 materiales**, así que tocarla afecta al catálogo de materiales.
+- **Materiales (869): se conservan.** Los nombres son correctos; lo que está mal es el resto
+  de la información de cada uno.
+
+Sin decidir: qué se hace con los 13 productos y sus 201 variaciones, con los 122 pedidos y con
+las 22 fichas de cliente, que tienen pinta de ser de prueba.
+
+**El importador de materiales** existe (`tec_inventory_csv_importer`), y por él entraron 470 de
+los 869 materiales, pero está a medio hacer:
+
+- **Rellena 5 de los 56 campos** de un material: nombre, descripción, trazabilidad, unidad de
+  uso y tipo de material. Precios, unidades de compra y de stock, factores de conversión,
+  punto de pedido, plazo de entrega, imagen, SKU y embalaje entran vacíos. De ahí la
+  sensación de que "la información no está bien": no es incorrecta, es que falta.
+- **El proveedor no se enlaza nunca.** El importador sí lee una columna `Suppliers` del CSV,
+  está declarada ahí dentro, pero no está conectada a ningún campo: lee el dato y lo tira. Lo
+  mismo le ocurre a una columna de coste.
+- **Hay dos campos de proveedor** en los materiales y hay que elegir cuál es el bueno antes de
+  tocar nada: `field_tec_vendor` (etiqueta "Supplier", obligatorio, se elige de una lista) y
+  `field_tec_suppliers` (etiqueta "Suppliers", opcional, admite varios y crea proveedores
+  nuevos sobre la marcha).
+- **Procesa solo 100 filas por pasada**, así que con 869 materiales hay que lanzarlo nueve
+  veces o subir ese límite.
+- **Inventa unidades y tipos de material** cuando el texto del Excel no coincide exactamente.
+  Escribir "metros" donde el sistema tiene "metro" no da error: crea una unidad nueva. Como
+  las 13 unidades y los 23 tipos son correctos, conviene apagarlo para que una errata falle
+  en voz alta en lugar de ensuciar el catálogo.
+- Arrastra además una docena de columnas declaradas y sin usar, restos de pruebas, que
+  enredan a la hora de entender qué espera el fichero.
+
+Lo bueno es que identifica cada material por su nombre y está configurado para actualizar los
+que ya existen. **No hay que borrar nada para arreglar los datos**: con una plantilla nueva
+bien hecha se corrigen los 869 en el sitio, sin perder lo que cuelga de ellos.
+
+El trabajo, entonces, es: elegir el campo de proveedor, mapear los campos que faltan, limpiar
+las columnas sobrantes y generar la plantilla de Excel con una columna por dato y los nombres
+exactos que el importador espera.
+
 ## 4. Cuando el ERP nuevo ya funcione
 
 - **Dar de baja el servidor de Nueva York.** Ahí está el ahorro grande: 32 dólares al mes.
