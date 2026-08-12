@@ -12,45 +12,112 @@ Se lee y se edita desde tres sitios: en Cursor (`docs/backlog.md`), en el Explor
 de Windows (`C:\laragon\www\tec\docs\backlog.md`) o desde el móvil en GitHub, en
 `github.com/daviddogu-code/ERP-ANV`, carpeta `docs`.
 
+**Está ordenado de más urgente a menos.** Lo de arriba es lo que hay que mirar hoy; lo de
+abajo puede esperar meses sin que pase nada. Si abres el archivo agobiado, quédate solo con
+las dos primeras secciones y cierra.
+
 Cuando una tarea se termina, se mueve a la sección "Hecho" con la fecha y una línea
 explicando por qué se hizo. Esa explicación es lo que evita rehacer trabajo o deshacer
 por error algo que estaba puesto a propósito.
 
 ---
 
-## Con fecha límite
+## 1. Ahora mismo
+
+- **Borrar y recrear el repositorio en GitHub.** El historial local ya está limpio de la
+  clave de OpenAI, con sus 30 commits intactos, pero el repositorio de GitHub todavía tiene
+  la versión antigua. Hay que borrarlo en Settings → Danger Zone y crear uno nuevo vacío con
+  el mismo nombre `ERP-ANV`, privado y **sin** marcar README, `.gitignore` ni licencia. Luego
+  se suben los 30 commits. Hasta que esto no se haga, la credencial sigue en internet.
+
+## 2. Esta semana
+
+- **Subir a Google Drive los dos zips de copia de seguridad** que están en
+  `c:\laragon\backups`: `actatec-db-20260812.zip` (la base de datos) y
+  `tec-project-20260812.zip` (el proyecto con las imágenes). Hoy la única copia completa del
+  ERP vive en un solo disco duro. GitHub no cubre ni las imágenes ni los datos.
+- **Crear el droplet de Singapur.** Cinco minutos en el panel de DigitalOcean. Las
+  características y el porqué están en la sección 7. A partir de ahí el resto es trabajo
+  técnico que no requiere decisiones.
+- **Guardar los diez códigos de recuperación de Namecheap** fuera del móvil, en Drive o
+  impresos. Namecheap no permite dos métodos de 2FA a la vez, así que si se pierde el
+  teléfono esos códigos son la única forma de entrar en el dominio.
+
+## 3. Antes de que entren los empleados
+
+Lista de "no publicar sin esto". Casi todo es trabajo técnico durante el despliegue y no
+requiere decisiones del dueño, salvo los tres puntos de correo y el de las cuentas.
+
+- **Configurar el servidor**: Ubuntu, Apache, PHP, MySQL, cortafuegos y acceso solo por
+  llave criptográfica.
+- **Corregir los tres ajustes de `sites/default/settings.php`**, que hoy están puestos para
+  desarrollo local y en un servidor público serían fallos reales:
+  `rebuild_access` está en `TRUE`, lo que deja reconstruir la caché sin identificarse;
+  los archivos privados viven en `sites/default/private`, dentro de la carpeta que sirve el
+  servidor web, y deben estar fuera; y `trusted_host_patterns` solo admite `tec.test`, así
+  que el sitio devolvería un error 400 a cualquier otro dominio.
+- **Instalar el programa `patch`** en el servidor y comprobar después que el parche de
+  `inline_entity_form` quedó aplicado. Sin ese programa Composer se lo salta en silencio.
+- **Publicar en `erp.anvfightgear.com`** con un registro A en Namecheap → Advanced DNS y un
+  certificado de Let's Encrypt. No hay que tocar `www`, ni el redireccionamiento, ni el
+  correo del dominio.
+- **Programar el cron.** Hoy Ultimate Cron reporta once tareas atrasadas.
+- **Crear el buzón `erp@anvfightgear.com`** en Google Workspace, como alias que reenvía al
+  dueño y no como cuenta de pago nueva. Es la dirección desde la que el ERP manda los
+  correos desde el 2026-08-12.
+- **Configurar el envío de correo a través del servidor de Google.** No es opcional:
+  DigitalOcean bloquea el envío directo en las cuentas nuevas. El módulo `smtp` ya está
+  instalado, solo hay que rellenar servidor, usuario y contraseña.
+- **Activar DKIM y DMARC en `anvfightgear.com`.** Hoy solo existe SPF. DKIM se genera en el
+  panel de Google Workspace y se pega en Namecheap → Advanced DNS; DMARC es un registro TXT
+  escrito a mano.
+
+  Estos tres puntos de correo van juntos: con uno o dos hechos, las recuperaciones de
+  contraseña siguen sin llegar. Y mientras no funcionen, un empleado que olvide su clave
+  depende de que alguien se la restablezca desde la línea de comandos.
+
+- **Repasar las cuentas de usuario.** Hay seis y solo dos se han usado alguna vez. Hay que
+  crear las de los tres empleados, revisar para qué sirven las otras y cambiar la contraseña
+  del superusuario (`uid 1`), que tiene todos los permisos del sistema.
+
+## 4. Cuando el ERP nuevo ya funcione
+
+- **Dar de baja el servidor de Nueva York.** Ahí está el ahorro grande: 32 dólares al mes.
+  Durante el solape se pagan los dos, pero el cobro es por horas. Conviene tenerlo encendido
+  unos días por si acaso.
+- **Borrar el snapshot `actafight.com-1755603370919`** (38,68 GB) cuando el ERP nuevo lleve
+  un mes funcionando.
+
+## 5. Con fecha en el calendario
 
 - **Antes del 3 de octubre de 2026** — confirmar en Namecheap (Profile → Billing) que la
-  tarjeta guardada sigue vigente. Ese día renueva `anvfightgear.com`, que es el dominio
-  sobre el que va a ir el ERP y la web pública. La renovación automática está activada,
-  pero no sirve de nada si la tarjeta ha caducado.
+  tarjeta guardada sigue vigente. Ese día renueva `anvfightgear.com`, que es el dominio sobre
+  el que va a ir el ERP y la web pública. La renovación automática está activada, pero no
+  sirve de nada si la tarjeta ha caducado.
 
-## En curso
+## 6. Funcionalidad nueva
 
-- **Crear el servidor de Singapur.** El ensayo del 2026-08-12 confirmó que la receta de
-  despliegue funciona, así que ya no queda nada bloqueando. El plan cerrado está más abajo,
-  en "Despliegue a DigitalOcean". El siguiente paso lo tiene que dar el dueño: crear el
-  droplet desde el panel de DigitalOcean.
+Sin prisa y sin orden fijo entre ellas. La lista de compra es la que más valor daría a corto
+plazo.
 
-## Seguridad
+- **Lista de compra sugerida por proveedor**, con el total de cada uno y aviso de los
+  umbrales de envío gratuito. Boceto ya acordado, falta montarlo.
+- **Avance automático del estado del pedido** cuando "Remaining" llega a cero. Decidido
+  dejarlo desconectado de momento; se puede conectar más adelante sin rehacer nada.
+- **Packing lists.**
+- **Facturas**, con IVA y sin IVA.
+- **Web pública de `anvfightgear.com`**, de presentación de la fábrica OEM. Hoy el dominio
+  muestra la página de aparcamiento de Namecheap.
+- **Portal de clientes**: que entren con su cuenta, vean sus productos y hagan sus propios
+  pedidos.
+- **Agentes.** Atención al cliente en los grupos de WhatsApp y en el correo. Pedidos
+  automáticos a proveedores locales por los grupos de LINE.
 
-- **DKIM y DMARC en `anvfightgear.com`.** Hoy solo existe el registro SPF. Sin los otros
-  dos, los correos de la fábrica tienen más papeletas de acabar en spam y cualquiera puede
-  suplantar el dominio. Se vuelve crítico antes de que ningún agente automático empiece a
-  escribir a clientes. DKIM se genera en el panel de Google Workspace y se pega en
-  Namecheap → Advanced DNS; DMARC es un registro TXT que se escribe a mano.
-- **Guardar los diez códigos de recuperación de Namecheap** fuera del móvil (Drive o
-  impresos). Namecheap no permite dos métodos de 2FA a la vez, así que si se pierde el
-  teléfono esos códigos son la única vía de entrada.
-- **Cortafuegos en el servidor nuevo.** La cuenta de DigitalOcean no tiene ninguno
-  configurado. Son gratuitos. Hay que dejarlo puesto antes de subir datos reales. Las
-  reglas concretas están abajo, en "Despliegue a DigitalOcean".
-
-## Despliegue a DigitalOcean
+## 7. Referencia: el plan del servidor de Singapur
 
 Plan cerrado el 2026-08-12. El procedimiento técnico paso a paso vive en
-`modules/custom/tec_production/README.md`, sección "Deployment procedure". Aquí están solo
-las decisiones y el porqué de cada una.
+`modules/custom/tec_production/README.md`, sección "Deployment procedure". Aquí están las
+decisiones y el porqué de cada una, para no volver a discutirlas dentro de seis meses.
 
 ### Lo que se contrata
 
@@ -94,9 +161,6 @@ MySQL 8.4 desde el repositorio oficial de Oracle, no el 8.0 que trae Ubuntu, par
 coincida con el 8.4.3 de local. Restaurar una copia de una versión nueva en una vieja
 funciona casi siempre, y ese "casi" no compensa.
 
-`apt-get install patch` es obligatorio. Sin ese programa el parche de `inline_entity_form`
-falla en silencio; ver el ensayo del 2026-08-12 en "Hecho".
-
 ### Cortafuegos
 
 Dos capas, las dos gratis: el de DigitalOcean filtra fuera de la máquina y `ufw` dentro, por
@@ -124,52 +188,35 @@ máquina entera. Sacar esos volcados fuera del servidor, a Drive, queda para una
 
 ### El orden
 
-1. Crear el droplet en el panel de DigitalOcean. **Lo tiene que hacer el dueño**, son cinco
-   minutos.
+1. Crear el droplet en el panel. **Lo tiene que hacer el dueño**, son cinco minutos.
 2. Dejarlo configurado: sistema, Apache, PHP, MySQL, `patch`, cortafuegos y accesos.
 3. Subir el ERP siguiendo el procedimiento del README: el código desde GitHub, la base de
    datos y los archivos desde los zips, y `settings.php` escrito a mano.
-4. Añadir en Namecheap → Advanced DNS un registro A que apunte `erp.anvfightgear.com` a la
-   IP nueva. No hay que tocar `www`, ni el redireccionamiento, ni nada del correo.
-5. Instalar el certificado con Let's Encrypt para que sea `https://` y no dé avisos de sitio
-   inseguro.
-6. Probarlo unos días **con el de Nueva York todavía encendido**, por si acaso.
-7. Destruir el de Nueva York. Durante el solape se pagan los dos, pero el cobro es por horas.
+4. Añadir el registro A de `erp.anvfightgear.com` en Namecheap.
+5. Instalar el certificado con Let's Encrypt.
+6. Probarlo unos días con el de Nueva York todavía encendido.
+7. Destruir el de Nueva York.
 
 Crear el servidor son veinte minutos. Dejarlo bien, una tarde.
 
 ### Lo que el ensayo no pudo probar
 
-Se hizo sobre Windows y por HTTP, así que esto sigue sin verificar y hay que resolverlo en
-el servidor: HTTPS, la programación del cron (Ultimate Cron iba con once tareas atrasadas),
-el envío de correo —DigitalOcean bloquea el puerto 25 en las cuentas nuevas, así que hará
-falta un relé SMTP, probablemente el de Google Workspace—, los permisos de las carpetas de
-archivos, y el ajuste de `opcache`.
+Se hizo sobre Windows y por HTTP, así que esto sigue sin verificar: HTTPS, la programación
+del cron, el envío de correo, los permisos de las carpetas de archivos y el ajuste de
+`opcache`.
 
-## Producto
+## 8. Deuda técnica
 
-- **Lista de compra sugerida por proveedor**, con el total de cada uno y aviso de los
-  umbrales de envío gratuito. Boceto ya acordado, falta montarlo.
-- **Avance automático del estado del pedido** cuando "Remaining" llega a cero. Decidido
-  dejarlo desconectado de momento; se puede conectar más adelante sin rehacer nada.
-- **Packing lists.**
-- **Facturas**, con IVA y sin IVA.
-- **Web pública de `anvfightgear.com`**, de presentación de la fábrica OEM. Hoy el dominio
-  muestra la página de aparcamiento de Namecheap.
-- **Portal de clientes**: que entren con su cuenta, vean sus productos y hagan sus propios
-  pedidos.
-- **Agentes.** Atención al cliente en los grupos de WhatsApp y en el correo. Pedidos
-  automáticos a proveedores locales por los grupos de LINE.
+Nada de esto corre prisa, pero conviene que esté escrito para que no se descubra por sorpresa.
 
-## Mantenimiento y deuda técnica
-
-- **Subir a Google Drive** los dos zips de copia de seguridad del 2026-08-12.
-- **Borrar `c:\laragon\backups\nested-git-20260812`** dentro de unas semanas, cuando esté
-  claro que la conversión de los módulos no dio problemas.
-- **Borrar el snapshot `actafight.com-1755603370919`** cuando el ERP nuevo lleve un mes
-  funcionando en Singapur.
-- **Borrar el snapshot `thailivestream-final-2026-08-12`** dentro de tres meses si no se
-  retoma ese proyecto. Cuesta 0,56 dólares al mes y es lo único que queda de esa web.
+- **Desinstalar del todo los cinco módulos de IA** (`ai`, `ai_interpolator`,
+  `ai_interpolator_eca`, `ai_interpolator_openai`, `openai` y `openai_eca`). Hoy están
+  instalados pero sin credenciales y con todos los interpoladores apagados, así que no hacen
+  nada. Quitarlos del todo requiere planificarlo, porque `ai_interpolator` metió campos
+  obligatorios en materiales, colores y unidades, y arrancarlos a lo bruto rompe cosas.
+- **`views_aggregator` 2.1.1 dice que necesita Drupal 10.3 u 11** y el sitio corre 10.2.4,
+  así que el informe de estado lo marca como incompatible. Hoy funciona, pero es uno de los
+  módulos instalados a mano y conviene resolverlo antes de que sea un incidente.
 - **`composer update` no se puede ejecutar en este proyecto.** Hay conflictos entre
   dependencias fijadas a Drupal 10.2.4 y otras que ya piden 10.3 u 11. Un intento llegó a
   desinstalar `drupal/inline_entity_form` por su cuenta. Hoy se sortea usando solo
@@ -178,23 +225,79 @@ archivos, y el ajuste de `opcache`.
   `quicktabs` e `integer_to_decimal`. No están en `composer.json` ni en `composer.lock`, se
   descargaron a mano. Llegan al servidor solo a través del repositorio. Dos de ellos llevan
   parches aplicados a mano (ver "Hecho").
-- **`views_aggregator` 2.1.1 dice que necesita Drupal 10.3 u 11** y el sitio corre 10.2.4, así
-  que el informe de estado lo marca como incompatible. Hoy funciona, pero es otro de los
-  módulos instalados a mano y conviene resolverlo antes de que se convierta en un incidente.
 - **Estudiar `composer-exit-on-patch-failure`** en `composer.json`, para que un parche que no
-  se aplica corte la instalación en voz alta en lugar de pasar desapercibido, como pasó en el
-  ensayo.
+  se aplica corte la instalación en voz alta en lugar de pasar desapercibido.
+- **El editor guarda a veces en UTF-16 en vez de UTF-8**, y eso rompe cualquier fichero PHP,
+  CSS, JS o Markdown que toque. Ha pasado ya media docena de veces. De momento se detecta y
+  se corrige a mano después de cada edición.
+- **Limpiar carpetas sobrantes** dentro del proyecto:
+  `config/sync.pre-restore-20260810023747` (1.248 archivos) y
+  `modules/custom.pre-restore-20260810023746` (134 archivos), restos de una restauración del
+  10 de agosto que ya está superada por las copias del 12. Están excluidas del repositorio,
+  así que no llegan a GitHub, pero sí ocupan sitio y confunden las búsquedas.
+- **Borrar `c:\laragon\backups\nested-git-20260812`** dentro de unas semanas, cuando esté
+  claro que la conversión de los módulos no dio problemas.
+- **Borrar `c:\laragon\backups\git-history-20260812`** (119 MB, el historial de Git anterior
+  a la reescritura) cuando el repositorio nuevo lleve unas semanas funcionando. Ojo: esa
+  carpeta **sí contiene** la clave de OpenAI en sus objetos antiguos, así que no debe salir
+  del ordenador ni subirse a ningún sitio.
+- **Borrar el snapshot `thailivestream-final-2026-08-12`** dentro de tres meses si no se
+  retoma ese proyecto. Cuesta 0,56 dólares al mes y es lo único que queda de esa web.
 - **Mirar las versiones móviles de GitHub y Cursor.** GitHub tiene aplicación de iOS y
   Android, con la que se puede leer y editar este backlog desde el teléfono. Cursor tiene
-  agentes en la nube que se lanzan desde el navegador del móvil. Ninguna de las dos es
-  urgente.
-- **El editor guarda a veces en UTF-16 en vez de UTF-8**, y eso rompe cualquier fichero PHP,
-  CSS, JS o Markdown que toque. Ha pasado ya media docena de veces, incluida una al escribir
-  este mismo archivo. De momento se detecta y se corrige a mano después de cada edición.
+  agentes en la nube que se lanzan desde el navegador del móvil.
 
 ---
 
 ## Hecho
+
+### 2026-08-12 — Limpieza de todo lo que quedaba del programador anterior
+
+El ERP guardaba una clave de OpenAI en texto plano, en `config/sync/openai.settings.yml`,
+apuntando a la cuenta personal del programador que montó el sistema original. Era la cuenta
+que había que ir recargando con dinero. Seis procesos automáticos llamados *"TEC Inventory
+term: Calculate units"* preguntaban a GPT las conversiones de unidades **cada vez que se
+creaba o modificaba un material**; con más de ochocientos materiales, ahí estaba el gasto.
+Esos seis ya estaban desactivados desde hacía tiempo, pero cuatro campos seguían armados:
+tres de las unidades de medida y el de color.
+
+Se hizo lo siguiente: vaciar la clave y el identificador de organización, apagar esos cuatro
+campos, bloquear su cuenta de usuario `uid 3` (activa, con rol de dirección y sin usarse
+desde julio de 2024) y cambiar el correo del sitio, que era el suyo, por
+`erp@anvfightgear.com`.
+
+Al apagar el último interpolador, el propio módulo retiró tres campos suyos que ya no hacían
+falta. Eso es normal, no es un daño.
+
+Una auditoría completa confirmó que no queda nada más: su dominio aparecía en un solo sitio
+del código, la clave era la única credencial de los 1.255 objetos de configuración, los
+repositorios externos de Composer apuntan solo a Drupal y GitHub, el remoto de Git es el
+propio, y la configuración de SMTP estaba vacía. Sí había **cuatro copias del fichero de la
+clave** en el disco; dos estaban obsoletas y se vaciaron también, y una de ellas vivía dentro
+de `sites/default/files`, o sea que habría viajado al servidor de Singapur dentro del zip.
+
+Queda un frente que no se puede auditar desde aquí: el servidor de Nueva York, que montó él y
+donde probablemente sigue instalada su llave de acceso. Se resuelve solo, porque el servidor
+nuevo se crea desde cero y el viejo se destruye.
+
+### 2026-08-12 — El historial de Git, reescrito para purgar la clave
+
+La clave estaba en 28 de los 29 commits del repositorio, y se había subido a GitHub esa misma
+mañana. Se descartó empezar de cero, porque el historial documenta el rediseño del
+inventario, la ampliación del CRM y el módulo de stock control, y esos mensajes valen. En su
+lugar se reescribieron los 30 commits eliminando ese único fichero, y luego se devolvió con
+los campos vacíos en el último.
+
+Se comprobó de dos maneras. Buscando la clave en los 30 commits: cero apariciones. Y
+comparando el inventario completo de archivos antes y después: de 17.457 entradas, la única
+diferencia es la desaparición de ese fichero. Los otros 17.456 son idénticos hash a hash, así
+que la reescritura no tocó nada más.
+
+El historial anterior está íntegro en `c:\laragon\backups\git-history-20260812`.
+
+Falta subirlo: hay que borrar el repositorio de GitHub y recrearlo vacío, en vez de forzar la
+subida, porque forzándola los commits viejos seguirían accesibles en los servidores de GitHub
+durante un tiempo.
 
 ### 2026-08-12 — Ensayo de despliegue en local
 
@@ -245,7 +348,7 @@ intacto.
 ### 2026-08-12 — El proyecto entero en GitHub
 
 Se creó el repositorio privado `github.com/daviddogu-code/ERP-ANV` y se subió el proyecto
-completo, 17.456 archivos. La identidad de Git (`daviddogu-code` con el correo oculto de
+completo, unos 17.456 archivos. La identidad de Git (`daviddogu-code` con el correo oculto de
 GitHub) está configurada **solo en este repositorio**, no en el Windows entero, para que
 otros proyectos puedan llevar la suya. La rama se llama `main`.
 
@@ -312,3 +415,4 @@ No hay direcciones IP reservadas huérfanas ni cortafuegos configurados.
 | Web pública | No existe | `www` apunta a la página de aparcamiento de Namecheap |
 | Código | `github.com/daviddogu-code/ERP-ANV` | Privado, rama `main` |
 | Copia local | `c:\laragon\www\tec` | Drupal 10.2.4, PHP 8.3.30, MySQL 8.4.3, 197 módulos activos |
+| Correo del ERP | `erp@anvfightgear.com` | Declarado, pero el buzón aún no existe y el envío no está configurado |
