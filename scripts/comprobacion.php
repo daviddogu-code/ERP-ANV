@@ -65,6 +65,10 @@ const REFERENCIA_VARIOS = [
   'modulos' => 146,
 ];
 
+// Herramientas de diagnostico que se instalan durante la actualizacion y se
+// quitan al terminar. No cuentan para el total de 146.
+const MODULOS_TEMPORALES = ['upgrade_status', 'update'];
+
 // -----------------------------------------------------------------------------
 // Utilidades.
 // -----------------------------------------------------------------------------
@@ -124,9 +128,12 @@ comprobar($resultados, 'ficheros', $n === REFERENCIA_VARIOS['ficheros'], "$n (se
 // -----------------------------------------------------------------------------
 titulo('2. Los modulos y los automatismos siguen ahi');
 
-$modulos = count(\Drupal::service('extension.list.module')->getAllInstalledInfo());
+$instalados = array_keys(\Drupal::service('extension.list.module')->getAllInstalledInfo());
+$temporales = array_intersect($instalados, MODULOS_TEMPORALES);
+$modulos = count($instalados) - count($temporales);
 comprobar($resultados, 'modulos instalados', $modulos === REFERENCIA_VARIOS['modulos'],
-  "$modulos (se esperaban " . REFERENCIA_VARIOS['modulos'] . ")");
+  "$modulos (se esperaban " . REFERENCIA_VARIOS['modulos'] . ")"
+  . ($temporales ? ', mas ' . implode(' y ', $temporales) . ' de diagnostico' : ''));
 
 $ecas = $etm->getStorage('eca')->loadMultiple();
 $encendidos = count(array_filter($ecas, fn($e) => $e->status()));
