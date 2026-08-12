@@ -227,9 +227,12 @@ Dos formas de convivir con ello, y conviene aplicar las dos:
 fábricas". Hay clientes que se reconocerían en la primera frase. Basta con enseñar lo propio:
 la comparación la hace el comprador solo, y sale igual de bien sin costar un cliente.
 
-**Nunca nombrar clientes ni enseñar sus logos.** Y darle la vuelta: si sus diseños están
-igual de protegidos, eso es exactamente lo que un cliente serio quiere oír. Una fábrica que
-enseña el producto de otras marcas es una fábrica en la que no se puede confiar.
+**Nunca nombrar clientes ni enseñar sus logos**, mientras no haya permiso por escrito. Y darle
+la vuelta: si sus diseños están igual de protegidos, eso es exactamente lo que un cliente serio
+quiere oír. Una fábrica que enseña el producto de otras marcas es una fábrica en la que no se
+puede confiar. Dicho esto, **ese permiso se puede negociar y conviene intentarlo**: ver la
+sección 12, donde está el ejemplo de una fábrica que sí nombra a Everlast y a Nike, y el plan
+para conseguirlo.
 
 **Ni una foto generada con IA.** Fabrion, que ocupa esta posición en textil, está construido
 con fotos falsas y contradicciones —dice tener 150 trabajadores "en Bangkok" mientras su
@@ -353,3 +356,89 @@ todos los clientes salen de que el dueño los contacta uno a uno**. Cuando una d
 busca quién eres, no encuentra nada. Desde el día que la web exista, encuentra una fábrica con
 sesenta empleados, vídeo del taller y procesos escritos. Ese cambio funciona desde el primer
 día.
+
+---
+
+## 12. Lo que hacen bien las fábricas potentes de China y Taiwán
+
+Añadido esa misma noche, después de mirar Sakurai Group (Taiwán/Guangdong), Jiangxi Zhengtu
+y Seedoo. Estas juegan en otra liga de profesionalidad que las tailandesas, y hay cosas
+copiables tal cual.
+
+La lección de fondo: **escriben para un jefe de compras que quiere datos, mientras las webs
+tailandesas escriben para un romántico**. Nuestro comprador es un jefe de compras que además
+quiere producto tailandés. La jugada es coger el esqueleto de datos de los chinos y ponerle
+encima lo que ellos no tienen: Tailandia y una fábrica que se puede visitar.
+
+### La ficha técnica de fábrica (Sakurai)
+
+Ni una foto de luchadores ni una frase bonita. Cada planta tiene su hoja con el código del
+centro, el año de fundación, el listado de lo que fabrica y las inspecciones que ha pasado.
+Ese formato, aplicado a nuestra página de fábrica, vale más que cualquier adorno.
+
+### Nombrar clientes: se negocia, no está prohibido por naturaleza
+
+**Este es el hallazgo que más puede cambiar la web.** Sakurai publica los nombres de sus
+clientes en texto corrido:
+
+> *"...partnered clients include **Nike, Wilson, Mizuno and Rawlings**."*
+>
+> *"...providing the services for brands such as **Title, Everlast, Cooper, CCM and more**."*
+
+Importa **cómo** lo hacen: nombres sueltos dentro de un párrafo, **sin logos y sin una sección
+de "nuestros clientes"**. La diferencia no es estética. La mayoría de los contratos de
+fabricación prohíben usar la marca y el logo del cliente en publicidad —que es exactamente lo
+que sería un muro de logos— y son más ambiguos sobre mencionar un nombre en una frase.
+
+También hay que ver por qué ellos pueden: hacen guantes de béisbol para equipos de la MLB y
+para Nike y Rawlings, así que negocian de igual a igual. Nosotros todavía no estamos ahí.
+
+El plan, por orden:
+
+1. **Mirar qué dicen exactamente los contratos actuales.** Puede que prohíban menos de lo que
+   se da por supuesto.
+2. **Comprobar si algún cliente ya lo ha contado él mismo.** Si una marca presume en público
+   de fabricar en Tailandia con su fábrica asociada, el secreto ya no lo es.
+3. **Preguntar a un cliente con buena relación**, empezando por el más pequeño, que es el que
+   menos tiene que perder.
+4. **Meter el derecho a nombrar como cláusula en los contratos nuevos**, desde el principio,
+   mientras se negocia y no como un favor pedido después. Esto es lo más rentable a largo
+   plazo.
+
+Ojo: **nombrar al cliente y enseñar su producto son dos permisos distintos.** Hay que pedirlos
+por separado, porque pueden conceder uno y no el otro.
+
+Y si nadie acepta, hay términos medios que no rompen nada y dicen casi lo mismo: *"fabricamos
+para marcas que se venden en las principales cadenas de Estados Unidos y Europa"*, o *"para una
+de las cinco mayores marcas europeas de muay thai"*.
+
+### Tres mecánicas de Zhengtu, copiables tal cual
+
+**Bloque de especificaciones en cada producto**: material, tallas, colores, método de
+aplicación del logo, origen. Sin adjetivos. Va en la página de Capacidades.
+
+**Una página enseñando las máquinas**, que ellos llaman "Production Equipment". Es prueba
+pura, y es justo lo que nosotros podemos hacer y un bróker no. Va dentro de la página de la
+fábrica.
+
+**Botón de "añadir a consulta" en lugar de "contáctanos".** El comprador va metiendo productos
+en una cesta y manda una sola petición de presupuesto con todo. Es como trabaja de verdad un
+jefe de compras, y baja mucho la barrera frente a un formulario en blanco. Afecta a
+Capacidades y a Contacto.
+
+Publican además ISO, CE y SGS, y tienen la web en nueve idiomas. Otra vez el mismo patrón:
+**China y Pakistán hablan de normas y certificados; Tailandia habla de artesanía.**
+
+### Anuncios de pago (Seedoo)
+
+Seedoo paga anuncios en Google; se ve en los parámetros de campaña de sus enlaces. Con la
+competencia que hay en estas búsquedas, **unos anuncios pondrían la web arriba mañana en lugar
+de en tres meses**, y con términos tan de nicho el clic debería costar poco. Es la forma de
+tener resultados mientras el posicionamiento natural madura. Merece una prueba con presupuesto
+pequeño en cuanto la web exista.
+
+### Lo que no hay que copiar
+
+El aspecto. Estas webs ganan por completas, no por fiables: recargadas, con catálogos de todos
+los deportes y todas las gamas de precio, vendiendo a cualquiera. Nosotros somos lo contrario,
+estrechos y de gama alta. Quedarse con la estructura de datos y dejarles el desorden.
