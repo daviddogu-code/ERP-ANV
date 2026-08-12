@@ -7,7 +7,6 @@ module:
   admin_toolbar_tools: 0
   ai_interpolator: 0
   ai_interpolator_eca: 0
-  ai_interpolator_openai: 0
   ajax_loader: 0
   antibot: 0
   asset_injector: 0
@@ -129,8 +128,6 @@ module:
   mysql: 0
   name: 0
   node: 0
-  openai: 0
-  openai_eca: 0
   options: 0
   pace: 0
   path: 0

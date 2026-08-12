@@ -24,9 +24,17 @@ por error algo que estaba puesto a propósito.
 
 ## 1. Ahora mismo
 
-- **Configurar el servidor de Singapur**, que ya existe y está vacío. Es la lista entera de
-  la sección 3 y da para una tarde. No requiere decisiones del dueño salvo los tres puntos de
-  correo y el de las cuentas de usuario.
+El ERP ya está publicado en `https://erp.anvfightgear.com` desde el 12 de agosto. Lo que
+queda para que la revisión de Lukpla pueda empezar:
+
+- **Crear la cuenta de Lukpla.** Hacen falta tres datos del dueño: su correo, el nombre de
+  usuario y el rol. La recomendación es *manager* — lleva producción, compras y pedidos pero
+  no la configuración del sistema — y subirla a *executive* si se queda corta.
+- **Preparar dónde apunta lo que vea**, aunque sea una hoja de cálculo compartida. Por chat
+  se evapora en tres días.
+- **Darle un encargo concreto**, empezando por compras, en vez de un "míralo a ver qué te
+  parece".
+- **Confirmar si se maneja en inglés**, que es el idioma en el que está el ERP entero.
 
 ## 2. Esta semana
 
@@ -42,35 +50,15 @@ porque hay partes del negocio, compras sobre todo, cuya lógica conoce ella y no
 el motivo de querer publicarlo cuanto antes. Después, ya con sus cambios hechos, entran los tres
 empleados a usarlo de verdad.
 
-Para la primera fase el listón baja mucho. Lo único que no se puede saltar son **los tres
-ajustes de `settings.php`**, y eso no depende de cuánta gente entre: en cuanto la máquina está
-en internet, está expuesta al mundo entero. El correo puede esperar, porque si Lukpla olvida la
-contraseña se la cambia el dueño. La limpieza de datos puede esperar, y de hecho conviene que
-espere, porque ella es quien va a opinar sobre qué falta. Y las cuentas de los otros empleados
-no hacen falta todavía.
+**La primera fase se completó el 12 de agosto**: servidor configurado, los tres ajustes de
+`settings.php` corregidos, parche verificado, publicado en `erp.anvfightgear.com` con
+certificado. El detalle está abajo, en Hecho. Lo que falta para que Lukpla empiece está en la
+sección 1.
 
-Dos cosas sí hay que preparar para que su revisión sirva de algo: **un sitio donde apunte lo que
-vea**, aunque sea una hoja de cálculo compartida, porque por chat se evapora en tres días; y
-**un encargo concreto**, empezando por compras, en vez de un "míralo a ver qué te parece". Queda
-por confirmar si se maneja en inglés, que es el idioma en el que está el ERP entero.
+El resto de esta lista es el "no publicar sin esto" de la segunda fase, la de los tres
+empleados. Casi todo es trabajo técnico y no requiere decisiones del dueño, salvo los tres
+puntos de correo y el de las cuentas.
 
-El resto de la lista es el "no publicar sin esto" de la segunda fase. Casi todo es trabajo
-técnico durante el despliegue y no requiere decisiones del dueño, salvo los tres puntos de
-correo y el de las cuentas.
-
-- **Configurar el servidor**: Ubuntu, Apache, PHP, MySQL, cortafuegos y acceso solo por
-  llave criptográfica.
-- **Corregir los tres ajustes de `sites/default/settings.php`**, que hoy están puestos para
-  desarrollo local y en un servidor público serían fallos reales:
-  `rebuild_access` está en `TRUE`, lo que deja reconstruir la caché sin identificarse;
-  los archivos privados viven en `sites/default/private`, dentro de la carpeta que sirve el
-  servidor web, y deben estar fuera; y `trusted_host_patterns` solo admite `tec.test`, así
-  que el sitio devolvería un error 400 a cualquier otro dominio.
-- **Instalar el programa `patch`** en el servidor y comprobar después que el parche de
-  `inline_entity_form` quedó aplicado. Sin ese programa Composer se lo salta en silencio.
-- **Publicar en `erp.anvfightgear.com`** con un registro A en Namecheap → Advanced DNS y un
-  certificado de Let's Encrypt. No hay que tocar `www`, ni el redireccionamiento, ni el
-  correo del dominio.
 - **Programar el cron.** Hoy Ultimate Cron reporta once tareas atrasadas.
 - **Crear el buzón `erp@anvfightgear.com`** en Google Workspace, como alias que reenvía al
   dueño y no como cuenta de pago nueva. Es la dirección desde la que el ERP manda los
@@ -90,9 +78,9 @@ correo y el de las cuentas.
   salvo una. Además de crear las de los tres empleados, el repaso del 12 de agosto dejó tres
   cosas concretas:
 
-  - **El superusuario (`uid 1`) se llama `drusphere`**, el nombre de la empresa del
-    programador anterior. La cuenta sí es del dueño, porque el correo asociado es su gmail
-    personal, y es la única activa del sistema. Hay que renombrarla y cambiarle la contraseña.
+  - ~~**El superusuario (`uid 1`) se llama `drusphere`**~~ — hecho el 12 de agosto. Se
+    renombró a `david` y se le puso contraseña nueva. Para liberar ese nombre hubo que
+    renombrar antes la cuenta bloqueada `David` (`uid 4`) a `david-antiguo`.
   - **`devT` (`uid 7`) tiene rol de administrador**, es decir permisos totales, con un correo
     en un dominio que parece una errata del suyo (`drupshere.com`). Está bloqueada, así que no
     es urgente, pero es una segunda llave maestra que no es del dueño: lo suyo es borrarla, no
@@ -368,6 +356,47 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-12 — El ERP, publicado en internet
+
+Está en **`https://erp.anvfightgear.com`**, en el servidor de Singapur. Desde el primer envío
+de archivos hasta tener la página de acceso funcionando con certificado pasaron unos cuarenta
+minutos.
+
+Lo que se montó: el código traído desde GitHub con una llave de despliegue de solo lectura
+—el servidor puede descargar el repositorio pero nunca escribir en él, así que aunque alguien
+entrara en la máquina no podría tocar el código—, los 254 paquetes de Composer, la base de
+datos con sus 460 tablas, los 3.950 archivos de imágenes y documentos, Apache, y el
+certificado de Let's Encrypt con renovación automática ya probada en simulacro.
+
+Los tres ajustes de `settings.php` quedaron corregidos, y de paso dos más que no estaban en la
+lista: los errores ya no se enseñan en pantalla sino que van al registro, y el ERP se conecta a
+la base de datos con un usuario propio en vez de con `root`. El propio `settings.php` está
+puesto de forma que solo lo pueden leer el sistema y el servidor web, y comprobado desde fuera
+que devuelve un 403.
+
+**Dos sustos que conviene recordar.** El primero: el comprimido hecho con Windows solo
+descomprimía 659 de los 3.950 archivos y se paraba en silencio, sin dar error, porque Windows
+no guarda los permisos que Linux necesita. Y engañaba dos veces, porque la prueba de
+integridad del comprimido decía que estaba perfecto y el tamaño en disco coincidía byte a
+byte. Solo se detecta contando los archivos ya descomprimidos. De haber pasado por alto,
+el ERP habría abierto con casi todas las imágenes rotas. Se rehizo con `tar` y entraron todos.
+
+El segundo: **`docs/backlog.md`, este mismo archivo, se podía descargar desde internet sin
+contraseña**, con los planes del servidor, el historial del incidente de la clave y las notas
+internas dentro. Drupal bloquea por su cuenta los `.yml` y los `.php`, pero los `.md` no los
+conoce porque no existían cuando se escribieron esas reglas. Ya está bloqueado, junto con el
+README y los `.txt` de instalación, en los dos ficheros de configuración de Apache — importa
+que sean los dos, porque Certbot hace una copia para la versión segura del sitio y desde ese
+momento las dos van por su cuenta.
+
+Ambos están documentados como trampas 8 y 9 en el procedimiento de despliegue del README de
+`tec_production`, junto con el resto de correcciones que el ensayo en local no pudo anticipar.
+
+Veinte minutos después de publicarlo, un rastreador automático de internet (LeakIX) ya había
+encontrado el formulario de acceso e intentado entrar. Es ruido de fondo, le pasa a cualquier
+cosa que se publique, y el sitio lo rechazó — pero es el motivo por el que ninguna cuenta
+puede quedarse con una contraseña floja.
 
 ### 2026-08-12 — El servidor de Singapur, creado
 

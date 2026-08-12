@@ -198,13 +198,23 @@ below. The rebuilt site served `/`, `/user/login`, `/o/queue`, `/stock` and
 sufficient — but only if the verification steps here are followed, because
 `composer install` alone does **not** produce a correct tree (see "Traps").
 
+**Executed for real the same day** onto `erp-anv-sgp1` (DigitalOcean Singapore,
+Ubuntu 24.04, PHP 8.3.33 FPM, MySQL 8.4.11, Apache 2.4.58), serving
+`https://erp.anvfightgear.com`. Total time from first `scp` to a working HTTPS
+login page: about 40 minutes. Linux behaved far better than the Windows
+rehearsal — Composer needed a single pass, left no empty package directories
+and applied the patch by itself — but two new traps appeared that the rehearsal
+could not have found, both listed below (8 and 9). Traps 1–3 did **not**
+reproduce on Linux; keep the verification steps anyway, since they cost seconds
+and their failure mode is silent.
+
 ## Ingredients
 
 | Ingredient | Contains | Notes |
 |---|---|---|
 | `github.com/daviddogu-code/ERP-ANV`, branch `main` | everything except `/core`, `/vendor`, and the two runtime file directories | ~17,500 files, 43 MB |
 | database dump | the `actatec` schema | 460 tables |
-| project archive | `sites/default/files` **and** `sites/default/private` | 2,640 + 1,384 files |
+| project archive | `sites/default/files` **and** `sites/default/private` | 2,566 + 1,384 files; build it with `tar`, never `Compress-Archive` — see trap 8 |
 
 The repo carries `config/sync` (1,097 files), `libraries/` (select2,
 tiny-slider, swiffy-slider, jquery-ui-touch-punch), the patch in `patches/`,
@@ -225,11 +235,19 @@ were confirmed to arrive intact.
 
    ```bash
    # every package directory must exist and be non-empty
-   ls modules/contrib | wc -l   # expect 156
+   ls modules/contrib | wc -l   # expect 156, and none of them empty
    ls themes/contrib  | wc -l   # expect 3
-   # no truncated files
-   find core modules themes vendor libraries -type f -empty | wc -l
+   # truncated files
+   find core -type f -empty | wc -l   # expect exactly 37
    ```
+
+   Those 37 empty files in `core` are legitimate: every one lives under a
+   `tests/fixtures/` directory and is empty on purpose (`HtaccessTest`
+   fixtures, `invalid-img-zero-size.png`, three empty `.po` files). A higher
+   number, or any empty file outside `tests/fixtures/`, means trap 1. The fast
+   way to tell the two apart is to check a file that must never be empty:
+   `core/misc/drupal.js` (21 KB) and
+   `core/assets/vendor/ckeditor5/ckeditor5-dll/ckeditor5-dll.js` (762 KB).
 
    Re-run `composer install` until the counts stop changing. The Windows
    rehearsal needed three passes; on Linux one is normally enough, but the
@@ -243,21 +261,51 @@ were confirmed to arrive intact.
    grep -c '?? \[\]' inline_entity_form.module   # must print 1
    ```
 5. Create the database and import the dump.
-6. Restore `sites/default/files` and `sites/default/private` from the archive.
-7. Install `sites/default/settings.php` and edit exactly four things:
-   - `$databases['default']['default']['database']` (and user/password/host).
-   - `$settings['trusted_host_patterns']` — add the production domain.
-     Without it Drupal answers **400 Bad Request** to every request.
-   - `$settings['rebuild_access']` — set to **FALSE**. It is `TRUE` in the
-     current file, which lets anyone run `rebuild.php`.
-   - `$settings['hash_salt']` — keep the existing value; changing it
-     invalidates all sessions and one-time login links.
+6. Restore the two runtime directories, then **count what actually arrived**
+   (trap 8):
 
-   Leave `config_sync_directory` (`config/sync`) and `file_private_path`
-   (`sites/default/private`) alone: both are relative and already correct.
+   ```bash
+   tar -xzf archive.tar.gz -C /tmp/staging
+   mv /tmp/staging/files   /var/www/erp/sites/default/files
+   mv /tmp/staging/private /var/www/erp-private       # outside the docroot
+   find /var/www/erp/sites/default/files -type f | wc -l   # expect ~2,566
+   find /var/www/erp-private             -type f | wc -l   # expect 1,384
+   chown -R www-data:www-data /var/www/erp/sites/default/files /var/www/erp-private
+   find … -type d -exec chmod 755 {} + ; find … -type f -exec chmod 644 {} +
+   ```
+
+   Only these two trees belong to the web server user. The code stays owned by
+   the deploy user so a compromised PHP process cannot rewrite it.
+7. Write a production `sites/default/settings.php`. Copy the active lines from
+   the development file (everything that is not a comment — there are only
+   about twenty) and change five things:
+   - `$databases['default']['default']` — the dedicated database user, never
+     `root`. Generate the password on the server and keep it out of any chat
+     window or repository.
+   - `$settings['trusted_host_patterns']` — the production domain only.
+     Without it Drupal answers **400 Bad Request** to every request.
+   - `$settings['rebuild_access']` — **FALSE**. It is `TRUE` in the development
+     file, which lets anyone run `rebuild.php`.
+   - `$settings['file_private_path']` — an **absolute path outside the document
+     root**, e.g. `/var/www/erp-private`. The development value
+     (`sites/default/private`) sits inside the tree Apache serves and must not
+     ship. Confirm with `drush status`, which prints "Files, Private".
+   - `$config['system.logging']['error_level'] = 'hide'` — stack traces belong
+     in the log, not on the customer's screen.
+
+   `$settings['hash_salt']` can be regenerated (`openssl rand -base64 55`) on a
+   fresh install; it only invalidates sessions and pending one-time links, and
+   a value that has lived in a repository is better replaced. Leave
+   `config_sync_directory` (`config/sync`) alone — it is relative, correct, and
+   protected by Drupal's own `.htaccess`.
+
+   Then lock the file down: `chown root:www-data`, `chmod 640`. Verify from
+   outside that it returns 403.
 8. Point the web server at the project root. This is a
    `drupal/legacy-project` layout: the document root **is** the repository
-   root, not a `web/` subdirectory.
+   root, not a `web/` subdirectory. Set `AllowOverride All`, or Drupal's
+   `.htaccess` — the thing protecting `config/sync` and every `.php` in
+   `files/` — is ignored entirely. Add the deny rules from trap 9.
 9. `drush cr`, then verify (see checklist).
 
 ## Traps found during the rehearsal
@@ -318,6 +366,52 @@ were confirmed to arrive intact.
    drift accumulated on the live install; a fresh deploy gets exactly what
    `composer.lock` specifies, and the rehearsal proved that combination works.
 
+## Traps found during the real deployment
+
+8. **A zip built by PowerShell loses two thirds of the payload on Linux, in
+   silence.** `Compress-Archive` writes Windows path separators and stores no
+   Unix permission bits, so `unzip` on the server recreates the directory tree
+   without the traversal bit and then cannot descend into the folders it just
+   made. It extracted **659 of 3,950 files** and exited 0. Worse, the two
+   integrity checks that a careful person would run both pass: `unzip -t`
+   reports "No errors detected" (the archive really is intact — it is the
+   extraction that fails), and the byte count on disk matches the source
+   exactly. The failure only shows up if you count files *after* extracting.
+
+   Cure: build the archive with `tar`, which Windows 10 and 11 ship at
+   `C:\Windows\System32\tar.exe`:
+
+   ```powershell
+   cd c:\laragon\www\tec\sites\default
+   tar -czf c:\laragon\backups\tec-files.tar.gz files private
+   ```
+
+   It is also five times faster (5 s versus 54 s) and 6 MB smaller. GNU tar on
+   the receiving end prints `Ignoring unknown extended header keyword
+   'SCHILY.fflags'` once per file; that is Windows metadata Linux does not use,
+   and it is harmless.
+9. **Drupal's `.htaccess` does not know about `.md` files.** It blocks `.yml`,
+   `.php`, `.inc`, `.install` and friends, so `settings.php`, `config/sync` and
+   `composer.json` all correctly returned 403 — but `docs/backlog.md` was
+   downloadable by anyone who guessed the URL, and that file documents the
+   server layout, the credential incident and the internal roadmap. Anything
+   added to the repository in a format Drupal's authors never anticipated is
+   public by default. Deny it at the vhost level:
+
+   ```apache
+   <DirectoryMatch "^/var/www/erp/(docs|patches)">
+       Require all denied
+   </DirectoryMatch>
+   <FilesMatch "^(README|CHANGELOG|CONTRIBUTING|INSTALL|UPDATE|MAINTAINERS|USAGE|COPYRIGHT)\.(md|txt)$">
+       Require all denied
+   </FilesMatch>
+   ```
+
+   Add the block to **both** vhost files. Certbot copies `erp.conf` into
+   `erp-le-ssl.conf` when it installs the certificate, and from then on the two
+   drift independently — a rule added only to the HTTP vhost does nothing on
+   the HTTPS site that everyone actually uses.
+
 ## Post-deploy checklist
 
 ```bash
@@ -343,11 +437,40 @@ drush cr
   inherited from the dump, and `views_aggregator`). Anything new is a
   deployment problem.
 
-## Not covered by this rehearsal
+### From outside the server
 
-Everything was validated on Windows/Laragon against PHP 8.3.30, MySQL 8.4.3
-and Drupal 10.2.4, over HTTP with Drupal's own router. The following still
-have to be settled on the server: HTTPS and the PWA "HTTPS off" error, cron
-scheduling (Ultimate Cron reported 11 jobs behind), outbound mail, file
-ownership and permissions for `sites/default/files` and `.../private`, and
-`opcache`/`realpath_cache` sizing under mod_php or PHP-FPM.
+Run these against the public domain, not from a shell on the box — the point
+is to see what a stranger sees. Everything except the last two must be denied:
+
+| URL | Expected |
+|---|---|
+| `/sites/default/settings.php` | 403 |
+| `/config/sync/system.site.yml` | 403 |
+| `/composer.json` | 403 |
+| `/.git/config` | 403 |
+| `/docs/backlog.md` | 403 (only after trap 9 is fixed) |
+| `/README.md` | 403 |
+| `/robots.txt` | 200 |
+| `/user/login` | 200, title "Log in \| Acta Total Enterprise Control" |
+
+Also confirm `http://` answers **301** to `https://`, and that the certificate
+names the right domain. Expect a scanner to find the login form within minutes
+of the DNS record going live — one hit the site 20 minutes after launch. That
+is background noise, not a targeted attack, but it is the reason `fail2ban`
+matters and the reason no account should keep a weak password.
+
+## Settled during the real deployment
+
+HTTPS via Certbot with the Apache plugin, which writes `erp-le-ssl.conf`,
+enables the 301 redirect and installs a renewal timer (verify with
+`certbot renew --dry-run`). File ownership and permissions as in step 6.
+Opcache confirmed loaded under PHP-FPM. The PWA "HTTPS off" warning disappears
+by itself once the certificate is in place.
+
+## Still open
+
+Cron scheduling (Ultimate Cron reported 11 jobs behind), outbound mail from
+`erp@anvfightgear.com` with DKIM and DMARC, off-server backups of the
+production database, and a way to reach the site while DNS is still
+propagating (a `hosts` entry, or a temporary `ServerAlias` on the droplet IP —
+note that `trusted_host_patterns` will reject the bare IP by design).
