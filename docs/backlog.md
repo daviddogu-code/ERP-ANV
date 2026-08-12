@@ -24,18 +24,13 @@ por error algo que estaba puesto a propósito.
 
 ## 1. Ahora mismo
 
-- **Borrar y recrear el repositorio en GitHub.** El historial local ya está limpio de la
-  clave de OpenAI, con sus 30 commits intactos, pero el repositorio de GitHub todavía tiene
-  la versión antigua. Hay que borrarlo en Settings → Danger Zone y crear uno nuevo vacío con
-  el mismo nombre `ERP-ANV`, privado y **sin** marcar README, `.gitignore` ni licencia. Luego
-  se suben los 30 commits. Hasta que esto no se haga, la credencial sigue en internet.
-
-## 2. Esta semana
-
 - **Subir a Google Drive los dos zips de copia de seguridad** que están en
   `c:\laragon\backups`: `actatec-db-20260812.zip` (la base de datos) y
   `tec-project-20260812.zip` (el proyecto con las imágenes). Hoy la única copia completa del
   ERP vive en un solo disco duro. GitHub no cubre ni las imágenes ni los datos.
+
+## 2. Esta semana
+
 - **Crear el droplet de Singapur.** Cinco minutos en el panel de DigitalOcean. Las
   características y el porqué están en la sección 7. A partir de ahí el resto es trabajo
   técnico que no requiere decisiones.
@@ -295,9 +290,13 @@ que la reescritura no tocó nada más.
 
 El historial anterior está íntegro en `c:\laragon\backups\git-history-20260812`.
 
-Falta subirlo: hay que borrar el repositorio de GitHub y recrearlo vacío, en vez de forzar la
-subida, porque forzándola los commits viejos seguirían accesibles en los servidores de GitHub
-durante un tiempo.
+El repositorio de GitHub se borró y se recreó vacío, en vez de forzar la subida, porque
+forzándola los commits viejos habrían seguido accesibles en los servidores de GitHub durante
+un tiempo. Sobre el repositorio nuevo se subieron los 31 commits ya limpios.
+
+La comprobación no se hizo mirando la copia local, sino descargando de GitHub una copia
+independiente y revisándola commit a commit: los 31 están limpios y el fichero de la clave
+llega con los dos campos vacíos.
 
 ### 2026-08-12 — Ensayo de despliegue en local
 
