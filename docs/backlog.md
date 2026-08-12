@@ -224,7 +224,29 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   se aplica corte la instalación en voz alta en lugar de pasar desapercibido.
 - **El editor guarda a veces en UTF-16 en vez de UTF-8**, y eso rompe cualquier fichero PHP,
   CSS, JS o Markdown que toque. Ha pasado ya media docena de veces. De momento se detecta y
-  se corrige a mano después de cada edición.
+  se corrige a mano después de cada edición, lo que duplica el coste de tocar un archivo.
+
+  Investigado el 12 de agosto: **no es un problema de configuración de este proyecto, sino un
+  fallo conocido de Cursor en Windows**, confirmado por un empleado suyo el 21 de julio de
+  2026 en el foro oficial. Falla el motor que escribe los ficheros en disco; ni el editor ni
+  la consola tienen nada que ver. Sigue sin corregir: nos ocurrió hoy con la versión 3.15.6,
+  tres semanas después de que lo reconocieran, y no han dado fecha.
+  Informe: https://forum.cursor.com/t/agent-write-tool-creates-new-files-as-bom-less-utf-16le-on-windows-breaking-c-compilation/166312
+
+  Cosas que **no** funcionan, ya probadas por otros usuarios: poner `files.encoding` en los
+  ajustes, el `charset = utf-8` del `.editorconfig` que ya trae el proyecto, y cerrar y
+  reabrir el fichero. El agente se los salta todos. Lo único que funciona, y es lo que
+  recomienda el propio Cursor, es escribir los ficheros desde la consola indicando la
+  codificación a mano.
+
+  Para saber si lo arreglan, el registro de novedades de Cursor no sirve, porque solo anuncia
+  funciones nuevas y esto no aparecería. Hay dos vías: seguir el hilo del foro, donde
+  prometieron avisar, o la prueba directa después de cada actualización, que es escribir un
+  fichero y mirar sus bytes.
+
+  Pendiente de decidir: montar un *hook* de Cursor del tipo `afterFileEdit` que detecte el
+  UTF-16 y lo convierta solo. No arregla el fallo, pero lo vuelve indoloro y protege del caso
+  grave, que es un `.php` mal guardado tumbando el ERP sin motivo aparente.
 - **Limpiar carpetas sobrantes** dentro del proyecto:
   `config/sync.pre-restore-20260810023747` (1.248 archivos) y
   `modules/custom.pre-restore-20260810023746` (134 archivos), restos de una restauración del
