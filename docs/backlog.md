@@ -407,9 +407,12 @@ una puerta obligatoria, no una recomendación. PHP 8.3, que es lo que ya corremo
    las versiones, la actualización arrastra los veinticuatro descuadres.
 
    A cambio se llevan por delante la mayoría de los 82 avisos de seguridad, porque el núcleo,
-   Twig, Guzzle y los polyfills están todos en la lista de lo que sube. Quedarían pendientes
-   solo cuatro paquetes: `eca`, `entity_browser`, `mail_login` y `psy/psysh`. Y aquí
-   `views_aggregator` deja de dar problemas solo.
+   Twig, Guzzle y los polyfills están todos en la lista de lo que sube.
+
+   *Hecho el 13 de agosto. Se cumplió lo previsto —quedaron 2 avisos— salvo una cosa: aquí se
+   decía que `views_aggregator` dejaría de dar problemas solo, y no fue así. Su error 500 no
+   venía del núcleo sino de un fallo propio, y hubo que parchearlo. Ver la Fase 2 en el
+   apartado de Hecho.*
 4. **ECA, de la rama 1 a la 2**, con sus submódulos y con `bpmn_io` de la 1 a la 2. Es un salto
    de versión mayor y mueve las transacciones de inventario, así que es la parte que más hay
    que probar. Importante: **no ir a ECA 3**, que exige Drupal 11.2 o más.
