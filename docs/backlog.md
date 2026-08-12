@@ -24,15 +24,20 @@ por error algo que estaba puesto a propósito.
 
 ## 1. Ahora mismo
 
-- **Confirmar en Git el trabajo del 12 y el 13 de agosto.** Descubierto el 13 al preparar la
-  copia de seguridad: hay **unos 140 ficheros sin confirmar**, y ahí dentro está la limpieza de
-  43 módulos, la retirada de la IA y el backlog entero. Mientras no se confirmen, GitHub no los
-  tiene y el único respaldo son las copias de `C:\laragon\backups`. No es urgente por riesgo de
-  pérdida —las copias existen— sino porque sin confirmar no hay punto al que volver con
-  precisión si la actualización sale mal.
+- **Decidir si se sube el núcleo a 10.6.15.** Es lo único que hay abierto en la actualización.
+  Las fases 0 y 1 están cerradas, el ensayo dice que resuelve sin conflictos, y hay dos razones
+  para hacerlo que van más allá de la seguridad: la Fase 1 **no se puede terminar sin ello**
+  —`views_aggregator` exige 10.3 y corremos 10.2.4— y de paso **arregla el error 500 de la
+  página de pedidos**. Ver el apartado 8.
 
-El ERP ya está publicado en `https://erp.anvfightgear.com` desde el 12 de agosto. Lo que
-queda para que la revisión de Lukpla pueda empezar:
+~~**Confirmar en Git el trabajo del 12 y el 13 de agosto.**~~ Hecho el 13 de agosto en tres
+commits: la limpieza de módulos, la red de seguridad de la Fase 0 y el saneado de Composer.
+
+El ERP ya está publicado en `https://erp.anvfightgear.com` desde el 12 de agosto.
+
+**La revisión de Lukpla queda aparcada** por decisión del dueño el 13 de agosto: se le dirá que
+de momento no entre, para poder trabajar sin la restricción de no romperle nada. Lo que hay
+preparado para cuando se retome:
 
 - ~~**Crear la cuenta de Lukpla.**~~ Hecha, con rol *supervisor*, directamente en el servidor.
 - **Llevar al servidor la limpieza de módulos del 13 de agosto**, con un cuidado que antes no
@@ -352,7 +357,12 @@ una puerta obligatoria, no una recomendación. PHP 8.3, que es lo que ya corremo
 
 ### El orden
 
-1. **Meter en Composer los módulos sueltos y reconciliar las versiones.** Los sueltos son
+1. **Meter en Composer los módulos sueltos y reconciliar las versiones.** *Hecho a medias el 13
+   de agosto: `composer.json` ya describe la realidad —ver la Fase 1 en el apartado de Hecho—,
+   pero **el `lock` no se puede sincronizar hasta subir el núcleo**, porque `views_aggregator`
+   2.1.1 exige `^10.3 || ^11` y corremos 10.2.4. En la práctica esto funde este punto con el 3.*
+
+   Los sueltos eran
    dieciocho de los activos, y los descuadrados **no son cinco sino veinticuatro**, medidos el 13
    de agosto comparando uno a uno el disco contra el `lock`. Entre ellos `ds` (3.22 en disco
    frente a 3.19.0 en el `lock`), `token`, `gin_login`, `jquery_ui`, `better_exposed_filters`,
@@ -569,6 +579,88 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-13 — Fase 1: `composer.json` por fin describe la realidad, y aparece por qué falla la página de pedidos
+
+La fase consistía en poner al día el fichero que dice qué módulos tiene este proyecto, sin mover
+ni una versión. Estaba muy lejos de la realidad. El inventario cruzado de cuatro fuentes —lo que
+pide Composer, lo que tiene apuntado, lo que hay en el disco y lo que Drupal usa de verdad—
+salía así: Composer pedía 100 módulos, tenía apuntados 136, en el disco había 160 y Drupal
+usaba 148.
+
+Lo que se hizo, todo con `--no-update` para que no se instalara ni se borrara nada:
+
+- **Anclados 12 módulos que entraban por la puerta de atrás.** Estaban en uso pero nadie los
+  pedía: llegaban como dependencia de otra cosa. Entre ellos `inline_entity_form` —el del parche
+  delicado—, `flag`, `token`, `tamper` y `color`. Si el día de mañana se quita el módulo que los
+  arrastraba, desaparecen sin avisar.
+- **Quitados 38 que sobraban.** Y aquí una corrección a lo que dijimos el 13 por la mañana: **no
+  son paquetes fantasma**. Los 38 están en el disco, con su código y todo; lo que pasa es que
+  Drupal no los tiene encendidos. Quitarlos del fichero no borra nada hoy. Es la retirada de
+  Commerce entero, la IA, `search_api`, `shield`, `quicklink`, `memcache` y compañía. Antes de
+  tocarlos se comprobó que `settings.php` no menciona ninguno.
+- **Fuera el `merge-plugin`.** Apuntaba a `modules/contrib/charts/modules/charts_billboard/composer.json`.
+  Ni el fichero ni la carpeta `charts` existen, y el módulo no está instalado. El plugin llevaba
+  quién sabe cuánto sin hacer nada.
+- **Metidos 16 de los 18 huérfanos**, cada uno con la versión exacta que corre, verificada una a
+  una contra drupal.org antes de escribirla.
+- **Fijados los seis comodines.** Un `*` significa "cualquier versión", que es lo contrario de
+  reproducible.
+
+**Los tres módulos con historia.** De los 18 huérfanos, 15 eran versiones publicadas normales.
+Los otros tres:
+
+- `pdf_serialization` **ya está resuelto**: es la 2.2.0 más dos parches que estaban tirados
+  dentro de su propia carpeta como `4.patch` y `6.patch`. Se comprobó dos veces que aplicados
+  sobre la 2.2.0 original reproducen exactamente el código del disco. Ahora viven en `patches/`
+  con nombres que se entienden y están declarados en `composer.json`, así que Composer los
+  aplicará solo.
+- `quicktabs` **no es una versión publicada, es un clon de la rama de desarrollo**. Trae
+  `.gitlab-ci.yml` y `phpstan.neon`, que solo aparecen en clones de git, y va por delante de la
+  alpha7. Los cambios que lleva de más son de arriba, no manipulaciones de nadie: el JavaScript
+  cambia `$.cookie` por `window.Cookies`, que es el arreglo conocido para Drupal 10. Se queda
+  fuera de Composer hasta que se decida a qué versión llevarlo.
+- `views_entity_form_field` también se queda fuera, por lo mismo que ya estaba anotado: la
+  versión del disco es anterior a la 8.x-1.2 y su parche no aplica sobre ella.
+
+**Las siete ramas de desarrollo se quedan como están**, a propósito. Son `eca`, `eck`, `bpmn_io`,
+`conditional_fields`, `bootstrap_layout_builder`, `mimemail` y `ultimate_cron`. Fijarlas
+significaría moverlas de versión, y esta fase no mueve versiones. El `lock` ya guarda el commit
+exacto de cada una, así que una instalación desde cero sí es reproducible; el riesgo es solo si
+alguien lanza un `composer update` a pelo.
+
+**El paso que falta y por qué.** Queda sincronizar el `lock`, y no se puede. El ensayo acotado
+falla con un mensaje que lo explica todo: **`views_aggregator` 2.1.1 exige núcleo `^10.3 || ^11`
+y nosotros corremos 10.2.4**. Es el único módulo del disco en esa situación.
+
+Y esto cierra un círculo. Es exactamente el error 500 de la página de pedidos que diagnosticamos
+leyendo el código el 13 de agosto, solo que ahora lo dice Composer por su cuenta y con otras
+palabras. No era una casualidad ni un fallo raro del módulo: el sitio lleva tiempo ejecutando un
+módulo fuera del rango de versiones que su propio autor declara soportar. **La Fase 1 no se
+puede terminar sin subir el núcleo**, y subir el núcleo arregla la página de pedidos de paso.
+
+**El ensayo completo, que es el dato gordo del día.** Un `composer update` de todo, simulado sin
+tocar nada, **resuelve sin un solo conflicto**: 29 instalaciones, 107 actualizaciones y 69
+retiradas. El núcleo llegaría a 10.6.15 y los avisos de seguridad bajarían **de 82 a uno**.
+
+No se hizo, y no se debe hacer así. Serían las fases 2, 3 y 4 de una sentada, con 107 cambios a
+la vez y ninguna forma de saber cuál rompió qué si algo falla. Pero deja probado que el camino
+entero está despejado, que era la duda de fondo. Ojo a dos cosas que aparecen en esa lista y hay
+que tratar con cuidado cuando toque: `eca_ui` saltaría de la 1.1.5 a la 2.1.22, y `eca` movería
+de commit. Eso mueve las transacciones de inventario.
+
+**El informe de `upgrade_status`, que terminó esa misma noche.** 165 proyectos, 84.396 líneas.
+23 hallazgos de "arreglar ya" y 18.936 de "revisar a mano". Los 18.936 son ruido de la
+herramienta —"llamada a método no definido", "acceso a propiedad no definida"—, los falsos
+positivos típicos de analizar código ajeno sin contexto completo. De los 23 importantes,
+**ninguno está en nuestro código** y la mayoría están en ficheros de prueba que no se ejecutan
+en producción. Los reales son funciones que Drupal 11 retira, en `eck`, `entity_browser`, `flag`
+y `flood_control`, y las versiones nuevas de esos módulos ya las tienen arregladas. Ocho
+proyectos salen completamente limpios, y uno de ellos es **`TEC Production`**, nuestro módulo
+grande.
+
+El inventario quedó guardado como `scripts/inventario-composer.php`. Se vuelve a lanzar con
+`drush scr scripts/inventario-composer.php` y no modifica nada, solo cuenta.
 
 ### 2026-08-13 — Fase 0 de la actualización: la red de seguridad, y un parche que llevaba meses sin poder aplicarse solo
 
