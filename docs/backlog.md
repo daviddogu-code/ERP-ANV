@@ -24,22 +24,12 @@ por error algo que estaba puesto a propósito.
 
 ## 1. Ahora mismo
 
-- **Renombrar en Google Drive la carpeta `2026-08-12`**, dentro de `Backups ERP-ANV`, a
-  `2026-08-12 PRE-limpieza - NO usar para desplegar`. Los dos zips se subieron por la mañana,
-  horas antes de quitar la clave de OpenAI, así que llevan dentro las credenciales del
-  programador anterior. Como copia de seguridad sirven igual, pero si alguien los usa de
-  ingrediente el día del despliegue, la clave reaparece en el servidor nuevo y el trabajo del
-  12 de agosto se pierde. Son diez segundos y evitan un accidente difícil de detectar.
+- **Configurar el servidor de Singapur**, que ya existe y está vacío. Es la lista entera de
+  la sección 3 y da para una tarde. No requiere decisiones del dueño salvo los tres puntos de
+  correo y el de las cuentas de usuario.
 
 ## 2. Esta semana
 
-- **Crear una llave SSH.** No hay ninguna en el PC. Va primero porque DigitalOcean pregunta
-  al crear el droplet cómo se va a entrar, y sin llave registrada solo deja elegir contraseña
-  de administrador por correo, que es justo lo que el plan descarta. Lo hace el agente en un
-  minuto; al dueño solo le toca pegar la parte pública en el panel.
-- **Crear el droplet de Singapur.** Cinco minutos en el panel de DigitalOcean, después de la
-  llave. Las características y el porqué están en la sección 7. A partir de ahí el resto es
-  trabajo técnico que no requiere decisiones.
 - **Guardar los diez códigos de recuperación de Namecheap** fuera del móvil, en Drive o
   impresos. Namecheap no permite dos métodos de 2FA a la vez, así que si se pierde el
   teléfono esos códigos son la única forma de entrar en el dominio.
@@ -282,6 +272,26 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-12 — El servidor de Singapur, creado
+
+Existe y responde. Se llama `erp-anv-sgp1`, su dirección pública es **188.166.255.1**, corre
+Ubuntu 24.04.4 LTS con 2 GB de memoria, 1 CPU y 50 GB de disco, y cuesta 15,60 al mes con las
+copias diarias incluidas, que se hacen de 3 a 7 de la madrugada hora de Tailandia.
+
+Se entra con llave SSH, sin contraseñas. La llave se creó ese mismo día en el PC del dueño
+(`C:\Users\Acer\.ssh\id_ed25519`, tipo ed25519, sin frase de paso para que los despliegues no
+pidan teclear nada). La mitad privada no tiene copia todavía: **si se pierde ese archivo se
+pierde el acceso al servidor**, y recuperarlo obliga a pasar por el panel de DigitalOcean.
+Hay que resolverlo durante la configuración.
+
+La razón de todo el traslado quedó medida: desde el PC de la fábrica, el servidor de Singapur
+responde en **33 milisegundos**, frente a los 250 del de Nueva York. Siete veces más rápido,
+que es la diferencia entre un ERP que va suelto y uno que va a tirones.
+
+Un detalle para la configuración: la máquina no tiene memoria de intercambio (*swap*)
+configurada. Con 2 GB reales conviene añadirla, porque `composer install` necesita cerca de
+1 GB él solo y, si se queda corto, Linux mata el proceso a media faena sin explicar por qué.
 
 ### 2026-08-12 — Las copias, fuera del disco duro
 
