@@ -4,25 +4,27 @@ namespace Drupal\entity_browser\Plugin\EntityBrowser\Display;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\entity_browser\Attribute\EntityBrowserDisplay;
 use Drupal\entity_browser\DisplayBase;
 use Drupal\entity_browser\DisplayRouterInterface;
 use Drupal\entity_browser\Events\AlterEntityBrowserDisplayData;
 use Drupal\entity_browser\Events\Events;
 use Drupal\entity_browser\Events\RegisterJSCallbacks;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 /**
  * Presents entity browser in an iFrame.
- *
- * @EntityBrowserDisplay(
- *   id = "iframe",
- *   label = @Translation("iFrame"),
- *   description = @Translation("Displays the entity browser in an iFrame container embedded into the main page."),
- *   uses_route = TRUE
- * )
  */
+#[EntityBrowserDisplay(
+  id: 'iframe',
+  label: new TranslatableMarkup('iFrame'),
+  description: new TranslatableMarkup('Displays the entity browser in an iFrame container embedded into the main page.'),
+  uses_route: TRUE
+)]
 class IFrame extends DisplayBase implements DisplayRouterInterface {
 
   /**
@@ -95,6 +97,13 @@ class IFrame extends DisplayBase implements DisplayRouterInterface {
     $js_event_object->registerCallback('Drupal.entityBrowser.selectionCompleted');
     $callback_event = $this->eventDispatcher->dispatch($js_event_object, Events::REGISTER_JS_CALLBACKS);
     $original_path = $this->currentPath->getPath();
+
+    if (!empty($original_path) && strpos($original_path, '/entity-embed/dialog') === 0) {
+      if (!empty($_SERVER['HTTP_REFERER'])) {
+        $request = Request::create($_SERVER['HTTP_REFERER']);
+        $original_path = $request->getPathInfo();
+      }
+    }
 
     $data = [
       'query_parameters' => [
@@ -190,6 +199,8 @@ class IFrame extends DisplayBase implements DisplayRouterInterface {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildConfigurationForm($form, $form_state);
+
     $configuration = $this->getConfiguration();
     $form['width'] = [
       '#type' => 'textfield',

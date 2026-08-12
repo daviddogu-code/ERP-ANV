@@ -1,3 +1,0 @@
-administer commerce_pricelist:
-  title: 'Administer price lists'
-  'restrict access': TRUE

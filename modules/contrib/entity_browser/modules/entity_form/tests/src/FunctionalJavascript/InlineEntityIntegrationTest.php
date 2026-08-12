@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser_entity_form\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
 /**
@@ -9,6 +11,8 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  *
  * @group entity_browser_entity_form
  */
+#[Group('entity_browser_entity_form')]
+#[RunTestsInSeparateProcesses]
 class InlineEntityIntegrationTest extends WebDriverTestBase {
 
   /**
@@ -62,7 +66,6 @@ class InlineEntityIntegrationTest extends WebDriverTestBase {
     $this->assertSession()
       ->selectExists('fields[field_content_reference][region]')
       ->selectOption('content');
-    $this->assertSession()->assertWaitOnAjaxRequest();
 
     // Switch to using inline_entity_form_complex, so we can test
     // entity browser alterations to field widget settings form.

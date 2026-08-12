@@ -6,18 +6,19 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserFieldWidgetDisplay;
 use Drupal\entity_browser\FieldWidgetDisplayBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Displays the fully rendered entity.
- *
- * @EntityBrowserFieldWidgetDisplay(
- *   id = "rendered_entity",
- *   label = @Translation("Rendered entity"),
- *   description = @Translation("Displays fully rendered entity.")
- * )
  */
+#[EntityBrowserFieldWidgetDisplay(
+  id: 'rendered_entity',
+  label: new TranslatableMarkup('Rendered entity'),
+  description: new TranslatableMarkup('Displays fully rendered entity.'),
+)]
 class RenderedEntity extends FieldWidgetDisplayBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -55,8 +56,8 @@ class RenderedEntity extends FieldWidgetDisplayBase implements ContainerFactoryP
         '@title' => $entity->label(),
       ];
       $restricted_access_label = $entity->access('view label')
-       ?  new FormattableMarkup('@label @id (@title)', $parameters)
-       :  new FormattableMarkup('@label @id', $parameters);
+       ? new FormattableMarkup('@label @id (@title)', $parameters)
+       : new FormattableMarkup('@label @id', $parameters);
       return ['#markup' => $restricted_access_label];
     }
 

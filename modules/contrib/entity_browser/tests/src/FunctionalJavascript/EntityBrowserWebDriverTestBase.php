@@ -251,7 +251,7 @@ abstract class EntityBrowserWebDriverTestBase extends WebDriverTestBase {
   }
 
   /**
-   * Checks that a specific radio input element does not exist on the current page.
+   * Checks that a specific radio input element does not exist on the page.
    *
    * @param string $value
    *   The string value of the radio element.
@@ -285,7 +285,7 @@ abstract class EntityBrowserWebDriverTestBase extends WebDriverTestBase {
   }
 
   /**
-   * Checks that a specific checkbox input element does not exist on the current page.
+   * Checks that a specific checkbox input element does not exist on the page.
    *
    * @param string $value
    *   The string value of the radio element.
@@ -299,6 +299,19 @@ abstract class EntityBrowserWebDriverTestBase extends WebDriverTestBase {
     $value = (string) $value;
     return $this->assertSession()
       ->elementNotExists('xpath', "//input[contains(@type, 'checkbox') and contains(@value, '" . $value . "')]");
+  }
+
+  /**
+   * Checks the core version.
+   *
+   * @param string $version
+   *   The core version, for example 10.2.
+   *
+   * @return bool
+   *   Whether the core version is higher than the requested one.
+   */
+  protected function coreVersion(string $version): bool {
+    return version_compare(\Drupal::VERSION, $version, '>=');
   }
 
 }

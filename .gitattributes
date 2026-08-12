@@ -42,13 +42,8 @@
 *.xml     text eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tab-in-indent,tabwidth=2
 *.yml     text eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tab-in-indent,tabwidth=2
 
-# Patch files must keep Unix line endings on every platform.
-# Drupal's own list does not cover *.patch, so on Windows with core.autocrlf=true
-# they get checked out with CRLF while their target files stay LF. Composer then
-# applies patches with `git apply`, which refuses the mismatch outright, and falls
-# back to the `patch` binary, which may not be installed. The result is a patch
-# that silently never applies. See docs/backlog.md, 2026-08-13.
-*.patch   text eol=lf
+# PHPStan's baseline uses tabs instead of spaces.
+core/.phpstan-baseline.php text eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tabwidth=2 diff=php linguist-language=php
 
 # Define binary file attributes.
 # - Do not treat them as text.
@@ -67,3 +62,15 @@
 *.ttf     -text diff
 *.woff    -text diff
 *.woff2   -text diff
+
+
+# Patch files must keep Unix line endings on every platform.
+# Drupal's own list does not cover *.patch, so on Windows with core.autocrlf=true
+# they get checked out with CRLF while their target files stay LF. Composer then
+# applies patches with `git apply`, which refuses the mismatch outright, and falls
+# back to the `patch` binary, which may not be installed. The result is a patch
+# that silently never applies. See docs/backlog.md, 2026-08-13.
+#
+# This block is appended by Composer's scaffolding on every install, because a
+# plain core update overwrites .gitattributes and would otherwise erase it.
+*.patch   text eol=lf

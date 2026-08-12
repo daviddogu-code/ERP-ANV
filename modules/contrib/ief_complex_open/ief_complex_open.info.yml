@@ -1,7 +1,0 @@
-name: IEF Complex Open
-description: Inline entity form complex widget with add existing open by default.
-type: module
-package: Fields
-core_version_requirement: ^8.8 || ^9 || ^10
-dependencies:
-  - inline_entity_form:inline_entity_form

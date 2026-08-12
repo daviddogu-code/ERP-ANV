@@ -1,5 +1,0 @@
-services:
-  symfony_mailer_log.settings_config:
-    class: Drupal\symfony_mailer_log\Config\SymfonyMailerLogSettingsConfig
-    arguments:
-      - '@config.factory'

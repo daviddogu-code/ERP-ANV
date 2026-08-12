@@ -2,24 +2,25 @@
 
 namespace Drupal\entity_browser\Plugin\EntityBrowser\WidgetSelector;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserWidgetSelector;
 use Drupal\entity_browser\WidgetSelectorBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Displays entity browser widgets as tabs.
- *
- * @EntityBrowserWidgetSelector(
- *   id = "tabs",
- *   label = @Translation("Tabs"),
- *   description = @Translation("Creates horizontal tabs on the top of the entity browser, each tab representing one available widget.")
- * )
  */
+#[EntityBrowserWidgetSelector(
+  id: 'tabs',
+  label: new TranslatableMarkup('Tabs'),
+  description: new TranslatableMarkup("Creates horizontal tabs on the top of the entity browser, each tab representing one available widget."),
+)]
 class Tabs extends WidgetSelectorBase {
 
   /**
    * {@inheritdoc}
    */
-  public function getForm(array &$form = [], FormStateInterface &$form_state = NULL) {
+  public function getForm(array &$form = [], ?FormStateInterface &$form_state = NULL) {
     $element = [];
     /** @var \Drupal\entity_browser\EntityBrowserInterface $browser */
     $browser = $form_state->getFormObject()->getEntityBrowser();
@@ -54,6 +55,7 @@ class Tabs extends WidgetSelectorBase {
         return $trigger['#widget_id'];
       }
     }
+    return '';
   }
 
 }

@@ -1,6 +1,0 @@
-services:
-  file_resup_media_library.build_form:
-    class: Drupal\file_resup_media_library\EventSubscriber\BuildForm
-    arguments: ['@form_builder', '@entity_type.manager']
-    tags:
-      - { name: event_subscriber }

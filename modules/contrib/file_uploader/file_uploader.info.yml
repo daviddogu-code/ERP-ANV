@@ -1,9 +1,9 @@
 name: "File Uploader"
 type: module
 description: "JavaScript file uploader framework."
-core_version_requirement: "^9 || ^10"
+core_version_requirement: "^9 || ^10 || ^11"
 
-# Information added by Drupal.org packaging script on 2023-11-06
-version: '1.0.8'
+# Information added by Drupal.org packaging script on 2025-03-10
+version: '1.1.0'
 project: 'file_uploader'
-datestamp: 1699291752
+datestamp: 1741650292

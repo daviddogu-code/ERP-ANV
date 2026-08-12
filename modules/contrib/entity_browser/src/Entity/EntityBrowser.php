@@ -3,11 +3,19 @@
 namespace Drupal\entity_browser\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\Attribute\ConfigEntityType;
+use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
 use Drupal\Core\Plugin\DefaultSingleLazyPluginCollection;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Controllers\EntityBrowserListBuilder;
 use Drupal\entity_browser\DisplayRouterInterface;
 use Drupal\entity_browser\EntityBrowserInterface;
+use Drupal\entity_browser\Form\EntityBrowserDeleteForm;
+use Drupal\entity_browser\Form\EntityBrowserEditForm;
+use Drupal\entity_browser\Form\EntityBrowserForm;
+use Drupal\entity_browser\Form\WidgetsConfig;
 use Drupal\entity_browser\WidgetInterface;
 use Drupal\entity_browser\WidgetsCollection;
 use Symfony\Component\Routing\Route;
@@ -30,7 +38,6 @@ use Symfony\Component\Routing\Route;
  *     "list_builder" = "Drupal\entity_browser\Controllers\EntityBrowserListBuilder",
  *   },
  *   links = {
- *     "canonical" = "/admin/config/content/entity_browser/{entity_browser}",
  *     "collection" = "/admin/config/content/entity_browser",
  *     "edit-form" = "/admin/config/content/entity_browser/{entity_browser}/edit",
  *     "edit-widgets" = "/admin/config/content/entity_browser/{entity_browser}/edit_widgets",
@@ -55,6 +62,44 @@ use Symfony\Component\Routing\Route;
  *   },
  * )
  */
+#[ConfigEntityType(
+  id: 'entity_browser',
+  label: new TranslatableMarkup('Entity browser'),
+  config_prefix: 'browser',
+  entity_keys: [
+    'id' => 'name',
+    'label' => 'label'
+  ],
+  handlers: [
+    'form' => [
+      'entity_browser' => EntityBrowserForm::class,
+      'default' => EntityBrowserEditForm::class,
+      'edit' => EntityBrowserEditForm::class,
+      'delete' => EntityBrowserDeleteForm::class,
+      'edit_widgets' => WidgetsConfig::class,
+    ],
+    'access' => EntityAccessControlHandler::class,
+    'list_builder' => EntityBrowserListBuilder::class,
+  ],
+  links: [
+    'collection' => '/admin/config/content/entity_browser',
+    'edit-form' => '/admin/config/content/entity_browser/{entity_browser}/edit',
+    'edit-widgets' => '/admin/config/content/entity_browser/{entity_browser}/edit_widgets',
+    'delete-form' => '/admin/config/content/entity_browser/{entity_browser}/delete',
+  ],
+  admin_permission: 'administer entity browsers',
+  config_export: [
+    'name',
+    'label',
+    'display',
+    'display_configuration',
+    'selection_display',
+    'selection_display_configuration',
+    'widget_selector',
+    'widget_selector_configuration',
+    'widgets',
+  ],
+)]
 class EntityBrowser extends ConfigEntityBase implements EntityBrowserInterface, EntityWithPluginCollectionInterface {
 
   /**
@@ -154,13 +199,6 @@ class EntityBrowser extends ConfigEntityBase implements EntityBrowserInterface, 
    * @var array
    */
   protected $additional_widget_parameters = [];
-
-  /**
-   * Name of the form class.
-   *
-   * @var string
-   */
-  protected $form_class = '\Drupal\entity_browser\Form\EntityBrowserForm';
 
   /**
    * {@inheritdoc}
@@ -320,7 +358,7 @@ class EntityBrowser extends ConfigEntityBase implements EntityBrowserInterface, 
    * {@inheritdoc}
    */
   public function addAdditionalWidgetParameters(array $parameters) {
-    // TODO - this doesn't make much sense. Refactor.
+    // @todo this doesn't make much sense. Refactor.
     $this->additional_widget_parameters += $parameters;
     return $this;
   }
@@ -329,7 +367,7 @@ class EntityBrowser extends ConfigEntityBase implements EntityBrowserInterface, 
    * {@inheritdoc}
    */
   public function getAdditionalWidgetParameters() {
-    // TODO - this doesn't make much sense. Refactor.
+    // @todo this doesn't make much sense. Refactor.
     return $this->get('additional_widget_parameters');
   }
 
@@ -383,10 +421,11 @@ class EntityBrowser extends ConfigEntityBase implements EntityBrowserInterface, 
    * {@inheritdoc}
    */
   public function route() {
-    // TODO: Allow displays to define more than just path.
+    // @todo Allow displays to define more than just path.
     // See: https://www.drupal.org/node/2364193
     $display = $this->getDisplay();
     if ($display instanceof DisplayRouterInterface) {
+      $config = $display->getConfiguration();
       $path = $display->path();
       return new Route(
         $path,
@@ -396,7 +435,7 @@ class EntityBrowser extends ConfigEntityBase implements EntityBrowserInterface, 
           'entity_browser_id' => $this->id(),
         ],
         ['_permission' => 'access ' . $this->id() . ' entity browser pages'],
-        ['_admin_route' => \Drupal::config('node.settings')->get('use_admin_theme')]
+        ['_admin_route' => $config['use_admin_theme'] ?? FALSE]
       );
     }
 
@@ -425,7 +464,7 @@ class EntityBrowser extends ConfigEntityBase implements EntityBrowserInterface, 
    * Prevents plugin collections from being serialized and correctly serializes
    * selected entities.
    */
-  public function __sleep() {
+  public function __sleep(): array {
     // Save configuration for all plugins.
     $this->widgets = $this->getWidgets()->getConfiguration();
     $this->widget_selector_configuration = $this->widgetSelectorPluginCollection()->getConfiguration();
@@ -468,9 +507,10 @@ class EntityBrowser extends ConfigEntityBase implements EntityBrowserInterface, 
    * {@inheritdoc}
    */
   public function getFormObject() {
-    $form_class = \Drupal::service('class_resolver')->getInstanceFromDefinition($this->form_class);
-    $form_class->setEntityBrowser($this);
-    return $form_class;
+    $form_class = $this->getEntityType()->getFormClass('entity_browser');
+    $form_obj = \Drupal::service('class_resolver')->getInstanceFromDefinition($form_class);
+    $form_obj->setEntityBrowser($this);
+    return $form_obj;
   }
 
   /**

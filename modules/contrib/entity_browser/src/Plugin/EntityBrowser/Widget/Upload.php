@@ -4,20 +4,21 @@ namespace Drupal\entity_browser\Plugin\EntityBrowser\Widget;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\entity_browser\Attribute\EntityBrowserWidget;
 use Drupal\entity_browser\WidgetBase;
 use Drupal\file\FileInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Adds an upload field browser's widget.
- *
- * @EntityBrowserWidget(
- *   id = "upload",
- *   label = @Translation("Upload"),
- *   description = @Translation("Adds an upload field browser's widget."),
- *   auto_select = FALSE
- * )
  */
+#[EntityBrowserWidget(
+  id: 'upload',
+  label: new TranslatableMarkup('Upload'),
+  description: new TranslatableMarkup("Adds an upload field browser's widget."),
+  auto_select: FALSE
+)]
 class Upload extends WidgetBase {
 
   /**
@@ -72,7 +73,7 @@ class Upload extends WidgetBase {
       // more than one value.
       '#multiple' => $field_cardinality != 1 && $this->configuration['multiple'],
       '#upload_validators' => array_merge([
-        'file_validate_extensions' => [$this->configuration['extensions']],
+        'FileExtension' => ['extensions' => $this->configuration['extensions']],
       ], $upload_validators),
     ];
 

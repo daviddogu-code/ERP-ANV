@@ -82,7 +82,7 @@ class EntityBrowserFormController extends HtmlFormController implements Containe
    */
   protected function getFormObject(RouteMatchInterface $route_match, $form_arg) {
     $browser = $this->loadBrowser();
-    if ($original_path = $this->request->get('original_path')) {
+    if ($original_path = $this->request->query->get('original_path')) {
       $browser->addAdditionalWidgetParameters(['path_parts' => explode('/', $original_path)]);
     }
 
@@ -104,9 +104,9 @@ class EntityBrowserFormController extends HtmlFormController implements Containe
    *   Loads the entity browser object
    */
   protected function loadBrowser() {
-    /* @var $route \Symfony\Component\Routing\Route */
+    /** @var \Symfony\Component\Routing\Route $route */
     $route = $this->currentRouteMatch->getRouteObject();
-    /* @var $browser \Drupal\entity_browser\EntityBrowserInterface */
+    /** @var \Drupal\entity_browser\EntityBrowserInterface $browser */
     return $this->browserStorage->load($route->getDefault('entity_browser_id'));
   }
 

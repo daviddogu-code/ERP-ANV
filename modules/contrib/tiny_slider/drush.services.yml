@@ -1,7 +1,0 @@
-services:
-  tiny_slider.commands:
-    class: \Drupal\tiny_slider\Commands\TinySliderCommands
-    arguments:
-      - '@library.discovery'
-    tags:
-      - { name: drush.command }

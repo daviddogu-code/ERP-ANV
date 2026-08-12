@@ -1,6 +1,0 @@
-parameters:
-	ignoreErrors:
-		-
-			message: "#^Method Drupal\\\\commerce_pricelist\\\\Form\\\\PriceListItemForm\\:\\:save\\(\\) should return int but return statement is missing\\.$#"
-			count: 1
-			path: src/Form/PriceListItemForm.php

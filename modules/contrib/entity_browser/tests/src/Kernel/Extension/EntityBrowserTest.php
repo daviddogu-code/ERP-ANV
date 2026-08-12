@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\Kernel\Extension;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
@@ -21,6 +23,8 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class EntityBrowserTest extends KernelTestBase {
 
   /**
@@ -69,8 +73,6 @@ class EntityBrowserTest extends KernelTestBase {
     $this->controller = $this->container->get('entity_type.manager')->getStorage('entity_browser');
     $this->widgetUUID = $this->container->get('uuid')->generate();
     $this->routeProvider = $this->container->get('router.route_provider');
-
-    $this->installSchema('system', ['sequences']);
     View::create(['id' => 'test_view'])->save();
   }
 
@@ -94,7 +96,10 @@ class EntityBrowserTest extends KernelTestBase {
       'name' => 'test_browser',
       'label' => 'Testing entity browser instance',
       'display' => 'standalone',
-      'display_configuration' => ['path' => 'test-browser-test'],
+      'display_configuration' => [
+        'path' => 'test-browser-test',
+        'use_admin_theme' => TRUE,
+      ],
       'selection_display' => 'no_display',
       'selection_display_configuration' => [],
       'widget_selector' => 'single',
@@ -169,7 +174,10 @@ class EntityBrowserTest extends KernelTestBase {
       'name' => 'test_browser',
       'label' => 'Testing entity browser instance',
       'display' => 'standalone',
-      'display_configuration' => ['path' => 'test-browser-test'],
+      'display_configuration' => [
+        'path' => 'test-browser-test',
+        'use_admin_theme' => TRUE,
+      ],
       'selection_display' => 'no_display',
       'selection_display_configuration' => [],
       'widget_selector' => 'single',
@@ -286,11 +294,17 @@ class EntityBrowserTest extends KernelTestBase {
         ->translate('Access pages that %browser uses to operate.', ['%browser' => $entity->label()])
         ->render(),
       'provider' => 'entity_browser',
+      'dependencies' => [
+        'config' => [
+          'entity_browser.browser.test',
+        ],
+      ],
     ];
 
     $this->assertSame($permissions[$expected_permission_name]['title']->render(), $expected_permission['title'], 'Dynamically generated permission title found.');
     $this->assertSame($permissions[$expected_permission_name]['description']->render(), $expected_permission['description'], 'Dynamically generated permission description found.');
     $this->assertSame($permissions[$expected_permission_name]['provider'], $expected_permission['provider'], 'Dynamically generated permission provider found.');
+    $this->assertSame($permissions[$expected_permission_name]['dependencies'], $expected_permission['dependencies'], 'Dynamically generated permission dependencies found.');
   }
 
   /**

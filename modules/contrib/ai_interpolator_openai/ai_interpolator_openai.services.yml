@@ -1,4 +1,0 @@
-services:
-  ai_interpolator_openai.request:
-    class: Drupal\ai_interpolator_openai\OpenAiRequester
-    arguments: ['@openai.client']

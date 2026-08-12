@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorageException;
 
 /**
@@ -9,6 +11,8 @@ use Drupal\Core\Entity\Sql\SqlContentEntityStorageException;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class PluginsTest extends EntityBrowserWebDriverTestBase {
 
   /**
@@ -167,14 +171,18 @@ class PluginsTest extends EntityBrowserWebDriverTestBase {
 
     $this->assertSession()->waitForField('entity_browser_select[file:' . $unicorn_image->id() . ']')->check();
     $this->getSession()->getPage()->pressButton('Select entities');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()
       ->waitForElement('css', '#edit-selected-items-2-1-remove-button');
     $this->assertSession()
       ->waitForElement('css', '#edit-selected-items-1-0-remove-button');
     $this->getSession()->getPage()->pressButton('Use selected');
-    $this->getSession()->switchToIFrame();
     $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->switchToIFrame();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
+
     $this->assertSession()->pageTextContains('dragon_0.jpg');
     $this->assertSession()->pageTextContains('unicorn.jpg');
   }
@@ -214,6 +222,7 @@ class PluginsTest extends EntityBrowserWebDriverTestBase {
     $standalone_configuration = [
       'entity_browser_id' => 'test_entity_browser_file',
       'path' => 'test',
+      'use_admin_theme' => TRUE,
     ];
     $this->getEntityBrowser('test_entity_browser_file', 'standalone', 'single', 'no_display', $standalone_configuration);
 
@@ -225,7 +234,7 @@ class PluginsTest extends EntityBrowserWebDriverTestBase {
     $this->getSession()->getPage()->checkField('entity_browser_select[file:' . $image->id() . ']');
     $this->getSession()->getPage()->pressButton('Select entities');
 
-    // TODO test if entities were selected. Will most likely need a custom event
+    // @todo test if entities were selected. Will most likely need a custom event
     // subscriber that displays a message or something along those lines.
   }
 

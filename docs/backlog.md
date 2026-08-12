@@ -24,11 +24,13 @@ por error algo que estaba puesto a propósito.
 
 ## 1. Ahora mismo
 
-- **Decidir si se sube el núcleo a 10.6.15.** Es lo único que hay abierto en la actualización.
-  Las fases 0 y 1 están cerradas, el ensayo dice que resuelve sin conflictos, y hay dos razones
-  para hacerlo que van más allá de la seguridad: la Fase 1 **no se puede terminar sin ello**
-  —`views_aggregator` exige 10.3 y corremos 10.2.4— y de paso **arregla el error 500 de la
-  página de pedidos**. Ver el apartado 8.
+- **Llevar al servidor el salto a Drupal 10.6.15.** Hecho en local el 13 de agosto; el servidor
+  sigue en 10.2.4 con los 82 avisos de seguridad. Es lo más urgente de la lista. Antes de
+  desplegar hay que leerse los cuatro tropiezos del apartado de Hecho, porque los tres primeros
+  volverán a salir allí: Composer plantándose en `vendor/symfony/css-selector`, `drush updatedb`
+  sin funcionar y las versiones de esquema que no se guardan.
+- **Decidir hasta dónde se sigue con las fases 3 y 4.** Lo que queda es ECA de la rama 1 a la 2,
+  los temas —que son la parte cara— y el resto de módulos. Ver el apartado 8.
 
 ~~**Confirmar en Git el trabajo del 12 y el 13 de agosto.**~~ Hecho el 13 de agosto en tres
 commits: la limpieza de módulos, la red de seguridad de la Fase 0 y el saneado de Composer.
@@ -579,6 +581,85 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-13 — Fase 2: el ERP corre en Drupal 10.6.15, la página de pedidos vuelve a abrir y quedan 2 alertas de seguridad de 82
+
+Dos años y medio de parches sin aplicar, puestos en una noche. **El núcleo pasa de 10.2.4 a
+10.6.15**, la última de la rama 10, que es la puerta obligatoria para llegar algún día a Drupal
+11. Las 35 comprobaciones del ERP pasan, las páginas que se probaron responden y no ha hecho
+falta tocar nada del contenido.
+
+**Cómo se hizo, y por qué así.** El ensayo de una actualización completa resolvía sin
+conflictos, pero eran 107 cambios a la vez. Se hizo la versión acotada: subir solo el núcleo y
+lo que arrastra. Resultado, **27 actualizaciones en vez de 107, y de módulos contribuidos se
+movió uno solo**, `entity_browser` (2.10 → 2.17), porque el suyo no servía para el núcleo nuevo.
+ECA, ECK, los temas y todo lo demás se quedaron donde estaban, que era justo la intención.
+
+De paso Composer **borró del disco los 48 módulos muertos**: las carpetas de `modules/contrib`
+bajaron de 157 a 109. Ahí se fue el código de la IA que llevaba desde el 12 de agosto esperando
+a poder quitarse, más Commerce entero, `search_api`, `shield`, `quicklink` y `memcache`.
+
+**Las alertas de seguridad, de 82 en 10 paquetes a 2 en 2.** Las que quedan son `eca` —de
+gravedad baja, se va con el salto a ECA 2— y `psy/psysh`, que es una dependencia de Drush y solo
+afecta en local. Por el camino se actualizó también `mail_login` de la 3.0.0 a la 4.2.2, que
+tenía un aviso **crítico de salto de control de acceso** (SA-CONTRIB-2025-088).
+
+**La página de pedidos ya abre**, y no fue como yo había anticipado. Dije que subir el núcleo la
+arreglaría sola porque `views_aggregator` pedía 10.3; me equivoqué. Eso era la declaración de
+compatibilidad del módulo, no la causa del error 500. El fallo era suyo: `getCellRaw()` promete
+devolver texto, pero varias de sus ramas pueden devolver `false` —`reset()` sobre un array
+vacío, un campo booleano— y eso tumba la página entera con un `TypeError`. Está arreglado con un
+parche nuestro, registrado en Composer, que devuelve celda vacía en esos casos. `/tec_order/348`
+pasa de 500 a 200 con 352 KB.
+
+**Cuatro tropiezos que conviene tener anotados**, porque los tres primeros volverán a pasar en
+el servidor.
+
+1. **Composer se plantó a mitad.** `vendor/symfony/css-selector` estaba instalado desde git y
+   tenía "cambios sin confirmar", así que Composer se negó a borrarlo. No era corrupción: es el
+   propio plugin `core-vendor-hardening` de Drupal, que elimina las carpetas `Tests/` de
+   `vendor` por seguridad, y Git las ve como borrados pendientes. Hay **43 paquetes instalados
+   desde git y 18 de ellos están así**. Se resolvió borrando a mano las tres carpetas que
+   Composer necesitaba mover y relanzando. Si vuelve a pasar, es lo mismo.
+2. **`drush updatedb` no funciona en este equipo.** Drush se relanza a sí mismo en un
+   subproceso con la ruta en barras normales, y `cmd.exe` no la reconoce. Además no existe
+   `vendor\bin\drush.bat`. Se hizo un script propio, `scripts/actualizar-bd.php`, que llama a
+   la misma interfaz de Drupal sin subprocesos.
+3. **Y ese script tenía un fallo silencioso muy feo.** Las cuatro actualizaciones se ejecutaban
+   pero **la versión del esquema no se guardaba**, así que volvían a salir como pendientes una y
+   otra vez. La causa está en `core/includes/update.inc` línea 213: solo apunta la versión si
+   `$context['finished']` vale 1, y esa clave únicamente se rellena sola cuando la actualización
+   trabaja por lotes. Hay que inicializarla a mano. Ya está corregido y verificado:
+   `system` 10201 → 10600, `entity_browser` 8201 → 8202, `locale` 10100 → 10300.
+4. **El andamiaje del núcleo se llevó por delante `.gitattributes`**, y con él la línea
+   `*.patch text eol=lf` que se había puesto esa misma noche en la Fase 0. O sea que el arreglo
+   duró unas horas. Ahora está resuelto de verdad: la línea vive en
+   `scaffold/gitattributes-append.txt` y `composer.json` le dice al andamiaje que la **añada**
+   en cada instalación en vez de sobrescribir el fichero. Verificado relanzando el andamiaje.
+
+**Dos regresiones que se detectaron a tiempo, y lo que enseñan.** Al reinstalar los módulos que
+Composer no conocía, escribió las versiones publicadas encima de código que estaba por delante.
+`file_uploader` perdió el arreglo de los validadores de ficheros de Drupal 10.2 y `verf` perdió
+tres parches. Se vieron comparando con Git antes de confirmar.
+
+- `file_uploader` se dejó en la **1.1.0**, porque esa versión ya trae el arreglo de arriba. Lo
+  que había en el disco era un parcheo manual que además **había fallado a medias**: quedaban un
+  `.orig` y un `.rej` en la carpeta, que son los restos de una aplicación rechazada.
+- `verf` se devolvió a la **2.0.2** con sus tres parches ahora registrados en Composer. El que
+  importaba de verdad hace que el desplegable del filtro ofrezca **solo los valores que están en
+  uso**, con una consulta directa, en vez de cargar todas las entidades. Con 869 materiales en el
+  ERP eso se nota. El código quedó byte a byte como estaba.
+- `views_aggregator` tenía otro apaño manual, un puente para `renderInIsolation()` que no existía
+  en Drupal 10.2. Composer lo borró y esta vez está bien: en 10.6 ese método ya existe.
+
+La lección es la de siempre en este proyecto, y ahora con tres casos más: **cada módulo tocado a
+mano es una bomba de relojería** hasta que su cambio esté en un fichero de `patches/` y
+declarado en `composer.json`. Con los de hoy quedan seis parches registrados y aplicándose
+solos. Siguen fuera `quicktabs` y `views_entity_form_field`.
+
+**Y la Fase 1 se cerró de rebote.** El paso 11, sincronizar el `lock`, estaba bloqueado
+precisamente por `views_aggregator`. Al subir el núcleo se desbloqueó, y `composer validate`
+ya no da ni un aviso: **`composer.json` y `composer.lock` cuadran por primera vez**.
 
 ### 2026-08-13 — Fase 1: `composer.json` por fin describe la realidad, y aparece por qué falla la página de pedidos
 

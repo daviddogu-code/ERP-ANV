@@ -37,6 +37,7 @@ class MailLoginAdminSettingsForm extends ConfigFormBase {
    * MailLoginAdminSettingsForm constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    */
   public function __construct(ConfigFactoryInterface $config_factory) {
     $this->configFactory = $config_factory;
@@ -79,14 +80,14 @@ class MailLoginAdminSettingsForm extends ConfigFormBase {
 
     $form['general']['mail_login_email_only'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Login by email address only'),
+      '#title' => $this->t('Log in by email address only'),
       '#default_value' => $config->get('mail_login_email_only'),
       '#states' => [
         'visible' => [
           ':input[name="mail_login_enabled"]' => ['checked' => TRUE],
         ],
       ],
-      '#description' => $this->t('This option disables login by username and forces login by email address only.'),
+      '#description' => $this->t('This option disables logging in by username and forces logging in by email address only.'),
     ];
 
     $form['general']['mail_login_override_login_labels'] = [
@@ -104,7 +105,7 @@ class MailLoginAdminSettingsForm extends ConfigFormBase {
     $form['general']['mail_login_username_title'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Login form username/email address label'),
-      '#default_value' => $config->get('mail_login_username_title') ?: $this->t('Login by username/email address'),
+      '#default_value' => $config->get('mail_login_username_title') ?: $this->t('Log in by username/email address'),
       '#states' => [
         'required' => [
           ':input[name="mail_login_override_login_labels"]' => [
@@ -127,6 +128,7 @@ class MailLoginAdminSettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Login form username/email address description'),
       '#default_value' => $config->get('mail_login_username_description') ?: $this->t('You can use your username or email address to login.'),
+      '#maxlength' => 255,
       '#states' => [
         'required' => [
           ':input[name="mail_login_override_login_labels"]' => [
@@ -171,6 +173,7 @@ class MailLoginAdminSettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Login form email address only description'),
       '#default_value' => $config->get('mail_login_email_only_description') ?: $this->t('You can use your email address only to login.'),
+      '#maxlength' => 255,
       '#states' => [
         'required' => [
           ':input[name="mail_login_email_only"]' => [
@@ -193,6 +196,7 @@ class MailLoginAdminSettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Login form password only description'),
       '#default_value' => $config->get('mail_login_password_only_description') ?: $this->t('Enter the password that accompanies your email address.'),
+      '#maxlength' => 255,
       '#states' => [
         'required' => [
           ':input[name="mail_login_email_only"]' => [
@@ -237,6 +241,7 @@ class MailLoginAdminSettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Password reset form username/email address description'),
       '#default_value' => $config->get('mail_login_password_reset_username_description') ?: $this->t('Password reset instructions will be sent to your registered email address.'),
+      '#maxlength' => 255,
       '#states' => [
         'required' => [
           ':input[name="mail_login_override_login_labels"]' => [
@@ -281,6 +286,7 @@ class MailLoginAdminSettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Password reset form email address only description'),
       '#default_value' => $config->get('mail_login_password_reset_email_only_description') ?: $this->t('Password reset instructions will be sent to your registered email address.'),
+      '#maxlength' => 255,
       '#states' => [
         'required' => [
           ':input[name="mail_login_email_only"]' => [

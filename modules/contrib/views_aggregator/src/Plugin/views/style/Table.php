@@ -751,7 +751,15 @@ class Table extends ViewsTable {
         $value = reset($value);
       }
     }
-    return $value;
+    // Several of the branches above can hand back something that is not a
+    // string: reset() answers FALSE on an empty array, boolean fields answer
+    // FALSE, and an uncompressed multi-value field stays an array. Any of
+    // them raises a TypeError against the declared return type and takes the
+    // whole page down. In every one of those cases the cell is simply empty.
+    if (!is_scalar($value) && !(is_object($value) && method_exists($value, '__toString'))) {
+      $value = '';
+    }
+    return (string) $value;
   }
 
   /**
@@ -1052,7 +1060,7 @@ class Table extends ViewsTable {
     }
 
     $rendered_value = implode(empty($separator) ? ' - ' : $separator, $rendered_values);
-    return is_array($rendered_value) ? $this->renderIsolated($rendered_value) : $rendered_value;
+    return is_array($rendered_value) ? $this->getRenderer()->renderInIsolation($rendered_value) : $rendered_value;
   }
 
   /**
@@ -1140,23 +1148,9 @@ class Table extends ViewsTable {
     }
 
     $render_array = $field->view($display);
-    $rendered_value = $this->renderIsolated($render_array);
+    $rendered_value = $this->getRenderer()->renderInIsolation($render_array);
 
     return strip_tags((string) $rendered_value);
-  }
-
-  /**
-   * Render in isolation with Drupal 10.2 fallback (renderPlain).
-   *
-   * views_aggregator 2.1.x calls renderInIsolation(), which only exists on
-   * Drupal >=10.3. This site runs 10.2.x.
-   */
-  protected function renderIsolated($render_array) {
-    $renderer = $this->getRenderer();
-    if (method_exists($renderer, 'renderInIsolation')) {
-      return $renderer->renderInIsolation($render_array);
-    }
-    return $renderer->renderPlain($render_array);
   }
 
   /**

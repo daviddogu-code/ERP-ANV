@@ -1,7 +1,0 @@
-symfony_mailer_log.settings:
-  path: '/admin/config/system/mailer/symfony_mailer_log/settings'
-  defaults:
-    _form: '\Drupal\symfony_mailer_log\Form\SymfonyMailerLogSettingsForm'
-    _title: 'Mailer log settings'
-  requirements:
-    _permission: 'administer site configuration'

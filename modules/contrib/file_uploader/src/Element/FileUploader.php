@@ -90,11 +90,14 @@ class FileUploader extends ManagedFile {
     ];
 
     // Prepare the attachment settings.
-    // Note: the file_validate_* functions are for backwards compatibility, they were deprecated in Drupal 10.2
-    $upload_validators = $element['#upload_validators'];
-    $extensions = $upload_validators['FileExtension']['extensions'] ?? ($upload_validators['file_validate_extensions'][0] ?? '');
-    $file_size = $upload_validators['FileSizeLimit']['fileLimit'] ?? ($upload_validators['file_validate_size'][0] ?? 0);
-
+    if (isset($element['#upload_validators']['file_validate_extensions'][0])) {
+      $extensions = $element['#upload_validators']['file_validate_extensions'][0] ?? '';
+      $filesize = $element['#upload_validators']['file_validate_size'][0] ?? 0;
+    }
+    else {
+      $extensions = $element['#upload_validators']['FileExtension']['extensions'] ?? '';
+      $filesize = $element['#upload_validators']['FileSizeLimit']['fileLimit'] ?? 0;
+    }
     $settings = [
       'provider' => $element['#upload_provider'],
       'name' => $element['#name'],
@@ -103,7 +106,7 @@ class FileUploader extends ManagedFile {
         'validators' => [
           'limit' => $element['#cardinality'],
           'extensions' => preg_filter('/^/', '.', explode(' ', $extensions)),
-          'filesize' => $file_size,
+          'filesize' => $filesize,
         ],
       ],
       'values' => $values,

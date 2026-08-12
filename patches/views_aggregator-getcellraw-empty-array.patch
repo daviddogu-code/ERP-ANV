@@ -1,0 +1,34 @@
+Fix TypeError that takes down any page using an aggregated table.
+
+getCellRaw() declares a string return type, but several of its branches can
+hand back something else: reset() answers FALSE on an empty array, boolean
+fields answer FALSE, and an uncompressed multi-value field stays an array.
+Any of them crashes the whole page with:
+
+  TypeError: Drupal\views_aggregator\Plugin\views\style\Table::getCellRaw():
+  Return value must be of type string, false returned
+
+On this site it took down the sales order pages through the
+tec_order_material_calculation_summary view. In every one of those cases the
+cell simply has no value, so an empty string is the right answer.
+
+diff --git a/src/Plugin/views/style/Table.php b/src/Plugin/views/style/Table.php
+--- a/src/Plugin/views/style/Table.php
++++ b/src/Plugin/views/style/Table.php
+@@ -751,7 +751,15 @@ private function getCellRaw(FieldHandlerInterface $field_handler, ResultRow $res
+         $value = reset($value);
+       }
+     }
+-    return $value;
++    // Several of the branches above can hand back something that is not a
++    // string: reset() answers FALSE on an empty array, boolean fields answer
++    // FALSE, and an uncompressed multi-value field stays an array. Any of
++    // them raises a TypeError against the declared return type and takes the
++    // whole page down. In every one of those cases the cell is simply empty.
++    if (!is_scalar($value) && !(is_object($value) && method_exists($value, '__toString'))) {
++      $value = '';
++    }
++    return (string) $value;
+   }
+ 
+   /**

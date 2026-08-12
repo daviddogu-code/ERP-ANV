@@ -2,29 +2,28 @@
 
 namespace Drupal\entity_browser\Plugin\Field\FieldWidget;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Component\Utility\Bytes;
+use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Environment;
 use Drupal\Component\Utility\SortArray;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\image\Entity\ImageStyle;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Entity browser file widget.
- *
- * @FieldWidget(
- *   id = "entity_browser_file",
- *   label = @Translation("Entity browser"),
- *   provider = "entity_browser",
- *   multiple_values = TRUE,
- *   field_types = {
- *     "file",
- *     "image"
- *   }
- * )
  */
+#[FieldWidget(
+  id: 'entity_browser_file',
+  label: new TranslatableMarkup('Entity browser'),
+  field_types: ['file', 'image'],
+  multiple_values: TRUE,
+)]
 class FileBrowserWidget extends EntityReferenceBrowserWidget {
 
   /**
@@ -56,12 +55,20 @@ class FileBrowserWidget extends EntityReferenceBrowserWidget {
   protected $mimeTypeGuesser;
 
   /**
+   * The image factory service.
+   *
+   * @var \Drupal\Core\Image\ImageFactory
+   */
+  protected $imageFactory;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->configFactory = $container->get('config.factory');
     $instance->mimeTypeGuesser = $container->get('file.mime_type.guesser');
+    $instance->imageFactory = $container->get('image.factory');
     return $instance;
   }
 
@@ -102,7 +109,7 @@ class FileBrowserWidget extends EntityReferenceBrowserWidget {
     $element['preview_image_style'] = [
       '#title' => $this->t('Preview image style'),
       '#type' => 'select',
-      '#options' => image_style_options(FALSE),
+      '#options' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.4.0', fn() => \Drupal::service('Drupal\image\ImageDerivativeUtilities')->styleOptions(FALSE), fn() => image_style_options(FALSE)),
       '#default_value' => $this->getSetting('preview_image_style'),
       '#description' => $this->t('The preview image will be shown while editing the content. Only relevant if using the default file view mode.'),
       '#weight' => 15,
@@ -319,7 +326,7 @@ class FileBrowserWidget extends EntityReferenceBrowserWidget {
             'wrapper' => $details_id,
           ],
           '#submit' => [[get_class($this), 'removeItemSubmit']],
-          '#name' => $field_machine_name . '_replace_' . $entity_id . '_' . md5(json_encode($field_parents)),
+          '#name' => $field_machine_name . '_replace_' . $entity_id . '_' . Crypt::hashBase64(json_encode($field_parents)),
           '#limit_validation_errors' => [array_merge($field_parents, [$field_machine_name, 'target_id'])],
           '#attributes' => [
             'data-entity-id' => $entity->getEntityTypeId() . ':' . $entity->id(),
@@ -336,7 +343,7 @@ class FileBrowserWidget extends EntityReferenceBrowserWidget {
             'wrapper' => $details_id,
           ],
           '#submit' => [[get_class($this), 'removeItemSubmit']],
-          '#name' => $field_machine_name . '_remove_' . $entity_id . '_' . md5(json_encode($field_parents)),
+          '#name' => $field_machine_name . '_remove_' . $entity_id . '_' . Crypt::hashBase64(json_encode($field_parents)),
           '#limit_validation_errors' => [array_merge($field_parents, [$field_machine_name, 'target_id'])],
           '#attributes' => [
             'data-entity-id' => $entity->getEntityTypeId() . ':' . $entity->id(),
@@ -428,25 +435,30 @@ class FileBrowserWidget extends EntityReferenceBrowserWidget {
         $max_filesize = min($max_filesize, Bytes::toNumber($settings['max_filesize']));
       }
       // There is always a file size limit due to the PHP server limit.
-      $validators['file_validate_size'] = [$max_filesize];
+      $validators['FileSizeLimit'] = ['fileLimit' => $max_filesize];
     }
 
     // Images have expected defaults for file extensions.
     // See \Drupal\image\Plugin\Field\FieldWidget::formElement() for details.
     if ($this->fieldDefinition->getType() == 'image') {
-      // If not using custom extension validation, ensure this is an image.
-      $supported_extensions = ['png', 'gif', 'jpg', 'jpeg'];
-      $extensions = isset($settings['file_extensions']) ? $settings['file_extensions'] : implode(' ', $supported_extensions);
+      // Use the image factory to get supported extensions dynamically from the
+      // active image toolkit, instead of a hardcoded list. This ensures that
+      // additional formats like webp, avif, etc. are not silently stripped.
+      $supported_extensions = $this->imageFactory->getSupportedExtensions();
+      $extensions = $settings['file_extensions'] ?? implode(' ', $supported_extensions);
       $extensions = array_intersect(explode(' ', $extensions), $supported_extensions);
-      $validators['file_validate_extensions'] = [implode(' ', $extensions)];
+      $validators['FileExtension'] = ['extensions' => implode(' ', $extensions)];
 
       // Add resolution validation.
       if (!empty($settings['max_resolution']) || !empty($settings['min_resolution'])) {
-        $validators['entity_browser_file_validate_image_resolution'] = [$settings['max_resolution'], $settings['min_resolution']];
+        $validators['EntityBrowserImageDimensions'] = [
+          'maxDimensions' => $settings['max_resolution'],
+          'minDimensions' => $settings['min_resolution'],
+        ];
       }
     }
     elseif (!empty($settings['file_extensions'])) {
-      $validators['file_validate_extensions'] = [$settings['file_extensions']];
+      $validators['FileExtension'] = ['extensions' => $settings['file_extensions']];
     }
 
     return $validators;

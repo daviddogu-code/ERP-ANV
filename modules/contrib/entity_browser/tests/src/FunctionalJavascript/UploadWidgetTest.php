@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\entity_browser\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Drupal\user\Entity\Role;
 
 /**
@@ -9,6 +11,8 @@ use Drupal\user\Entity\Role;
  *
  * @group entity_browser
  */
+#[Group('entity_browser')]
+#[RunTestsInSeparateProcesses]
 class UploadWidgetTest extends EntityBrowserWebDriverTestBase {
 
   /**
@@ -56,6 +60,9 @@ class UploadWidgetTest extends EntityBrowserWebDriverTestBase {
     $config['settings']['submit_text'] = 'Fancy submit';
     $widget->setConfiguration($config);
     $browser->save();
+
+    // Cache clearing doesn't happen reliably within the test.
+    $this->rebuildAll();
 
     $this->drupalGet($browser->getDisplay()->path());
     $page->attachFileToField('edit-upload-upload', \Drupal::root() . '/core/misc/druplicon.png');

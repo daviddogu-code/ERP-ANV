@@ -117,14 +117,27 @@ function mail_login_validate_authentication($form, &$form_state) {
     }
 
     $account = NULL;
-    // If mail login is enabled, check mail address.
+    // If mail login is enabled, check whether the submitted value is an email
+    // and translate it to the *canonical* user-name so that Drupal's flood-
+    // control sees a single, consistent identifier.
     if ($config->get('mail_login_enabled')) {
       if (filter_var($form_state->getValue('name'), FILTER_VALIDATE_EMAIL)) {
-        $accounts = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties([
-          'mail' => $form_state->getValue('name'),
-          'status' => 1,
-        ]);
+        $accounts = \Drupal::entityTypeManager()
+          ->getStorage('user')
+          ->loadByProperties([
+            'mail' => $form_state->getValue('name'),
+            'status' => 1,
+          ]);
         $account = reset($accounts);
+
+        if ($account) {
+          // Replace the submitted identifier with the canonical user-name so
+          // - flood-pre-checks (`user.failed_login_*`) run,
+          // - lookupAccount() succeeds,
+          // - the UID lock-out applies equally to username *and* email.
+          $username = $account->getAccountName();
+          $form_state->setValue('name', $username);
+        }
       }
     }
     // If no user was found using the email, and username login is enabled,
@@ -160,7 +173,16 @@ function mail_login_validate_authentication($form, &$form_state) {
     }
     // We are not limited by flood control, so try to authenticate.
     // Store $uid in form state as a flag for self::validateFinal().
-    $uid = \Drupal::service('user.auth')->authenticate($form_state->getValue('name'), $password);
-    $form_state->set('uid', $uid);
+    // Only perform authentication if we haven't already found an account
+    // via email lookup above.
+    if (!$account) {
+      $account = \Drupal::service('user.auth')->lookupAccount($form_state->getValue('name'));
+    }
+    if ($account) {
+      $auth_status = \Drupal::service('user.auth')->authenticateAccount($account, $password);
+      if ($auth_status) {
+        $form_state->set('uid', $account->id());
+      }
+    }
   }
 }

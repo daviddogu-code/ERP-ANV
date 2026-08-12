@@ -1,11 +1,8 @@
 langcode: en
 status: true
 dependencies:
-  config:
-    - views.view.content
   module:
     - entity_browser_entity_form
-    - views
 name: entity_browser_test_entity_form
 label: 'Entity Browser Test'
 display: iframe
@@ -14,6 +11,7 @@ display_configuration:
   height: '500'
   link_text: 'Select entities'
   auto_open: false
+  use_admin_theme: true
 selection_display: no_display
 selection_display_configuration: {  }
 widget_selector: single
