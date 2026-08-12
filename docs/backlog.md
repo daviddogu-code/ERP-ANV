@@ -184,10 +184,16 @@ plazo.
   dejarlo desconectado de momento; se puede conectar más adelante sin rehacer nada.
 - **Packing lists.**
 - **Facturas**, con IVA y sin IVA.
-- **Web pública de `anvfightgear.com`**, de presentación de la fábrica OEM. Hoy el dominio
-  muestra la página de aparcamiento de Namecheap.
+- **Web pública de `anvfightgear.com`**, de presentación de la fábrica OEM. **La estructura, el
+  argumentario y el análisis de la competencia ya están escritos en
+  [`docs/web-anvfightgear.md`](web-anvfightgear.md)**, listos para pasárselos a otra ventana de
+  agente. Lo único que bloquea el trabajo son las fotos y el vídeo del taller, que solo puede
+  hacer el dueño. Corrección del 12 de agosto: el dominio no muestra una página de
+  aparcamiento, simplemente **no tiene ningún registro A**, ni él ni `www`. No hay nada roto
+  que arreglar.
 - **Portal de clientes**: que entren con su cuenta, vean sus productos y hagan sus propios
-  pedidos.
+  pedidos. **Este sí depende del ERP** y no debe empezarse hasta que el modelo de datos esté
+  asentado, después de la limpieza y de los cambios que proponga Lukpla.
 - **Agentes.** Atención al cliente en los grupos de WhatsApp y en el correo. Pedidos
   automáticos a proveedores locales por los grupos de LINE.
 
