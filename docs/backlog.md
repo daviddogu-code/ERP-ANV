@@ -24,6 +24,13 @@ por error algo que estaba puesto a propósito.
 
 ## 1. Ahora mismo
 
+- **Confirmar en Git el trabajo del 12 y el 13 de agosto.** Descubierto el 13 al preparar la
+  copia de seguridad: hay **unos 140 ficheros sin confirmar**, y ahí dentro está la limpieza de
+  43 módulos, la retirada de la IA y el backlog entero. Mientras no se confirmen, GitHub no los
+  tiene y el único respaldo son las copias de `C:\laragon\backups`. No es urgente por riesgo de
+  pérdida —las copias existen— sino porque sin confirmar no hay punto al que volver con
+  precisión si la actualización sale mal.
+
 El ERP ya está publicado en `https://erp.anvfightgear.com` desde el 12 de agosto. Lo que
 queda para que la revisión de Lukpla pueda empezar:
 
@@ -563,6 +570,87 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-13 — Fase 0 de la actualización: la red de seguridad, y un parche que llevaba meses sin poder aplicarse solo
+
+Antes de tocar una línea del núcleo había que poder volver atrás y poder saber si algo se
+rompió. Eso es esta fase. Salieron tres cosas, y la tercera era una bomba de relojería.
+
+**La copia de seguridad, y dos descubrimientos incómodos.** El primero: **todo el trabajo del 12
+y el 13 de agosto estaba sin confirmar en Git**: unos 140 ficheros de configuración, la limpieza
+de 43 módulos, la retirada de la IA y el backlog entero, todo en el aire.
+
+El segundo: **la carpeta `sites/default/private`, con 1.389 ficheros, no estaba en ninguna copia
+y tampoco está en GitHub.** La copia de ficheros del 12 de agosto no la incluía. Llevaba desde
+entonces sin respaldo. Ya está copiada.
+
+Se guardó todo lo que Git no protege, en `C:\laragon\backups\pre-actualizacion-*`: la base de
+datos (6,6 MB comprimidos, 88 MB de SQL), el árbol de trabajo con `config`, `docs`, `patches`,
+`composer.json`, `composer.lock` y `modules/custom` (2.648 ficheros), `core` con `vendor` (35.941
+ficheros, 173 MB) y `private` (1.491 entradas, 171 MB). Los ficheros de usuario siguen cubiertos
+por la copia del 12, porque lo único que ha cambiado desde entonces son ficheros de caché
+regenerados.
+
+**Y se probó la restauración, que no es lo mismo que probar que el fichero se lee.** El volcado
+se cargó entero en una base de datos aparte y se compararon los recuentos: **449 tablas en ambas,
+y cero diferencias** en escandallos, líneas, pedidos, materiales, usuarios y procesos de ECA. Las
+únicas tres entradas de configuración que faltaban eran las que crea `upgrade_status`, instalado
+después del volcado. La base de datos de prueba se borró al terminar.
+
+De paso se aprendió que **empaquetar el proyecto entero no funciona en esta máquina**: el
+antivirus inspecciona cada fichero y `tar` se quedó dieciséis minutos sin escribir un solo byte.
+Hay que copiar por partes. Y un detalle que hace perder tiempo: si se añade Git al PATH, `tar`
+deja de ser el de Windows y pasa a ser el de Unix, que interpreta `c:/...` como un servidor
+remoto y falla. Con Git en el PATH hay que llamar a `C:\Windows\System32\tar.exe` por su ruta.
+
+**La lista de comprobación ya es un programa.** Estaba en la cabeza y en el chat; ahora está en
+`scripts/comprobacion.php` y se ejecuta con `drush scr scripts/comprobacion.php`. Hace **35
+comprobaciones**: cuenta todo el contenido contra las cifras de referencia, verifica los 146
+módulos y los 36 procesos de ECA, crea entidades de verdad para ver si los seis automatismos
+reaccionan, y revisa que no queden banderas de bloqueo colgadas ni errores nuevos en el
+registro. Lo que crea lo borra y lo que modifica lo restaura. Se pasó tres veces esta noche,
+siempre 35 de 35. **Es la orden que hay que ejecutar después de cada paso de la actualización.**
+
+**El parche de `inline_entity_form` llevaba sin poder aplicarse solo desde siempre, y nadie
+sabía por qué.** El arreglo estaba en el fichero, pero puesto a mano, con un comentario que
+decía literalmente *"composer patch could not auto-apply on this machine"*.
+
+La causa, encontrada esta noche, tiene tres capas. La superficial: **el fichero del parche tenía
+finales de línea de Windows y el módulo los tiene de Unix**, y Composer aplica los parches
+primero con `git apply`, que es estricto y rechaza esa mezcla de plano, y luego con el programa
+`patch`, que sí la tolera pero **no estaba en el PATH**. Sin las dos vías, el parche fallaba
+siempre.
+
+La segunda: **Composer no estaba configurado para detenerse ante un parche fallido**, así que
+seguía adelante diciendo que todo había ido bien.
+
+Y la de abajo del todo, que es la que explica por qué el problema era eterno: **Git en esta
+máquina tiene `core.autocrlf = true`, y el `.gitattributes` que trae Drupal fija finales Unix
+para `.php`, `.module` y `.yml`, pero no dice nada de `.patch`.** O sea que Git sacaba el parche
+convertido a finales de Windows **en cada checkout**. Cualquiera que lo hubiera arreglado a mano
+lo habría visto romperse otra vez a la siguiente descarga del repositorio, sin motivo aparente.
+
+Se arregló en cuatro pasos: una línea `*.patch text eol=lf` en `.gitattributes`, que es el
+arreglo de verdad y el único permanente; el parche convertido a finales Unix; el fichero del
+módulo dejado exactamente como lo produce el parche, porque antes había dos versiones distintas
+del mismo arreglo; y `"composer-exit-on-patch-failure": true` en `composer.json`.
+
+Se comprobó del modo que importa: se borró el parche, se dejó que Git lo sacara de nuevo, y sale
+con finales Unix y aplicando limpio. Ahora, además, `git apply --check --reverse` sirve para
+saber si el parche está puesto, cosa que antes era imposible.
+
+**Y se comprobó solo, por accidente.** Al instalar `upgrade_status`, Composer decidió borrar y
+reinstalar `inline_entity_form` para volver a parchearlo — cosa que hace sin avisar y por su
+cuenta. Esta vez el parche se aplicó bien. Sin el arreglo de esta noche, ese `composer require`
+inocente y sin relación ninguna se habría llevado el arreglo por delante en silencio. **El
+programa `patch` está en `C:\laragon\bin\git\usr\bin`**, y hay que añadir esa carpeta al PATH
+antes de lanzar cualquier orden de Composer.
+
+**El informe de `upgrade_status` confirma lo que decía la auditoría del código propio.** Se
+instaló la versión 4.3.10 (cinco paquetes nuevos, cero cambios en lo ya instalado) y se analizó
+el código nuestro: **ni una sola llamada a funciones que Drupal 11 elimine**. `tec_production`,
+el módulo grande, sale limpio del todo. Los otros cinco solo necesitan cambiar la línea
+`core_version_requirement`. Dos de ellos, `tec_brands` y `tec_crm`, ni siquiera están instalados.
+
 ### 2026-08-13 — Diagnóstico de Composer: el bloqueo era menor de lo que creíamos, y el descuadre mayor
 
 Cuatro comandos de solo lectura, ninguno modificó un fichero (comprobado por huella digital
@@ -571,8 +659,11 @@ antes y después). Tres conclusiones que cambian el plan:
 **La subida del núcleo no está bloqueada.** Simulada con `composer update drupal/core-recommended
 --with-all-dependencies --dry-run`, resuelve sin un solo conflicto y llega hasta la **10.6.15**,
 no solo la 10.3. Son 22 actualizaciones y 3 retiradas, y no toca ningún módulo contribuido.
-Llevábamos meses creyendo que el proyecto estaba atascado; lo que está atascado es el `update`
-general, no una actualización dirigida.
+
+La idea de que "en este proyecto no se puede actualizar" no venía de meses de intentos: nació el
+9 de agosto, cuando un `composer update` a pelo rompió `inline_entity_form`, y se dio por buena
+sin volver a comprobarla. Cuatro días de suposición, no meses. Lo que está atascado es el
+`update` general; una actualización dirigida no lo está.
 
 **El descuadre de versiones es de 24 módulos, no de 5.** Y lo importante es *por qué* nadie lo
 vio: Composer no lee los ficheros de los módulos, se fía de su contabilidad interna en

@@ -192,6 +192,7 @@
         "installer-types": [
             "npm-asset"
         ],
+        "composer-exit-on-patch-failure": true,
         "patches": {
             "drupal/inline_entity_form": {
                 "Fix Oops on IEF Cancel when entities is NULL (#3516478)": "patches/ief-close-all-forms-null-entities.patch"
@@ -249,5 +250,8 @@
                 "      composer remove drupal/core-project-message"
             ]
         }
+    },
+    "require-dev": {
+        "drupal/upgrade_status": "^4.3"
     }
 }
