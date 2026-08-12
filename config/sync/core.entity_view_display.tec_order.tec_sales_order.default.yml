@@ -11,6 +11,8 @@ dependencies:
     - field.field.tec_order.tec_sales_order.field_tec_line_items
     - field.field.tec_order.tec_sales_order.field_tec_order_status
     - field.field.tec_order.tec_sales_order.field_tec_priority
+    - field.field.tec_order.tec_sales_order.field_tec_produced
+    - field.field.tec_order.tec_sales_order.field_tec_queue_position
   module:
     - bootstrap_layout_builder
     - layout_builder
@@ -1154,4 +1156,6 @@ content:
 hidden:
   changed: true
   field_tec_customer: true
+  field_tec_produced: true
+  field_tec_queue_position: true
   langcode: true

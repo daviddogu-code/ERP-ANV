@@ -1,0 +1,186 @@
+{#
+/**
+ * @file
+ * Production documents panel for a sales order.
+ *
+ * Available variables:
+ * - order_label
+ * - order_id
+ * - grand_total
+ * - products
+ */
+#}
+{% macro product_section(product) %}
+  <section class="tec-production-docs__product">
+    <h2 class="tec-production-docs__product-title">{{ product.label }}</h2>
+    {% for variation in product.variations %}
+      <article class="tec-production-docs__variation">
+        <div class="tec-production-docs__variation-grid">
+          <div class="tec-production-docs__picture">
+            {% if variation.image_url %}
+              <img src="{{ variation.image_url }}" alt="{{ variation.color_label }}" />
+            {% else %}
+              <div class="tec-production-docs__picture-empty">{{ 'No image'|t }}</div>
+            {% endif %}
+            <div class="tec-production-docs__color-name">{{ variation.color_label }}</div>
+          </div>
+
+          <div class="tec-production-docs__sizes">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ 'Size'|t }}</th>
+                  <th>{{ 'Quantity'|t }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for size in variation.sizes %}
+                  <tr{% if size.qty == 0 %} class="is-zero"{% endif %}>
+                    <td>{{ size.size_label }}</td>
+                    <td>{{ size.qty|number_format(0) }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>{{ 'SUBTOTAL'|t }}</th>
+                  <th>{{ variation.subtotal|number_format(0) }}</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="tec-production-docs__materials">
+            {% if variation.materials %}
+              {{ variation.materials|join(' // ') }}
+            {% else %}
+              <span class="tec-production-docs__materials-empty">{{ 'No flagged materials'|t }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </section>
+{% endmacro %}
+
+{# Cutting tables: only for per-product documents. Remove with ENABLE_CUTTING_TABLES. #}
+{% macro cutting_tables(product) %}
+  {% if product.cutting_tables %}
+    <div class="tec-production-docs__cutting">
+      {% for table in product.cutting_tables %}
+        <table class="tec-production-docs__cutting-table">
+          <thead>
+            <tr>
+              <th colspan="3" class="tec-production-docs__cutting-size">{{ table.size_label }}</th>
+            </tr>
+            <tr>
+              <th></th>
+              <th>{{ 'Target'|t }}</th>
+              <th>{{ 'Total Pairs / Pieces'|t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in table.rows %}
+              <tr>
+                <td>{{ row.material }}</td>
+                <td>{{ row.target|number_format(2) }}</td>
+                <td>{{ row.total|number_format(2) }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endmacro %}
+
+{% import _self as pd %}
+
+<div class="tec-production-docs" data-tec-production-docs>
+  <div class="tec-production-docs__toolbar no-print">
+    <button type="button" class="button button--primary" data-tec-print>{{ 'Print / PDF'|t }}</button>
+  </div>
+
+  {% if products is empty %}
+    <p>{{ 'No line items on this order.'|t }}</p>
+  {% else %}
+    <nav class="tec-production-docs__nav no-print" aria-label="{{ 'Production documents'|t }}">
+      <strong>{{ 'Documents'|t }}:</strong>
+      <button type="button"
+              class="tec-production-docs__nav-btn is-active"
+              data-doc-target="all"
+              data-doc-label="{{ 'All Products'|t }}"
+              data-doc-total="{{ grand_total }}">
+        {{ 'All Products'|t }}
+      </button>
+      {% for product in products %}
+        <button type="button"
+                class="tec-production-docs__nav-btn"
+                data-doc-target="{{ product.id }}"
+                data-doc-label="{{ product.label }}"
+                data-doc-total="{{ product.product_total }}">
+          {{ product.label }}
+        </button>
+      {% endfor %}
+    </nav>
+
+    {# Document 1: All Products #}
+    <div class="tec-production-docs__doc is-active" data-doc="all">
+      <header class="tec-production-docs__header">
+        <div class="tec-production-docs__order-cell">
+          <strong>{{ 'ORDER'|t }}</strong> {{ order_label }}
+        </div>
+        <div class="tec-production-docs__doc-name">{{ 'All Products'|t }}</div>
+      </header>
+      <div class="tec-production-docs__totals-row">
+        <div class="tec-production-docs__header-grid">
+          <div class="tec-production-docs__header-spacer"></div>
+          <div class="tec-production-docs__sizes">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ 'Grand total'|t }}</th>
+                  <th>{{ grand_total|number_format(0) }}</th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+          <div class="tec-production-docs__header-spacer"></div>
+        </div>
+      </div>
+      {% for product in products %}
+        {{ pd.product_section(product) }}
+      {% endfor %}
+    </div>
+
+    {# Documents 2..N: one per product #}
+    {% for product in products %}
+      <div class="tec-production-docs__doc" data-doc="{{ product.id }}" hidden>
+        <header class="tec-production-docs__header">
+          <div class="tec-production-docs__order-cell">
+            <strong>{{ 'ORDER'|t }}</strong> {{ order_label }}
+          </div>
+          <div class="tec-production-docs__doc-name">{{ product.label }}</div>
+        </header>
+        <div class="tec-production-docs__totals-row">
+          <div class="tec-production-docs__header-grid">
+            <div class="tec-production-docs__header-spacer"></div>
+            <div class="tec-production-docs__sizes">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ 'Total'|t }}</th>
+                    <th>{{ product.product_total|number_format(0) }}</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+            <div class="tec-production-docs__header-spacer"></div>
+          </div>
+        </div>
+        {{ pd.product_section(product) }}
+        {{ pd.cutting_tables(product) }}
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>

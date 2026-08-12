@@ -67,8 +67,8 @@ custom_sources:
     machine_name: name
     type: csv
   material_type:
-    value: 'Material category'
-    label: 'Material category'
+    value: 'Material Type'
+    label: 'Material Type'
     machine_name: material_type
     type: csv
   suppliers:

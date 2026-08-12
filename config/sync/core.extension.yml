@@ -37,6 +37,7 @@ module:
   contextual: 0
   csv_serialization: 0
   datetime: 0
+  dblog: 0
   draggableviews: 0
   dxpr_theme_helper: 0
   dynamic_page_cache: 0
@@ -82,9 +83,6 @@ module:
   field_tools: 0
   field_ui: 0
   file: 0
-  file_mdm: 0
-  file_mdm_exif: 0
-  file_mdm_font: 0
   file_resup: 0
   file_resup_media_library: 0
   file_uploader: 0
@@ -99,7 +97,6 @@ module:
   history: 0
   ief_table_view_mode: 0
   image: 0
-  image_effects: 0
   inline_entity_form: 0
   jquery_ui: 0
   jquery_ui_autocomplete: 0
@@ -169,6 +166,7 @@ module:
   taxonomy_unique: 0
   tec_crm_ux: 0
   tec_inventory: 0
+  tec_production: 0
   text: 0
   token: 0
   toolbar: 0

@@ -1,47 +1,66 @@
 <?php
+
+/**
+ * @file
+ * Admin form styling helpers (inventory stock modal, etc.).
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
+use Drupal\taxonomy\TermInterface;
+
+/**
+ * Implements hook_entity_view().
+ */
+function admin_form_styles_entity_view(array &$build, $entity, $display, $view_mode) {
+  if ($entity->getEntityTypeId() === 'tec_product' && $entity->bundle() === 'tec_product') {
+    $build['#attached']['library'][] = 'admin_form_styles/product-view';
+  }
+}
+
 /**
  * Implements hook_page_attachments().
  */
 function admin_form_styles_page_attachments(array &$attachments) {
-  // Temporary: accent styles for the top black menu (all pages).
-  $attachments['#attached']['library'][] = 'admin_form_styles/menu-accent';
-
   $route_match = \Drupal::routeMatch();
-  
+
   // SAFETY CHECK - prevent 500 errors
   if (!$route_match) {
     return;
   }
-  
+
   $route_name = $route_match->getRouteName();
-  
+
   // Additional safety check for route name
   if (!$route_name) {
     return;
   }
-  
+
   $current_path = \Drupal::service('path.current')->getPath();
   $request = \Drupal::request();
-  
+
   // Purchase Order Calculator - FIRST PRIORITY
   if (strpos($current_path, '/po/draft/') !== FALSE) {
     $attachments['#attached']['library'][] = 'admin_form_styles/purchase_order_calculator';
     return; // Exit early to avoid conflicts
   }
-  
+
   // Load on taxonomy add/edit forms (original functionality)
   if (strpos($route_name, 'entity.taxonomy_term.add_form') !== FALSE ||
       strpos($route_name, 'entity.taxonomy_term.edit_form') !== FALSE) {
     $attachments['#attached']['library'][] = 'admin_form_styles/form-styles';
   }
-  
+
   // ONLY load on inventory transaction forms - be more specific
   if (strpos($current_path, '/admin/content/tec_inventory/add/tec_inventory_transaction') !== FALSE) {
     $attachments['#attached']['library'][] = 'admin_form_styles/form-styles';
   }
-  
+
   // Force load ONLY on inventory modal wrapper format requests
-  if ($request->query->get('_wrapper_format') === 'drupal_modal' && 
+  if ($request->query->get('_wrapper_format') === 'drupal_modal' &&
       strpos($current_path, 'tec_inventory_transaction') !== FALSE) {
     $attachments['#attached']['library'][] = 'admin_form_styles/form-styles';
   }
@@ -54,10 +73,427 @@ function admin_form_styles_form_alter(&$form, $form_state, $form_id) {
   // Attach calculator library to main inventory form
   if ($form_id === 'taxonomy_term_tec_inventory_form') {
     $form['#attached']['library'][] = 'admin_form_styles/inventory-calculator';
+    // Units are managed in taxonomy (no inline create on UoM selects).
+    _admin_form_styles_attach_taxonomy_manage_link(
+      $form,
+      'field_tec_unit_purchase',
+      'tec_units',
+      t('Manage units')
+    );
+    _admin_form_styles_attach_taxonomy_manage_link(
+      $form,
+      'field_tec_material_type',
+      'tec_materials',
+      t('Manage Material Types')
+    );
+
+    // Replace generic Drupal "Add term" / "Edit term" titles.
+    $entity = NULL;
+    if (method_exists($form_state, 'getFormObject') && method_exists($form_state->getFormObject(), 'getEntity')) {
+      $entity = $form_state->getFormObject()->getEntity();
+    }
+    if ($entity instanceof TermInterface && $entity->bundle() === 'tec_inventory') {
+      $form['#title'] = $entity->isNew()
+        ? t('Add New Material')
+        : t('Edit Material');
+    }
   }
-  
+
+  // Product type is managed in taxonomy (no inline create).
+  if ($form_id === 'tec_product_tec_product_form') {
+    _admin_form_styles_attach_taxonomy_manage_link(
+      $form,
+      'field_tec_product_type',
+      'tec_product_types',
+      t('Manage product types')
+    );
+  }
+
+  // Color catalog is managed in taxonomy (no inline create).
+  if ($form_id === 'tec_product_tec_color_variation_form') {
+    _admin_form_styles_attach_taxonomy_manage_link(
+      $form,
+      'field_tec_colors',
+      'tec_colors',
+      t('Manage colors')
+    );
+  }
+
+  // Size catalog is managed in taxonomy (no inline create).
+  if ($form_id === 'tec_product_tec_size_variation_form') {
+    _admin_form_styles_attach_taxonomy_manage_link(
+      $form,
+      'field_tec_size',
+      'tec_sizes',
+      t('Manage sizes')
+    );
+  }
+
+  // Material Types overview: editable "Show on production document" checkboxes.
+  if ($form_id === 'taxonomy_overview_terms') {
+    _admin_form_styles_tec_materials_overview_checkboxes($form, $form_state);
+  }
+
+  // After deleting a size/color, return to the parent product (not /p or ECK list).
+  // Use #after_build so our submit runs after ECA appends HookHandler::submit.
+  if (in_array($form_id, [
+    'tec_product_tec_size_variation_delete_form',
+    'tec_product_tec_color_variation_delete_form',
+  ], TRUE)) {
+    $form['#after_build'][] = 'admin_form_styles_tec_product_delete_after_build';
+  }
+
   // ONLY target the inventory transaction form - be very specific
   if ($form_id === 'tec_inventory_tec_inventory_transaction_form') {
     $form['#attached']['library'][] = 'admin_form_styles/form-styles';
+
+    // Decimal storage scale is 4 → browser spinner would step 0.0001.
+    // Step by whole units for the wheel; fractional values can still be typed
+    // if the browser allows (HTML5 may warn on non-integers with step=1).
+    if (isset($form['field_tec_quantity']['widget'][0]['value'])) {
+      $form['field_tec_quantity']['widget'][0]['value']['#step'] = '1';
+    }
+
+    $material = _admin_form_styles_resolve_transaction_material($form_state);
+    $uom_label = _admin_form_styles_material_inventory_uom_label($material);
+    $material_name = $material instanceof TermInterface ? $material->label() : '';
+
+    // Replace generic "units" suffix with Inventory UoM (e.g. Sheet, kg).
+    if (isset($form['field_tec_quantity']['widget'][0]['value'])) {
+      $form['field_tec_quantity']['widget'][0]['value']['#field_suffix'] = $uom_label;
+    }
+
+    // Operative title for full page + modal dialog.
+    $title = $material_name !== ''
+      ? t('Adjust stock: @name', ['@name' => $material_name])
+      : t('Adjust stock');
+    $form['#title'] = $title;
+
+    $current_stock = \Drupal::request()->query->get('current_stock');
+    $form['#attached']['drupalSettings']['adminFormStyles']['stockDisplay'] = [
+      'uom' => $uom_label,
+      'title' => (string) $title,
+      'materialName' => $material_name,
+      'currentStock' => is_numeric($current_stock) ? (float) $current_stock : NULL,
+    ];
   }
+}
+
+/**
+ * Attach a manage-catalog link under a form field.
+ *
+ * @param array $form
+ *   The form array.
+ * @param string $field_name
+ *   Field machine name.
+ * @param string $vocabulary
+ *   Taxonomy vocabulary ID.
+ * @param \Drupal\Core\StringTranslation\TranslatableMarkup|string $link_text
+ *   Link label.
+ */
+function _admin_form_styles_attach_taxonomy_manage_link(array &$form, $field_name, $vocabulary, $link_text) {
+  if (!isset($form[$field_name])) {
+    return;
+  }
+
+  $account = \Drupal::currentUser();
+  if (
+    !$account->hasPermission('administer taxonomy')
+    && !$account->hasPermission("create terms in $vocabulary")
+    && !$account->hasPermission("edit terms in $vocabulary")
+  ) {
+    return;
+  }
+
+  try {
+    $url = Url::fromRoute('entity.taxonomy_vocabulary.overview_form', [
+      'taxonomy_vocabulary' => $vocabulary,
+    ]);
+  }
+  catch (\Exception $e) {
+    return;
+  }
+
+  if (!$url->access()) {
+    return;
+  }
+
+  $link = Link::fromTextAndUrl($link_text, $url)->toString();
+  $markup = '<div class="description admin-form-styles-catalog-link">' . $link . '</div>';
+
+  if (!isset($form[$field_name]['widget']['#suffix'])) {
+    $form[$field_name]['widget']['#suffix'] = '';
+  }
+  $form[$field_name]['widget']['#suffix'] .= $markup;
+}
+
+/**
+ * Add production-doc checkboxes on Material Types taxonomy overview.
+ */
+function _admin_form_styles_tec_materials_overview_checkboxes(array &$form, FormStateInterface $form_state) {
+  $vocabulary = $form_state->get(['taxonomy', 'vocabulary']);
+  if (!$vocabulary || $vocabulary->id() !== 'tec_materials' || empty($form['terms']['#header'])) {
+    return;
+  }
+
+  $header = [];
+  foreach ($form['terms']['#header'] as $key => $label) {
+    $header[$key] = $label;
+    if ($key === 'term') {
+      $header['production_doc'] = t('Show in Production Documents');
+    }
+  }
+  $form['terms']['#header'] = $header;
+
+  foreach (Element::children($form['terms']) as $key) {
+    if (empty($form['terms'][$key]['#term']) || !($form['terms'][$key]['#term'] instanceof TermInterface)) {
+      continue;
+    }
+    /** @var \Drupal\taxonomy\TermInterface $term */
+    $term = $form['terms'][$key]['#term'];
+    $checked = FALSE;
+    if ($term->hasField('field_tec_show_on_prod_doc') && !$term->get('field_tec_show_on_prod_doc')->isEmpty()) {
+      $checked = (bool) $term->get('field_tec_show_on_prod_doc')->value;
+    }
+
+    $row = $form['terms'][$key];
+    $new_row = [
+      '#term' => $row['#term'],
+      '#attributes' => $row['#attributes'] ?? [],
+      'term' => $row['term'],
+      'production_doc' => [
+        '#type' => 'checkbox',
+        '#title' => t('Show in Production Documents'),
+        '#title_display' => 'invisible',
+        '#default_value' => $checked,
+      ],
+      'status' => $row['status'],
+      'operations' => $row['operations'],
+    ];
+    if (array_key_exists('weight', $row)) {
+      $new_row['weight'] = $row['weight'];
+    }
+    $form['terms'][$key] = $new_row;
+  }
+
+  $form['actions']['submit']['#submit'][] = 'admin_form_styles_tec_materials_overview_submit';
+}
+
+/**
+ * Save production-doc flags from Material Types overview.
+ */
+function admin_form_styles_tec_materials_overview_submit(array &$form, FormStateInterface $form_state) {
+  $terms = $form_state->getValue('terms');
+  if (!is_array($terms)) {
+    return;
+  }
+
+  foreach ($terms as $key => $row) {
+    if (!isset($form['terms'][$key]['#term']) || !($form['terms'][$key]['#term'] instanceof TermInterface)) {
+      continue;
+    }
+    if (!array_key_exists('production_doc', $row)) {
+      continue;
+    }
+    /** @var \Drupal\taxonomy\TermInterface $term */
+    $term = $form['terms'][$key]['#term'];
+    if (!$term->hasField('field_tec_show_on_prod_doc')) {
+      continue;
+    }
+    $new = !empty($row['production_doc']) ? 1 : 0;
+    $old = $term->get('field_tec_show_on_prod_doc')->isEmpty()
+      ? 0
+      : (int) $term->get('field_tec_show_on_prod_doc')->value;
+    if ($old !== $new) {
+      $term->set('field_tec_show_on_prod_doc', $new);
+      $term->save();
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for page_title.
+ */
+function admin_form_styles_preprocess_page_title(&$variables) {
+  $path = \Drupal::service('path.current')->getPath();
+  $route_match = \Drupal::routeMatch();
+
+  if (strpos($path, '/admin/content/tec_inventory/add/tec_inventory_transaction') !== FALSE) {
+    $material = _admin_form_styles_resolve_transaction_material();
+    if ($material instanceof TermInterface) {
+      $variables['title'] = t('Adjust stock: @name', ['@name' => $material->label()]);
+    }
+    else {
+      $variables['title'] = t('Adjust stock');
+    }
+    return;
+  }
+
+  // Material add/edit uses taxonomy term routes with a generic "term" title.
+  $route_name = $route_match ? $route_match->getRouteName() : '';
+  if ($route_name === 'entity.taxonomy_term.add_form') {
+    $vocabulary = $route_match->getParameter('taxonomy_vocabulary');
+    $vid = is_object($vocabulary) && method_exists($vocabulary, 'id') ? $vocabulary->id() : $vocabulary;
+    if ($vid === 'tec_inventory') {
+      $variables['title'] = t('Add New Material');
+    }
+  }
+  elseif ($route_name === 'entity.taxonomy_term.edit_form') {
+    $term = $route_match->getParameter('taxonomy_term');
+    if ($term instanceof TermInterface && $term->bundle() === 'tec_inventory') {
+      $variables['title'] = t('Edit Material');
+    }
+  }
+}
+
+/**
+ * Resolve the material term for the inventory transaction form.
+ *
+ * @param \Drupal\Core\Form\FormStateInterface|null $form_state
+ *   Optional form state when altering the form.
+ *
+ * @return \Drupal\taxonomy\TermInterface|null
+ *   The material term, or NULL.
+ */
+function _admin_form_styles_resolve_transaction_material($form_state = NULL) {
+  if ($form_state && method_exists($form_state, 'getFormObject')) {
+    $form_object = $form_state->getFormObject();
+    if (method_exists($form_object, 'getEntity')) {
+      $entity = $form_object->getEntity();
+      if ($entity && $entity->hasField('field_tec_inventory') && !$entity->get('field_tec_inventory')->isEmpty()) {
+        $material = $entity->get('field_tec_inventory')->entity;
+        if ($material instanceof TermInterface) {
+          return $material;
+        }
+      }
+    }
+  }
+
+  $query = \Drupal::request()->query->all();
+  $tid = $query['edit']['field_tec_inventory']['widget'][0]['target_id'] ?? NULL;
+  if (!$tid || !is_numeric($tid)) {
+    return NULL;
+  }
+
+  $term = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($tid);
+  return $term instanceof TermInterface ? $term : NULL;
+}
+
+/**
+ * After-build: ensure delete redirect submit runs last (after ECA).
+ */
+function admin_form_styles_tec_product_delete_after_build(array $form, FormStateInterface $form_state): array {
+  $handler = 'admin_form_styles_tec_product_delete_redirect_submit';
+  _admin_form_styles_append_submit_last($form, $handler);
+  if (isset($form['actions']['submit']) && is_array($form['actions']['submit'])) {
+    _admin_form_styles_append_submit_last($form['actions']['submit'], $handler);
+  }
+  return $form;
+}
+
+/**
+ * Append a submit callback as the last handler on an element.
+ *
+ * @param array $element
+ *   Form or button element (by reference).
+ * @param string $handler
+ *   Submit callback name.
+ */
+function _admin_form_styles_append_submit_last(array &$element, string $handler): void {
+  $submits = [];
+  foreach ($element['#submit'] ?? [] as $callback) {
+    if ($callback !== $handler) {
+      $submits[] = $callback;
+    }
+  }
+  $submits[] = $handler;
+  $element['#submit'] = $submits;
+}
+
+/**
+ * Submit handler: redirect size/color delete to the parent product.
+ */
+function admin_form_styles_tec_product_delete_redirect_submit(array &$form, FormStateInterface $form_state) {
+  $form_object = $form_state->getFormObject();
+  if (!method_exists($form_object, 'getEntity')) {
+    return;
+  }
+  $entity = $form_object->getEntity();
+  if (!$entity instanceof EntityInterface) {
+    return;
+  }
+
+  $url = _admin_form_styles_tec_product_post_delete_url($entity);
+  if (!$url instanceof Url) {
+    return;
+  }
+
+  // Prefer parent product over ?destination= (often lost or points at /p).
+  \Drupal::request()->query->remove('destination');
+  if (\Drupal::hasService('redirect_response_subscriber')) {
+    \Drupal::service('redirect_response_subscriber')->setIgnoreDestination(TRUE);
+  }
+  $form_state->setRedirectUrl($url);
+}
+
+/**
+ * Build canonical product URL after deleting a size or color variation.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The size or color entity being deleted.
+ *
+ * @return \Drupal\Core\Url|null
+ *   Product view URL with optional color fragment, or NULL.
+ */
+function _admin_form_styles_tec_product_post_delete_url(EntityInterface $entity) {
+  if ($entity->getEntityTypeId() !== 'tec_product') {
+    return NULL;
+  }
+
+  $bundle = $entity->bundle();
+  if (!in_array($bundle, ['tec_size_variation', 'tec_color_variation'], TRUE)) {
+    return NULL;
+  }
+
+  if (!$entity->hasField('field_tec_product') || $entity->get('field_tec_product')->isEmpty()) {
+    return NULL;
+  }
+
+  $product_id = (int) $entity->get('field_tec_product')->target_id;
+  if ($product_id < 1) {
+    return NULL;
+  }
+
+  $options = [];
+  if ($bundle === 'tec_size_variation' && $entity->hasField('field_tec_color_variation') && !$entity->get('field_tec_color_variation')->isEmpty()) {
+    $options['fragment'] = (string) $entity->get('field_tec_color_variation')->target_id;
+  }
+  elseif ($bundle === 'tec_color_variation') {
+    $options['fragment'] = (string) $entity->id();
+  }
+
+  return Url::fromRoute('entity.tec_product.canonical', ['tec_product' => $product_id], $options);
+}
+
+/**
+ * Inventory UoM label for a material, fallback "units".
+ *
+ * @param \Drupal\taxonomy\TermInterface|null $material
+ *   The material term.
+ *
+ * @return string
+ *   UoM name.
+ */
+function _admin_form_styles_material_inventory_uom_label($material) {
+  if (!$material instanceof TermInterface || !$material->hasField('field_tec_uos')) {
+    return (string) t('units');
+  }
+  if ($material->get('field_tec_uos')->isEmpty()) {
+    return (string) t('units');
+  }
+  $uos = $material->get('field_tec_uos')->entity;
+  if ($uos instanceof TermInterface && $uos->label()) {
+    return $uos->label();
+  }
+  return (string) t('units');
 }

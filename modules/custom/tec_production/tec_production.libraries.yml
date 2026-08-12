@@ -1,0 +1,40 @@
+production_queue:
+  css:
+    theme:
+      css/production-queue.css: {}
+  js:
+    js/production-queue.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+production_log:
+  css:
+    theme:
+      css/production-log.css: {}
+
+production_report:
+  css:
+    theme:
+      css/production-report.css: {}
+  js:
+    js/production-report.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+stock_control:
+  css:
+    theme:
+      css/stock-control.css: {}
+  js:
+    js/stock-control.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/drupal.message
+
+dxpr_gin_header_fix:
+  css:
+    theme:
+      css/dxpr-gin-header-fix.css: {}

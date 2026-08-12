@@ -1,0 +1,208 @@
+<?php
+
+/**
+ * @file
+ * TEC Inventory helpers.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_entity_presave().
+ *
+ * Evaluate BoM "Production requires" formulas locally (e.g. 1/12 → 0.0833…)
+ * instead of calling OpenAI via AI Interpolator during IEF AJAX create.
+ */
+function tec_inventory_entity_presave(EntityInterface $entity) {
+  if (
+    !$entity instanceof FieldableEntityInterface
+    || $entity->getEntityTypeId() !== 'tec_inventory'
+    || $entity->bundle() !== 'tec_bom_item'
+  ) {
+    return;
+  }
+
+  if (
+    !$entity->hasField('field_tec_quantity_input')
+    || !$entity->hasField('field_tec_quantity')
+    || $entity->get('field_tec_quantity_input')->isEmpty()
+  ) {
+    return;
+  }
+
+  _tec_inventory_apply_quantity_formula($entity);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for tec_product.
+ *
+ * Keep color variation titles in sync with their first Color taxonomy term.
+ * The title field is hidden in the variation form and normally filled by the
+ * ECA process "TEC Color variation: Set data values" — but only when empty,
+ * so clones made via "Duplicate color" kept the source title forever after
+ * their color term was changed (e.g. variation 816: term White, title Black).
+ * Running at presave covers every path (form, IEF, ECA duplicate, scripts)
+ * without extra saves or recursion.
+ */
+function tec_inventory_tec_product_presave(EntityInterface $entity) {
+  if ($entity->bundle() !== 'tec_color_variation') {
+    return;
+  }
+  if (!$entity instanceof FieldableEntityInterface
+    || !$entity->hasField('field_tec_colors')
+    || $entity->get('field_tec_colors')->isEmpty()) {
+    return;
+  }
+  $term = $entity->get('field_tec_colors')->entity;
+  if ($term && $term->label() !== '' && $entity->label() !== $term->label()) {
+    $entity->set('title', $term->label());
+  }
+}
+
+/**
+ * Implements hook_inline_entity_form_entity_form_alter().
+ *
+ * IEF "Create BoM item" keeps the entity unsaved until the parent Save, so
+ * hook_entity_presave() has not run yet when the table row is rendered.
+ * Apply the formula while building the inline entity.
+ */
+function tec_inventory_inline_entity_form_entity_form_alter(array &$entity_form, FormStateInterface &$form_state) {
+  if (($entity_form['#entity_type'] ?? '') !== 'tec_inventory') {
+    return;
+  }
+  if (($entity_form['#bundle'] ?? '') !== 'tec_bom_item') {
+    return;
+  }
+  $entity_form['#entity_builders'][] = 'tec_inventory_bom_item_entity_builder';
+}
+
+/**
+ * Entity builder: parse Production requires into field_tec_quantity.
+ */
+function tec_inventory_bom_item_entity_builder($entity_type, FieldableEntityInterface $entity, array &$form, FormStateInterface &$form_state) {
+  _tec_inventory_apply_quantity_formula($entity);
+}
+
+/**
+ * Copy a parseable formula/decimal from quantity_input into quantity.
+ */
+function _tec_inventory_apply_quantity_formula(FieldableEntityInterface $entity) {
+  if (
+    !$entity->hasField('field_tec_quantity_input')
+    || !$entity->hasField('field_tec_quantity')
+    || $entity->get('field_tec_quantity_input')->isEmpty()
+  ) {
+    return;
+  }
+
+  $raw = trim((string) $entity->get('field_tec_quantity_input')->value);
+  $decimal = _tec_inventory_parse_quantity_formula($raw);
+  if ($decimal === NULL) {
+    return;
+  }
+
+  // Match decimal field scale (4).
+  $entity->set('field_tec_quantity', round($decimal, 4));
+}
+
+/**
+ * Implements hook_inline_entity_form_table_fields_alter().
+ *
+ * Show Production requires from entity fields directly. The old viewfield
+ * column used [tec_inventory:id], which is empty for unsaved IEF rows.
+ */
+function tec_inventory_inline_entity_form_table_fields_alter(array &$fields, array $context) {
+  if (($context['entity_type'] ?? '') !== 'tec_inventory') {
+    return;
+  }
+  if (($context['field_name'] ?? '') !== 'field_tec_bom') {
+    return;
+  }
+  if (empty($context['allowed_bundles']) || !in_array('tec_bom_item', $context['allowed_bundles'], TRUE)) {
+    return;
+  }
+
+  unset($fields['field_tec_production_requires_vf'], $fields['field_tec_quantity'], $fields['field_tec_quantity_input']);
+  $fields['tec_production_requires'] = [
+    'type' => 'callback',
+    'label' => t('Production requires'),
+    'weight' => 1,
+    'callback' => 'tec_inventory_ief_production_requires_column',
+  ];
+}
+
+/**
+ * IEF table callback: render quantity (+ original formula when present).
+ */
+function tec_inventory_ief_production_requires_column($entity, array $variables = []) {
+  if (!$entity instanceof FieldableEntityInterface) {
+    return ['#markup' => ''];
+  }
+
+  _tec_inventory_apply_quantity_formula($entity);
+
+  $parts = [];
+  if ($entity->hasField('field_tec_quantity') && !$entity->get('field_tec_quantity')->isEmpty()) {
+    $parts[] = number_format((float) $entity->get('field_tec_quantity')->value, 4, '.', '');
+  }
+  if ($entity->hasField('field_tec_quantity_input') && !$entity->get('field_tec_quantity_input')->isEmpty()) {
+    $input = trim((string) $entity->get('field_tec_quantity_input')->value);
+    if ($input !== '' && (empty($parts) || $parts[0] !== $input)) {
+      $parts[] = $input;
+    }
+  }
+
+  return [
+    '#markup' => $parts ? implode(' · ', $parts) : '',
+  ];
+}
+
+/**
+ * Parse a plain decimal or simple fraction (a/b) into a float.
+ *
+ * @param string $raw
+ *   User input.
+ *
+ * @return float|null
+ *   Parsed value, or NULL if not parseable.
+ */
+function _tec_inventory_parse_quantity_formula($raw) {
+  if ($raw === '') {
+    return NULL;
+  }
+
+  // Plain decimal / integer (optional leading sign).
+  if (preg_match('/^[+-]?\d+(\.\d+)?$/', $raw)) {
+    return (float) $raw;
+  }
+
+  // Fraction a/b — numerator and denominator may be decimals (e.g. 1/12, 1/2.5, 1.1/2).
+  if (preg_match('/^([+-]?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/', $raw, $matches)) {
+    $denominator = (float) $matches[2];
+    if ($denominator == 0.0) {
+      return NULL;
+    }
+    return ((float) $matches[1]) / $denominator;
+  }
+
+  return NULL;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function tec_inventory_theme($existing, $type, $theme, $path) {
+  return [
+    'tec_order_production_documents' => [
+      'variables' => [
+        'order_label' => '',
+        'order_id' => NULL,
+        'grand_total' => 0,
+        'products' => [],
+      ],
+      'template' => 'tec-order-production-documents',
+    ],
+  ];
+}

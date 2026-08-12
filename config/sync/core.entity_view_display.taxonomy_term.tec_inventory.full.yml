@@ -478,7 +478,7 @@ third_party_settings:
             region: blb_region_col_1
             configuration:
               id: 'field_block:taxonomy_term:tec_inventory:field_tec_material_type'
-              label: 'Material category'
+              label: 'Material Type'
               label_display: '0'
               provider: layout_builder
               context_mapping:

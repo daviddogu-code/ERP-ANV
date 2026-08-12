@@ -9,10 +9,10 @@ dependencies:
     - ai_interpolator
 third_party_settings:
   ai_interpolator:
-    interpolator_enabled: 1
+    interpolator_enabled: 0
     interpolator_rule: ai_interpolator_openai_string
     interpolator_mode: base
-    interpolator_base_field: title
+    interpolator_base_field: field_tec_quantity_input
     interpolator_prompt: "If the following context is a formula, return the result of the calculation as a decimal value. If the context is not a formula but a value, just return that same value as a decimal number.\r\nContext: {{ context }}.\r\nConvert any fraction or text input to decimal format. Examples: convert '1/10' to '0.1', '3/4' to '0.75', '1/2' to '0.5'. If the input is already a decimal number, keep it as is. Only return the decimal number, nothing else."
     interpolator_token: ''
     interpolator_edit_mode: 0

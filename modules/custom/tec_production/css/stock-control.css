@@ -1,0 +1,287 @@
+/* Stock Control board (/stock). */
+
+.tec-stock__help {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3f6fb;
+  border: 1px solid #dbe4f0;
+  border-radius: 6px;
+  color: #444;
+  font-size: 0.82rem;
+  max-width: 72rem;
+}
+
+/* Horizontal scroll container (Google Sheets style, same pattern as
+   /o/queue): native scrollbar hidden, scrolling driven by the fixed bar at
+   the bottom of the window. Vertical scrolling stays on the browser. */
+.tec-stock__scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid #c8c8c8;
+  scrollbar-width: none;
+}
+
+.tec-stock__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Synthetic horizontal scrollbar fixed to the bottom of the viewport. */
+.tec-stock__hscroll {
+  position: fixed;
+  bottom: 0;
+  height: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #f1f1f1;
+  border-top: 1px solid #c8c8c8;
+  z-index: 501;
+  display: none;
+}
+
+.tec-stock__hscroll-inner {
+  height: 1px;
+}
+
+/* White strip between the admin toolbar and the frozen header. Above page
+   content (z 0-10) but safely below any toolbar implementation. */
+.tec-stock__topmask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  z-index: 90;
+  display: none;
+}
+
+.tec-stock__table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-size: 0.82rem;
+}
+
+.tec-stock__table th,
+.tec-stock__table td {
+  padding: 0.3rem 0.45rem;
+  white-space: nowrap;
+  vertical-align: middle;
+  border-bottom: 1px solid #e3e3e3;
+  background: #fff;
+}
+
+/* Header frozen via JS translateY while the page scrolls (queue pattern). */
+.tec-stock__table thead {
+  position: relative;
+  z-index: 10;
+}
+
+.tec-stock__table thead th {
+  background: #f5f5f5;
+  font-weight: 600;
+  border-bottom: 2px solid #ccc;
+}
+
+/* Sticky left block: image + stock + material name. */
+.tec-stock__table .tec-stock__h-img,
+.tec-stock__table .tec-stock__c-img {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 48px;
+  width: 48px;
+}
+
+.tec-stock__table .tec-stock__h-stock,
+.tec-stock__table .tec-stock__c-stock {
+  position: sticky;
+  left: 48px;
+  z-index: 2;
+  min-width: 88px;
+  width: 88px;
+}
+
+.tec-stock__table .tec-stock__h-mat,
+.tec-stock__table .tec-stock__c-mat {
+  position: sticky;
+  left: 136px; /* 48px image + 88px stock */
+  z-index: 2;
+  min-width: 12rem;
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-right: 2px solid #d8d8d8;
+}
+
+.tec-stock__table thead .tec-stock__h-img,
+.tec-stock__table thead .tec-stock__h-stock,
+.tec-stock__table thead .tec-stock__h-mat {
+  z-index: 4;
+  background: #f5f5f5;
+}
+
+.tec-stock__img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Numeric columns. */
+.tec-stock__c-num,
+.tec-stock__h-num {
+  text-align: right;
+  min-width: 5.2rem;
+}
+
+.tec-stock__c-sup {
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Stock number is read-only on the board. */
+.tec-stock__stock-num {
+  font-weight: 600;
+}
+
+/* ± opens the mutation-with-note modal. */
+.tec-stock__adjust-link {
+  display: inline-block;
+  margin-left: 1px;
+  padding: 0 4px;
+  border-radius: 3px;
+  color: #777;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.tec-stock__adjust-link:hover {
+  background: #e8eefb;
+  color: #0550ae;
+  text-decoration: none;
+}
+
+.tec-stock__req {
+  font-weight: 600;
+}
+
+.tec-stock__proj-uos,
+.tec-stock__proj-uop {
+  font-weight: 600;
+  color: #1a7f37;
+}
+
+.tec-stock__proj-uos.is-neg,
+.tec-stock__proj-uop.is-neg {
+  color: #c62828;
+}
+
+.tec-stock__muted,
+.tec-stock__qty.is-zero {
+  color: #b5b5b5;
+}
+
+/* Per-order pair: narrow checkbox column + qty column. */
+.tec-stock__table .tec-stock__h-chk,
+.tec-stock__table .tec-stock__c-chk {
+  border-left: 2px solid #d8d8d8;
+  width: 26px;
+  min-width: 26px;
+  text-align: center;
+  padding-left: 0.25rem;
+  padding-right: 0.15rem;
+}
+
+.tec-stock__table .tec-stock__h-ord,
+.tec-stock__table .tec-stock__c-qty {
+  text-align: right;
+  min-width: 3.6rem;
+  padding-right: 0.6rem;
+}
+
+.tec-stock__h-ord a {
+  text-decoration: none;
+  font-weight: 600;
+  color: #222;
+}
+
+.tec-stock__h-ord a:hover {
+  color: #0550ae;
+}
+
+.tec-stock__qty.has-qty {
+  font-weight: 600;
+}
+
+.tec-stock__chk,
+.tec-stock__master {
+  margin: 0;
+  vertical-align: middle;
+}
+
+/* Checked pair looks "done": fade the qty. */
+.tec-stock__c-qty.is-checked .tec-stock__qty {
+  color: #9aa5b1;
+  text-decoration: line-through;
+  font-weight: 400;
+}
+
+/* Zebra that keeps sticky cells opaque. */
+.tec-stock__table tbody tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+.tec-stock__table tbody tr:hover td {
+  background: #f0f6ff;
+}
+
+/* Auto-save feedback: brief flash on the checkbox cell. Placed after the
+   zebra/hover rules so the flash wins while it lasts. */
+.tec-stock__table tbody td.is-saved,
+.tec-stock__table tbody tr:hover td.is-saved {
+  background: #d9f2d9;
+}
+
+.tec-stock__table tbody td.is-save-error,
+.tec-stock__table tbody tr:hover td.is-save-error {
+  background: #ffdada;
+}
+
+/* Adjust form (/stock/{tid}/adjust) — also shown inside the ± modal. */
+.tec-stock-adjust__head {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f3f6fb;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+}
+
+.tec-stock-adjust__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.tec-stock-adjust__current {
+  color: #555;
+}
+
+.tec-stock-adjust__num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0550ae;
+  margin: 0 0.15rem;
+}
+
+.tec-stock-adjust__unit {
+  color: #777;
+}
+
+.tec-stock-adjust__delta {
+  font-size: 1.2rem;
+  font-weight: 600;
+  max-width: 10rem;
+}

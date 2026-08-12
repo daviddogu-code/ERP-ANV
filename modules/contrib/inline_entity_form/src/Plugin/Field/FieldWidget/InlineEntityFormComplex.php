@@ -324,7 +324,7 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
       // to be referenced otherwise we set the variable to false.
       /** @var \Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface $handler */
       $handler = $this->selectionManager->getInstance($options);
-      $have_multiple_existing_entities = $handler->countReferenceableEntities() > 1;
+      $have_multiple_existing_entities = count($handler->getReferenceableEntities(NULL, 'CONTAINS', 2)) > 1;
     } else {
       $have_multiple_existing_entities = FALSE;
     }
@@ -430,6 +430,8 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
         $row['title'] = [];
         $row['delta'] = [
           '#type' => 'weight',
+          '#title' => $this->t('Weight for row @number', ['@number' => $key + 1]),
+          '#title_display' => 'invisible',
           '#delta' => $weight_delta,
           '#default_value' => $value['weight'],
           '#attributes' => ['class' => ['ief-entity-delta']],
@@ -1037,7 +1039,7 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
       return $ief_settings['bundle'];
     }
     else {
-      $target_bundles = $this->getTargetBundles();
+      $target_bundles = $this->getCreateBundles();
       return reset($target_bundles);
     }
   }

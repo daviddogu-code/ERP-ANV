@@ -151,7 +151,7 @@ class MigrationHelper {
    */
   protected function getMigrationWithSharedConfiguration(array &$migration) {
     // Integrate shared group configuration into the migration.
-    if (!empty($migration['migration_group'])) {
+    if (!empty($migration['migration_group']) && class_exists('\Drupal\migrate_plus\Entity\MigrationGroup')) {
       $group = \Drupal\migrate_plus\Entity\MigrationGroup::load($migration['migration_group']);
       $shared_configuration = !empty($group) ? $group->get('shared_configuration') : [];
       if (!empty($shared_configuration)) {

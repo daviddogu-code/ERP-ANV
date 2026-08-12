@@ -1,0 +1,133 @@
+/* Production Report: month view over the Daily Production Log. */
+
+.tec-report__nav {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  margin: 0.25rem 0 1rem;
+}
+
+.tec-report__nav-current {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.tec-report__nav-link {
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.tec-report__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+}
+
+.tec-report__card {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  min-width: 170px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.tec-report__card-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.tec-report__card-big {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.tec-report__card-small {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.tec-report__table {
+  font-size: 0.85rem;
+}
+
+.tec-report__table th,
+.tec-report__table td {
+  vertical-align: middle;
+}
+
+.tec-report__table th.tec-report__cat-col,
+.tec-report__table th.tec-report__total-col {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tec-report__table td.tec-report__num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tec-report__zero {
+  color: #c5c9d0;
+}
+
+.tec-report__day-cell {
+  white-space: nowrap;
+}
+
+/* Rows with data are clickable to reveal the day detail. */
+.tec-report__row--has-data .tec-report__day-cell {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tec-report__expander {
+  display: inline-block;
+  transition: transform 0.15s;
+  color: #1e3a5f;
+}
+
+.tec-report__day-row.is-expanded .tec-report__expander {
+  transform: rotate(90deg);
+}
+
+.tec-report__row--sunday td {
+  background: #fafafa;
+}
+
+.tec-report__row--today td {
+  background: #fffbe6;
+}
+
+.tec-report__row--has-data td.tec-report__row-total {
+  background: #eef6ff;
+}
+
+.tec-report__detail-row {
+  display: none;
+}
+
+.tec-report__detail-row.is-open {
+  display: table-row;
+}
+
+.tec-report__detail-cell {
+  background: #f8fafc;
+  padding: 0.5rem 1rem 0.75rem;
+}
+
+.tec-report__detail-table {
+  font-size: 0.8rem;
+  margin: 0;
+  width: 100%;
+}
+
+.tec-report__table tr.tec-report__totals td {
+  background: #f3f3f3;
+  border-top: 2px solid #999;
+}

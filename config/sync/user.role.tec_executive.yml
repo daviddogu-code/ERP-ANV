@@ -56,6 +56,7 @@ dependencies:
     - shortcut
     - system
     - taxonomy
+    - tec_production
     - views_bulk_edit
 id: tec_executive
 label: Executive
@@ -69,6 +70,7 @@ permissions:
   - 'access files overview'
   - 'access media overview'
   - 'access shortcuts'
+  - 'access tec production queue'
   - 'access tec_gui_products entity browser pages'
   - 'access tec_products entity browser pages'
   - 'access user profiles'
@@ -227,6 +229,7 @@ permissions:
   - 'masquerade as tec_customer'
   - 'masquerade as tec_manager'
   - 'masquerade as tec_supervisor'
+  - 'register tec production'
   - 'revert any audio media revisions'
   - 'revert any document media revisions'
   - 'revert any image media revisions'
@@ -289,6 +292,7 @@ permissions:
   - 'view own tec_product entities of bundle tec_size_variation'
   - 'view own unpublished content'
   - 'view own unpublished media'
+  - 'view tec production report'
   - 'view tec_bom_items_importer feeds'
   - 'view tec_inventory_csv_importer feeds'
   - 'view the administration theme'

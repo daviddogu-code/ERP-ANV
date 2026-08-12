@@ -31,12 +31,13 @@ dependencies:
     - eca_content
     - eca_flag
     - eca_log
+    - eca_tamper
     - eca_views
     - flag
 id: process_sclj26d
 modeller: bpmn_io
 label: 'TEC Order: Create Sales order - Excel lover'
-version: '1.4'
+version: '1.5'
 weight: 5
 events:
   Event_05bhyol:
@@ -384,6 +385,32 @@ actions:
       list_token: soList
     successors:
       -
+        id: Activity_so_next
+        condition: ''
+  Activity_so_next:
+    plugin: 'eca_tamper:math'
+    label: 'Next SO number (+1)'
+    configuration:
+      operation: addition
+      flip: false
+      value: '1'
+      eca_data: '[soCount]'
+      eca_token_name: soNext
+    successors:
+      -
+        id: Activity_so_pad
+        condition: ''
+  Activity_so_pad:
+    plugin: 'eca_tamper:str_pad'
+    label: 'Pad SO number to 3 digits'
+    configuration:
+      pad_length: '3'
+      pad_string: '0'
+      pad_type: 0
+      eca_data: '[soNext]'
+      eca_token_name: soPad
+    successors:
+      -
         id: Activity_0xwr7vw
         condition: ''
   Activity_0xwr7vw:
@@ -391,7 +418,7 @@ actions:
     label: 'Set the order nr/ title'
     configuration:
       field_name: title
-      field_value: '[current-date:custom:y]-[soCount]'
+      field_value: '[entity:field_tec_customer_code:value] [current-date:custom:y]-[soPad]'
       method: 'set:clear'
       strip_tags: false
       trim: false

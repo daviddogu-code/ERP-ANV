@@ -14,6 +14,7 @@ use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\inline_entity_form\InlineFormInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -53,6 +54,13 @@ class EntityInlineForm implements InlineFormInterface {
   protected $moduleHandler;
 
   /**
+   * The theme manager.
+   *
+   * @var \Drupal\Core\Theme\ThemeManagerInterface
+   */
+  protected $themeManager;
+
+  /**
    * Constructs the inline entity form controller.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -63,12 +71,15 @@ class EntityInlineForm implements InlineFormInterface {
    *   The module handler.
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type.
+   * @param \Drupal\Core\Theme\ThemeManagerInterface $theme_manager
+   *   The theme manager.
    */
-  public function __construct(EntityFieldManagerInterface $entity_field_manager, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, EntityTypeInterface $entity_type) {
+  public function __construct(EntityFieldManagerInterface $entity_field_manager, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, EntityTypeInterface $entity_type, ThemeManagerInterface $theme_manager) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
     $this->entityType = $entity_type;
+    $this->themeManager = $theme_manager;
   }
 
   /**
@@ -79,7 +90,8 @@ class EntityInlineForm implements InlineFormInterface {
       $container->get('entity_field.manager'),
       $container->get('entity_type.manager'),
       $container->get('module_handler'),
-      $entity_type
+      $entity_type,
+      $container->get('theme.manager')
     );
   }
 
@@ -201,8 +213,9 @@ class EntityInlineForm implements InlineFormInterface {
     // Determine the children of the entity form before it has been altered.
     $children_before = Element::children($entity_form);
 
-    // Allow other modules to alter the form.
+    // Allow other modules and themes to alter the form.
     $this->moduleHandler->alter('inline_entity_form_entity_form', $entity_form, $form_state);
+    $this->themeManager->alter('inline_entity_form_entity_form', $entity_form, $form_state);
 
     // Determine the children of the entity form after it has been altered.
     $children_after = Element::children($entity_form);

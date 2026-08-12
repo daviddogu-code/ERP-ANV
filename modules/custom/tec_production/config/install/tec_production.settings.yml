@@ -1,0 +1,9 @@
+capacity_staff: 42.6
+capacity_overtime: 0
+capacity_factor: 1.5
+days_per_month: 30
+include_open: true
+queue_tile_nid: 0
+log_tile_nid: 0
+report_tile_nid: 0
+stock_tile_nid: 0

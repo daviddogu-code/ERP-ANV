@@ -12,7 +12,7 @@ entity_type: tec_product
 bundle: tec_size_variation
 label: Size
 description: ''
-required: false
+required: true
 translatable: false
 default_value: {  }
 default_value_callback: ''

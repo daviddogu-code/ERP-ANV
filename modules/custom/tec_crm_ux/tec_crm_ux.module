@@ -5,11 +5,16 @@
  * Usability fixes for the CRM contact forms.
  */
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\views\Views;
 
@@ -42,6 +47,85 @@ function tec_crm_ux_supplier_field_names(): array {
     'field_tec_website',
     'field_tec_supplier_active',
   ];
+}
+
+/**
+ * #states config: show only when Supplier contact type is checked.
+ */
+function tec_crm_ux_supplier_visibility_states(): array {
+  return [
+    'visible' => [
+      ':input[name="field_tec_contact_type[' . TEC_CRM_UX_TYPE_SUPPLIER . ']"]' => [
+        'checked' => TRUE,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Apply supplier visibility to fields and the Field Group fieldset.
+ */
+function tec_crm_ux_apply_supplier_visibility(array &$form): void {
+  $states = tec_crm_ux_supplier_visibility_states();
+  foreach (tec_crm_ux_supplier_field_names() as $field_name) {
+    if (isset($form[$field_name])) {
+      $form[$field_name]['#states'] = $states;
+    }
+  }
+  if (isset($form['group_supplier'])) {
+    $form['group_supplier']['#states'] = $states;
+  }
+  $form['#attached']['library'][] = 'core/drupal.states';
+}
+
+/**
+ * Implements hook_field_group_form_process_alter().
+ *
+ * Field Group rebuilds group_supplier after hook_form_alter(), so #states set
+ * there are discarded. Re-apply while the fieldset element is built.
+ */
+function tec_crm_ux_field_group_form_process_alter(array &$element, &$group, &$complete_form): void {
+  if (($group->group_name ?? '') !== 'group_supplier') {
+    return;
+  }
+  $element['#states'] = tec_crm_ux_supplier_visibility_states();
+}
+
+/**
+ * Build a display title for a person from field_tec_name.
+ */
+function tec_crm_ux_person_title_from_name(FieldableEntityInterface $entity): string {
+  if (!$entity->hasField('field_tec_name') || $entity->get('field_tec_name')->isEmpty()) {
+    return '';
+  }
+  $item = $entity->get('field_tec_name')->first();
+  if (!$item) {
+    return '';
+  }
+  $parts = array_filter([
+    trim((string) ($item->given ?? '')),
+    trim((string) ($item->family ?? '')),
+  ], static fn($p) => $p !== '');
+  return trim(implode(' ', $parts));
+}
+
+/**
+ * Implements hook_entity_presave().
+ *
+ * Person bundles hide the entity title field, so lists that use title show a
+ * blank row. Keep title in sync with Given + Family from field_tec_name.
+ */
+function tec_crm_ux_entity_presave(EntityInterface $entity): void {
+  if ($entity->getEntityTypeId() !== 'tec_crm'
+    || $entity->bundle() !== 'tec_contact_person'
+    || !$entity instanceof FieldableEntityInterface
+    || !$entity->hasField('title')) {
+    return;
+  }
+  $title = tec_crm_ux_person_title_from_name($entity);
+  if ($title !== '') {
+    $entity->set('title', $title);
+  }
 }
 
 /**
@@ -222,12 +306,28 @@ function tec_crm_ux_entity_prepare_form(EntityInterface $entity, $operation, For
  *
  * Runs while the Contact type widget is being built, so #default_value is in
  * place before Checkboxes::processCheckboxes creates the child boxes.
+ *
+ * Also hardens Address country AJAX on CRM forms (Field Group can break the
+ * stock Address::ajaxRefresh() parent path and crash the Apache worker).
  */
 function tec_crm_ux_field_widget_complete_form_alter(&$field_widget_complete_form, FormStateInterface $form_state, $context) {
-  if (($context['items']->getName() ?? '') !== 'field_tec_contact_type') {
+  $field_name = $context['items']->getName() ?? '';
+  $entity = $context['items']->getEntity();
+
+  if ($field_name === 'field_tec_address'
+    && $entity
+    && $entity->getEntityTypeId() === 'tec_crm'
+    && isset($field_widget_complete_form['widget'])) {
+    foreach (Element::children($field_widget_complete_form['widget']) as $delta) {
+      if (isset($field_widget_complete_form['widget'][$delta]['address'])) {
+        $field_widget_complete_form['widget'][$delta]['address']['#after_build'][] = 'tec_crm_ux_address_after_build';
+      }
+    }
+  }
+
+  if ($field_name !== 'field_tec_contact_type') {
     return;
   }
-  $entity = $context['items']->getEntity();
   if (!$entity || !$entity->isNew() || $entity->getEntityTypeId() !== 'tec_crm') {
     return;
   }
@@ -242,6 +342,59 @@ function tec_crm_ux_field_widget_complete_form_alter(&$field_widget_complete_for
   if (isset($field_widget_complete_form['widget'])) {
     tec_crm_ux_force_contact_type_widget($field_widget_complete_form['widget'], $tids);
   }
+}
+
+/**
+ * #after_build for CRM address widgets.
+ *
+ * Address country AJAX crashes the Apache/PHP worker on this Windows host
+ * (STATUS_ACCESS_VIOLATION) and/or returns "form outdated". Disable Address
+ * AJAX and rebuild the form with a normal submit instead.
+ */
+function tec_crm_ux_address_after_build(array $element, FormStateInterface $form_state): array {
+  tec_crm_ux_address_disable_ajax($element);
+  tec_crm_ux_address_neutralize_group_keys($element);
+  return $element;
+}
+
+/**
+ * Strip #ajax from Address country / subdivision elements.
+ */
+function tec_crm_ux_address_disable_ajax(array &$element): void {
+  $strip = static function (array &$el) use (&$strip): void {
+    if (isset($el['#ajax'])) {
+      unset($el['#ajax']);
+    }
+    foreach (Element::children($el) as $key) {
+      if (isset($el[$key]) && is_array($el[$key])) {
+        $strip($el[$key]);
+      }
+    }
+  };
+  $strip($element);
+}
+
+/**
+ * Address uses integer #group for inline layout; Field Group/Form API treat
+ * #group as structural grouping and can corrupt the AJAX rebuild tree.
+ */
+function tec_crm_ux_address_neutralize_group_keys(array &$element): void {
+  foreach (Element::children($element) as $key) {
+    if (!isset($element[$key]) || !is_array($element[$key])) {
+      continue;
+    }
+    if (isset($element[$key]['#group']) && !is_string($element[$key]['#group'])) {
+      unset($element[$key]['#group']);
+    }
+    tec_crm_ux_address_neutralize_group_keys($element[$key]);
+  }
+}
+
+/**
+ * Submit handler: rebuild CRM form after country/province change (no save).
+ */
+function tec_crm_ux_address_rebuild_submit(array &$form, FormStateInterface $form_state): void {
+  $form_state->setRebuild(TRUE);
 }
 
 /**
@@ -261,6 +414,8 @@ function tec_crm_ux_contact_form_after_build(array $form, FormStateInterface $fo
       tec_crm_ux_force_contact_type_widget($form['field_tec_contact_type']['widget'], $tids);
     }
   }
+  // Field Group may rebuild the fieldset after form_alter; keep states alive.
+  tec_crm_ux_apply_supplier_visibility($form);
   return $form;
 }
 
@@ -320,12 +475,26 @@ function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $fo
 
   $form['#attributes']['class'][] = 'tec-crm-contact-form';
   $form['#attached']['library'][] = 'tec_crm_ux/prefill';
+  $form['#attached']['library'][] = 'tec_crm_ux/address';
   $form['#after_build'][] = 'tec_crm_ux_contact_form_after_build';
   $form['#validate'][] = 'tec_crm_ux_contact_form_validate';
-  $form['#cache']['max-age'] = 0;
   $form['#cache']['contexts'][] = 'url.query_args:tipo';
   $form['#cache']['contexts'][] = 'url.query_args:prefill';
   $form['#cache']['contexts'][] = 'url.query_args:works_at';
+
+  // Non-AJAX rebuild trigger used by crm-address.js when Country changes.
+  $form['tec_crm_ux_address_rebuild'] = [
+    '#type' => 'submit',
+    '#name' => 'tec_crm_ux_address_rebuild',
+    '#value' => t('Refresh address fields'),
+    '#limit_validation_errors' => [],
+    '#submit' => ['tec_crm_ux_address_rebuild_submit'],
+    '#attributes' => [
+      'class' => ['tec-crm-address-rebuild', 'visually-hidden'],
+      'formnovalidate' => 'formnovalidate',
+    ],
+    '#weight' => 1000,
+  ];
 
   if ($entity->isNew() && !$form_state->isSubmitted()) {
     $tids = tec_crm_ux_requested_contact_type_tids($entity);
@@ -362,20 +531,45 @@ function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $fo
     }
   }
 
-  $selector = ':input[name="field_tec_contact_type[' . TEC_CRM_UX_TYPE_SUPPLIER . ']"]';
-  $states = [
-    'visible' => [
-      $selector => ['checked' => TRUE],
-    ],
-  ];
-  foreach (tec_crm_ux_supplier_field_names() as $field_name) {
-    if (isset($form[$field_name])) {
-      $form[$field_name]['#states'] = $states;
+  tec_crm_ux_apply_supplier_visibility($form);
+}
+
+/**
+ * Whether a CRM contact has Contact type = Supplier.
+ */
+function tec_crm_ux_entity_is_supplier(FieldableEntityInterface $entity): bool {
+  if (!$entity->hasField('field_tec_contact_type') || $entity->get('field_tec_contact_type')->isEmpty()) {
+    return FALSE;
+  }
+  foreach ($entity->get('field_tec_contact_type') as $item) {
+    if ((int) $item->target_id === TEC_CRM_UX_TYPE_SUPPLIER) {
+      return TRUE;
     }
   }
-  if (isset($form['group_supplier'])) {
-    $form['group_supplier']['#states'] = $states;
+  return FALSE;
+}
+
+/**
+ * Implements hook_entity_field_access().
+ *
+ * Hide supplier purchase fields on view pages when the contact is not a
+ * Supplier. Edit forms keep the fields (shown/hidden via #states).
+ */
+function tec_crm_ux_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
+  if ($operation !== 'view' || !$items) {
+    return AccessResult::neutral();
   }
+  if (!in_array($field_definition->getName(), tec_crm_ux_supplier_field_names(), TRUE)) {
+    return AccessResult::neutral();
+  }
+  $entity = $items->getEntity();
+  if ($entity->getEntityTypeId() !== 'tec_crm') {
+    return AccessResult::neutral();
+  }
+  $result = tec_crm_ux_entity_is_supplier($entity)
+    ? AccessResult::neutral()
+    : AccessResult::forbidden('Supplier fields are only shown for Supplier contacts.');
+  return $result->addCacheableDependency($entity);
 }
 
 /**

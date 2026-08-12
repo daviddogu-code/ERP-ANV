@@ -51,15 +51,9 @@ gateways:
       -
         id: Activity_0lq4n16
         condition: ''
-      -
-        id: Gateway_1bspm76
-        condition: Flow_0birar7
   Gateway_1bspm76:
     type: 0
-    successors:
-      -
-        id: Activity_1v75f7b
-        condition: Flow_0izr0fb
+    successors: {  }
 actions:
   Activity_1meagnj:
     plugin: eca_write_log_message
@@ -116,7 +110,7 @@ actions:
     successors: {  }
   Activity_1v75f7b:
     plugin: eca_ai_interpolator_rule
-    label: 'Interpolate the Quantity'
+    label: 'Interpolate the Quantity (disabled)'
     configuration:
       rule_name: tec_inventory--tec_bom_item--field_tec_quantity
       overwrite: 1

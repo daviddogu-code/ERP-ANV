@@ -1,0 +1,9 @@
+production_documents:
+  css:
+    theme:
+      css/production-documents.css: {}
+  js:
+    js/production-documents.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

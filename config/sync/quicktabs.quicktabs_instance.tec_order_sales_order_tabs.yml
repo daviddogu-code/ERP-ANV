@@ -38,7 +38,7 @@ configuration_data:
           machine_name: tec_crm_contact_tabs
   -
     title: 'Material calculation'
-    weight: 0
+    weight: 1
     type: block_content
     content:
       node_content:
@@ -61,7 +61,7 @@ configuration_data:
           machine_name: tec_crm_contact_tabs
   -
     title: 'Material Summary'
-    weight: 0
+    weight: 2
     type: view_content
     content:
       node_content:
@@ -77,6 +77,29 @@ configuration_data:
       block_content:
         options:
           bid: 'views_block:tec_order_material_calculation_terms-block_1'
+          block_title: ''
+          display_title: false
+      qtabs_content:
+        options:
+          machine_name: tec_crm_contact_tabs
+  -
+    title: 'Production Documents'
+    weight: 3
+    type: block_content
+    content:
+      node_content:
+        options:
+          nid: ''
+          view_mode: full
+          hide_title: true
+      view_content:
+        options:
+          vid: block_content
+          display: default
+          args: ''
+      block_content:
+        options:
+          bid: tec_order_production_documents
           block_title: ''
           display_title: false
       qtabs_content:

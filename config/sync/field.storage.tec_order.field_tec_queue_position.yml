@@ -1,0 +1,20 @@
+uuid: ba8e63aa-ca7b-492c-91a1-a71fdc672d90
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_order.field_tec_queue_position
+field_name: field_tec_queue_position
+entity_type: tec_order
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

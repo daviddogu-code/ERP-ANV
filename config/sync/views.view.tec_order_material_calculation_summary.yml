@@ -3460,7 +3460,7 @@ display:
           exclude: false
           alter:
             alter_text: false
-            text: '{{ [field_tec_quantity_1] * [field_tec_quantity_input_1] }}'
+            text: ''
             make_link: false
             path: ''
             absolute: false
@@ -3536,7 +3536,7 @@ display:
               field_views_simple_math_field_5: 0
               field_uop_to_uos: 0
               field_tec_uou_split_qty: 0
-            formula: '@field_tec_quantity_1 * @field_tec_quantity_input_1'
+            formula: '@field_tec_quantity * 1'
           mute_logs: false
           set_precision: 1
           precision: '2'
@@ -3704,7 +3704,7 @@ display:
               field_views_simple_math_field_5: 0
               field_uop_to_uos: 0
               field_tec_uou_split_qty: 0
-            formula: '(@field_tec_quantity_1 * @field_tec_quantity_input_1) / @field_tec_split_into'
+            formula: '@field_tec_quantity / @field_tec_split_into'
           mute_logs: true
           set_precision: 1
           precision: '3'
@@ -3865,7 +3865,7 @@ display:
               field_views_simple_math_field_5: 0
               field_uop_to_uos: 0
               field_tec_uou_split_qty: 0
-            formula: '(@field_tec_quantity_1 * @field_tec_quantity_input_1) / @field_tec_split_into / @field_tec_units'
+            formula: '@field_tec_quantity / @field_tec_split_into / @field_tec_units'
           mute_logs: true
           set_precision: 1
           precision: '5'
@@ -3995,9 +3995,9 @@ display:
           id: field_tec_quantity
           table: tec_inventory__field_tec_quantity
           field: field_tec_quantity
-          relationship: field_tec_bom_item
+          relationship: reverse__tec_inventory__field_tec_inventory
           group_type: sum
-          admin_label: ''
+          admin_label: 'Line item BoM total UoU'
           plugin_id: field
           label: 'Total required UoU'
           exclude: true
@@ -5043,7 +5043,7 @@ display:
               field_tec_production_requires_vf: 0
               field_views_simple_math_field_5: 0
               field_uop_to_uos: 0
-            formula: '(@field_tec_quantity_1 * @field_tec_quantity_input_1) / (@field_tec_uou_split_qty * @field_tec_split_into)'
+            formula: '@field_tec_quantity / (@field_tec_uou_split_qty * @field_tec_split_into)'
           mute_logs: true
           set_precision: 1
           precision: '4'

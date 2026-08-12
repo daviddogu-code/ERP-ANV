@@ -26,9 +26,11 @@ AddEncoding gzip svgz
 # sites/default/default.settings.php and
 # Drupal\Core\DrupalKernel::bootEnvironment() for settings that can be
 # changed at runtime.
-<IfModule mod_php.c>
-  php_value assert.active                   0
-</IfModule>
+# NOTE (2026-08-11): the stock "php_value assert.active 0" block was REMOVED
+# on purpose: under mod_php + PHP 8.3 on Windows it corrupts the Apache
+# worker and segfaults every 2nd request (see drupal.org/i/3379901 and
+# tec_production/README.md). Composer scaffold restores it on every
+# require/remove — delete it again if it reappears.
 
 # Requires mod_expires to be enabled.
 <IfModule mod_expires.c>

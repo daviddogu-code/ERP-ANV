@@ -1,0 +1,18 @@
+uuid: 1b2e9014-d0cb-4411-a06f-58b64ce6ca32
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_tec_show_on_prod_doc
+field_name: field_tec_show_on_prod_doc
+entity_type: taxonomy_term
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

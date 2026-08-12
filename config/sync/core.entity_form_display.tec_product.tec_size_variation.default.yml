@@ -17,10 +17,8 @@ dependencies:
     - entity_browser_entity_form
     - field_group
     - ief_table_view_mode
-    - inline_entity_form
     - scan_code
     - select2
-    - viewfield
 third_party_settings:
   field_group:
     group_left:
@@ -66,7 +64,6 @@ third_party_settings:
         required_fields: true
     group_excluded:
       children:
-        - field_tec_import_bom
         - field_tec_color_variation
         - field_tec_product
       label: Excluded
@@ -101,19 +98,19 @@ content:
     third_party_settings:
       scan_code:
         scan_code_group:
-          barcode_scan_enabled: '1'
+          barcode_scan_enabled: true
           scan_code_patterns:
             code_128_reader: code_128_reader
-            ean_reader: 0
-            ean_8_reader: 0
-            code_39_reader: 0
-            code_39_vin_reader: 0
-            codabar_reader: 0
-            upc_reader: 0
-            upc_e_reader: 0
-            i2of5_reader: 0
-            2of5_reader: 0
-            code_93_reader: 0
+            ean_reader: '0'
+            ean_8_reader: '0'
+            code_39_reader: '0'
+            code_39_vin_reader: '0'
+            codabar_reader: '0'
+            upc_reader: '0'
+            upc_e_reader: '0'
+            i2of5_reader: '0'
+            2of5_reader: '0'
+            code_93_reader: '0'
   field_tec_bom:
     type: inline_entity_form_complex_table_view_mode
     weight: 2
@@ -144,32 +141,6 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-  field_tec_controls:
-    type: viewfield_select
-    weight: 4
-    region: content
-    settings: {  }
-    third_party_settings: {  }
-  field_tec_import_bom:
-    type: inline_entity_form_complex
-    weight: 3
-    region: content
-    settings:
-      form_mode: default
-      override_labels: true
-      label_singular: 'CSV file'
-      label_plural: 'CSV files'
-      allow_new: true
-      allow_existing: false
-      match_operator: CONTAINS
-      allow_duplicate: false
-      collapsible: false
-      collapsed: false
-      revision: false
-      removed_reference: delete
-    third_party_settings:
-      entity_browser_entity_form:
-        entity_browser_id: _none
   field_tec_price:
     type: number
     weight: 5
@@ -199,6 +170,8 @@ content:
     third_party_settings: {  }
 hidden:
   created: true
+  field_tec_controls: true
+  field_tec_import_bom: true
   field_tec_view_bill_of_materials: true
   flag: true
   langcode: true

@@ -1,6 +1,6 @@
 _core:
   default_config_hash: fqxTev6tvsJawK6Fh00ONACo-GoP0GlNAjoSRzF7wMw
-header_mobile_breakpoint: '1200'
+header_mobile_breakpoint: '992'
 full_width_containers:
   cnt_secondary_header: cnt_secondary_header
   cnt_header_nav: cnt_header_nav
@@ -107,7 +107,7 @@ header_style: normal
 header_top_bg_opacity: '1'
 header_top_height: '40'
 header_top_fixed: 0
-header_top_sticky: 1
+header_top_sticky: '1'
 header_top_sticky_show: always
 header_top_height_sticky_offset: '60'
 header_top_height_scroll: '50'

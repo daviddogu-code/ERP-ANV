@@ -41,6 +41,7 @@
     "require": {
         "composer/installers": "^2.0",
         "cweagans/composer-patches": "^1.7",
+        "drupal/address": "2.0.4",
         "drupal/admin_toolbar": "^3.4",
         "drupal/ai_interpolator_openai": "^1.0@RC",
         "drupal/ajax_loader": "^2.1",
@@ -171,21 +172,28 @@
             "wikimedia/composer-merge-plugin": true,
             "oomphinc/composer-installers-extender": true
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "block-insecure": false
+        }
     },
     "extra": {
         "drupal-scaffold": {
             "locations": {
                 "web-root": "./"
+            },
+            "file-mapping": {
+                "[web-root]/.htaccess": false
             }
-        },
-        "file-mapping": {
-            "[web-root]/.htaccess": "assets/scaffold/.htaccess"
         },
         "installer-types": [
             "npm-asset"
         ],
-        "patches": [],
+        "patches": {
+            "drupal/inline_entity_form": {
+                "Fix Oops on IEF Cancel when entities is NULL (#3516478)": "patches/ief-close-all-forms-null-entities.patch"
+            }
+        },
         "merge-plugin": {
             "include": [
                 "modules/contrib/charts/modules/charts_billboard/composer.json"

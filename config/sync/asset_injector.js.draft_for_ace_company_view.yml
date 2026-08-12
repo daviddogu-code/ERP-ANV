@@ -77,8 +77,8 @@ code: |-
           //console.log('Grand total:', grandTotal);
       }
 
-      // Bind the keyup and change events to dynamically update totals
-      jQuery(document).on('keyup change', '.views-field-form-field-field-tec-quantity input', function() {
+      // input covers mouse-wheel on number fields; keyup/change cover keyboard.
+      jQuery(document).on('input keyup change', '.views-field-form-field-field-tec-quantity input', function() {
           //console.log("Input changed");
           updateGrandTotal();
       });

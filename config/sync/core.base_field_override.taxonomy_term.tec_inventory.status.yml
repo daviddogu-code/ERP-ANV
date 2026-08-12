@@ -1,0 +1,22 @@
+uuid: e9dda9f7-fb92-49d6-849a-a3dc956a824a
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tec_inventory
+id: taxonomy_term.tec_inventory.status
+field_name: status
+entity_type: taxonomy_term
+bundle: tec_inventory
+label: Active
+description: 'Uncheck to hide this material from lists and new selections without deleting history (stock, BOM, POs).'
+required: false
+translatable: true
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: Active
+  off_label: Inactive
+field_type: boolean

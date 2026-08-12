@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\file_mdm_exif\Plugin\FileMetadata;
 
-use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\file_mdm\Plugin\Attribute\FileMetadata;
 use Drupal\file_mdm\Plugin\FileMetadata\FileMetadataPluginBase;
 use Drupal\file_mdm_exif\ExifTagMapperInterface;
 use lsolesen\pel\PelEntry;
@@ -19,12 +17,13 @@ use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
 /**
  * FileMetadata plugin for EXIF.
+ *
+ * @FileMetadata(
+ *   id = "exif",
+ *   title = @Translation("EXIF"),
+ *   help = @Translation("File metadata plugin for EXIF image information, using the PHP Exif Library (PEL)."),
+ * )
  */
-#[FileMetadata(
-  id: 'exif',
-  title: new TranslatableMarkup('EXIF'),
-  help: new TranslatableMarkup('File metadata plugin for EXIF image information, using the PHP Exif Library (PEL).')
-)]
 class Exif extends FileMetadataPluginBase {
 
   /**
@@ -96,8 +95,11 @@ class Exif extends FileMetadataPluginBase {
         return [];
       }
     }
-    else {
+    elseif ($file instanceof PelTiff) {
       $tiff = $file;
+    }
+    else {
+      return [];
     }
 
     // Scans metadata for entries of supported tags.
@@ -195,8 +197,11 @@ class Exif extends FileMetadataPluginBase {
         $exif->setTiff($tiff);
       }
     }
-    else {
+    elseif ($file instanceof PelTiff) {
       $tiff = $file;
+    }
+    else {
+      return FALSE;
     }
 
     // Get IFD0 if existing, or create it if not.

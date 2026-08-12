@@ -15,3 +15,15 @@ sites/*/private
 
 # Multi-site test environment.
 sites/simpletest
+
+# Database dumps and backup artefacts. Backups live outside the project, in
+# c:\laragon\backups, and must never reach the remote.
+*.sql
+*.sql.gz
+*.zip
+/backups/
+
+# Leftovers from local restores and throwaway debugging scripts.
+/config/sync.pre-restore-*/
+/modules/custom.pre-restore-*/
+/tmp_*

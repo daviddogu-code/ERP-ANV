@@ -1,0 +1,67 @@
+<?php
+
+/**
+ * @file
+ * Install and update hooks for TEC Production.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function tec_production_schema() {
+  $schema['tec_stock_check'] = [
+    'description' => 'Stock Control board checkboxes: material prepared/allocated per order. A row means checked.',
+    'fields' => [
+      'order_id' => [
+        'description' => 'Sales order entity id (tec_order).',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'material_tid' => [
+        'description' => 'Material term id (tec_inventory vocabulary).',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'description' => 'User who checked the box.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'changed' => [
+        'description' => 'Unix timestamp of the last change.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['order_id', 'material_tid'],
+    'indexes' => [
+      'material_tid' => ['material_tid'],
+    ],
+  ];
+  return $schema;
+}
+
+/**
+ * Install the production log entry entity type (phase 2).
+ */
+function tec_production_update_10001() {
+  \Drupal::entityDefinitionUpdateManager()->installEntityType(
+    \Drupal::entityTypeManager()->getDefinition('tec_production_entry')
+  );
+}
+
+/**
+ * Create the stock control checkbox table (phase 4).
+ */
+function tec_production_update_10002() {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('tec_stock_check')) {
+    $spec = tec_production_schema();
+    $schema->createTable('tec_stock_check', $spec['tec_stock_check']);
+  }
+}

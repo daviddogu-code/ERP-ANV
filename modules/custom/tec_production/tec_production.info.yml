@@ -1,0 +1,9 @@
+name: 'TEC Production'
+type: module
+description: 'Production planning: orders queue, daily production log, reports and stock control.'
+package: TEC
+core_version_requirement: ^10 || ^11
+dependencies:
+  - eck:eck
+  - drupal:datetime
+  - drupal:user

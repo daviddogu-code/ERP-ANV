@@ -1,6 +1,7 @@
 /**
  * @file
  * Check Contact type boxes from ?tipo= / ?prefill[]= when the server missed it.
+ * Keep Supplier purchase defaults hidden unless Supplier is checked.
  */
 (function (Drupal, once) {
   'use strict';
@@ -37,19 +38,42 @@
     });
   }
 
+  function syncSupplierFields(form) {
+    const supplier = form.querySelector(
+      'input[type="checkbox"][name="field_tec_contact_type[1396]"]'
+    );
+    const panel = form.querySelector(
+      '#supplier-purchase-defaults, fieldset.tec-crm-supplier-fields'
+    );
+    if (!supplier || !panel) {
+      return;
+    }
+    panel.style.display = supplier.checked ? '' : 'none';
+  }
+
   Drupal.behaviors.tecCrmPrefill = {
     attach: function (context) {
       const tids = tidsFromUrl();
-      if (!tids.length) {
-        return;
+      if (tids.length) {
+        once('tec-crm-prefill', 'html', context).forEach(function () {
+          applyTids(tids);
+        });
+        if (context !== document && context.querySelectorAll) {
+          applyTids(tids);
+        }
       }
-      once('tec-crm-prefill', 'html', context).forEach(function () {
-        applyTids(tids);
+
+      once('tec-crm-supplier-visibility', 'form.tec-crm-contact-form', context).forEach(function (form) {
+        const supplier = form.querySelector(
+          'input[type="checkbox"][name="field_tec_contact_type[1396]"]'
+        );
+        if (supplier) {
+          supplier.addEventListener('change', function () {
+            syncSupplierFields(form);
+          });
+        }
+        syncSupplierFields(form);
       });
-      // Also run against AJAX-replaced fragments.
-      if (context !== document && context.querySelectorAll) {
-        applyTids(tids);
-      }
     }
   };
 })(Drupal, once);

@@ -33,6 +33,7 @@ class Country extends FormElement {
       '#input' => TRUE,
       '#multiple' => FALSE,
       '#default_value' => NULL,
+      '#disabled' => FALSE,
       '#process' => [
         [$class, 'processCountry'],
         [$class, 'processGroup'],
@@ -96,6 +97,7 @@ class Country extends FormElement {
         '#options' => $country_list,
         '#default_value' => $element['#default_value'],
         '#required' => $element['#required'],
+        '#disabled' => $element['#disabled'],
         '#limit_validation_errors' => [],
         '#attributes' => [
           'class' => ['country'],

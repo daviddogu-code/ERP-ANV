@@ -1536,7 +1536,7 @@ display:
           entity_type: taxonomy_term
           entity_field: name
           plugin_id: term_name
-          label: 'Material category'
+          label: 'Material Type'
           exclude: true
           alter:
             alter_text: false
@@ -2750,7 +2750,7 @@ display:
           exposed: true
           expose:
             operator_id: field_tec_material_type_target_id_verf_op
-            label: 'Material category'
+            label: 'Material Type'
             description: ''
             use_operator: false
             operator: field_tec_material_type_target_id_verf_op

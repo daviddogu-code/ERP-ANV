@@ -2172,13 +2172,15 @@ display:
       style:
         type: views_bootstrap_table
         options:
-          grouping:
-            -
-              field: field_tec_material_type
-              rendered: true
-              rendered_strip: false
+          grouping: {  }
           row_class: ''
           default_row_class: false
+          responsive: false
+          bootstrap_styles:
+            bordered: bordered
+            sm: sm
+            hover: hover
+            striped: striped
           override: 1
           sticky: 0
           caption: ''
@@ -2226,12 +2228,6 @@ display:
               responsive: ''
           default: '-1'
           empty_table: 0
-          responsive: 0
-          bootstrap_styles:
-            striped: striped
-            bordered: bordered
-            hover: hover
-            sm: sm
       row:
         type: fields
         options:

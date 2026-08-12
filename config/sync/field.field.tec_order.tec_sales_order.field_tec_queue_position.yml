@@ -1,0 +1,23 @@
+uuid: 69bfb683-58d0-4b23-abcc-cb7f9aab7902
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_sales_order
+    - field.storage.tec_order.field_tec_queue_position
+id: tec_order.tec_sales_order.field_tec_queue_position
+field_name: field_tec_queue_position
+entity_type: tec_order
+bundle: tec_sales_order
+label: 'Queue position'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

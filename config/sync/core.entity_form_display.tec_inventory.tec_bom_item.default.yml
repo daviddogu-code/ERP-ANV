@@ -15,7 +15,6 @@ dependencies:
     - field.field.tec_inventory.tec_bom_item.field_tec_size_variation
   module:
     - select2
-    - viewfield
 _core:
   default_config_hash: nhLp2uzYEB_7TpyAiRSzwgA4Jd3yrrWhvVPhthj6XEA
 id: tec_inventory.tec_bom_item.default
@@ -33,12 +32,6 @@ content:
       match_operator: CONTAINS
       match_limit: 10
     third_party_settings: {  }
-  field_tec_production_requires_vf:
-    type: viewfield_select
-    weight: 2
-    region: content
-    settings: {  }
-    third_party_settings: {  }
   field_tec_quantity_input:
     type: string_textfield
     weight: 1
@@ -47,19 +40,16 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-  flag:
-    weight: 10
-    settings: {  }
-    third_party_settings: {  }
-    region: content
 hidden:
   ai_interpolator_status: true
   created: true
   feeds_item: true
   field_tec_color_swatch_vf: true
   field_tec_imported_item_id: true
+  field_tec_production_requires_vf: true
   field_tec_quantity: true
   field_tec_size_variation: true
+  flag: true
   langcode: true
   status: true
   title: true

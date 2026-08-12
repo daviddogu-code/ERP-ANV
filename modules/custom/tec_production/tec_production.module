@@ -1,0 +1,96 @@
+<?php
+
+/**
+ * @file
+ * TEC Production: orders queue, production log, reports, stock control.
+ *
+ * See README.md for the 4-phase build plan and agreed business rules.
+ */
+
+/**
+ * Implements hook_page_attachments().
+ */
+function tec_production_page_attachments(array &$attachments) {
+  // Site-wide fix: keep the DXPR sticky header below the Gin admin toolbar
+  // (see css/dxpr-gin-header-fix.css). Harmless on pages without DXPR.
+  $attachments['#attached']['library'][] = 'tec_production/dxpr_gin_header_fix';
+}
+
+/**
+ * Implements hook_contextual_links_alter().
+ *
+ * Site-wide fix: draggableviews attaches an "Order view" contextual link to
+ * every views display and points it at the display holding the drag-sort
+ * (draggableviews_contextual_links_alter()). When that display is a page
+ * whose path has a required contextual filter (e.g. tec_products page_2 at
+ * /tec_crm/%/reorder), the URL cannot be generated and the whole
+ * /contextual/render request fails with MissingMandatoryParametersException,
+ * showing the "Oops, something went wrong" banner on any page embedding the
+ * view. Drop the link when its route needs parameters we cannot supply.
+ * This hook runs after draggableviews' one (alphabetical module order).
+ */
+function tec_production_contextual_links_alter(array &$links, $group, array $route_parameters) {
+  $key = 'draggableviews.view.order_view';
+  if ($group !== $key || empty($links[$key]['route_name'])) {
+    return;
+  }
+  try {
+    $route = \Drupal::service('router.route_provider')->getRouteByName($links[$key]['route_name']);
+    foreach ($route->compile()->getPathVariables() as $name) {
+      if (!isset($route_parameters[$name]) && !$route->hasDefault($name)) {
+        unset($links[$key]);
+        return;
+      }
+    }
+  }
+  catch (\Exception $e) {
+    unset($links[$key]);
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert() for tec_production_entry.
+ */
+function tec_production_tec_production_entry_insert($entry) {
+  _tec_production_recompute_produced((int) $entry->get('order_id')->target_id);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for tec_production_entry.
+ */
+function tec_production_tec_production_entry_update($entry) {
+  _tec_production_recompute_produced((int) $entry->get('order_id')->target_id);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete() for tec_production_entry.
+ */
+function tec_production_tec_production_entry_delete($entry) {
+  _tec_production_recompute_produced((int) $entry->get('order_id')->target_id);
+}
+
+/**
+ * Recompute field_tec_produced (X on the queue) as SUM of log entries.
+ *
+ * The Daily Production Log is the sole source of X. The queue form never
+ * writes this field. After the last entry is deleted, the SUM is 0.
+ */
+function _tec_production_recompute_produced(int $order_id): void {
+  if ($order_id <= 0) {
+    return;
+  }
+  $order = \Drupal::entityTypeManager()->getStorage('tec_order')->load($order_id);
+  if (!$order || !$order->hasField('field_tec_produced')) {
+    return;
+  }
+  $result = \Drupal::entityQueryAggregate('tec_production_entry')
+    ->condition('order_id', $order_id)
+    ->aggregate('quantity', 'SUM')
+    ->accessCheck(FALSE)
+    ->execute();
+  $sum = (int) ($result[0]['quantity_sum'] ?? 0);
+  if ((int) $order->get('field_tec_produced')->value !== $sum) {
+    $order->set('field_tec_produced', $sum);
+    $order->save();
+  }
+}

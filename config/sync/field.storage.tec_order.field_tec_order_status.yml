@@ -30,8 +30,11 @@ settings:
       value: quality_control_inspection
       label: 'Quality Control/Inspection'
     -
-      value: completed_ready_for_delivery
-      label: 'Completed/Ready for Delivery'
+      value: completed
+      label: Completed
+    -
+      value: ready_for_delivery
+      label: 'Ready for Delivery'
     -
       value: shipped_delivered
       label: Shipped/Delivered

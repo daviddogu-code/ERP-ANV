@@ -98,10 +98,7 @@ gateways:
         condition: ''
   Gateway_1p4bf5k:
     type: 0
-    successors:
-      -
-        id: Activity_1i1b9rr
-        condition: Flow_0ei4mw8
+    successors: {  }
   Gateway_0q8bfy1:
     type: 0
     successors:
@@ -120,13 +117,10 @@ actions:
       trim: false
       save_entity: true
       object: ''
-    successors:
-      -
-        id: Activity_1i1b9rr
-        condition: ''
+    successors: {  }
   Activity_1i1b9rr:
     plugin: eca_ai_interpolator_rule
-    label: 'Interpolate quantity and save'
+    label: 'Interpolate quantity and save (disabled — local parse)'
     configuration:
       rule_name: tec_inventory--tec_bom_item--field_tec_quantity
       overwrite: 1

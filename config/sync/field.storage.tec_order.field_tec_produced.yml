@@ -1,0 +1,20 @@
+uuid: bfbe8298-269c-4447-a93b-14a5a4e4823c
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_order.field_tec_produced
+field_name: field_tec_produced
+entity_type: tec_order
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

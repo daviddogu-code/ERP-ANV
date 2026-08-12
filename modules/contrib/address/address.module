@@ -7,6 +7,7 @@
 
 use Drupal\address\AddressInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldTypeCategoryManagerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
@@ -103,4 +104,11 @@ function address_field_info_alter(&$info) {
     $info['address_country']['category'] = new TranslatableMarkup("Address");
     $info['address_zone']['category'] = new TranslatableMarkup("Address");
   }
+}
+
+/**
+ * Implements hook_field_type_category_info_alter().
+ */
+function address_field_type_category_info_alter(&$definitions) {
+  $definitions[FieldTypeCategoryManagerInterface::FALLBACK_CATEGORY]['libraries'][] = 'address/field-icon';
 }

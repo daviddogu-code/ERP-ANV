@@ -6,6 +6,7 @@ dependencies:
     - eck.eck_type.tec_crm.tec_contact_organization
     - field.field.tec_crm.tec_contact_organization.field_tec_address
     - field.field.tec_crm.tec_contact_organization.field_tec_contact_type
+    - field.field.tec_crm.tec_contact_organization.field_tec_customer_code
     - field.field.tec_crm.tec_contact_organization.field_tec_email
     - field.field.tec_crm.tec_contact_organization.field_tec_incoterm
     - field.field.tec_crm.tec_contact_organization.field_tec_payment_terms
@@ -24,6 +25,7 @@ third_party_settings:
     group_left:
       children:
         - title
+        - field_tec_customer_code
         - field_tec_email
         - field_tec_phone
         - field_tec_contact_type
@@ -99,13 +101,21 @@ content:
     third_party_settings: {  }
   field_tec_contact_type:
     type: options_buttons
-    weight: 3
+    weight: 4
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_tec_customer_code:
+    type: string_textfield
+    weight: 1
+    region: content
+    settings:
+      size: 10
+      placeholder: 'e.g. ACTA'
+    third_party_settings: {  }
   field_tec_email:
     type: email_default
-    weight: 1
+    weight: 2
     region: content
     settings:
       placeholder: ''
@@ -127,7 +137,7 @@ content:
     third_party_settings: {  }
   field_tec_phone:
     type: phone_number_default
-    weight: 2
+    weight: 3
     region: content
     settings:
       default_country: US

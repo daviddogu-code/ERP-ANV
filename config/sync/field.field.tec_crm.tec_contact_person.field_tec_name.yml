@@ -29,7 +29,7 @@ settings:
     title: false
     given: true
     middle: false
-    family: true
+    family: false
     generational: false
     credentials: false
   max_length:

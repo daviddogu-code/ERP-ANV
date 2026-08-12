@@ -1,0 +1,102 @@
+.tec-log__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.tec-log__card {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  min-width: 170px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.tec-log__card-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.tec-log__card-big {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.tec-log__picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.tec-log__picker .form-item {
+  margin: 0;
+}
+
+.tec-log__picker .tec-log__load-btn {
+  margin: 0 0 0.1rem;
+}
+
+.tec-log__table {
+  font-size: 0.85rem;
+}
+
+.tec-log__table th,
+.tec-log__table td {
+  vertical-align: middle;
+}
+
+.tec-log__table td.tec-log__num,
+.tec-log__table th.tec-log__num-col {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tec-log__table .tec-log__qty-input {
+  width: 6em;
+  text-align: right;
+}
+
+.tec-log__table tr.tec-log__totals td {
+  background: #f3f3f3;
+  border-top: 2px solid #999;
+}
+
+.tec-log__table tr.tec-log__row--done td {
+  background: #ecfdf5;
+}
+
+/* Thumbnail column: 40x40 image, large popup on hover (line items format).
+   Hover is done in CSS because the Simple Popup Views JS binds on page load
+   and would not see this AJAX-loaded grid. */
+.tec-log__table th.tec-log__img-col {
+  width: 56px;
+}
+
+.tec-log__table .spv-popup-link img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.tec-log__table .spv-popup-wrapper:hover .spv-popup-content {
+  display: block;
+}
+
+.tec-log__table .spv-popup-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.tec-log__history {
+  margin-top: 1.5rem;
+}

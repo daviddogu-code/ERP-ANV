@@ -1,0 +1,15 @@
+/**
+ * Compatibility fix: DXPR sticky header vs Gin admin toolbar.
+ *
+ * When the page scrolls, DXPR pins the site header (black menu bar) with
+ * position:fixed at top:0 (its Gin rule), which puts it UNDER Gin's white
+ * horizontal toolbar: menu links end up hidden/cut. Push it down by the
+ * toolbar displacement that Drupal core publishes as a CSS variable.
+ *
+ * The selectors repeat .affix to beat the specificity of DXPR's own
+ * `top: 0 !important` rule for Gin vertical toolbar setups.
+ */
+html.js body.body--dxpr-theme-nav-desktop.gin--vertical-toolbar.toolbar-fixed .dxpr-theme-header--top.affix.affix.affix,
+html.js body.body--dxpr-theme-nav-desktop.toolbar-fixed.toolbar-horizontal .dxpr-theme-header--top.affix.affix.affix {
+  top: var(--drupal-displace-offset-top, 0px) !important;
+}

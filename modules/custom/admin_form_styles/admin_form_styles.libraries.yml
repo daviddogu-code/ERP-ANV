@@ -1,8 +1,8 @@
-# Global menu accent (CSS only, no JS).
-menu-accent:
+# Product entity view (name + material row, etc.).
+product-view:
   css:
     theme:
-      css/menu-accent.css: {}
+      css/product-view.css: {}
 
 # This is your existing library for the stock mutation pop-up
 form-styles:
@@ -14,6 +14,7 @@ form-styles:
   dependencies:
     - core/jquery
     - core/drupal
+    - core/drupalSettings
     - core/once
 
 # --- ADDED: NEW LIBRARY DEFINITION ---

@@ -1,0 +1,53 @@
+tec_production.queue:
+  path: '/o/queue'
+  defaults:
+    _form: '\Drupal\tec_production\Form\ProductionQueueForm'
+    _title: 'Orders on Queue'
+  requirements:
+    _permission: 'access tec production queue'
+
+tec_production.log:
+  path: '/production/log'
+  defaults:
+    _form: '\Drupal\tec_production\Form\ProductionLogForm'
+    _title: 'Daily Production Log'
+  requirements:
+    _permission: 'register tec production'
+
+tec_production.report:
+  path: '/production/report'
+  defaults:
+    _controller: '\Drupal\tec_production\Controller\ProductionReportController::build'
+    _title: 'Production Report'
+  requirements:
+    _permission: 'view tec production report'
+
+tec_production.stock:
+  path: '/stock'
+  defaults:
+    _form: '\Drupal\tec_production\Form\StockControlForm'
+    _title: 'Stock Control'
+  requirements:
+    _permission: 'access tec stock control'
+
+tec_production.stock_check:
+  path: '/stock/check'
+  defaults:
+    _controller: '\Drupal\tec_production\Controller\StockCheckController::save'
+  methods: [POST]
+  requirements:
+    _permission: 'access tec stock control'
+    _csrf_request_header_token: 'TRUE'
+
+tec_production.stock_adjust:
+  path: '/stock/{taxonomy_term}/adjust'
+  defaults:
+    _form: '\Drupal\tec_production\Form\StockAdjustForm'
+    _title: 'Adjust stock'
+  requirements:
+    _permission: 'access tec stock control'
+    taxonomy_term: \d+
+  options:
+    parameters:
+      taxonomy_term:
+        type: 'entity:taxonomy_term'

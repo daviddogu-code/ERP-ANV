@@ -1,0 +1,6 @@
+services:
+  tec_production.queue_tile_redirect:
+    class: Drupal\tec_production\EventSubscriber\QueueTileRedirectSubscriber
+    arguments: ['@config.factory', '@current_route_match']
+    tags:
+      - { name: event_subscriber }

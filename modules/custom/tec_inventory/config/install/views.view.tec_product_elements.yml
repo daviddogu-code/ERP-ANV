@@ -2169,11 +2169,7 @@ display:
       style:
         type: views_bootstrap_table
         options:
-          grouping:
-            -
-              field: field_tec_material_type
-              rendered: true
-              rendered_strip: false
+          grouping: {  }
           row_class: ''
           default_row_class: false
           override: 1

@@ -52,6 +52,7 @@ dependencies:
     - shortcut
     - system
     - taxonomy
+    - tec_production
     - views_bulk_edit
 id: tec_supervisor
 label: Supervisor
@@ -65,6 +66,7 @@ permissions:
   - 'access files overview'
   - 'access media overview'
   - 'access shortcuts'
+  - 'access tec production queue'
   - 'access tec_gui_products entity browser pages'
   - 'access tec_products entity browser pages'
   - 'access user profiles'
@@ -166,6 +168,7 @@ permissions:
   - 'import tec_inventory_csv_importer feeds'
   - 'masquerade as authenticated'
   - 'masquerade as tec_customer'
+  - 'register tec production'
   - 'schedule_import own tec_inventory_csv_importer feeds'
   - 'schedule_import tec_inventory_csv_importer feeds'
   - 'unflag tec_draft_order_excel_lover'
@@ -213,6 +216,7 @@ permissions:
   - 'view own tec_product entities of bundle tec_size_variation'
   - 'view own unpublished content'
   - 'view own unpublished media'
+  - 'view tec production report'
   - 'view tec_inventory_csv_importer feeds'
   - 'view the administration theme'
   - 'view unpublished eck entities'

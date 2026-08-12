@@ -89,48 +89,6 @@ third_party_settings:
         effect: none
         speed: fast
         required_fields: true
-    group_col_left:
-      children:
-        - group_general_info
-        - group_costs
-      label: 'Left column'
-      region: content
-      parent_name: group_row_1
-      weight: 0
-      format_type: html_element
-      format_settings:
-        classes: tec-card-stack
-        show_empty_fields: false
-        id: ''
-        element: div
-        show_label: false
-        label_element: h3
-        label_element_classes: ''
-        attributes: ''
-        effect: none
-        speed: fast
-        required_fields: true
-    group_col_right:
-      children:
-        - group_uom
-        - group_reorder_rules
-      label: 'Right column'
-      region: content
-      parent_name: group_row_1
-      weight: 1
-      format_type: html_element
-      format_settings:
-        classes: tec-card-stack
-        show_empty_fields: false
-        id: ''
-        element: div
-        show_label: false
-        label_element: h3
-        label_element_classes: ''
-        attributes: ''
-        effect: none
-        speed: fast
-        required_fields: true
     group_general_info:
       children:
         - group_general_cols
@@ -273,6 +231,7 @@ third_party_settings:
         - field_tec_lead_time_days
         - field_tec_scrap_margin
         - field_tec_volume_cbm
+        - status
       label: 'Reorder & Safety Stock Rules'
       region: content
       parent_name: group_col_right
@@ -304,6 +263,48 @@ third_party_settings:
         id: stock-history
         element: div
         show_label: true
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_col_left:
+      children:
+        - group_general_info
+        - group_costs
+      label: 'Left column'
+      region: content
+      parent_name: group_row_1
+      weight: 0
+      format_type: html_element
+      format_settings:
+        classes: tec-card-stack
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
+        label_element: h3
+        label_element_classes: ''
+        attributes: ''
+        effect: none
+        speed: fast
+        required_fields: true
+    group_col_right:
+      children:
+        - group_uom
+        - group_reorder_rules
+      label: 'Right column'
+      region: content
+      parent_name: group_row_1
+      weight: 1
+      format_type: html_element
+      format_settings:
+        classes: tec-card-stack
+        show_empty_fields: false
+        id: ''
+        element: div
+        show_label: false
         label_element: h3
         label_element_classes: ''
         attributes: ''
@@ -452,7 +453,7 @@ content:
       override_labels: true
       label_singular: 'stock mutation'
       label_plural: 'stock mutations'
-      allow_new: true
+      allow_new: false
       allow_existing: false
       match_operator: CONTAINS
       allow_duplicate: false
@@ -546,6 +547,13 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 99
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
 hidden:
   feeds_item: true
   field_1_uou_uos_pu: true
@@ -584,4 +592,3 @@ hidden:
   layout_builder__layout: true
   menu: true
   path: true
-  status: true

@@ -23,8 +23,6 @@ variables:
   OPT_IN_TEST_MAX_PHP: 1
   OPT_IN_TEST_NEXT_MINOR: 1
   OPT_IN_TEST_PREVIOUS_MINOR: 1
-  # Show more log output
-  _PHPUNIT_EXTRA: --verbose
   # Convenient, and we have no secrets.
   _SHOW_ENVIRONMENT_VARIABLES: 1
   # Try to track down random failures at https://www.drupal.org/node/3414252

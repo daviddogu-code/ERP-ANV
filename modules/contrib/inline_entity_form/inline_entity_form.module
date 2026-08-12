@@ -132,8 +132,9 @@ function inline_entity_form_reference_form(array $reference_form, FormStateInter
   $reference_form['#element_validate'][] = 'inline_entity_form_reference_form_validate';
   $reference_form['#ief_element_submit'][] = 'inline_entity_form_reference_form_submit';
 
-  // Allow other modules to alter the form.
+  // Allow other modules and themes to alter the form.
   \Drupal::moduleHandler()->alter('inline_entity_form_reference_form', $reference_form, $form_state);
+  \Drupal::theme()->alter('inline_entity_form_reference_form', $reference_form, $form_state);
 
   return $reference_form;
 }
@@ -284,7 +285,12 @@ function inline_entity_form_close_all_forms(array $elements, FormStateInterface 
     // Close the main form.
     $form_state->set(['inline_entity_form', $ief_id, 'form'], NULL);
     // Close the row forms.
-    $entities = $form_state->get(['inline_entity_form', $ief_id, 'entities']);
+    // PATCHED (composer patch could not auto-apply on this machine): when
+    // cancelling a brand-new empty IEF (e.g. BoM add with 0 items), entities
+    // may be NULL - foreach would warn and break the AJAX response.
+    // See https://www.drupal.org/node/3516478 and
+    // patches/ief-close-all-forms-null-entities.patch
+    $entities = $form_state->get(['inline_entity_form', $ief_id, 'entities']) ?? [];
     foreach ($entities as $key => $value) {
       $entities[$key]['form'] = NULL;
     }

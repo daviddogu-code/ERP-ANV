@@ -1,0 +1,43 @@
+uuid: 151f2571-0ae1-4561-bb2b-3a539c0ebf98
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.tec_materials.field_tec_show_on_prod_doc
+    - taxonomy.vocabulary.tec_materials
+  module:
+    - manage_display
+    - text
+id: taxonomy_term.tec_materials.default
+targetEntityType: taxonomy_term
+bundle: tec_materials
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_tec_show_on_prod_doc:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  name:
+    type: title
+    label: hidden
+    settings:
+      link_to_entity: true
+      tag: h2
+    third_party_settings: {  }
+    weight: -49
+    region: content
+hidden:
+  langcode: true

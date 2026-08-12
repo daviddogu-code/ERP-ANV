@@ -5,3 +5,11 @@ prefill:
   dependencies:
     - core/drupal
     - core/once
+
+address:
+  version: 1.0
+  js:
+    js/crm-address.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

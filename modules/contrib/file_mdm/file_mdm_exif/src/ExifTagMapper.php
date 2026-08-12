@@ -8,10 +8,9 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\file_mdm\FileMetadataException;
+use Psr\Log\LoggerInterface;
 use lsolesen\pel\PelIfd;
 use lsolesen\pel\PelTag;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Provides a mapping service for EXIF ifds and tags.
@@ -58,11 +57,9 @@ class ExifTagMapper implements ExifTagMapperInterface {
    *   The cache service.
    */
   public function __construct(
-    #[Autowire(service: 'logger.channel.file_mdm')]
     protected readonly LoggerInterface $logger,
     protected readonly ConfigFactoryInterface $configFactory,
-    #[Autowire(service: 'cache.file_mdm')]
-    protected readonly CacheBackendInterface $cache,
+    protected readonly CacheBackendInterface $cache
   ) {}
 
   public function resolveKeyToIfdAndTag(string|array $key): array {

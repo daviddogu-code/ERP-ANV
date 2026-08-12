@@ -1,0 +1,23 @@
+uuid: 54975b94-8e29-46a0-bb50-407f5c8e39bb
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_sales_order
+    - field.storage.tec_order.field_tec_produced
+id: tec_order.tec_sales_order.field_tec_produced
+field_name: field_tec_produced
+entity_type: tec_order
+bundle: tec_sales_order
+label: 'Produced pieces'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

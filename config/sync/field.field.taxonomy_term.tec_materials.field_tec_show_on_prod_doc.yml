@@ -1,0 +1,23 @@
+uuid: 65c4da32-c3ba-44ce-908e-4d235615e7c6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_show_on_prod_doc
+    - taxonomy.vocabulary.tec_materials
+id: taxonomy_term.tec_materials.field_tec_show_on_prod_doc
+field_name: field_tec_show_on_prod_doc
+entity_type: taxonomy_term
+bundle: tec_materials
+label: 'Show in Production Documents'
+description: 'If checked, materials of this type appear in the materials box on production documents.'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

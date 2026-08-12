@@ -7,7 +7,6 @@ namespace Drupal\file_mdm;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\File\Exception\FileNotExistsException;
-use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\file_mdm\Plugin\FileMetadataPluginInterface;
 use Drupal\file_mdm\Plugin\FileMetadataPluginManagerInterface;
@@ -71,7 +70,7 @@ class FileMetadata implements FileMetadataInterface {
       $this->fileSystem->unlink($tempUri);
       $tempUri .= '.' . pathinfo($this->getUri(), PATHINFO_EXTENSION);
     }
-    if ($tempPath = $this->fileSystem->copy($this->getUri(), $this->fileSystem->realpath($tempUri), FileExists::Replace)) {
+    if ($tempPath = $this->fileSystem->copy($this->getUri(), $this->fileSystem->realpath($tempUri), FileSystemInterface::EXISTS_REPLACE)) {
       $this->setLocalTempPath($tempPath);
     }
     return (bool) $tempPath;
@@ -81,7 +80,7 @@ class FileMetadata implements FileMetadataInterface {
     if (($tempPath = $this->getLocalTempPath()) === NULL) {
       return FALSE;
     }
-    return (bool) $this->fileSystem->copy($tempPath, $this->getUri(), FileExists::Replace);
+    return (bool) $this->fileSystem->copy($tempPath, $this->getUri(), FileSystemInterface::EXISTS_REPLACE);
   }
 
   public function getFileMetadataPlugin(string $metadataId): ?FileMetadataPluginInterface {

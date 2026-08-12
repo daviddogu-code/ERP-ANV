@@ -1,0 +1,21 @@
+uuid: 6bed2bdf-5193-4878-93b9-fcbf43765c14
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_crm.field_tec_customer_code
+field_name: field_tec_customer_code
+entity_type: tec_crm
+type: string
+settings:
+  max_length: 6
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

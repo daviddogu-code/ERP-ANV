@@ -57,7 +57,7 @@ class CountryConstraintValidatorTest extends UnitTestCase {
     if ($expected_violation) {
       $violation_builder = $this->prophesize(ConstraintViolationBuilderInterface::class);
       $violation_builder->setParameter('%value', Argument::any())->willReturn($violation_builder);
-      $violation_builder->addViolation()->willReturn($violation_builder);
+      $violation_builder->addViolation()->shouldBeCalled();
       $context->buildViolation($expected_violation)->willReturn($violation_builder->reveal())->shouldBeCalled();
     }
     else {

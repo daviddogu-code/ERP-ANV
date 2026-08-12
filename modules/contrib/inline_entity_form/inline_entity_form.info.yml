@@ -5,7 +5,7 @@ package: Fields
 core_version_requirement: ^8.8 || ^9 || ^10
 php: 7.1
 
-# Information added by Drupal.org packaging script on 2023-12-19
-version: '8.x-1.0-rc17'
+# Information added by Drupal.org packaging script on 2024-01-08
+version: '3.0.0-rc19'
 project: 'inline_entity_form'
-datestamp: 1703020132
+datestamp: 1704729079

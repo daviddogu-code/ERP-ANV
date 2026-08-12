@@ -1,0 +1,15 @@
+access tec production queue:
+  title: 'Access the production queue'
+  description: 'View and reorder the Orders on Queue page.'
+
+register tec production:
+  title: 'Register daily production'
+  description: 'Create and delete entries on the Daily Production Log.'
+
+view tec production report:
+  title: 'View the production report'
+  description: 'Monthly production report built from the Daily Production Log.'
+
+access tec stock control:
+  title: 'Access stock control'
+  description: 'View the Stock Control board and register +/- stock mutations.'

@@ -17,7 +17,6 @@ dependencies:
   module:
     - field_formatter_class
     - layout_builder
-    - viewfield
 third_party_settings:
   layout_builder:
     enabled: false
@@ -39,14 +38,14 @@ content:
         class: ''
     weight: 0
     region: content
-  field_tec_production_requires_vf:
-    type: viewfield_default
+  field_tec_quantity_input:
+    type: string
     label: hidden
     settings:
-      view_title: hidden
-      always_build_output: false
-      empty_view_title: hidden
-    third_party_settings: {  }
+      link_to_entity: false
+    third_party_settings:
+      field_formatter_class:
+        class: ''
     weight: 1
     region: content
 hidden:
@@ -56,8 +55,8 @@ hidden:
   feeds_item: true
   field_tec_color_swatch_vf: true
   field_tec_imported_item_id: true
+  field_tec_production_requires_vf: true
   field_tec_quantity: true
-  field_tec_quantity_input: true
   field_tec_size_variation: true
   label: true
   langcode: true

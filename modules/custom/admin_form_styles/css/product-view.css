@@ -1,0 +1,23 @@
+/* Product name (h2) + material on one row, same type style. */
+.layout--onecol .inline-block {
+  vertical-align: baseline;
+}
+
+.layout--onecol .inline-block h2 {
+  display: inline;
+  margin: 0;
+}
+
+.tec-product-material-block {
+  display: inline-block;
+  vertical-align: baseline;
+  margin-left: 0.75rem;
+}
+
+/* Bootstrap .h2 matches product name heading styles. */
+.tec-product-material-block .h2,
+.tec-product-material-block .field__item.h2,
+.tec-product-material-block .tec-product-material.h2 {
+  display: inline;
+  margin: 0;
+}

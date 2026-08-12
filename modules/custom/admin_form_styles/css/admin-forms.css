@@ -374,16 +374,6 @@ body .page-wrapper .costs-row {
   box-shadow: 0 4px 12px rgba(0,123,255,0.3);
 }
 
-/* === TEMPORARY: top black menu accent === */
-.dxpr-theme-header,
-.dxpr-theme-header--top,
-.region-secondary-header,
-.toolbar-bar,
-.gin-secondary-toolbar {
-  border-bottom: 3px solid #39ff14 !important;
-  box-shadow: 0 3px 10px rgba(57, 255, 20, 0.5);
-}
-
 /* ==========================================================================
    Add / Edit Material form: card layout
    The rules above target the older #purchasing / .costs-row containers, which

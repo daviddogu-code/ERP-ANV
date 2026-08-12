@@ -730,7 +730,6 @@ display:
         type: full
         options:
           offset: 0
-          pagination_heading_level: h4
           items_per_page: 50
           total_pages: null
           id: 0
@@ -748,6 +747,7 @@ display:
             offset: false
             offset_label: Offset
           quantity: 9
+          pagination_heading_level: h4
       exposed_form:
         type: basic
         options:
@@ -852,14 +852,14 @@ display:
             link_flag: link_flag
           info:
             id:
-              sortable: 0
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
               empty_column: 0
               responsive: ''
             title:
-              sortable: 0
+              sortable: true
               default_sort_order: asc
               align: views-align-left
               separator: ''
@@ -870,15 +870,17 @@ display:
               separator: ''
               empty_column: 0
               responsive: ''
+              sortable: true
+              default_sort_order: asc
             field_tec_order_status:
-              sortable: 0
+              sortable: true
               default_sort_order: asc
               align: views-align-left
               separator: ''
               empty_column: 0
               responsive: ''
             field_tec_priority:
-              sortable: 0
+              sortable: true
               default_sort_order: asc
               align: views-align-left
               separator: ''
@@ -892,14 +894,14 @@ display:
               empty_column: 0
               responsive: ''
             created:
-              sortable: 0
-              default_sort_order: asc
+              sortable: true
+              default_sort_order: desc
               align: views-align-right
               separator: ''
               empty_column: 0
               responsive: ''
             changed:
-              sortable: 0
+              sortable: true
               default_sort_order: desc
               align: views-align-right
               separator: ''
@@ -1808,6 +1810,9 @@ display:
         operator: AND
         groups:
           1: AND
+      style:
+        options:
+          info: null
       defaults:
         empty: false
         title: false
@@ -2721,6 +2726,9 @@ display:
           validate_options: {  }
           break_phrase: false
           not: false
+      style:
+        options:
+          info: null
       defaults:
         empty: false
         pager: false
@@ -3756,6 +3764,9 @@ display:
         operator: AND
         groups:
           1: AND
+      style:
+        options:
+          info: null
       defaults:
         empty: false
         pager: false

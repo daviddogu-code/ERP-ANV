@@ -6,8 +6,8 @@
     "license": "GPL-2.0-or-later",
     "require": {
         "php": "^8.0",
-        "drupal/core": "^9.5 || ^10",
-        "commerceguys/addressing": "^2.1.1"
+        "commerceguys/addressing": "^2.1.1",
+        "drupal/core": "^9.5 || ^10 || ^11"
     },
     "require-dev": {
         "drupal/diff": "^1",

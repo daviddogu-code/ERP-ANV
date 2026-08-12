@@ -1,0 +1,366 @@
+.tec-queue__summary {
+  margin: 0.5rem 0 1rem;
+}
+
+.tec-queue__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tec-queue__card {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  min-width: 170px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.tec-queue__card-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.tec-queue__card-big {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.tec-queue__card-small {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.tec-queue__settings {
+  margin-bottom: 1rem;
+}
+
+/* Horizontal scroll container. Its native scrollbar is hidden; scrolling is
+   driven by the fixed bar at the bottom of the window (Google Sheets style).
+   Vertical scrolling stays on the browser scrollbar only. */
+.tec-queue__table-wrap {
+  overflow-x: auto;
+  border: 1px solid #c8c8c8;
+  scrollbar-width: none;
+}
+
+.tec-queue__table-wrap::-webkit-scrollbar {
+  display: none;
+}
+
+/* Synthetic horizontal scrollbar fixed to the bottom of the viewport. */
+.tec-queue__hscroll {
+  position: fixed;
+  bottom: 0;
+  height: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #f1f1f1;
+  border-top: 1px solid #c8c8c8;
+  z-index: 501;
+  display: none;
+}
+
+.tec-queue__hscroll-inner {
+  height: 1px;
+}
+
+/* White strip between the admin toolbar and the frozen header. Above page
+   content (z 0-10) but safely below any toolbar implementation. */
+.tec-queue__topmask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  z-index: 90;
+  display: none;
+}
+
+/* Spreadsheet look, matching the Google Sheet.
+   border-collapse stays "separate" so the frozen rows keep their borders. */
+#tec-production-queue {
+  font-size: 0.82rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+}
+
+#tec-production-queue th,
+#tec-production-queue td {
+  border-right: 1px solid #c8c8c8;
+  border-bottom: 1px solid #c8c8c8;
+  padding: 2px 6px;
+  background: #fff;
+}
+
+#tec-production-queue td {
+  vertical-align: middle;
+}
+
+#tec-production-queue thead th {
+  background: #efefef;
+  text-align: center;
+  vertical-align: bottom;
+  padding: 4px 4px;
+}
+
+/* Header + TOTAL row frozen via JS translateY while the page scrolls. */
+#tec-production-queue thead {
+  position: relative;
+  z-index: 10;
+}
+
+#tec-production-queue tr.tec-queue__totals {
+  position: relative;
+  z-index: 9;
+}
+
+
+.tec-queue__h-en {
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.tec-queue__h-lo {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: #333;
+}
+
+/* All product type columns share the same fixed width. The inner blocks
+   carry the constraint because table auto-layout ignores width on cells
+   whose content is wider; long Lao labels truncate with an ellipsis. */
+#tec-production-queue th.tec-queue__cat {
+  width: 65px;
+  min-width: 65px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+#tec-production-queue th.tec-queue__cat br {
+  display: none;
+}
+
+#tec-production-queue th.tec-queue__cat .tec-queue__h-en {
+  display: block;
+  width: 59px;
+  margin: 0 auto;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+#tec-production-queue th.tec-queue__cat .tec-queue__h-lo {
+  display: block;
+  width: 59px;
+  margin: 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Header group colors from the sheet. */
+#tec-production-queue th.tec-queue__cat--green {
+  background: #93c47d;
+}
+
+#tec-production-queue th.tec-queue__cat--blue {
+  background: #cfe2f3;
+}
+
+#tec-production-queue th.tec-queue__cat--yellow {
+  background: #fff2cc;
+}
+
+#tec-production-queue th.tec-queue__cat--other {
+  background: #d9d2e9;
+}
+
+#tec-production-queue th.tec-queue__total-col {
+  background: #ead1dc;
+}
+
+/* TOTAL row (like row 4 of the sheet). */
+#tec-production-queue tr.tec-queue__totals td {
+  background: #f3f3f3;
+  border-bottom: 2px solid #999;
+}
+
+#tec-production-queue td.tec-queue__num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Shrink NO / ORDER / STATUS to their content; numbers get the space. */
+#tec-production-queue td.tec-queue__no-cell,
+#tec-production-queue td.tec-queue__order-cell,
+#tec-production-queue td.tec-queue__status-cell {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* Cap the ORDER column: long labels get truncated with an ellipsis
+   (full name in the tooltip). The cap must live on the link because
+   max-width is ignored on table cells in auto layout. */
+#tec-production-queue td.tec-queue__order-cell a {
+  display: block;
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#tec-production-queue td.tec-queue__no-cell {
+  text-align: left;
+  color: #666;
+  white-space: nowrap;
+  min-width: 60px;
+  padding-left: 6px;
+}
+
+/* Undo core tabledrag's float + negative margin, which made the drag icon
+   overlap the NO number and the ORDER column in these compact cells. */
+#tec-production-queue .draggable a.tabledrag-handle {
+  float: none;
+  display: inline-block;
+  vertical-align: middle;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+}
+
+#tec-production-queue a.tabledrag-handle .handle {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  background-position: center;
+}
+
+#tec-production-queue .tec-queue__no {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 5px;
+}
+
+#tec-production-queue td.tec-queue__total-cell {
+  background: #fafafa;
+}
+
+#tec-production-queue .tec-queue__zero {
+  color: #d9d9d9;
+}
+
+#tec-production-queue .tec-queue__produced-locked {
+  font-weight: 600;
+  color: #1e3a5f;
+}
+
+#tec-production-queue .tec-queue__deadline {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+#tec-production-queue .tec-queue__status-cell {
+  font-size: 0.72rem;
+  color: #555;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Status label + compact → advance (tooltip = next status). */
+#tec-production-queue td.tec-queue__status-cell > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 118px;
+  max-width: 160px;
+}
+
+#tec-production-queue td.tec-queue__status-cell .tec-queue__status {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#tec-production-queue td.tec-queue__status-cell .tec-queue__advance,
+#tec-production-queue td.tec-queue__status-cell input.tec-queue__advance {
+  flex: 0 0 auto;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.35em;
+  height: 1.35em;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  box-shadow: none;
+  color: #2563eb;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35em;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+#tec-production-queue td.tec-queue__status-cell .tec-queue__advance:hover,
+#tec-production-queue td.tec-queue__status-cell input.tec-queue__advance:hover {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.1);
+  box-shadow: none;
+  text-decoration: none;
+}
+
+#tec-production-queue td.tec-queue__status-cell .tec-queue__advance:focus,
+#tec-production-queue td.tec-queue__status-cell input.tec-queue__advance:focus {
+  outline: 1px dotted #2563eb;
+  outline-offset: 1px;
+  background: rgba(37, 99, 235, 0.08);
+  box-shadow: none;
+}
+
+/* Keep the link readable on grey Open rows. */
+#tec-production-queue tr.tec-queue__row--open td.tec-queue__status-cell .tec-queue__advance {
+  color: #1e40af;
+}
+
+/* Open (no deposit yet) = grey rows, same #ccc as the sheet. */
+#tec-production-queue tr.tec-queue__row--open td {
+  background: #cccccc;
+}
+
+#tec-production-queue tr.tec-queue__row--open td,
+#tec-production-queue tr.tec-queue__row--open a {
+  color: #4b5563;
+}
+
+#tec-production-queue tr.tec-queue__row--producing td {
+  background: #ecfdf5;
+}
+
+/* Completed — mfg done, admin period (invoice + packing). EXW: stays until Shipped. */
+#tec-production-queue tr.tec-queue__row--completed td {
+  background: #eef2ff;
+}
+
+/* Ready for Delivery — admin done, waiting to ship. */
+#tec-production-queue tr.tec-queue__row--ready td {
+  background: #ecfeff;
+}
+
+#tec-production-queue tr.drag td {
+  background: #fef9c3;
+}

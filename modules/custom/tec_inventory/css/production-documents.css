@@ -1,0 +1,316 @@
+.tec-production-docs {
+  --tec-pd-border: #1e3a5f;
+  --tec-pd-head: #2f5f8f;
+  --tec-pd-muted: #6b7280;
+  --tec-pd-zero: #9ca3af;
+  --tec-pd-col-picture: 180px;
+  --tec-pd-col-sizes: 200px;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  color: #111;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.tec-production-docs__toolbar {
+  margin-bottom: 1rem;
+}
+
+.tec-production-docs__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem 1.25rem;
+  border-bottom: 2px solid var(--tec-pd-border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0;
+}
+
+.tec-production-docs__totals-row {
+  margin: 0.85rem 0 1.25rem;
+}
+
+.tec-production-docs__header-grid,
+.tec-production-docs__variation-grid {
+  display: grid;
+  grid-template-columns: var(--tec-pd-col-picture) var(--tec-pd-col-sizes) minmax(180px, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.tec-production-docs__order-cell {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.tec-production-docs__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+}
+
+.tec-production-docs__nav-btn {
+  appearance: none;
+  background: #e8eef5;
+  border: 1px solid #94a3b8;
+  border-radius: 3px;
+  color: #0f172a;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.25rem 0.65rem;
+  text-decoration: none;
+}
+
+.tec-production-docs__nav-btn:hover {
+  background: #dbe7f3;
+}
+
+.tec-production-docs__nav-btn.is-active {
+  background: var(--tec-pd-head);
+  border-color: var(--tec-pd-border);
+  color: #fff;
+  font-weight: 600;
+}
+
+.tec-production-docs__doc {
+  display: none;
+}
+
+.tec-production-docs__doc.is-active {
+  display: block;
+}
+
+.tec-production-docs__doc-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.tec-production-docs__product {
+  margin-bottom: 2rem;
+}
+
+.tec-production-docs__product-title {
+  background: var(--tec-pd-head);
+  color: #fff;
+  margin: 0 0 0.75rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.tec-production-docs__variation {
+  margin-bottom: 1.25rem;
+  break-inside: avoid;
+}
+
+.tec-production-docs__picture img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid #d1d5db;
+  background: #fff;
+}
+
+.tec-production-docs__picture-empty {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d1d5db;
+  color: var(--tec-pd-muted);
+  font-size: 0.85rem;
+}
+
+.tec-production-docs__color-name {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tec-production-docs__sizes table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.95rem;
+}
+
+.tec-production-docs__sizes th,
+.tec-production-docs__sizes td {
+  border: 1px solid #cbd5e1;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* Keep label | value divider aligned across Grand total and Size/Quantity tables. */
+.tec-production-docs__sizes th:first-child,
+.tec-production-docs__sizes td:first-child {
+  width: 58%;
+}
+
+.tec-production-docs__sizes th:last-child,
+.tec-production-docs__sizes td:last-child {
+  width: 42%;
+}
+
+.tec-production-docs__sizes thead th,
+.tec-production-docs__sizes tfoot th {
+  background: #e8eef5;
+}
+
+.tec-production-docs__sizes tr.is-zero td {
+  color: var(--tec-pd-zero);
+}
+
+.tec-production-docs__materials {
+  border: 2px solid var(--tec-pd-border);
+  padding: 0.65rem 0.75rem;
+  min-height: 4rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  background: #f8fafc;
+}
+
+.tec-production-docs__materials-empty {
+  color: var(--tec-pd-muted);
+  font-style: italic;
+}
+
+/* Sheet cutting tables (per-product docs only). Removable with ENABLE_CUTTING_TABLES. */
+.tec-production-docs__cutting {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  margin: 1.25rem 0 0.5rem;
+  align-items: flex-start;
+}
+
+.tec-production-docs__cutting-table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 280px;
+  max-width: 100%;
+}
+
+.tec-production-docs__cutting-table th,
+.tec-production-docs__cutting-table td {
+  border: 1px solid #94a3b8;
+  padding: 0.28rem 0.5rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tec-production-docs__cutting-table .tec-production-docs__cutting-size {
+  background: #cfe2f3;
+  text-align: center;
+  font-weight: 700;
+}
+
+.tec-production-docs__cutting-table thead tr:last-child th {
+  background: #e8eef5;
+  font-weight: 600;
+}
+
+.tec-production-docs__cutting-table td:nth-child(2),
+.tec-production-docs__cutting-table td:nth-child(3),
+.tec-production-docs__cutting-table thead tr:last-child th:nth-child(2),
+.tec-production-docs__cutting-table thead tr:last-child th:nth-child(3) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 800px) {
+  .tec-production-docs__header-grid,
+  .tec-production-docs__variation-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  /*
+   * Print only a cloned active production document (see production-documents.js).
+   * Starts at top of page, continuous flow (no large gaps).
+   */
+  html.tec-printing-production-docs,
+  html.tec-printing-production-docs body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  html.tec-printing-production-docs body > *:not(.tec-print-root) {
+    display: none !important;
+  }
+
+  html.tec-printing-production-docs body > .tec-print-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 8mm !important;
+    background: #fff !important;
+  }
+
+  .tec-print-root .no-print {
+    display: none !important;
+  }
+
+  .tec-print-root .tec-production-docs__doc {
+    display: block !important;
+  }
+
+  .tec-print-root .tec-production-docs__header {
+    margin-bottom: 2mm;
+    padding-bottom: 2mm;
+  }
+
+  .tec-print-root .tec-production-docs__totals-row {
+    margin: 2mm 0 3mm;
+  }
+
+  .tec-print-root .tec-production-docs__product {
+    margin-bottom: 4mm;
+  }
+
+  .tec-print-root .tec-production-docs__variation {
+    margin-bottom: 3mm;
+  }
+
+  .tec-print-root .tec-production-docs__product-title,
+  .tec-print-root .tec-production-docs__sizes thead th,
+  .tec-print-root .tec-production-docs__sizes tfoot th,
+  .tec-print-root .tec-production-docs__materials,
+  .tec-print-root .tec-production-docs__cutting-table .tec-production-docs__cutting-size,
+  .tec-print-root .tec-production-docs__cutting-table thead tr:last-child th {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .tec-print-root .tec-production-docs__cutting {
+    gap: 3mm;
+    margin-top: 3mm;
+  }
+
+  .tec-print-root .tec-production-docs__cutting-table {
+    font-size: 9pt;
+  }
+
+  .tec-print-root .tec-production-docs__header-grid,
+  .tec-print-root .tec-production-docs__variation-grid {
+    display: grid !important;
+    grid-template-columns: 40mm 50mm 1fr;
+    gap: 3mm;
+    align-items: start;
+  }
+
+  .tec-print-root .tec-production-docs__picture img {
+    max-width: 100%;
+  }
+}
