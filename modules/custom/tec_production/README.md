@@ -186,3 +186,168 @@ capacity parameters.
 ## Revert
 Uninstall the module and delete the two fields above and the landing tile
 node. No existing behaviour is modified.
+
+---
+
+# Deployment procedure
+
+Validated on 2026-08-12 by rebuilding the whole ERP from scratch in a
+throwaway directory (`tec-ensayo`) using nothing but the three ingredients
+below. The rebuilt site served `/`, `/user/login`, `/o/queue`, `/stock` and
+`/production/log` with real data and zero PHP errors, so the ingredients are
+sufficient — but only if the verification steps here are followed, because
+`composer install` alone does **not** produce a correct tree (see "Traps").
+
+## Ingredients
+
+| Ingredient | Contains | Notes |
+|---|---|---|
+| `github.com/daviddogu-code/ERP-ANV`, branch `main` | everything except `/core`, `/vendor`, and the two runtime file directories | ~17,500 files, 43 MB |
+| database dump | the `actatec` schema | 460 tables |
+| project archive | `sites/default/files` **and** `sites/default/private` | 2,640 + 1,384 files |
+
+The repo carries `config/sync` (1,097 files), `libraries/` (select2,
+tiny-slider, swiffy-slider, jquery-ui-touch-punch), the patch in `patches/`,
+and the four contrib modules Composer does not manage (`pdf_serialization`,
+`views_entity_form_field`, `quicktabs`, `integer_to_decimal`). All of these
+were confirmed to arrive intact.
+
+`sites/default/private` is **not** in the repo and is easy to forget. It holds
+1,384 real files (dated folders 2024-05 … 2026-08, `feeds`, `filefield_paths`,
+`file_resup_temporary`). Restore it or private-file downloads break.
+
+## Steps
+
+1. `git clone` the repo into the target directory.
+2. `composer install` — never `composer update`, see the note in the
+   2026-08-11 incident above.
+3. **Verify the install and repeat if needed** (see "Traps" 1 and 2):
+
+   ```bash
+   # every package directory must exist and be non-empty
+   ls modules/contrib | wc -l   # expect 156
+   ls themes/contrib  | wc -l   # expect 3
+   # no truncated files
+   find core modules themes vendor libraries -type f -empty | wc -l
+   ```
+
+   Re-run `composer install` until the counts stop changing. The Windows
+   rehearsal needed three passes; on Linux one is normally enough, but the
+   check costs nothing.
+4. **Apply the inline_entity_form patch manually and verify it** (see "Traps"
+   3 — Composer will report success while silently skipping it):
+
+   ```bash
+   cd modules/contrib/inline_entity_form
+   patch -p1 --no-backup-if-mismatch -i ../../../patches/ief-close-all-forms-null-entities.patch
+   grep -c '?? \[\]' inline_entity_form.module   # must print 1
+   ```
+5. Create the database and import the dump.
+6. Restore `sites/default/files` and `sites/default/private` from the archive.
+7. Install `sites/default/settings.php` and edit exactly four things:
+   - `$databases['default']['default']['database']` (and user/password/host).
+   - `$settings['trusted_host_patterns']` — add the production domain.
+     Without it Drupal answers **400 Bad Request** to every request.
+   - `$settings['rebuild_access']` — set to **FALSE**. It is `TRUE` in the
+     current file, which lets anyone run `rebuild.php`.
+   - `$settings['hash_salt']` — keep the existing value; changing it
+     invalidates all sessions and one-time login links.
+
+   Leave `config_sync_directory` (`config/sync`) and `file_private_path`
+   (`sites/default/private`) alone: both are relative and already correct.
+8. Point the web server at the project root. This is a
+   `drupal/legacy-project` layout: the document root **is** the repository
+   root, not a `web/` subdirectory.
+9. `drush cr`, then verify (see checklist).
+
+## Traps found during the rehearsal
+
+1. **A crashed `composer install` poisons the cache silently.** The first pass
+   died on a corrupt download (`'…tmp-….zip' is a corrupted zip archive (0
+   bytes)`) and cached the damaged archive. Every later pass reused it and
+   extracted **113 files of `drupal/core` as 0 bytes** — including
+   `assets/vendor/backbone/backbone.js` (79 KB) and three CKEditor 5 plugins,
+   which breaks the admin UI, plus every `assets/scaffold/files/*` source, so
+   the scaffold then copied empty files over good ones (`.ht.router.php`,
+   `modules/README.txt`, …). Composer exits 0 throughout. Cure: delete the
+   cached archive and `composer reinstall drupal/core`. Detect it with the
+   empty-file check in step 3.
+2. **A successful `composer install` can still leave packages missing.** After
+   the crashed first pass, a second pass reported "243 installs" and exited 0,
+   yet `modules/contrib` held 45 of 156 directories and `themes/contrib` was
+   empty. A third pass installed the remaining 157 packages. Only packages
+   installed from a dist zip were affected; git-source (`dev-*`) packages and
+   the four non-Composer modules survived. Always verify, never trust exit 0.
+3. **The inline_entity_form patch never applies by itself.** Reproduced four
+   times. `cweagans/composer-patches` first *deletes* the package — the log
+   says `Removing package drupal/inline_entity_form so that it can be
+   re-installed and re-patched` — then tries `git apply`, which **silently
+   skips** the patch because the module lives inside the project's own Git
+   working tree and the patch paths (`a/inline_entity_form.module`) do not
+   start with the `modules/contrib/inline_entity_form/` prefix Git demands.
+   It then falls back to `patch`, and if that binary is absent the whole thing
+   ends in `Could not apply patch! Skipping.` — with the package left
+   unpatched or, in the worst case, deleted. This is the mechanism behind the
+   old "composer uninstalled inline_entity_form" incident.
+
+   Consequences for the server: make sure the `patch` binary is installed
+   (`apt-get install patch`; it is missing from many slim images), and always
+   run the `grep` check in step 4. Consider setting
+   `"composer-exit-on-patch-failure": true` under `extra` in `composer.json`
+   so a failed patch aborts the build loudly instead of shipping quietly.
+
+   The patch also carries a one-line-off hunk header (`@@ -284` while the
+   context starts at 285). GNU `patch` absorbs it ("Hunk #1 succeeded at 285,
+   offset 1 line"); stricter tools may not.
+4. **`.htaccess` protection works — leave it alone.** Across four Composer
+   runs the file was never touched (`Skip [web-root]/.htaccess: overridden in
+   drupal/legacy-project`) and its checksum was identical before and after.
+   The `assert.active` string still appears in the file, but only inside the
+   comment that explains why the directive was removed.
+5. **Line endings.** Cloning on Windows converts tracked files to CRLF, so 34
+   files under `modules/custom` differ from the live site by line endings
+   only — content is byte-identical. On Linux the checkout keeps LF. Harmless
+   here, but do not let it confuse a diff.
+6. **Pre-existing condition, unrelated to deployment:** `views_aggregator`
+   2.1.1 declares `core_version_requirement: ^10.3 || ^11` while the site runs
+   10.2.4, so the status report lists it as an incompatible module. It is one
+   of the hand-installed modules. Same files on the live site, so this ships
+   as-is unless it is downgraded first.
+7. Contrib code differs slightly from the live site (142 files absent, 22
+   extra, spread thinly over ~40 modules — mostly CI/test/doc files). That is
+   drift accumulated on the live install; a fresh deploy gets exactly what
+   `composer.lock` specifies, and the rehearsal proved that combination works.
+
+## Post-deploy checklist
+
+```bash
+drush status                     # "Drupal bootstrap: Successful"
+drush cr
+```
+
+- All enabled extensions resolve on disk — the rehearsal had **192** and none
+  missing.
+- Row counts against the source database: `tec_order_field_data` 123,
+  `tec_inventory_field_data` 4,987, `tec_product_field_data` 214,
+  `tec_line_item_field_data` 583, `file_managed` 315, `config` 1,255.
+- `/user/login` returns 200; `/`, `/o/queue`, `/stock`, `/production/log`
+  return 200 when logged in as administrator (307 to the login page when
+  anonymous, via r4032login).
+- `/o/queue` shows orders with a computed TOTAL row; `/stock` shows materials
+  with suppliers and non-zero `Projected` / `Required` columns;
+  `/production/log` lists dated entries.
+- Image styles generate: request any
+  `/sites/default/files/styles/small_40x40/public/...` URL and expect 200.
+- `drush core:requirements --severity=1` — expect only the known items
+  (Color Field libraries, cron, PWA/HTTPS, the entity-definition mismatch
+  inherited from the dump, and `views_aggregator`). Anything new is a
+  deployment problem.
+
+## Not covered by this rehearsal
+
+Everything was validated on Windows/Laragon against PHP 8.3.30, MySQL 8.4.3
+and Drupal 10.2.4, over HTTP with Drupal's own router. The following still
+have to be settled on the server: HTTPS and the PWA "HTTPS off" error, cron
+scheduling (Ultimate Cron reported 11 jobs behind), outbound mail, file
+ownership and permissions for `sites/default/files` and `.../private`, and
+`opcache`/`realpath_cache` sizing under mod_php or PHP-FPM.
