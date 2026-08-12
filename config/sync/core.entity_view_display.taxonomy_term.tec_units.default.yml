@@ -3,7 +3,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.taxonomy_term.tec_units.ai_interpolator_status
     - field.field.taxonomy_term.tec_units.field_tec_unit_plural
     - field.field.taxonomy_term.tec_units.field_tec_unit_symbol
     - field.field.taxonomy_term.tec_units.field_tec_unit_type
@@ -57,5 +56,4 @@ content:
     weight: -49
     region: content
 hidden:
-  ai_interpolator_status: true
   langcode: true

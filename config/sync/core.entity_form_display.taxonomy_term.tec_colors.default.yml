@@ -3,7 +3,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.taxonomy_term.tec_colors.ai_interpolator_status
     - field.field.taxonomy_term.tec_colors.field_tec_ai_color
     - field.field.taxonomy_term.tec_colors.field_tec_color_code_html
     - taxonomy.vocabulary.tec_colors
@@ -69,7 +68,6 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
-  ai_interpolator_status: true
   description: true
   langcode: true
   path: true

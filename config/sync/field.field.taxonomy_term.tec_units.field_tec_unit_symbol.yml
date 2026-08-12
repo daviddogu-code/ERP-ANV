@@ -9,7 +9,7 @@ dependencies:
     - ai_interpolator
 third_party_settings:
   ai_interpolator:
-    interpolator_enabled: 1
+    interpolator_enabled: false
     interpolator_rule: ai_interpolator_openai_string
     interpolator_mode: token
     interpolator_base_field: revision_log_message

@@ -67,6 +67,7 @@ permissions:
   - 'access media overview'
   - 'access shortcuts'
   - 'access tec production queue'
+  - 'access tec stock control'
   - 'access tec_gui_products entity browser pages'
   - 'access tec_products entity browser pages'
   - 'access user profiles'

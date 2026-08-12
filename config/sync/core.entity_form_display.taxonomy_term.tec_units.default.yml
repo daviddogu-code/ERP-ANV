@@ -3,7 +3,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.taxonomy_term.tec_units.ai_interpolator_status
     - field.field.taxonomy_term.tec_units.field_tec_unit_plural
     - field.field.taxonomy_term.tec_units.field_tec_unit_symbol
     - field.field.taxonomy_term.tec_units.field_tec_unit_type
@@ -13,12 +12,6 @@ targetEntityType: taxonomy_term
 bundle: tec_units
 mode: default
 content:
-  ai_interpolator_status:
-    type: options_select
-    weight: 0
-    region: content
-    settings: {  }
-    third_party_settings: {  }
   field_tec_unit_plural:
     type: string_textfield
     weight: 2

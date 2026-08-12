@@ -8,3 +8,4 @@ include_open: true
 queue_tile_nid: 11
 log_tile_nid: 12
 report_tile_nid: 13
+stock_tile_nid: 14
