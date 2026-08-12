@@ -24,16 +24,22 @@ por error algo que estaba puesto a propósito.
 
 ## 1. Ahora mismo
 
-- **Subir a Google Drive los dos zips de copia de seguridad** que están en
-  `c:\laragon\backups`: `actatec-db-20260812.zip` (la base de datos) y
-  `tec-project-20260812.zip` (el proyecto con las imágenes). Hoy la única copia completa del
-  ERP vive en un solo disco duro. GitHub no cubre ni las imágenes ni los datos.
+- **Renombrar en Google Drive la carpeta `2026-08-12`**, dentro de `Backups ERP-ANV`, a
+  `2026-08-12 PRE-limpieza - NO usar para desplegar`. Los dos zips se subieron por la mañana,
+  horas antes de quitar la clave de OpenAI, así que llevan dentro las credenciales del
+  programador anterior. Como copia de seguridad sirven igual, pero si alguien los usa de
+  ingrediente el día del despliegue, la clave reaparece en el servidor nuevo y el trabajo del
+  12 de agosto se pierde. Son diez segundos y evitan un accidente difícil de detectar.
 
 ## 2. Esta semana
 
-- **Crear el droplet de Singapur.** Cinco minutos en el panel de DigitalOcean. Las
-  características y el porqué están en la sección 7. A partir de ahí el resto es trabajo
-  técnico que no requiere decisiones.
+- **Crear una llave SSH.** No hay ninguna en el PC. Va primero porque DigitalOcean pregunta
+  al crear el droplet cómo se va a entrar, y sin llave registrada solo deja elegir contraseña
+  de administrador por correo, que es justo lo que el plan descarta. Lo hace el agente en un
+  minuto; al dueño solo le toca pegar la parte pública en el panel.
+- **Crear el droplet de Singapur.** Cinco minutos en el panel de DigitalOcean, después de la
+  llave. Las características y el porqué están en la sección 7. A partir de ahí el resto es
+  trabajo técnico que no requiere decisiones.
 - **Guardar los diez códigos de recuperación de Namecheap** fuera del móvil, en Drive o
   impresos. Namecheap no permite dos métodos de 2FA a la vez, así que si se pierde el
   teléfono esos códigos son la única forma de entrar en el dominio.
@@ -82,6 +88,9 @@ requiere decisiones del dueño, salvo los tres puntos de correo y el de las cuen
   unos días por si acaso.
 - **Borrar el snapshot `actafight.com-1755603370919`** (38,68 GB) cuando el ERP nuevo lleve
   un mes funcionando.
+- **Borrar de Drive la carpeta `PRE-limpieza`** cuando exista la copia nueva y el servidor
+  lleve unos días funcionando. Así deja de haber dos juegos de copias y desaparece el último
+  sitio donde queda la clave de OpenAI del programador anterior.
 
 ## 5. Con fecha en el calendario
 
@@ -183,14 +192,20 @@ máquina entera. Sacar esos volcados fuera del servidor, a Drive, queda para una
 
 ### El orden
 
-1. Crear el droplet en el panel. **Lo tiene que hacer el dueño**, son cinco minutos.
-2. Dejarlo configurado: sistema, Apache, PHP, MySQL, `patch`, cortafuegos y accesos.
-3. Subir el ERP siguiendo el procedimiento del README: el código desde GitHub, la base de
-   datos y los archivos desde los zips, y `settings.php` escrito a mano.
-4. Añadir el registro A de `erp.anvfightgear.com` en Namecheap.
-5. Instalar el certificado con Let's Encrypt.
-6. Probarlo unos días con el de Nueva York todavía encendido.
-7. Destruir el de Nueva York.
+1. Crear la llave SSH, porque el paso siguiente la pide.
+2. Crear el droplet en el panel. **Lo tiene que hacer el dueño**, son cinco minutos.
+3. Dejarlo configurado: sistema, Apache, PHP, MySQL, `patch`, cortafuegos y accesos.
+4. **Hacer copias nuevas ese mismo día.** Las que hay en Drive son del 12 de agosto por la
+   mañana, anteriores a la limpieza de credenciales, y no valen como ingrediente. Antes de
+   comprimir hay que comprobar que no ha reaparecido ninguna copia de `openai.settings.yml`
+   con la clave dentro de `sites/default/files`: es la única carpeta que viaja en el zip y
+   que GitHub no cubre, así que es el único sitio por donde la clave puede colarse.
+5. Subir el ERP siguiendo el procedimiento del README: el código desde GitHub, la base de
+   datos y los archivos desde esos zips nuevos, y `settings.php` escrito a mano.
+6. Añadir el registro A de `erp.anvfightgear.com` en Namecheap.
+7. Instalar el certificado con Let's Encrypt.
+8. Probarlo unos días con el de Nueva York todavía encendido.
+9. Destruir el de Nueva York.
 
 Crear el servidor son veinte minutos. Dejarlo bien, una tarde.
 
@@ -267,6 +282,24 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-12 — Las copias, fuera del disco duro
+
+Los dos zips ya están en Google Drive, en `Backups ERP-ANV / 2026-08-12`, con el mismo tamaño
+que en el disco (7,4 MB la base de datos y 545,8 MB el proyecto), lo que confirma que la
+subida terminó entera. Con esto el ERP deja de depender de un solo disco, que era el punto más
+frágil que había.
+
+Con una pega, detectada después: se subieron por la mañana, antes de la limpieza de
+credenciales de la tarde, así que llevan dentro la clave de OpenAI del programador anterior.
+No es un problema de seguridad, porque Drive es privado y la clave no es nuestra, pero sí de
+etiquetado: el procedimiento de despliegue usa esos zips como ingrediente, y usar estos
+resucitaría la clave en el servidor nuevo. De ahí las tres tareas repartidas por la lista,
+renombrar la carpeta, hacer copias nuevas el día del despliegue y borrar las viejas después.
+
+Recuperar desde estos zips tampoco sería un desastre, porque la limpieza sí está en GitHub: se
+restaura el zip y se importa encima la configuración limpia del repositorio. Las dos copias se
+complementan.
 
 ### 2026-08-12 — Limpieza de todo lo que quedaba del programador anterior
 
