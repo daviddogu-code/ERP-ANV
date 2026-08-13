@@ -664,6 +664,12 @@ sale limpio en el informe. La segunda, que su versión no admitiría la 11: la 5
 declara `core_version_requirement: '>=9.3'`, que la incluye. Sigue siendo un tema congelado desde
 enero de 2024 y conviene actualizarlo, pero por mantenimiento, no porque cierre el paso.
 
+Con una salvedad que despista al leer el informe: el paquete de `dxpr_theme` trae dentro un
+`dxpr_theme_STARTERKIT`, una plantilla de ejemplo para hacerse un subtema, y **esa sí** declara
+`^9.3 || ^10`. Sale marcada en el informe y parece un problema, pero no lo es: no está instalada.
+Los temas activos son `dxpr_theme` (el del sitio), `gin` (el de administración), `bootstrap5`
+(base del primero) y los tres del núcleo.
+
 **Aviso sobre cómo leer estas cifras**, porque cuesta más de lo que parece. La herramienta reparte
 sus hallazgos en tres cajones y solo uno importa:
 
