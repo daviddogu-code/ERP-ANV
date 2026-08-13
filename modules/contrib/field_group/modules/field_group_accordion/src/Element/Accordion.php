@@ -1,16 +1,16 @@
 <?php
 
-namespace Drupal\field_group\Element;
+namespace Drupal\field_group_accordion\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
  * Provides a render element for an accordion.
  *
  * @FormElement("field_group_accordion")
  */
-class Accordion extends RenderElement {
+class Accordion extends RenderElementBase {
 
   /**
    * {@inheritdoc}
@@ -45,8 +45,7 @@ class Accordion extends RenderElement {
   public static function processAccordion(array &$element, FormStateInterface $form_state) {
 
     // Add the jQuery UI accordion.
-    $element['#attached']['library'][] = 'field_group/formatter.accordion';
-    $element['#attached']['library'][] = 'field_group/core';
+    $element['#attached']['library'][] = 'field_group_accordion/formatter.accordion';
 
     // Add the effect class.
     if (isset($element['#effect'])) {

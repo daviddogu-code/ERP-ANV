@@ -1,8 +1,10 @@
 <?php
 
-namespace Drupal\field_group\Plugin\field_group\FieldGroupFormatter;
+namespace Drupal\field_group_accordion\Plugin\field_group\FieldGroupFormatter;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
+use Drupal\Core\Render\Markup;
 use Drupal\field_group\FieldGroupFormatterBase;
 
 /**
@@ -10,7 +12,7 @@ use Drupal\field_group\FieldGroupFormatterBase;
  *
  * @FieldGroupFormatter(
  *   id = "accordion_item",
- *   label = @Translation("Accordion Item"),
+ *   label = @Translation("Accordion Item (Deprecated)"),
  *   description = @Translation("This fieldgroup renders the content in a div, part of accordion group."),
  *   format_types = {
  *     "open",
@@ -35,7 +37,7 @@ class AccordionItem extends FieldGroupFormatterBase {
     $element += [
       '#type' => 'field_group_accordion_item',
       '#effect' => $this->getSetting('effect'),
-      '#title' => $this->getLabel(),
+      '#title' => $this->getSetting('label_as_html') ? Markup::create(Xss::filterAdmin($this->getLabel())) : Markup::create(Html::escape($this->getLabel())),
       // Prevent \Drupal\content_translation\ContentTranslationHandler::addTranslatabilityClue()
       // from adding an incorrect suffix to the field group title.
       '#multilingual' => TRUE,
@@ -58,7 +60,7 @@ class AccordionItem extends FieldGroupFormatterBase {
       $element['#open'] = TRUE;
     }
 
-    foreach ($element as $key => $value) {
+    foreach ($element as $value) {
       if (is_array($value) && !empty($value['#children_errors'])) {
         $element['#open'] = TRUE;
       }

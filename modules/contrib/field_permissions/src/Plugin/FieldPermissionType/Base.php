@@ -7,6 +7,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\field\FieldStorageConfigInterface;
+use Drupal\field_permissions\FieldPermissionsServiceInterface;
 use Drupal\field_permissions\Plugin\FieldPermissionTypeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -23,6 +24,13 @@ abstract class Base extends PluginBase implements FieldPermissionTypeInterface, 
   protected $fieldStorage;
 
   /**
+   * The fields permissions service.
+   *
+   * @var \Drupal\field_permissions\FieldPermissionsServiceInterface
+   */
+  protected $fieldPermissionsService;
+
+  /**
    * Constructs the plugin.
    *
    * @param array $configuration
@@ -33,21 +41,32 @@ abstract class Base extends PluginBase implements FieldPermissionTypeInterface, 
    *   The plugin implementation definition.
    * @param \Drupal\field\FieldStorageConfigInterface $field_storage
    *   The field storage.
+   * @param \Drupal\field_permissions\FieldPermissionsServiceInterface|null $field_permissions_service
+   *   Field permissions service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, FieldStorageConfigInterface $field_storage) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, FieldStorageConfigInterface $field_storage, ?FieldPermissionsServiceInterface $field_permissions_service = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->fieldStorage = $field_storage;
+    if ($field_permissions_service === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $field_permissions_service argument is deprecated in field_permissions:8.x-1.4 and will be required in field_permissions:8.x-2.0. See https://www.drupal.org/node/3359471', E_USER_DEPRECATED);
+      // @phpstan-ignore-next-line
+      $this->fieldPermissionsService = \Drupal::service('field_permissions.permissions_service');
+    }
+    else {
+      $this->fieldPermissionsService = $field_permissions_service;
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, FieldStorageConfigInterface $field_storage = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?FieldStorageConfigInterface $field_storage = NULL) {
     return new static(
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $field_storage
+      $field_storage,
+      $container->get('field_permissions.permissions_service')
     );
   }
 
