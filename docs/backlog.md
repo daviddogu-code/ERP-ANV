@@ -423,14 +423,28 @@ una puerta obligatoria, no una recomendación. PHP 8.3, que es lo que ya corremo
    solución. Pero solo es explotable si el sitio usa la acción "Render: Twig" del submódulo
    `eca_render`, y ese submódulo **está desinstalado** y no lo menciona ninguno de los 36
    procesos. Así que este salto se hace cuando toque, por mantenimiento, no con prisa.
-5. **Los temas, que son la parte cara.** `dxpr_theme` va de la versión 5 a la 8, y su rama
-   actual lleva congelada desde enero de 2024. Encima declara que necesita `color`, que
-   desapareció del núcleo, y sobrescribe Modernizr y Classy, que tampoco existen ya. Su tema
-   base, `bootstrap5`, va de la 3 a la 4. Y Gin, el de administración, de la 3 a la 4.
+5. **Los temas.** `dxpr_theme` va de la versión 5 a la 8, y su rama actual lleva congelada desde
+   enero de 2024. Su tema base, `bootstrap5`, va de la 3 a la 4. Y Gin, el de administración, de
+   la 3 a la 4.
+
+   *Rebajado el 13 de agosto: ya no es "la parte cara".* Aquí se decía que `dxpr_theme` cerraba
+   el paso porque depende de `color`, que salió del núcleo, y porque sobrescribe Modernizr y
+   Classy. Lo primero está resuelto desde la Fase 1: el `color` de contrib está anclado en
+   `composer.json` y sale limpio en el informe. Lo segundo no lo detecta el analizador, así que
+   habrá que mirarlo a ojo al probar. Y la versión que corremos declara `>=9.3`, que **incluye la
+   11**. Actualizarlo sigue siendo buena idea por lo congelado que está, pero no bloquea.
 6. **El resto de módulos**, empezando por `field_permissions`, cuya versión instalada
    **prohíbe expresamente** Drupal 11, y por los que cambian de versión mayor: `select2`,
    `field_group`, Better Exposed Filters, `flag`, `mimemail`, `module_filter`, `mail_login`,
    `quicklink`, `coffee`, `flood_control`, `views_bulk_edit` y `xls_serialization`.
+
+   *Acotado el 13 de agosto por el informe de `upgrade_status`.* De los 115 proyectos, **60 solo
+   necesitan que su nueva versión declare la 11** —no hay código que tocar— y **45 ya están
+   limpios**. Los únicos cuatro con código que Drupal 11 elimina son `flag` (tres llamadas a
+   `user_roles()`), `views_entity_form_field` (tres a `getEntityTranslation()`), `flood_control`
+   (una a `user_role_names()`) y ECA (una constante de clase, y esa aún funciona en la 11). Los
+   cuatro se resuelven actualizando, no programando. Lo que sí queda por comprobar módulo a
+   módulo es si existe versión publicada compatible con la 11, cosa que el informe no mira.
 7. **Entonces sí**, `drupal/core-recommended` a la 11 y Drush de la 12 a la 13.
 
 ### Lo nuestro está bien
@@ -615,6 +629,59 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-13 — El informe de compatibilidad con Drupal 11: cuatro módulos con trabajo real, y el tema deja de ser el bloqueante
+
+Tres horas y media de análisis, 115 proyectos, 47.000 líneas de informe en bruto. El resultado
+importa porque desmonta buena parte de lo que dábamos por hecho sobre lo que cuesta llegar a la
+versión 11.
+
+**El recuento, ya limpio:**
+
+| | proyectos |
+|---|---|
+| Sin nada que tocar | 45 |
+| Solo les falta declarar la 11 en su `.info.yml` | 60 |
+| Avisos únicamente en sus propios tests | 6 |
+| **Con código que hay que tocar de verdad** | **4** |
+
+Los cuatro son ocho hallazgos en total: `flag` llama tres veces a `user_roles()`,
+`views_entity_form_field` tres veces a `getEntityTranslation()`, `flood_control` una vez a
+`user_role_names()`, y ECA usa una constante de clase marcada para desaparecer. Las cuatro se
+arreglan actualizando el módulo, no escribiendo código.
+
+**Lo nuestro sale intacto, y esta vez con el sitio en marcha.** `tec_production`, el módulo
+grande, limpio del todo. `tec_crm_ux`, `tec_inventory`, `tec_brands`, `tec_crm` y
+`admin_form_styles` solo necesitan cambiar su línea `core_version_requirement`. Esto ya lo decía
+la auditoría de agosto, pero entonces se leyó el código a mano; ahora lo confirma un analizador
+estático pasando por cada fichero.
+
+**`dxpr_theme` ya no es el bloqueante que teníamos apuntado.** El punto 5 de la sección "Subir a
+Drupal 11" decía que era "la parte cara" por dos razones, y ninguna de las dos se sostiene ya. La
+primera, que declaraba necesitar `color`, un módulo que desapareció del núcleo: la dependencia
+sigue ahí, pero desde la Fase 1 tenemos el `color` de contrib anclado en `composer.json`, y ese
+sale limpio en el informe. La segunda, que su versión no admitiría la 11: la 5.2.1 que corremos
+declara `core_version_requirement: '>=9.3'`, que la incluye. Sigue siendo un tema congelado desde
+enero de 2024 y conviene actualizarlo, pero por mantenimiento, no porque cierre el paso.
+
+**Aviso sobre cómo leer estas cifras**, porque cuesta más de lo que parece. La herramienta reparte
+sus hallazgos en tres cajones y solo uno importa:
+
+- *Fix now* es código que Drupal 11 ya no tiene. Estos son los que cuentan.
+- *Fix later* sigue funcionando en la 11 y desaparece en la 12.
+- *Check manually* es casi todo ruido. Son 18.000 y pico avisos del tipo "llamada a método no
+  definido" que salen de analizar los tests de cada módulo sin tener PHPUnit delante. No
+  significan nada.
+
+Y una trampa concreta que costó tres intentos: **el informe parte la ruta del fichero en varias
+líneas cuando es larga**, dejando `FILE:` solo en la suya. Las rutas largas son justo las de
+`tests/`, las más hondas. Leído a lo bruto, eso hace que los avisos de los tests parezcan estar en
+el código del módulo: diez proyectos con trabajo pendiente en vez de cuatro. Queda resuelto en
+`scripts/resumir-informe.php`, que es lo que hay que usar para leer este informe y los que vengan.
+
+**Lo que el informe no dice**, y hay que tener presente: solo mira el código que tenemos. No dice
+si existe una versión compatible con la 11 publicada en drupal.org para cada módulo, que es la
+otra mitad de la pregunta. Eso se comprueba módulo a módulo cuando toque la Fase 4.
 
 ### 2026-08-13 — La prueba del clon destapa un fallo crítico de seguridad que llevaba dieciséis meses escondido
 
