@@ -3,62 +3,70 @@
  * Provides widget behaviors.
  */
 
-(($, Drupal, once) => {
-  /**
-   * Handles the phone number element.
-   *
-   * @type {{attach: Drupal.behaviors.phoneNumberFormElement.attach}}
-   */
+((Drupal, once) => {
   Drupal.behaviors.phoneNumberFormElement = {
+    /**
+     * Handles the phone number element.
+     *
+     * @type {{attach: Drupal.behaviors.phoneNumberFormElement.attach}}
+     */
     attach(context) {
       once('field-setup', '.phone-number-field .country', context).forEach(
-        (value) => {
-          const $input = $(value);
-          const val = $input.val();
-          $input.data('value', val);
+        (element) => {
+          const val = element.value;
+          element.dataset.value = val;
 
-          const addFlag = $input.hasClass('with-flag');
-          const addCountryCode = $input.hasClass('with-code');
+          const addFlag = element.classList.contains('with-flag');
+          const addCountryCode = element.classList.contains('with-code');
 
           let prefix = '<div class="prefix"></div><span class="arrow"></span>';
           if (addFlag) {
             prefix = `<div class="phone-number-flag"></div>${prefix}`;
           }
 
-          $input.wrap('<div class="country-select"></div>').before(prefix);
+          const wrapper = document.createElement('div');
+          wrapper.className = 'country-select';
+          element.parentNode.insertBefore(wrapper, element);
+          wrapper.appendChild(element);
+          wrapper.insertAdjacentHTML('afterbegin', prefix);
 
           function setCountry(country) {
             if (addFlag) {
-              $input
-                .parents('.country-select')
-                .find('.phone-number-flag')
-                .removeClass($input.data('value'))
-                .addClass(country.toLowerCase());
+              const countrySelect = element.closest('.country-select');
+              const flag = countrySelect.querySelector('.phone-number-flag');
+              if (flag && element.dataset.value) {
+                flag.classList.remove(element.dataset.value);
+              }
+              if (flag) {
+                flag.classList.add(country.toLowerCase());
+              }
             }
 
-            $input.data('value', country.toLowerCase());
+            element.dataset.value = country.toLowerCase();
 
-            const callingCode = $input
-              .find('option:selected')
-              .text()
-              .match(/\(\+\d+\)/)[0];
+            const selectedOption =
+              element.querySelector('option:checked') ||
+              element.options[element.selectedIndex];
+            const callingCode = selectedOption
+              ? selectedOption.textContent.match(/\(\+\d+\)/)[0]
+              : '';
             const countryCode = addCountryCode ? `${country} ` : '';
-            $input
-              .parents('.country-select')
-              .find('.prefix')
-              .text(`${countryCode}${callingCode}`);
+            const countrySelect = element.closest('.country-select');
+            if (countrySelect) {
+              const prefixElement = countrySelect.querySelector('.prefix');
+              if (prefixElement) {
+                prefixElement.textContent = `${countryCode}${callingCode}`;
+              }
+            }
           }
 
           setCountry(val);
 
-          $input.change((event) => {
-            const newVal = $(event.target).val();
-            if (val !== newVal) {
-              setCountry(newVal);
-            }
-          });
+          element.addEventListener('change', (event) =>
+            setCountry(event.target.value),
+          );
         },
       );
     },
   };
-})(jQuery, Drupal, once);
+})(Drupal, once);

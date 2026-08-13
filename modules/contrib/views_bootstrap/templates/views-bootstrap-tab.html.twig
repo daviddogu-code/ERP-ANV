@@ -18,6 +18,7 @@
   <div{{ create_attribute({'class': option_classes, 'role': 'tablist'}) }}{{ aria_attr }}>
     {% set attributes = create_attribute().addClass('nav-link') %}
     {% for key, tab in tabs %}
+      {% set clean_key = ('key-' ~ key)|striptags|trim|clean_class %}
       {% if loop.first %}
         {% set attributes = attributes.addClass('active') %}
         {% set selected = 'true' %}
@@ -25,7 +26,7 @@
         {% set attributes = attributes.removeClass('active') %}
         {% set selected = 'false' %}
       {% endif %}
-      {% set tab_id = "tab-" ~ tabid ~ '-' ~ key %}
+      {% set tab_id = "tab-" ~ tabid ~ '-' ~ clean_key %}
         <button {{ attributes }} id="{{ tab_id }}-tab" data-bs-toggle="tab" data-bs-target="#{{ tab_id }}" type="button" role="tab" aria-controls="{{ tab_id }}" aria-selected="{{ selected }}">{{ tab }}</button>
     {% endfor %}
   </div>
@@ -42,6 +43,7 @@
 
   <div{{ create_attribute({'class': 'tab-content mb-2 mt-2'}) }}>
     {% for key, row in rows %}
+      {% set clean_key = ('key-' ~ key)|striptags|trim|clean_class %}
       {% if loop.first %}
         {% set tabs_attributes = tabs_attributes.addClass('active') %}
         {% if tab_fade == 'fade' %}
@@ -50,8 +52,15 @@
       {% else %}
         {% set tabs_attributes = tabs_attributes.removeClass('active') %}
       {% endif %}
-      <div{{ tabs_attributes.setAttribute('id', "tab-" ~ tabid ~ '-' ~ key).setAttribute('role', 'tabpanel') }}>
-        {{ row.content }}
+      <div{{ tabs_attributes.setAttribute('id', "tab-" ~ tabid ~ '-' ~ clean_key).setAttribute('role', 'tabpanel') }}>
+        {% if row.content is not empty %}
+          {{ row.content }}
+        {% endif %}
+        {% if row.content_tabs is not empty %}
+          {% for tc_key, tab_content in row.content_tabs %}
+            {{ tab_content }}
+          {% endfor %}
+        {% endif %}
       </div>
     {% endfor %}
   </div>

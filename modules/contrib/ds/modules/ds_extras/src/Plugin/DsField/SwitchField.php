@@ -6,20 +6,21 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ds\Attribute\DsField;
 use Drupal\ds\Plugin\DsField\DsFieldBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Link;
 
 /**
  * Plugin that generates a link to switch view mode with via ajax.
- *
- * @DsField(
- *   id = "switch_field",
- *   title = @Translation("Switch field"),
- *   entity_type = "node"
- * )
  */
+#[DsField(
+  id: 'switch_field',
+  title: new TranslatableMarkup('Switch field'),
+  entity_type: 'node'
+)]
 class SwitchField extends DsFieldBase {
 
   /**
@@ -67,7 +68,7 @@ class SwitchField extends DsFieldBase {
     $settings = $this->getConfiguration();
 
     if (!empty($settings)) {
-      /* @var \Drupal\Core\Entity\EntityInterface $entity */
+      /** @var \Drupal\Core\Entity\EntityInterface $entity */
       $entity = $this->entity();
 
       // Basic route parameters.
@@ -93,8 +94,8 @@ class SwitchField extends DsFieldBase {
         // If the label is empty, do not create a link.
         if (!empty($value)) {
           $route_parameters['viewMode'] = $key == 'default' ? 'full' : $key;
-          $url= Url::fromRoute('ds_extras.switch_view_mode', $route_parameters, $route_options);
-          $items[] =  Link::fromTextAndUrl($value, $url)->toString();
+          $url = Url::fromRoute('ds_extras.switch_view_mode', $route_parameters, $route_options);
+          $items[] = Link::fromTextAndUrl($value, $url)->toString();
         }
       }
     }

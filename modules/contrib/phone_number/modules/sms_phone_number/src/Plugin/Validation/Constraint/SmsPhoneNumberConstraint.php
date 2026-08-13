@@ -45,7 +45,7 @@ class SmsPhoneNumberConstraint extends PhoneNumberConstraint {
   /**
    * {@inheritdoc}
    */
-  public function validatedBy() {
+  public function validatedBy(): string {
     return '\Drupal\sms_phone_number\Plugin\Validation\Constraint\SmsPhoneNumberValidator';
   }
 

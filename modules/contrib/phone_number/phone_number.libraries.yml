@@ -7,6 +7,5 @@ element:
       css/phone-number-form-element.css: {}
       css/phone-number-flags.css: {}
   dependencies:
-    - core/jquery
     - core/drupal
     - core/once

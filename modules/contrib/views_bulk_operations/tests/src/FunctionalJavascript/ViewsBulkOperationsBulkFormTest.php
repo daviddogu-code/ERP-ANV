@@ -1,19 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_bulk_operations\FunctionalJavascript;
 
 use Behat\Mink\Element\DocumentElement;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\Tests\WebAssert;
-use Drupal\views_bulk_operations\Form\ViewsBulkOperationsFormTrait;
+use Drupal\FunctionalJavascriptTests\JSWebAssert;
+use Drupal\Tests\views_bulk_operations\WatchdogTestTrait;
+use Drupal\views_bulk_operations\Plugin\views\field\ViewsBulkOperationsBulkForm;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\views_bulk_operations\Plugin\views\field\ViewsBulkOperationsBulkForm
- * @group views_bulk_operations
+ * VBO Bulk Form Views plugin JS test.
  */
-class ViewsBulkOperationsBulkFormTest extends WebDriverTestBase {
+#[CoversClass(ViewsBulkOperationsBulkForm::class)]
+#[Group('views_bulk_operations')]
+final class ViewsBulkOperationsBulkFormTest extends WebDriverTestBase {
 
-  use ViewsBulkOperationsFormTrait;
+  use WatchdogTestTrait;
 
   private const TEST_NODE_COUNT = 15;
 
@@ -28,7 +34,7 @@ class ViewsBulkOperationsBulkFormTest extends WebDriverTestBase {
   /**
    * The assert session.
    */
-  protected WebAssert $assertSession;
+  protected JSWebAssert $assertSession;
 
   /**
    * The page element.
@@ -58,11 +64,10 @@ class ViewsBulkOperationsBulkFormTest extends WebDriverTestBase {
   protected array $testViewParams;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
+    'dblog',
     'node',
     'views',
     'views_bulk_operations',
@@ -94,7 +99,6 @@ class ViewsBulkOperationsBulkFormTest extends WebDriverTestBase {
         'edit any page content',
         'create page content',
         'delete any page content',
-        'execute advanced test action',
       ]);
     $this->drupalLogin($admin_user);
 
@@ -156,8 +160,9 @@ class ViewsBulkOperationsBulkFormTest extends WebDriverTestBase {
   /**
    * Test if selection persists on view pages.
    */
-  private function testSelectionPersists() {
+  private function testSelectionPersists(): void {
     $selected_ids = [];
+    $selected_indexes = [];
 
     $page_selections = [
       [0, 1, 3],
@@ -191,10 +196,10 @@ class ViewsBulkOperationsBulkFormTest extends WebDriverTestBase {
         $view_node_index = $page * $this->testViewParams['items_per_page'] + $i;
         $node = $this->testNodes[$view_node_index];
         if (\array_key_exists($node->id(), $selected_ids)) {
-          $this->assertTrue($this->page->hasCheckedField($node->label()), sprintf('%s should be still checked.', $node->label()));
+          self::assertTrue($this->page->hasCheckedField($node->label()), sprintf('%s should be still checked.', $node->label()));
         }
         else {
-          $this->assertTrue($this->page->hasUncheckedField($node->label()), sprintf('%s should be still unchecked.', $node->label()));
+          self::assertTrue($this->page->hasUncheckedField($node->label()), sprintf('%s should be still unchecked.', $node->label()));
         }
       }
 
@@ -218,7 +223,7 @@ class ViewsBulkOperationsBulkFormTest extends WebDriverTestBase {
         $this->assertSession->pageTextNotContains(\sprintf('Test action (label: %s)', $node->label()));
       }
     }
-    $this->assertSession->pageTextContains(\sprintf('Action processing results: Test (%s)', \count($selected_ids)));
+    $this->assertSession->pageTextContains(\sprintf('Test (%s)', \count($selected_ids)));
   }
 
   /**
@@ -250,7 +255,7 @@ class ViewsBulkOperationsBulkFormTest extends WebDriverTestBase {
       $node = $this->testNodes[$index];
       $this->assertSession->pageTextContains(\sprintf('Test action (label: %s)', $node->label()));
     }
-    $this->assertSession->pageTextContains(\sprintf('Action processing results: Test (%s)', \count($selected_indexes)));
+    $this->assertSession->pageTextContains(\sprintf('Test (%s)', \count($selected_indexes)));
 
     // Check that the view now actually contains the new nodes in place of the
     // previously displayed ones.

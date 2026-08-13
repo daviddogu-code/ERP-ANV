@@ -50,7 +50,7 @@ class TitleFormatter extends StringFormatter {
     return [
       'tag' => 'h2',
       'link_to_entity' => TRUE,
-    ];
+    ] + parent::defaultSettings();
   }
 
   /**

@@ -13,23 +13,9 @@ use Drupal\quicktabs\TabTypeManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class QuickTabsInstanceEditForm.
+ * Creates QuickTabsInstanceEditForm entity form.
  */
 class QuickTabsInstanceEditForm extends EntityForm {
-
-  /**
-   * The tab renderer manager.
-   *
-   * @var \Drupal\quicktabs\TabRendererManager
-   */
-  protected $tabRendererManager;
-
-  /**
-   * The tab type manager.
-   *
-   * @var \Drupal\quicktabs\TabTypeManager
-   */
-  protected $tabTypeManager;
 
   /**
    * The Messenger service.
@@ -41,23 +27,25 @@ class QuickTabsInstanceEditForm extends EntityForm {
   /**
    * Constructs the QuickTabsInstanceEditForm object.
    *
-   * @param \Drupal\quicktabs\TabRendererManager $tab_renderer
+   * @param \Drupal\quicktabs\TabRendererManager $tabRendererManager
    *   The tab renderer manager.
-   * @param \Drupal\quicktabs\TabTypeManager $tab_type
+   * @param \Drupal\quicktabs\TabTypeManager $tabTypeManager
    *   The tab type manager.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(TabRendererManager $tab_renderer, TabTypeManager $tab_type, MessengerInterface $messenger) {
-    $this->tabRendererManager = $tab_renderer;
-    $this->tabTypeManager = $tab_type;
+  public function __construct(
+    protected TabRendererManager $tabRendererManager,
+    protected TabTypeManager $tabTypeManager,
+    MessengerInterface $messenger,
+  ) {
     $this->messenger = $messenger;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('plugin.manager.tab_renderer'),
       $container->get('plugin.manager.tab_type'),
@@ -68,14 +56,14 @@ class QuickTabsInstanceEditForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'quicktab_instance_edit';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $form_state) {
+  public function form(array $form, FormStateInterface $form_state): array {
     $form = parent::form($form, $form_state);
 
     $form['label'] = [
@@ -139,11 +127,19 @@ class QuickTabsInstanceEditForm extends EntityForm {
       '#weight' => -3,
     ];
 
+    $form['remember_last_clicked_tab'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Remember last clicked tab'),
+      '#default_value' => $this->entity->getRememberLastClickedTab(),
+      '#description' => $this->t("Use the browser's local storage to set the default tab to the last clicked tab by the current user."),
+      '#weight' => -3,
+    ];
+
     $tab_titles = [
       QuickTabsInstance::QUICKTABS_DELTA_NONE => $this->t('- None -'),
     ];
 
-    // Create a table with each tr corresponding to a tab.
+    // Create a table with each 'tr' corresponding to a tab.
     $qt = new \stdClass();
     if (!empty($form_state->getValue('configuration_data'))) {
       $qt->tabs = $form_state->getValue('configuration_data');
@@ -187,7 +183,6 @@ class QuickTabsInstanceEditForm extends EntityForm {
       '#title' => $this->t('Default tab'),
       '#options' => $tab_titles,
       '#default_value' => $this->entity->getDefaultTab(),
-      '#access' => !empty($tab_titles),
       '#weight' => -4,
     ];
 
@@ -233,7 +228,7 @@ class QuickTabsInstanceEditForm extends EntityForm {
    *
    * Returns the table rows.
    */
-  public function ajaxFormCallback(array &$form, FormStateInterface $form_state) {
+  public function ajaxFormCallback(array &$form, FormStateInterface $form_state): AjaxResponse {
     // Instantiate an AjaxResponse Object to return.
     $ajax_response = new AjaxResponse();
     $ajax_response->addCommand(new HtmlCommand('#configuration-data-wrapper', $form['configuration_data_wrapper']['configuration_data']));
@@ -246,21 +241,26 @@ class QuickTabsInstanceEditForm extends EntityForm {
    *
    * Removes a row or increments the number of rows depending on action.
    */
-  public function ajaxFormSubmit(array &$form, FormStateInterface $form_state) {
+  public function ajaxFormSubmit(array &$form, FormStateInterface $form_state): void {
     if ($form_state->getTriggeringElement()['#name'] === 'tabs_more') {
       $form_state->set('num_tabs', count($form_state->getValue('configuration_data')) + 1);
-      $form_state->setRebuild(TRUE);
+      $form_state->setRebuild();
     }
     elseif (is_numeric($form_state->getTriggeringElement()['#row_number'])) {
       $form_state->set('to_remove', $form_state->getTriggeringElement()['#row_number']);
-      $form_state->setRebuild(TRUE);
+      $form_state->setRebuild();
     }
   }
 
   /**
-   * {@inheritdoc}
+   * Validate the edit form.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    */
-  public function validate(array $form, FormStateInterface $form_state) {
+  public function validate(array $form, FormStateInterface $form_state): void {
     $id = $form_state->getValue('id');
 
     if (empty($id)) {
@@ -286,7 +286,7 @@ class QuickTabsInstanceEditForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $form_state) {
+  public function save(array $form, FormStateInterface $form_state): void {
     // We need the configuration_data array to be indexed according to weight
     // So change the indexes here.
     $ordered_configuration_data = [];
@@ -300,13 +300,12 @@ class QuickTabsInstanceEditForm extends EntityForm {
       $form_state->setRedirect('quicktabs.admin');
     }
     $this->messenger->addStatus($this->t('Your changes have been saved.'));
-    drupal_flush_all_caches();
   }
 
   /**
    * Returns configuration data form.
    */
-  private function getConfigurationDataForm($qt) {
+  private function getConfigurationDataForm($qt): array {
     $configuration_data = [
       '#type' => 'table',
       '#header' => [
@@ -383,7 +382,6 @@ class QuickTabsInstanceEditForm extends EntityForm {
     ];
 
     foreach ($plugin_definitions as $index => $def) {
-      $name = $def['name'];
       $row['content'][$index] = [
         '#prefix' => '<div class="' . $index . '-plugin-content plugin-content qt-tab-options-form qt-tab-' . $index . '-options-form" >',
         '#suffix' => '</div>',

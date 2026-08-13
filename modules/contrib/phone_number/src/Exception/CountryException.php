@@ -26,7 +26,7 @@ class CountryException extends PhoneNumberException {
    * @param \Exception $previous
    *   (optional) The previous exception used for the exception chaining.
    */
-  public function __construct($message = "", $country = NULL, $code = 0, \Exception $previous = NULL) {
+  public function __construct($message = "", $country = NULL, $code = 0, ?\Exception $previous = NULL) {
     parent::__construct($message, $code, $previous);
 
     $this->country = $country;

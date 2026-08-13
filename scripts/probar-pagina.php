@@ -14,6 +14,16 @@ $rutas = [
   '/tec_order/348/edit',
   '/admin/content',
   '/o/queue',
+  '/stock',
+  '/production/log',
+  '/production/report',
+  '/tec_crm/1',
+  '/tec_crm/1/edit',
+  '/tec_product/304',
+  '/admin/structure/views',
+  '/admin/modules',
+  '/admin/reports/status',
+  '/admin/config/development/performance',
 ];
 
 $cuenta = \Drupal\user\Entity\User::load(1);

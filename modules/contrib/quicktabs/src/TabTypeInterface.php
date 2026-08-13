@@ -21,9 +21,10 @@ interface TabTypeInterface extends PluginInspectionInterface {
   public function optionsForm(array $tab);
 
   /**
-   * Return a render array for an individual tab tat the theme layer to process.
+   * Return an array for an individual tab that the theme layer to process.
    *
    * @return string
+   *   Render array.
    *   @todo test if changing type to array works
    */
   public function render(array $tab);

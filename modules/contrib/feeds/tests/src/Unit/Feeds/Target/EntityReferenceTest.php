@@ -7,8 +7,8 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\feeds\Exception\EmptyFeedException;
 use Drupal\feeds\Exception\ReferenceNotFoundException;
-use Drupal\feeds\Feeds\Target\EntityReference;
 use Drupal\feeds\FeedTypeInterface;
+use Drupal\feeds\Feeds\Target\EntityReference;
 use Drupal\feeds\FieldTargetDefinition;
 use Drupal\feeds\Plugin\Type\Target\TargetInterface;
 
@@ -65,7 +65,7 @@ class EntityReferenceTest extends EntityReferenceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function createReferencableEntityType() {
+  protected function createReferenceableEntityType() {
     $referenceable_entity_type = $this->prophesize(EntityTypeInterface::class);
     $referenceable_entity_type->entityClassImplements(ContentEntityInterface::class)->willReturn(TRUE)->shouldBeCalled();
     $referenceable_entity_type->getKey('label')->willReturn('referenceable_entity_type label');
@@ -80,7 +80,7 @@ class EntityReferenceTest extends EntityReferenceTestBase {
     $field_definition_mock = $this->getMockFieldDefinition();
     $field_definition_mock->expects($this->once())
       ->method('getSetting')
-      ->will($this->returnValue('referenceable_entity_type'));
+      ->willReturn('referenceable_entity_type');
 
     $method = $this->getMethod($this->getTargetClass(), 'prepareTarget')->getClosure();
     $this->assertInstanceof(FieldTargetDefinition::class, $method($field_definition_mock));
@@ -104,7 +104,9 @@ class EntityReferenceTest extends EntityReferenceTestBase {
   /**
    * @covers ::prepareValue
    *
-   * Tests prepareValue() without passing values.
+   * Tests preparing value without passing values.
+   *
+   * @phpstan-ignore phpunit.coversMethod
    */
   public function testPrepareValueEmptyFeed() {
     $method = $this->getProtectedClosure($this->instantiatePlugin(), 'prepareValue');
@@ -117,7 +119,9 @@ class EntityReferenceTest extends EntityReferenceTestBase {
    * @covers ::prepareValue
    * @covers ::findEntities
    *
-   * Tests prepareValue() method without match.
+   * Tests preparing value without match.
+   *
+   * @phpstan-ignore phpunit.coversMethod
    */
   public function testPrepareValueReferenceNotFound() {
     $this->entityFinder->findEntities('referenceable_entity_type', 'referenceable_entity_type label', 1, [])
@@ -126,7 +130,8 @@ class EntityReferenceTest extends EntityReferenceTestBase {
 
     $method = $this->getProtectedClosure($this->instantiatePlugin(), 'prepareValue');
     $values = ['target_id' => 1];
-    $this->expectException(ReferenceNotFoundException::class, "Referenced entity not found for field <em class=\"placeholder\">referenceable_entity_type label</em> with value <em class=\"placeholder\">1</em>.");
+    $this->expectException(ReferenceNotFoundException::class);
+    $this->expectExceptionMessage("Referenced entity not found for field <em class=\"placeholder\">referenceable_entity_type label</em> with value <em class=\"placeholder\">1</em>.");
     $method(0, $values);
   }
 

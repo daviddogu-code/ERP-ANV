@@ -2,29 +2,54 @@
 
 namespace Drupal\quicktabs\Plugin\TabType;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\quicktabs\Attribute\TabType;
+use Drupal\quicktabs\Entity\QuickTabsInstanceInterface;
 use Drupal\quicktabs\TabTypeBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'qtabs content' tab type.
- *
- * @TabType(
- *   id = "qtabs_content",
- *   name = @Translation("qtabs"),
- * )
  */
-class QtabsContent extends TabTypeBase {
+#[TabType(
+  id: 'qtabs_content',
+  name: new TranslatableMarkup('qtabs'),
+)]
+class QtabsContent extends TabTypeBase implements ContainerFactoryPluginInterface {
 
   use StringTranslationTrait;
 
   /**
+   * {@inheritDoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected EntityTypeManagerInterface $entityTypeManager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager')
+    );
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function optionsForm(array $tab) {
+  public function optionsForm(array $tab): array {
     $plugin_id = $this->getPluginDefinition()['id'];
     $form = [];
     $tab_options = [];
-    foreach (\Drupal::entityTypeManager()->getStorage('quicktabs_instance')->loadMultiple() as $machine_name => $entity) {
+    foreach ($this->entityTypeManager->getStorage('quicktabs_instance')->loadMultiple() as $machine_name => $entity) {
       // Do not offer the option to put a tab inside itself.
       if (!isset($tab['entity_id']) || $machine_name != $tab['entity_id']) {
         $tab_options[$machine_name] = $entity->label();
@@ -35,7 +60,7 @@ class QtabsContent extends TabTypeBase {
       '#title' => $this->t('QuickTabs instance'),
       '#description' => $this->t('The QuickTabs instance to put inside this tab.'),
       '#options' => $tab_options,
-      '#default_value' => isset($tab['content'][$plugin_id]['options']['machine_name']) ? $tab['content'][$plugin_id]['options']['machine_name'] : '',
+      '#default_value' => $tab['content'][$plugin_id]['options']['machine_name'] ?? '',
     ];
     return $form;
   }
@@ -45,9 +70,23 @@ class QtabsContent extends TabTypeBase {
    */
   public function render(array $tab) {
     $options = $tab['content'][$tab['type']]['options'];
-    $qt = \Drupal::service('entity_type.manager')->getStorage('quicktabs_instance')->load($options['machine_name']);
+    $qt = $this->entityTypeManager->getStorage('quicktabs_instance')->load($options['machine_name']);
 
-    return $qt->getRenderArray();
+    if (!$qt instanceof QuickTabsInstanceInterface) {
+      return [];
+    }
+
+    $build = $qt->getRenderArray();
+    // getRenderArray() bubbles the cacheability of the nested instance's own
+    // tabs, but not of the instance entity itself, so editing the nested
+    // instance's configuration would not invalidate the parent tabset that
+    // embeds it.
+    // @see \Drupal\quicktabs\Plugin\Block\QuickTabsBlock::build()
+    CacheableMetadata::createFromRenderArray($build)
+      ->addCacheableDependency($qt)
+      ->applyTo($build);
+
+    return $build;
   }
 
 }

@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the quicktabs module.
+ */
+
+/**
+ * Implements hook_update_last_removed().
+ */
+function quicktabs_update_last_removed(): int {
+  // quicktabs_update_103001() installed the js_cookie module, which is no
+  // longer a dependency; tab memory now uses localStorage.
+  return 103001;
+}

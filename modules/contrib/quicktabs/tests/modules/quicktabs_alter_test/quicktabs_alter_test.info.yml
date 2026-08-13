@@ -1,0 +1,11 @@
+name: 'QuickTabs alter test'
+type: module
+description: 'Tests hook_quicktabs_instance_alter() invocation.'
+package: Testing
+dependencies:
+  - quicktabs:quicktabs
+
+# Information added by Drupal.org packaging script on 2026-08-12
+version: '4.3.1'
+project: 'quicktabs'
+datestamp: 1786549797

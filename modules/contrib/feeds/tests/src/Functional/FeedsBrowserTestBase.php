@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\feeds\Functional;
 
-use Drupal\feeds\FeedInterface;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\Traits\Core\CronRunTrait;
 use Drupal\Tests\feeds\Traits\FeedCreationTrait;
 use Drupal\Tests\feeds\Traits\FeedsCommonTrait;
-use Drupal\Tests\Traits\Core\CronRunTrait;
+use Drupal\feeds\FeedInterface;
 
 /**
  * Provides a base class for Feeds functional tests.
@@ -29,9 +29,10 @@ abstract class FeedsBrowserTestBase extends BrowserTestBase {
    */
   protected static $modules = [
     'feeds',
-    'node',
-    'user',
     'file',
+    'node',
+    'options',
+    'user',
   ];
 
   /**
@@ -50,12 +51,29 @@ abstract class FeedsBrowserTestBase extends BrowserTestBase {
     // Create a content type.
     $this->setUpNodeType();
 
-    // Create an user with Feeds admin privileges.
+    // Create a user with Feeds admin privileges.
     $this->adminUser = $this->drupalCreateUser([
       'administer feeds',
       'access feed overview',
     ]);
     $this->drupalLogin($this->adminUser);
+  }
+
+  /**
+   * Installs body field.
+   */
+  protected function setUpBodyField() {
+    $this->createFieldWithStorage('body', [
+      'type' => 'text_with_summary',
+      'bundle' => $this->nodeType->id(),
+      'label' => 'Body',
+      'field' => [
+        'settings' => [
+          'display_summary' => TRUE,
+          'allowed_formats' => [],
+        ],
+      ],
+    ]);
   }
 
   /**

@@ -2,16 +2,10 @@
 
 namespace Drupal\smtp\Form;
 
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use PHPMailer\PHPMailer\PHPMailer;
-use Drupal\Component\Utility\EmailValidatorInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Mail\MailManagerInterface;
-use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
+use PHPMailer\PHPMailer\PHPMailer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -55,42 +49,17 @@ class SMTPConfigForm extends ConfigFormBase {
   protected $moduleHandler;
 
   /**
-   * Constructs $messenger and $config_factory objects.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The D8 messenger object.
-   * @param \Drupal\Component\Utility\EmailValidatorInterface $email_validator
-   *   The Email Validator Service.
-   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
-   *   The current active user.
-   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
-   *   The mail manager service.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler service.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, MessengerInterface $messenger, EmailValidatorInterface $email_validator, AccountProxyInterface $current_user, MailManagerInterface $mail_manager, ModuleHandlerInterface $module_handler) {
-    $this->messenger = $messenger;
-    $this->emailValidator = $email_validator;
-    $this->currentUser = $current_user;
-    $this->mailManager = $mail_manager;
-    $this->moduleHandler = $module_handler;
-    parent::__construct($config_factory);
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('messenger'),
-      $container->get('email.validator'),
-      $container->get('current_user'),
-      $container->get('plugin.manager.mail'),
-      $container->get('module_handler')
-    );
+    $instance = parent::create($container);
+    $instance->messenger = $container->get('messenger');
+    $instance->emailValidator = $container->get('email.validator');
+    $instance->currentUser = $container->get('current_user');
+    $instance->mailManager = $container->get('plugin.manager.mail');
+    $instance->moduleHandler = $container->get('module_handler');
+
+    return $instance;
   }
 
   /**
@@ -121,7 +90,7 @@ class SMTPConfigForm extends ConfigFormBase {
     else {
       $this->messenger->addMessage($this->t('SMTP module is INACTIVE.'));
     }
-    // Add Debugging warning
+    // Add Debugging warning.
     if ($config->get('smtp_debugging')) {
       $this->messenger->addWarning($this->t('SMTP debugging is on, ensure it is <a href="#edit-smtp-debugging">disabled</a> before using in production.'));
     }
@@ -289,7 +258,7 @@ class SMTPConfigForm extends ConfigFormBase {
       '#title' => $this->t('Hostname'),
       '#default_value' => $config->get('smtp_client_hostname'),
       '#description' => $this->t('The hostname to use in the Message-Id and Received headers, and as the default HELO string. Leave blank for using %server_name.',
-        ['%server_name' => isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost.localdomain']),
+        ['%server_name' => $_SERVER['SERVER_NAME'] ?? 'localhost.localdomain']),
       '#disabled' => $this->isOverridden('smtp_client_hostname'),
     ];
     $form['client']['smtp_client_helo'] = [

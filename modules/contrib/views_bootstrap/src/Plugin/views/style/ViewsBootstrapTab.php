@@ -43,7 +43,8 @@ class ViewsBootstrapTab extends StylePluginBase {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-    $options['tab_field'] = ['default' => ''];
+    $options['tab_output'] = ['default' => 'single'];
+    $options['tab_field'] = ['default' => 'title'];
     $options['tab_type'] = ['default' => 'tabs'];
     $options['tab_position'] = ['default' => 'basic'];
     $options['tab_fade'] = ['default' => FALSE];
@@ -61,12 +62,41 @@ class ViewsBootstrapTab extends StylePluginBase {
       '#weight' => -99,
     ];
 
+    $form['tab_output'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Tab Output'),
+      '#options' => [
+        'single' => $this->t('One tab per result'),
+        'grouped' => $this->t('Tab content by grouped field'),
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="style_options[grouping][0][field]"]' => ['filled' => FALSE],
+        ],
+      ],
+      '#description' => $this->t('Select how to organize your content into tabs: either group by individual field values or aggregate by a field.'),
+      '#default_value' => $this->options['tab_output'],
+    ];
+
+    $form['group_help_container'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="style_options[tab_output]"]' => ['value' => 'grouped'],
+        ],
+      ],
+    ];
+
+    $form['group_help_container']['group_help'] = [
+      '#markup' => $this->t('When grouping content by a specific field, the displayed results depend on the total number of records returned. Please make sure the results include all the entries you expect to see.'),
+    ];
+
     $form['tab_field'] = [
       '#type' => 'select',
       '#title' => $this->t('Tab field'),
       '#options' => $this->displayHandler->getFieldLabels(TRUE),
-      '#required' => TRUE,
       '#default_value' => $this->options['tab_field'],
+      '#required' => TRUE,
       '#description' => $this->t('Select the field that will be used as the tab.'),
     ];
 
@@ -103,6 +133,22 @@ class ViewsBootstrapTab extends StylePluginBase {
       '#default_value' => $this->options['tab_fade'],
       '#description' => $this->t('Add a fade in effect when tabs clicked'),
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validate() {
+    $errors = parent::validate();
+    if (!$this->options['tab_field']) {
+      $errors[] = $this->t('@style style will not display without the "@field" setting.',
+        [
+          '@style' => $this->definition['title'],
+          '@field' => $this->t('Tab field'),
+        ]
+      );
+    }
+    return $errors;
   }
 
 }

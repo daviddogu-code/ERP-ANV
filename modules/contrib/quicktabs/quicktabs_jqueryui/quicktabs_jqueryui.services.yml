@@ -1,0 +1,5 @@
+
+services:
+  Drupal\quicktabs_jqueryui\Hook\QuicktabsJqueryuiHooks:
+    class: Drupal\quicktabs_jqueryui\Hook\QuicktabsJqueryuiHooks
+    autowire: true

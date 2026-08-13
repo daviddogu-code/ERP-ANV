@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\feeds\Kernel\Plugin\Action;
 
-use Drupal\system\Entity\Action;
 use Drupal\Tests\feeds\Kernel\FeedsKernelTestBase;
+use Drupal\system\Entity\Action;
 use Drupal\user\Entity\User;
 
 /**
@@ -65,7 +65,7 @@ class ClearFeedActionTest extends FeedsKernelTestBase {
 
     /** @var \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store */
     $temp_store = $this->container->get('tempstore.private');
-    $store_entries = $temp_store->get('feeds_feed_multiple_clear_confirm')->get($this->testUser->id() . ':feeds_feed');
+    $store_entries = $temp_store->get('feeds_feed_clear_action')->get($this->testUser->id() . ':feeds_feed');
     $expected = [
       $feed1->id() => $feed1->id(),
       $feed2->id() => $feed2->id(),

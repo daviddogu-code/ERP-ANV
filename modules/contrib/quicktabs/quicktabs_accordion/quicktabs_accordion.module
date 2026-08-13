@@ -5,16 +5,14 @@
  * Render content with tabs and other display styles.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\quicktabs_accordion\Hook\QuicktabsAccordionHooks;
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
  * Implements hook_help().
  */
+#[LegacyHook]
 function quicktabs_accordion_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    case 'help.page.quicktabs_accordion':
-      $output = '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Makes accordion rendering from jQuery UI available to the Quicktabs module.') . '</p>';
-      return $output;
-  }
+  return \Drupal::service(QuicktabsAccordionHooks::class)->help($route_name, $route_match);
 }

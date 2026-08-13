@@ -17,6 +17,12 @@ having to maintain dozens of twig files.
 6. Click "Save"
 [Read more](https://drupal.org/node/1795282)
 
+## Adding custom layouts.
+
+Layouts are based on using the Drupal Core Layout API.
+See ds.layouts.yml for many examples.
+See https://www.drupal.org/docs/drupal-apis/layout-api
+
 ## BC settings
 
 - When setting the default field template to e.g. minimal, but only moving a
@@ -34,7 +40,7 @@ having to maintain dozens of twig files.
   /admin/structure/ds/settings.
   See https://www.drupal.org/project/ds/issues/3198320 and
   https://www.drupal.org/project/ds/issues/3313688
-- Layout suggestions where using the id of the layout but this caused problems
+- Layout suggestions were using the id of the layout but this caused problems
   for some templates. They are now using the theme hook value. This is
   fixed, but with a BC layer which is set to TRUE when you upgrade. New
   installations can safely ignore this setting, which defaults to FALSE then.
@@ -43,6 +49,12 @@ having to maintain dozens of twig files.
   configure to use this option to preview the layout instead of the original
   icons Display Suite ships with. On fresh installs, the icon maps are used.
   This can be configured at /admin/structure/ds/settings.
+- When merging the build and layout build arrays, information might be lost,
+  for example data in the #source_contexts array. Instead of using array_merge,
+  the arrays are now merged recursively. This is fixed, but with a BC layer
+  which is set to TRUE when you upgrade. New installations can safely ignore
+  this setting, which defaults to FALSE then.
+  See https://www.drupal.org/project/ds/issues/3529867
 
 ## Known issues
 
@@ -69,6 +81,11 @@ having to maintain dozens of twig files.
 - Contact form manage display saving but not rendering: the key here is to
   install the contact storage module.
   See https://www.drupal.org/project/ds/issues/2832259#comment-15397394
+- Merge on ds-field-expert on item attributes accumulates:The ds-field-expert
+  mergeAttribute accumulates the values in field_item_wrapper_attributes in
+  some cases. You can alter the template in your custom theme folder to fix
+  that problem.
+  See https://www.drupal.org/project/ds/issues/3496186 for more information.
 
 ## Links
 

@@ -3,13 +3,13 @@
 namespace Drupal\Tests\feeds\Functional\Feeds\Fetcher;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Tests\feeds\Functional\FeedsBrowserTestBase;
 use Drupal\feeds\Exception\EmptyFeedException;
 use Drupal\feeds\FeedTypeInterface;
 use Drupal\feeds\Plugin\Type\Processor\ProcessorInterface;
 use Drupal\feeds\StateInterface;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\feeds\Functional\FeedsBrowserTestBase;
 
 /**
  * @coversDefaultClass \Drupal\feeds\Feeds\Fetcher\HttpFetcher
@@ -47,7 +47,7 @@ class HttpFetcherTest extends FeedsBrowserTestBase {
     drupal_flush_all_caches();
 
     // Add body field.
-    node_add_body_field($this->nodeType);
+    $this->setUpBodyField();
 
     // Add taxonomy reference field.
     Vocabulary::create(['vid' => 'tags', 'name' => 'Tags'])->save();

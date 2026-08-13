@@ -2,11 +2,11 @@ name: IEF Table View Mode
 description: Defines a view mode to set up the columns of the table for the Inline Entity Form widget.
 type: module
 package: Fields
-core_version_requirement: ^9 || ^10
+core_version_requirement: ^10 || ^11
 dependencies:
   - inline_entity_form:inline_entity_form
 
-# Information added by Drupal.org packaging script on 2023-08-11
-version: '3.0.x-dev'
+# Information added by Drupal.org packaging script on 2024-08-09
+version: '3.0.1'
 project: 'ief_table_view_mode'
-datestamp: 1691772405
+datestamp: 1723221605

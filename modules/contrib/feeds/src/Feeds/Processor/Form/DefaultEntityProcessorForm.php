@@ -171,12 +171,12 @@ class DefaultEntityProcessorForm extends ExternalPluginFormBase implements Conta
 
     $options = $this->getUpdateNonExistentActions();
     $selected = $this->plugin->getConfiguration('update_non_existent');
-    if (!isset($options[$selected])) {
+    if (is_string($selected) && strlen($selected) > 0 && !isset($options[$selected])) {
       $options[$selected] = $this->t('@label (action no longer available)', [
         '@label' => $selected,
       ]);
     }
-    if (!empty($options)) {
+    if ($options !== []) {
       $form['update_non_existent'] = [
         '#type' => 'select',
         '#title' => $this->t('Previously imported items'),
@@ -371,13 +371,14 @@ class DefaultEntityProcessorForm extends ExternalPluginFormBase implements Conta
 
     $action_definitions = $this->actionManager->getDefinitionsByType($this->plugin->entityType());
     foreach ($action_definitions as $id => $definition) {
+      // Filter out definitions that do not have a class specified.
+      if (!isset($definition['class'])) {
+        continue;
+      }
+
       // Filter out configurable actions.
       $interfaces = class_implements($definition['class']);
       if (isset($interfaces[ConfigurableInterface::class])) {
-        continue;
-      }
-      // @todo remove when Drupal 8 support has ended.
-      if (isset($interfaces['Drupal\Component\Plugin\ConfigurablePluginInterface'])) {
         continue;
       }
 
@@ -409,15 +410,8 @@ class DefaultEntityProcessorForm extends ExternalPluginFormBase implements Conta
    *   An array of class names.
    */
   protected function getDeprecatedActionClasses() {
-    // @todo remove when Drupal 8 support has ended.
-    return [
-      'Drupal\comment\Plugin\Action\PublishComment',
-      'Drupal\comment\Plugin\Action\UnpublishComment',
-      'Drupal\comment\Plugin\Action\SaveComment',
-      'Drupal\node\Plugin\Action\PublishNode',
-      'Drupal\node\Plugin\Action\UnpublishNode',
-      'Drupal\node\Plugin\Action\SaveNode',
-    ];
+    // There are no known deprecation action plugins right now.
+    return [];
   }
 
 }

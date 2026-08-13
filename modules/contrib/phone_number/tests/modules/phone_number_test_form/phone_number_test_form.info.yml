@@ -3,11 +3,11 @@ type: module
 description: Provide a custom form for testing the phone_number field.
 package: Testing
 hidden: true
-core_version_requirement: ^9.2 || ^10
+core_version_requirement: ^10.3 || ^11
 dependencies:
   - drupal:field
 
-# Information added by Drupal.org packaging script on 2024-04-24
-version: '2.0.0-alpha6'
+# Information added by Drupal.org packaging script on 2026-03-31
+version: '2.0.0-alpha9'
 project: 'phone_number'
-datestamp: 1713945773
+datestamp: 1774980193

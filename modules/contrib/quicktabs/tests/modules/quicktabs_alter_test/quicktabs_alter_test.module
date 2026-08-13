@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * @file
+ * Test module for hook_quicktabs_instance_alter().
+ *
+ * Records every invocation in State and applies a scenario change keyed by
+ * instance id, both consumed by QuickTabsInstanceAlterTest.
+ */
+
+/**
+ * Implements hook_quicktabs_instance_alter().
+ */
+function quicktabs_alter_test_quicktabs_instance_alter(&$qt) {
+  // Record every invocation (consumed by QuickTabsInstanceAlterTest).
+  $state = \Drupal::state();
+  $calls = $state->get('quicktabs_alter_test.alter_calls', []);
+  $calls[] = $qt->id();
+  $state->set('quicktabs_alter_test.alter_calls', $calls);
+
+  $tabs = $qt->getConfigurationData();
+  switch ($qt->id()) {
+    case 'argument':
+      // Inject a View argument the stored config does not contain (age 27).
+      $tabs[1]['content']['view_content']['options']['args'] = '27';
+      break;
+
+    case 'reorder':
+      // Reverse the tabs, reassigning the numeric keys.
+      $tabs = [
+        0 => $tabs[2],
+        1 => $tabs[1],
+        2 => $tabs[0],
+      ];
+      break;
+
+    case 'cache':
+      // Declare that the altered output varies, to prove the metadata reaches
+      // the render and the AJAX response.
+      $qt->addCacheContexts(['user.roles']);
+      $qt->addCacheTags(['quicktabs_alter_test:cache']);
+      break;
+
+    default:
+      // Prove the alter ran by prefixing every title.
+      foreach ($tabs as $key => $tab) {
+        $tabs[$key]['title'] = 'Altered: ' . $tab['title'];
+      }
+      break;
+  }
+  $qt->setConfigurationData($tabs);
+}

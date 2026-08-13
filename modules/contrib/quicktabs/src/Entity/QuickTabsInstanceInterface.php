@@ -42,6 +42,14 @@ interface QuickTabsInstanceInterface extends ConfigEntityInterface {
   public function getHideEmptyTabs();
 
   /**
+   * Returns boolean value of use last clicked tab setting.
+   *
+   * @return bool
+   *   Use last clicked tab setting.
+   */
+  public function getRememberLastClickedTab();
+
+  /**
    * Returns the number of the default tab for this instance.
    *
    * @return string

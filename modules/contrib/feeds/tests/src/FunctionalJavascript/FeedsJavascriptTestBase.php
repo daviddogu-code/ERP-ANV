@@ -3,13 +3,13 @@
 namespace Drupal\Tests\feeds\FunctionalJavascript;
 
 use Drupal\Component\Utility\Html;
+use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\Traits\Core\CronRunTrait;
+use Drupal\Tests\feeds\Traits\FeedCreationTrait;
+use Drupal\Tests\feeds\Traits\FeedsCommonTrait;
 use Drupal\feeds\Entity\FeedType;
 use Drupal\feeds\FeedInterface;
 use Drupal\feeds\FeedTypeInterface;
-use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\Tests\feeds\Traits\FeedCreationTrait;
-use Drupal\Tests\feeds\Traits\FeedsCommonTrait;
-use Drupal\Tests\Traits\Core\CronRunTrait;
 
 /**
  * Base class for Feeds javascript tests.
@@ -35,6 +35,7 @@ abstract class FeedsJavascriptTestBase extends WebDriverTestBase {
     'node',
     'user',
     'file',
+    'options',
   ];
 
   /**
@@ -59,6 +60,23 @@ abstract class FeedsJavascriptTestBase extends WebDriverTestBase {
       'administer users',
     ]);
     $this->drupalLogin($this->adminUser);
+  }
+
+  /**
+   * Installs body field.
+   */
+  protected function setUpBodyField() {
+    $this->createFieldWithStorage('body', [
+      'type' => 'text_with_summary',
+      'bundle' => $this->nodeType->id(),
+      'label' => 'Body',
+      'field' => [
+        'settings' => [
+          'display_summary' => TRUE,
+          'allowed_formats' => [],
+        ],
+      ],
+    ]);
   }
 
   /**

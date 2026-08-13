@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_bulk_operations\Form;
 
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionManager;
 use Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionProcessorInterface;
+use Drupal\views_bulk_operations\Traits\ViewsBulkOperationsFormTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -17,20 +22,10 @@ class ConfirmAction extends FormBase {
 
   use ViewsBulkOperationsFormTrait;
 
-  /**
-   * The tempstore service.
-   */
-  protected PrivateTempStoreFactory $tempStoreFactory;
-
-  /**
-   * Views Bulk Operations action manager.
-   */
-  protected ViewsBulkOperationsActionManager $actionManager;
-
-  /**
-   * Views Bulk Operations action processor.
-   */
-  protected ViewsBulkOperationsActionProcessorInterface $actionProcessor;
+  // We need this if we want to keep the readonly in constructor property
+  // promotion and not have errors in plugins that use AJAX in their
+  // buildConfigurationForm() method.
+  use DependencySerializationTrait;
 
   /**
    * Constructor.
@@ -43,19 +38,15 @@ class ConfirmAction extends FormBase {
    *   Views Bulk Operations action processor.
    */
   public function __construct(
-    PrivateTempStoreFactory $tempStoreFactory,
-    ViewsBulkOperationsActionManager $actionManager,
-    ViewsBulkOperationsActionProcessorInterface $actionProcessor
-  ) {
-    $this->tempStoreFactory = $tempStoreFactory;
-    $this->actionManager = $actionManager;
-    $this->actionProcessor = $actionProcessor;
-  }
+    protected readonly PrivateTempStoreFactory $tempStoreFactory,
+    protected readonly ViewsBulkOperationsActionManager $actionManager,
+    protected readonly ViewsBulkOperationsActionProcessorInterface $actionProcessor,
+  ) {}
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): self {
     return new static(
       $container->get('tempstore.private'),
       $container->get('plugin.manager.views_bulk_operations_action'),
@@ -73,13 +64,24 @@ class ConfirmAction extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $view_id = NULL, $display_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?string $view_id = NULL, ?string $display_id = NULL) {
 
     $form_data = $this->getFormData($view_id, $display_id);
 
     // @todo Display an error msg, redirect back.
-    if (!isset($form_data['action_id'])) {
-      return;
+    if (!\array_key_exists('action_id', $form_data)) {
+      return [];
+    }
+
+    if (
+      \array_key_exists('confirm_help_text', $form_data['preconfiguration']) &&
+      $form_data['preconfiguration']['confirm_help_text'] !== ''
+    ) {
+      $form['confirm_help_text'] = [];
+      $form['confirm_help_text']['#markup'] = new FormattableMarkup($form_data['preconfiguration']['confirm_help_text'], [
+        '%action' => $form_data['action_label'],
+        '%count' => $form_data['selected_count'],
+      ]);
     }
 
     $form['list'] = $this->getListRenderable($form_data);
@@ -113,7 +115,7 @@ class ConfirmAction extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $form_data = $form_state->get('views_bulk_operations');
     $this->deleteTempstoreData($form_data['view_id'], $form_data['display_id']);
     $response = $this->actionProcessor->executeProcessing($form_data);

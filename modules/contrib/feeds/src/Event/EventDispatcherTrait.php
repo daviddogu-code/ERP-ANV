@@ -2,7 +2,7 @@
 
 namespace Drupal\feeds\Event;
 
-// phpcs:disable Drupal.Classes.PropertyDeclaration
+// phpcs:disable PSR2.Classes.PropertyDeclaration.Underscore
 // phpcs:disable Drupal.NamingConventions.ValidVariableName.LowerCamelName
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -37,7 +37,7 @@ trait EventDispatcherTrait {
    * @return \Symfony\Contracts\EventDispatcher\Event
    *   The invoked event.
    */
-  protected function dispatchEvent($event_name, Event $event = NULL) {
+  protected function dispatchEvent($event_name, ?Event $event = NULL) {
     return $this->getEventDispatcher()->dispatch($event, $event_name);
   }
 

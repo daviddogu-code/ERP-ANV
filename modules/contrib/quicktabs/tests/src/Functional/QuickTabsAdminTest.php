@@ -4,12 +4,16 @@ namespace Drupal\Tests\quicktabs\Functional;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests creating and saving a QuickTabs instance.
  *
  * @group quicktabs
  */
+#[IgnoreDeprecations]
+#[RunTestsInSeparateProcesses]
 class QuickTabsAdminTest extends BrowserTestBase {
 
   use StringTranslationTrait;
@@ -33,6 +37,7 @@ class QuickTabsAdminTest extends BrowserTestBase {
     'toolbar',
     'quicktabs',
     'views',
+    'quicktabs_test_block',
   ];
 
   /**
@@ -103,27 +108,16 @@ class QuickTabsAdminTest extends BrowserTestBase {
       'type' => 'article',
     ]);
 
-    $edit = [
-      'label' => $this->randomMachineName(),
-      'id' => strtolower($this->randomMachineName()),
-      'renderer' => 'quick_tabs',
-      'options[quick_tabs][ajax]' => 0,
-      'hide_empty_tabs' => 1,
-      'default_tab' => 9999,
-      'configuration_data[0][title]' => $this->randomMachineName(),
-      'configuration_data[0][type]' => 'node_content',
-      'configuration_data[0][content][node_content][options][nid]' => $node1->id(),
-      'configuration_data[0][content][node_content][options][view_mode]' => 'full',
-      'configuration_data[0][content][node_content][options][hide_title]' => 1,
-      'configuration_data[1][title]' => $this->randomMachineName(),
-      'configuration_data[1][type]' => 'node_content',
-      'configuration_data[1][content][node_content][options][nid]' => $node2->id(),
-      'configuration_data[1][content][node_content][options][view_mode]' => 'full',
-      'configuration_data[1][content][node_content][options][hide_title]' => 1,
-    ];
-    $this->drupalGet('admin/structure/quicktabs/add');
-
-    $this->submitForm($edit, $this->t('Save'));
+    $edit = $this->createQuicktabsInstance([
+      [
+        'title' => $this->randomMachineName(),
+        'node' => $node1,
+      ],
+      [
+        'title' => $this->randomMachineName(),
+        'node' => $node2,
+      ],
+    ]);
 
     $qt = \Drupal::service('entity_type.manager')->getStorage('quicktabs_instance')->load($edit['id']);
 
@@ -151,6 +145,91 @@ class QuickTabsAdminTest extends BrowserTestBase {
 
     $qt = \Drupal::service('entity_type.manager')->getStorage('quicktabs_instance')->load($edit['id']);
     $this->assertNull($qt, $this->t('QuickTabs instance not found in database'));
+  }
+
+  /**
+   * Tests placing a Quicktabs block and rendering it on the page.
+   */
+  public function testPlaceQuicktabsBlock() {
+    $tab_title = $this->randomMachineName();
+    $tab_body = $this->randomMachineName();
+    $node = $this->drupalCreateNode([
+      'title' => $this->t('Placed tab node'),
+      'type' => 'article',
+      'body' => [
+        'value' => $tab_body,
+        'format' => 'plain_text',
+      ],
+    ]);
+
+    // Create the instance first so its derived block is discoverable.
+    $edit = $this->createQuicktabsInstance([
+      [
+        'title' => $tab_title,
+        'node' => $node,
+      ],
+    ]);
+
+    $this->drupalGet('admin/structure/block/library/stark');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains('QuickTabs - ' . $edit['label']);
+
+    $this->drupalPlaceBlock('quicktabs_block:' . $edit['id'], [
+      'region' => 'content',
+    ]);
+
+    $this->drupalGet('<front>');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains($tab_title);
+    $this->assertSession()->pageTextContains($tab_body);
+  }
+
+  /**
+   * Tests that a block admin label with "&" is not double-encoded.
+   *
+   * Block admin labels are Markup objects whose string form is already
+   * HTML-encoded. The block selector must render them as plain text so the
+   * select element encodes them exactly once ("&amp;") rather than twice
+   * ("&amp;amp;").
+   *
+   * @see https://www.drupal.org/project/quicktabs/issues/3588550
+   */
+  public function testBlockSelectorDoesNotDoubleEncodeTitle() {
+    $this->drupalGet('admin/structure/quicktabs/add');
+    $this->assertSession()->statusCodeEquals(200);
+
+    // The "Select a block" option for the test block, single-encoded.
+    $this->assertSession()->responseContains('Meetings &amp; Events (quicktabs_test_block)');
+    // The bug rendered the ampersand entity a second time.
+    $this->assertSession()->responseNotContains('&amp;amp;');
+  }
+
+  /**
+   * Creates a Quicktabs instance through the UI.
+   */
+  protected function createQuicktabsInstance(array $tabs): array {
+    $edit = [
+      'label' => $this->randomMachineName(),
+      'id' => strtolower($this->randomMachineName()),
+      'renderer' => 'quick_tabs',
+      'options[quick_tabs][ajax]' => 0,
+      'hide_empty_tabs' => 1,
+      'default_tab' => 9999,
+    ];
+
+    foreach ($tabs as $delta => $tab) {
+      // Match the nested Quicktabs form structure for each configured tab.
+      $edit["configuration_data[$delta][title]"] = $tab['title'];
+      $edit["configuration_data[$delta][type]"] = 'node_content';
+      $edit["configuration_data[$delta][content][node_content][options][nid]"] = $tab['node']->id();
+      $edit["configuration_data[$delta][content][node_content][options][view_mode]"] = 'full';
+      $edit["configuration_data[$delta][content][node_content][options][hide_title]"] = 1;
+    }
+
+    $this->drupalGet('admin/structure/quicktabs/add');
+    $this->submitForm($edit, $this->t('Save'));
+
+    return $edit;
   }
 
 }

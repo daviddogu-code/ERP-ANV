@@ -24,13 +24,20 @@ por error algo que estaba puesto a propósito.
 
 ## 1. Ahora mismo
 
-- **Llevar al servidor el salto a Drupal 10.6.15.** Hecho en local el 13 de agosto; el servidor
-  sigue en 10.2.4 con los 82 avisos de seguridad. Es lo más urgente de la lista. Antes de
-  desplegar hay que leerse los cuatro tropiezos del apartado de Hecho, porque los tres primeros
-  volverán a salir allí: Composer plantándose en `vendor/symfony/css-selector`, `drush updatedb`
-  sin funcionar y las versiones de esquema que no se guardan.
-- **Decidir hasta dónde se sigue con las fases 3 y 4.** Lo que queda es ECA de la rama 1 a la 2,
-  los temas —que son la parte cara— y el resto de módulos. Ver el apartado 8.
+- **Llevar al servidor el salto a Drupal 10.6.15 y la reconciliación de módulos.** Hecho en local
+  el 13 de agosto; el servidor sigue en 10.2.4 con los 82 avisos de seguridad. Es lo más urgente
+  de la lista. Antes de desplegar hay que leerse los cuatro tropiezos del apartado de Hecho,
+  porque los tres primeros volverán a salir allí: Composer plantándose en
+  `vendor/symfony/css-selector`, `drush updatedb` sin funcionar y las versiones de esquema que no
+  se guardan.
+
+  Y una comprobación nueva, ahora que el `lock` manda de verdad: **en el servidor hay que pasar
+  `scripts/comparar-con-original.php` antes de desplegar**. Si allí hay algún módulo retocado a
+  mano que aquí no tenemos localizado, el `composer install` del despliegue se lo lleva por
+  delante sin decir nada. En local había tres.
+- **Decidir hasta dónde se sigue con las fases 3 y 4.** Lo que queda es ECA de la rama 1 a la 2
+  —que ya no urge, ver el punto 4 del apartado 8— y los temas, que son la parte cara. El resto de
+  módulos ya está al día.
 
 ~~**Confirmar en Git el trabajo del 12 y el 13 de agosto.**~~ Hecho el 13 de agosto en tres
 commits: la limpieza de módulos, la red de seguridad de la Fase 0 y el saneado de Composer.
@@ -359,31 +366,19 @@ una puerta obligatoria, no una recomendación. PHP 8.3, que es lo que ya corremo
 
 ### El orden
 
-1. **Meter en Composer los módulos sueltos y reconciliar las versiones.** *Hecho a medias el 13
-   de agosto: `composer.json` ya describe la realidad —ver la Fase 1 en el apartado de Hecho—,
-   pero **el `lock` no se puede sincronizar hasta subir el núcleo**, porque `views_aggregator`
-   2.1.1 exige `^10.3 || ^11` y corremos 10.2.4. En la práctica esto funde este punto con el 3.*
+1. ~~**Meter en Composer los módulos sueltos y reconciliar las versiones.**~~ **Hecho el 13 de
+   agosto.** `composer.json` describe la realidad, `composer validate` dice *valid* y el
+   inventario da **0 descuadres** entre el disco y el `lock`. Fueron 28 módulos, no 24, más los
+   dos que Composer ni sabía que existían (`quicktabs` y `views_entity_form_field`) y tres
+   parches hechos a mano que nadie había registrado. El detalle está en el apartado de Hecho.
 
-   Los sueltos eran
-   dieciocho de los activos, y los descuadrados **no son cinco sino veinticuatro**, medidos el 13
-   de agosto comparando uno a uno el disco contra el `lock`. Entre ellos `ds` (3.22 en disco
-   frente a 3.19.0 en el `lock`), `token`, `gin_login`, `jquery_ui`, `better_exposed_filters`,
-   `smtp`, `feeds` y `ief_table_view_mode`, este último con una rama de desarrollo en disco
-   donde el `lock` pide una versión estable.
-
-   **Por qué Composer no lo detecta**, que es lo que hacía invisible el problema: Composer no
-   mira los ficheros de los módulos, se fía de su propia contabilidad en
-   `vendor/composer/installed.json`. Ahí sigue apuntado `ds` 3.19.0 aunque en disco haya un 3.22.
-   Por eso `composer install --dry-run` dice tan tranquilo "nada que hacer": para él todo cuadra.
-   Alguien actualizó esos módulos copiando ficheros por encima y la contabilidad se quedó atrás.
-
-   **Cuándo estalla.** Hoy no, mientras la carpeta `vendor` siga viva. Pero `vendor` está
-   excluida del repositorio y `modules/contrib` no, así que en una reconstrucción del servidor
-   desde cero —o si alguien borra `vendor` y lanza `composer install`— Composer escribiría las
-   versiones del `lock` encima de las del disco. Y hay una consecuencia peor: **volvería a
-   instalar en disco todo lo que quitamos**, incluidos `ai_interpolator`, `ai_interpolator_openai`,
-   `openai`, los diez paquetes de Commerce, `shield` y `quicklink`. Desinstalados en la base de
-   datos seguirían, pero el código volvería.
+   Vale la pena guardar **por qué el problema era invisible**, porque volverá a pasar: Composer
+   no mira los ficheros de los módulos, se fía de su propia contabilidad en
+   `vendor/composer/installed.json`. Ahí seguía apuntado `ds` 3.19.0 aunque en disco hubiera un
+   3.22, y por eso `composer install --dry-run` decía tan tranquilo "nada que hacer". La única
+   forma de detectarlo es comparar a mano, que es lo que hacen ahora
+   `scripts/inventario-composer.php` (disco contra `lock`) y `scripts/comparar-con-original.php`
+   (disco contra el paquete oficial de drupal.org).
 2. **Resolver los dos bloqueantes que quedan.** Tras la limpieza del 13 de agosto solo quedan
    dos módulos activos sin ninguna versión para Drupal 11:
    - `pdf_serialization`, que genera los PDF de las órdenes de compra. Está sin soporte desde
@@ -416,6 +411,12 @@ una puerta obligatoria, no una recomendación. PHP 8.3, que es lo que ya corremo
 4. **ECA, de la rama 1 a la 2**, con sus submódulos y con `bpmn_io` de la 1 a la 2. Es un salto
    de versión mayor y mueve las transacciones de inventario, así que es la parte que más hay
    que probar. Importante: **no ir a ECA 3**, que exige Drupal 11.2 o más.
+
+   *No corre prisa por seguridad, comprobado el 13 de agosto.* El único aviso que queda de los
+   82, `SA-CONTRIB-2026-074`, dice que se arregla en ECA 2.1.20 y que la rama 1 no tiene
+   solución. Pero solo es explotable si el sitio usa la acción "Render: Twig" del submódulo
+   `eca_render`, y ese submódulo **está desinstalado** y no lo menciona ninguno de los 36
+   procesos. Así que este salto se hace cuando toque, por mantenimiento, no con prisa.
 5. **Los temas, que son la parte cara.** `dxpr_theme` va de la versión 5 a la 8, y su rama
    actual lleva congelada desde enero de 2024. Encima declara que necesita `color`, que
    desapareció del núcleo, y sobrescribe Modernizr y Classy, que tampoco existen ya. Su tema
@@ -440,11 +441,13 @@ plantilla, y un parámetro que PHP 8.4 quiere ver escrito como `?FieldItemListIn
 
 ### `minimum-stability: dev`
 
-Sigue puesto en `composer.json`, y no es teórico: hay diez paquetes corriendo sobre ramas de
-desarrollo en lugar de versiones publicadas, entre ellos ECA, `eck`, `bpmn_io`, `mimemail` y
-`ultimate_cron`. Eso hace que la instalación no sea reproducible y que pueda colarse código sin
-aviso de seguridad. Cuando toque tocar Composer, hay que pasarlo a `stable` y marcar la
-excepción solo en los que de verdad no tengan versión estable.
+Sigue puesto en `composer.json`, y no es teórico: quedan **siete** paquetes sobre ramas de
+desarrollo en lugar de versiones publicadas —ECA, `eck`, `bpmn_io`, `mimemail`,
+`conditional_fields`, `bootstrap_layout_builder` y `ultimate_cron`—, tres menos que en la
+auditoría original. La instalación **sí es reproducible**, porque el `lock` guarda el commit
+exacto de cada rama; lo que falta es que esos paquetes tengan avisos de seguridad y una versión
+que alguien haya bendecido. Cuando toque, hay que pasarlo a `stable` y marcar la excepción solo
+en los que de verdad no tengan versión estable.
 
 ### Dos carpetas de más
 
@@ -479,56 +482,37 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   el día de mañana. Se arregla cambiando un carácter en
   `config/sync/eca.eca.process_rxuimsq.yml`, línea 166. No se ha tocado para no meter cambios de
   configuración no pedidos justo antes del despliegue al servidor.
-- **`views_aggregator` no es lo que parecía.** El informe de estado lo marca como incompatible
-  y de ahí salió la idea de que era un problema. Es al revés: la versión instalada, la 2.1.1,
-  ya vale para Drupal 10.3 y 11, y falla porque es **demasiado nueva** para el 10.2.4 que
-  corremos. Subir de versión no lo rompe, lo arregla. Se usa en una sola vista, el resumen de
-  cálculo de materiales de un pedido, y ahí tiene un fallo real: cuando un campo viene vacío,
-  la página del pedido devuelve un error 500. Comprobado el 13 de agosto en el pedido 348, que
-  es de los antiguos; los ocho pedidos siguientes cargan bien. Se resuelve solo al subir a
-  Drupal 10.3.
-- **`composer update` a pelo no se puede ejecutar; dirigido sí.** Matizado el 13 de agosto. Lo
-  que no se puede es lanzar un `composer update` sin argumentos: un intento llegó a desinstalar
-  `drupal/inline_entity_form` por su cuenta. Pero una actualización dirigida del núcleo sí
-  resuelve limpia (ver el apartado 8), así que el proyecto no está tan bloqueado como creíamos.
-  Lo que sigue pendiente es sanear el fichero para que un `update` general deje de ser peligroso.
-- **`composer.json` pide 38 paquetes que no están instalados.** Toda la suite de Commerce (diez
-  paquetes), `search_api`, `features`, `memcache`, `symfony_mailer`, `taxonomy_manager`, `shs`,
-  `image_effects`, `geofield_map`, y los que desinstalamos nosotros: `shield`, `quicklink`,
-  `eca_vbo` y `ai_interpolator_openai`. No hacen daño estando ahí, pero **participan en el
-  cálculo de dependencias** y de ahí sale buena parte de los conflictos. Quitarlos es lo que más
-  simplifica el problema: de 15 comodines `*` y 11 ramas de desarrollo se pasa a 4 y 7.
-- **Dos módulos críticos entran por la puerta de atrás.** `inline_entity_form`, que además
-  **lleva un parche nuestro**, no aparece en `require`: llega como dependencia de
-  `ief_table_view_mode`. Y `flag`, del que depende todo el mecanismo de bloqueo de ECA, llega a
-  través de `eca_flag`. Esto explica el incidente en que un `composer update` desinstaló
-  `inline_entity_form`: nada se lo impedía. Hay que anclarlos explícitamente, y hacerlo **antes**
-  de borrar los 38 muertos, porque dos de ellos (`ief_popup` e `ief_complex_open`) son los que
-  arrastran `inline_entity_form`.
-- **El `merge-plugin` apunta a un fichero que no existe**:
-  `modules/contrib/charts/modules/charts_billboard/composer.json`. Esa carpeta no está en el
-  proyecto. Es una mina enterrada en la configuración de Composer.
-- **No son cuatro los módulos que viven fuera de Composer, son veintitrés.** Corregido el 13 de
-  agosto; lo que decía antes esta línea se quedaba muy corto. Los que están activos y no
-  aparecen en `composer.lock` son: `ai_interpolator_eca`, `base_field_override_ui`,
-  `csv_serialization`, `draggableviews`, `entity_browser_enhanced`, `entity_browser_vertical`,
-  `entity_reference_modal`, `epp`, `field_label`, `file_uploader`, `file_uploader_uppy`,
-  `float_labels`, `markup`, `pdf_serialization`, `quicktabs`, `simple_popup_views`, `verf`,
-  `views_aggregator`, `views_conditional`, `views_data_export`, `views_entity_form_field` y
-  `xls_serialization`. Llegan al servidor solo a través del repositorio. Dos llevan parches
-  hechos a mano (ver "Hecho"). Hay que meterlos en Composer **antes** de intentar cualquier
-  actualización, porque mientras estén fuera cualquier `composer update` los pisa o los ignora.
-- **En cinco módulos el disco va por delante de `composer.lock`**: `ds`, `gin_login`, `shield`,
-  `smtp` y `feeds`. Alguien los actualizó copiando ficheros en vez de con Composer. Esto
-  importa hoy y no dentro de seis meses, porque el procedimiento de despliegue ejecuta
-  `composer install` en el servidor y ese comando instala la versión que dice el `lock`, no la
-  del disco. O el servidor está corriendo versiones más viejas que local sin que lo sepamos, o
-  el próximo despliegue las degrada en silencio. **Hay que comprobarlo.**
-- **El `composer.lock` está incoherente**: el núcleo figura en 10.2.4 pero una de sus piezas,
-  `core-composer-scaffold`, en 10.6.15. Es el rastro de una actualización que se quedó a medias
-  y probablemente parte de la causa de que `composer update` no funcione.
-- **Estudiar `composer-exit-on-patch-failure`** en `composer.json`, para que un parche que no
-  se aplica corte la instalación en voz alta en lugar de pasar desapercibido.
+- **La tabla de líneas de pedido no tiene modo de vista configurado.** El formulario del pedido
+  de venta usa el widget de `ief_table_view_mode`, pero con el ajuste `view_mode` vacío, así que
+  dibuja las columnas genéricas de Inline Entity Form: Título, Tipo y Operaciones. Es decir, el
+  módulo está instalado y no está haciendo lo único para lo que sirve, que es dejarte elegir qué
+  columnas ves. Viene de antes de la actualización del 13 de agosto —la configuración en Git es
+  idéntica—, así que no es una regresión, pero es una mejora fácil y visible: definir un modo de
+  vista con las columnas que de verdad importan de una línea de pedido.
+- **`composer update` a pelo sigue sin poder ejecutarse; dirigido, sí y mucho.** Matizado el 13
+  de agosto después de subir el núcleo y reconciliar 28 módulos, todo con actualizaciones
+  dirigidas y sin un solo conflicto. Lo que no se ha probado es un `update` sin argumentos, y no
+  hay motivo para probarlo: no aporta nada que no dé la vía dirigida y sí puede desmontar el
+  sitio entero de una vez.
+- **Ojo con `composer require --dry-run`: no es de solo lectura.** Escribe en `composer.json`
+  antes de simular. Si se usa, hay que deshacer el cambio a mano, no con `git checkout` del
+  fichero, porque eso también borra el trabajo sin confirmar que haya en él. Costó hora y media
+  el 13 de agosto.
+- **Diez módulos siguen colgando de ramas de desarrollo**, entre ellos ECA, `eck`, `bpmn_io`,
+  `mimemail`, `conditional_fields`, `bootstrap_layout_builder` y `ultimate_cron`. El `lock`
+  guarda el commit exacto, así que la instalación *sí* es reproducible, pero no hay avisos de
+  seguridad para una rama y nadie garantiza que lo que hay ahí compile mañana. Además, cuando un
+  paquete de rama no tiene descarga preparada, Composer lo **clona**, y eso deja un repositorio
+  Git anidado dentro del proyecto y los ficheros con finales de línea de Windows. Pasó con
+  `quicktabs` el 13 de agosto y se resolvió subiéndolo a una versión publicada. Conviene revisar
+  uno a uno si alguno ya tiene versión estable a la que saltar.
+- **Quince carpetas de módulos apagados siguen ocupando sitio en `modules/contrib`**, ninguna
+  gestionada por Composer: `base_field_override_ui`, `bootstrap4_modal`, `currency`,
+  `entity_browser_enhanced`, `entity_reference_modal`, `field_validation`, `integer_to_decimal`,
+  `key`, `pace`, `plugin` y `views_auto_refresh`, entre otras. No se ejecutan, pero engordan el
+  repositorio y aparecen en las búsquedas. Una de ellas, `integer_to_decimal`, lleva cambios
+  hechos a mano, así que si algún día se reactivara habría que capturarlos antes. Borrarlas es
+  seguro; solo hay que hacerlo con calma y comprobando una por una.
 - **El editor guarda a veces en UTF-16 en vez de UTF-8**, y eso rompe cualquier fichero PHP,
   CSS, JS o Markdown que toque. Ha pasado ya media docena de veces. De momento se detecta y
   se corrige a mano después de cada edición, lo que duplica el coste de tocar un archivo.
@@ -554,16 +538,14 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   Pendiente de decidir: montar un *hook* de Cursor del tipo `afterFileEdit` que detecte el
   UTF-16 y lo convierta solo. No arregla el fallo, pero lo vuelve indoloro y protege del caso
   grave, que es un `.php` mal guardado tumbando el ERP sin motivo aparente.
-- **Queda el código de la IA en el disco**, aunque los módulos estén desinstalados desde el 13 de
-  agosto: `modules/contrib/ai_interpolator`, `ai_interpolator_eca` y `ai_interpolator_openai`.
-  No se borran a mano porque `composer.json` todavía pide `drupal/ai_interpolator_openai`, y la
-  forma correcta de quitarlo es `composer remove`, que en este proyecto no se puede ejecutar sin
-  riesgo hasta sanear los conflictos. Va con esa tarea, no antes. No molesta: código
-  desinstalado no se ejecuta.
-- **Referencias muertas en las carpetas `config/install` de nuestros módulos.** Unos quince
-  ficheros dentro de `tec_inventory`, `tec_brands` y `tec_crm` siguen declarando dependencias de
-  `ai_interpolator`. Solo se leen al instalar un módulo, así que hoy no hacen nada, pero si
-  algún día se reinstalara uno de ellos fallaría. Es limpieza cosmética, sin prisa.
+- **Referencias muertas a la IA en nuestros propios módulos.** El código de los módulos de IA ya
+  no está en el disco —`ai_interpolator` y `ai_interpolator_openai` se los llevó la subida del
+  núcleo, y `ai` y `ai_interpolator_eca` se borraron a mano el 13 de agosto, 908 ficheros—, y
+  `composer.json` no los menciona. Lo que queda son referencias en texto: unos quince ficheros de
+  `config/install` dentro de `tec_inventory`, `tec_brands` y `tec_crm`, más el `dependencies:` de
+  los `.info.yml` de `tec_brands` y `tec_crm`. Solo se leen al instalar un módulo, y esos dos
+  están desinstalados y además marcados para borrar (ver "Dos carpetas de más" en el apartado 8),
+  así que hoy no hacen nada. La configuración activa tiene **cero** referencias, comprobado.
 - **Limpiar carpetas sobrantes** dentro del proyecto:
   `config/sync.pre-restore-20260810023747` (1.248 archivos) y
   `modules/custom.pre-restore-20260810023746` (134 archivos), restos de una restauración del
@@ -584,6 +566,87 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-13 — Disco y `composer.lock` por fin dicen lo mismo, y aparecen tres parches que nadie había apuntado
+
+Los veinticuatro descuadres entre lo que hay en disco y lo que Composer cree que hay resultaron
+ser **veintiocho**, y están todos resueltos. Pero lo importante de esta sesión no es esa cuenta:
+es lo que se encontró al ir a arreglarla.
+
+**El hallazgo: tres parches que solo existían en la carpeta del módulo.** Antes de dejar que
+Composer reinstalara veintiocho módulos había que asegurarse de que ninguno estaba retocado a
+mano, porque un módulo reinstalado vuelve a su estado de fábrica y se lleva por delante
+cualquier cambio no registrado. Ya nos pasó con `verf` en la Fase 2, y allí lo descubrimos
+*después*. Para no repetirlo se escribió `scripts/comparar-con-original.php`, que descarga de
+drupal.org el paquete oficial de cada módulo y lo compara fichero a fichero con el del disco.
+
+De 112 proyectos, **90 estaban intactos y 9 tocados**. Seis eran cosas conocidas o inofensivas.
+Los otros tres eran cambios reales que se habrían perdido sin decir nada:
+
+- **`tamper`** multiplicaba sin convertir a número: `$data * $value` con dos textos. El ERP usa
+  ese plugin a través de `eca_tamper` para calcular totales de línea, así que una multiplicación
+  mal hecha acaba en un pedido de venta. Alguien lo arregló a mano y dejó un fichero `.backup` al
+  lado. Ahora es `patches/tamper-math-multiplication-cast-to-float.patch`.
+- **`select2`** tenía aplicado el parche del issue #3279387, que evita un error de JavaScript
+  cuando la configuración del desplegable llega vacía. El fichero `.patch` estaba tirado dentro
+  de la carpeta del módulo, sin registrar en ningún sitio.
+- **`views_entity_form_field`**, que es la tabla editable de líneas de pedido, era la versión
+  8.x-1.0 con el parche de AJAX del issue #2998721 encima. **Este era el grave**: sin ese parche
+  no se puede guardar una línea sin recargar la página entera. El parche original de drupal.org
+  ya no encaja con la 8.x-1.0 publicada, así que se generó uno nuevo a partir de la diferencia
+  real y se comprobó que reproduce el disco byte a byte.
+
+Los tres están ahora en `patches/` y registrados en `composer.json`. Composer los aplica solo,
+y con `composer-exit-on-patch-failure` activo desde la Fase 0, si alguno dejara de encajar la
+instalación se para en voz alta en vez de seguir en silencio.
+
+**El aviso de seguridad de ECA no nos afecta.** Era el último que quedaba de los 82, y su
+solución oficial es saltar a ECA 2, que es la Fase 3 entera. Pero la letra pequeña del aviso
+dice que solo es explotable si el sitio usa la acción "Render: Twig" del submódulo `eca_render`.
+Ese submódulo **está desinstalado**, y ninguno de los 36 procesos lo menciona. El código
+vulnerable está en el disco pero Drupal no ejecuta módulos apagados. Conclusión: ECA 2 sigue
+siendo deseable, pero ya no es urgente ni es una decisión de seguridad.
+
+**La reconciliación.** Se hizo en dos rondas a propósito, para poder saber cuál había sido si
+algo se rompía: primero 23 módulos de salto pequeño, después los 5 con salto de verdad (`ds` de
+3.19 a 3.37, `feeds` de una beta a la 3.2.0 estable, `smtp`, `views_bootstrap` y `gin_toolbar`).
+Las 35 comprobaciones pasaron después de cada ronda. Diez ganchos de actualización tocaron ocho
+vistas y dos ajustes; se revisó uno a uno lo que cambiaban —renombrar opciones y convertir tipos,
+nada perdido— y se llevaron a `config/sync`. **Ahora el inventario da 0 descuadres.**
+
+**Los dos módulos que Composer no sabía que existían.** `quicktabs` y `views_entity_form_field`
+estaban en disco y activos pero fuera de `composer.json`, así que una instalación desde cero
+simplemente no los ponía. `views_entity_form_field` resultó ser la 8.x-1.0 parcheada, ya
+contada arriba. `quicktabs` era una copia del repositorio de la rama 3, no de una versión
+publicada: se notaba porque le faltaba el `LICENSE.txt` y le sobraban los ficheros de
+integración continua. Se intentó anclarlo a esa rama y Composer lo instaló **clonando**, con
+lo que dejaba un repositorio Git anidado de 1 MB dentro del proyecto y los 59 ficheros con
+finales de línea de Windows. Eso es exactamente el problema que costó una tarde al montar
+GitHub el 12 de agosto, así que se descartó y se subió a la **4.3.1**, que es versión publicada,
+soporta Drupal 11 y migró las cinco instancias de pestañas con dos ganchos que dicen
+expresamente que dejan el comportamiento anterior intacto. Comprobado a ojo: las tres pestañas
+de la ficha de CRM (compras, inventario, detalles) se siguen dibujando.
+
+**Lo que se miró por encargo.** `ief_table_view_mode`, que dibuja la tabla de líneas del pedido,
+tenía en disco una instantánea de rama de desarrollo de 2023 donde el `lock` pedía la 3.0.0. Se
+comparó con la 3.0.1 publicada y **solo cambia la metadata**: ni una línea de código. Se subió a
+la 3.0.1 sin riesgo. De paso salió una cosa que no es un fallo pero conviene saber: esa tabla
+sale con las columnas genéricas de Inline Entity Form (Título, Tipo, Operaciones) porque el
+formulario **no tiene modo de vista configurado**. Es así desde antes de tocar nada —la
+configuración en Git es idéntica— pero significa que el módulo no está haciendo lo único que
+sabe hacer. Merece una mirada cuando haya tiempo.
+
+**Cómo queda.** `composer validate` dice *valid* por primera vez: `composer.json` y
+`composer.lock` cuadran. Cero descuadres entre disco y `lock`. 14 páginas del ERP responden 200,
+incluidas las de pedidos, cola de producción, control de existencias y CRM. 35 de 35
+comprobaciones.
+
+**Un tropiezo del que aprender.** A mitad de faena se lanzó un `composer require --dry-run` para
+ver qué proponía. Ese comando **escribe en `composer.json` aunque sea un simulacro**, así que se
+deshizo con `git checkout composer.json`, y eso se llevó por delante hora y media de ediciones
+—los parches registrados y las siete restricciones ajustadas— mientras el `lock` y el disco ya
+tenían los cambios nuevos. Hubo que rehacerlas. La lección: `--dry-run` de `require` no es de
+solo lectura, y `git checkout` sobre un fichero con trabajo sin confirmar no perdona.
 
 ### 2026-08-13 — Fase 2: el ERP corre en Drupal 10.6.15, la página de pedidos vuelve a abrir y quedan 2 alertas de seguridad de 82
 

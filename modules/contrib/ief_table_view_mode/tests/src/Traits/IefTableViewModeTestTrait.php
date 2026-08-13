@@ -7,14 +7,14 @@ use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\ief_table_view_mode\Form\EntityInlineTableViewModeForm;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Provides common functionality for the IEF table view mode test classes.
  */
 trait IefTableViewModeTestTrait {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * Create an entity reference field and configure it with the widget.

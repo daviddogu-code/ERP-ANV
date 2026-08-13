@@ -1,0 +1,11 @@
+name: 'Quick Tabs direct link test'
+type: module
+description: 'Provides a routed Quick Tabs instance for testing direct linking.'
+package: Testing
+dependencies:
+  - quicktabs:quicktabs
+
+# Information added by Drupal.org packaging script on 2026-08-12
+version: '4.3.1'
+project: 'quicktabs'
+datestamp: 1786549797

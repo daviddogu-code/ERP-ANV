@@ -3,17 +3,24 @@
 namespace Drupal\feeds;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\feeds\Event\EventDispatcherTrait;
 use Drupal\feeds\Event\FeedsEvents;
 use Drupal\feeds\Event\ReportEvent;
+use Drupal\feeds\Feeds\State\ContainerStateInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Status of the import or clearing operation of a Feed.
  */
 #[\AllowDynamicProperties]
-class State implements StateInterface {
+class State implements StateInterface, ContainerStateInterface {
 
-  use DependencySerializationTrait;
+  use DependencySerializationTrait {
+    __sleep as dependencySerializationTraitSleep;
+    __wakeup as dependencySerializationTraitWakeUp;
+  }
   use EventDispatcherTrait;
 
   /**
@@ -76,6 +83,20 @@ class State implements StateInterface {
   public $failed = 0;
 
   /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * The logger for the feeds channel.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * The list of messages to display to the user.
    *
    * Each entry on the array is expected to have the following values:
@@ -90,6 +111,63 @@ class State implements StateInterface {
    * @var array
    */
   protected $messages = [];
+
+  /**
+   * Constructs a new State object.
+   *
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger for the feeds channel.
+   */
+  public function __construct(MessengerInterface $messenger, LoggerInterface $logger) {
+    $this->messenger = $messenger;
+    $this->logger = $logger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, int $feed_id) {
+    return new static(
+      $container->get('messenger'),
+      $container->get('logger.factory')->get('feeds')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __sleep() {
+    $vars = $this->dependencySerializationTraitSleep();
+
+    // Do not serialize the logger object.
+    $key = array_search('logger', $vars);
+    if ($key !== FALSE) {
+      unset($vars[$key]);
+    }
+
+    return $vars;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\ReturnTypeWillChange]
+  public function __wakeup() {
+    $this->dependencySerializationTraitWakeUp();
+
+    // Restore the logger.
+    $container = \Drupal::getContainer();
+    $this->logger = $container->get('logger.factory')->get('feeds');
+
+    // If the messenger service did not get restored because the State object
+    // was serialized in a Feeds version before 8.x-3.0-rc1, make sure that the
+    // messenger service does get restored.
+    if (!$this->messenger instanceof MessengerInterface) {
+      $this->messenger = $container->get('messenger');
+    }
+  }
 
   /**
    * Reports a processed item.
@@ -152,7 +230,7 @@ class State implements StateInterface {
    */
   public function displayMessages() {
     foreach ($this->messages as $message) {
-      \Drupal::messenger()->addMessage($message['message'], $message['type'], $message['repeat']);
+      $this->messenger->addMessage($message['message'], $message['type'], $message['repeat']);
     }
   }
 
@@ -166,7 +244,7 @@ class State implements StateInterface {
           $message['type'] = 'info';
           break;
       }
-      \Drupal::logger('feeds')->log($message['type'], $message['message'], [
+      $this->logger->log($message['type'], $message['message'], [
         'feed' => $feed,
       ]);
     }

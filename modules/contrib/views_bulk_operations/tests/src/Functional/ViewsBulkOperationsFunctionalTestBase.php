@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_bulk_operations\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\views_bulk_operations\WatchdogTestTrait;
 
 /**
  * Base class for VBO browser tests.
  */
 abstract class ViewsBulkOperationsFunctionalTestBase extends BrowserTestBase {
+
+  use WatchdogTestTrait;
 
   private const TEST_NODE_COUNT = 15;
 
@@ -17,11 +22,17 @@ abstract class ViewsBulkOperationsFunctionalTestBase extends BrowserTestBase {
   protected $defaultTheme = 'stable9';
 
   /**
-   * Modules to install.
+   * Array of node objects used for testing.
    *
-   * @var array
+   * @var \Drupal\node\NodeInterface[]
+   */
+  protected array $testNodes = [];
+
+  /**
+   * {@inheritdoc}
    */
   protected static $modules = [
+    'dblog',
     'node',
     'views',
     'views_bulk_operations',

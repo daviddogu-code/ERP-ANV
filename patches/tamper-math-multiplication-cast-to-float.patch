@@ -1,0 +1,29 @@
+Multiply numbers, not strings.
+
+The Math tamper plugin multiplied its two operands raw. Everything that reaches
+it from an entity field arrives as a string, and PHP's loose typing then decides
+what the result should be on its own. With decimal values written in the
+database as '12.50' that guesswork is wrong often enough to matter: the ERP uses
+this plugin through eca_tamper to work out line totals, so a bad multiplication
+lands straight in a sales order.
+
+The other three operations are left alone on purpose. Only multiplication was
+producing wrong figures on this site, and a wider change would be a bigger bet
+than the evidence supports.
+
+This fix was applied by hand to the module folder at some point before August
+2026 and was found again while reconciling the site with Composer. It lives here
+now so that reinstalling the module cannot silently undo it.
+
+diff --git a/src/Plugin/Tamper/Math.php b/src/Plugin/Tamper/Math.php
+--- a/src/Plugin/Tamper/Math.php
++++ b/src/Plugin/Tamper/Math.php
+@@ -153,7 +153,7 @@ class Math extends TamperBase {
+         break;
+ 
+       case 'multiplication':
+-        $data = $data * $value;
++        $data = (float) $data * (float) $value;
+         break;
+ 
+       case 'division':

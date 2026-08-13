@@ -125,6 +125,10 @@ class PhoneNumberUtil implements PhoneNumberUtilInterface {
       throw new ParseException('Invalid number', 0, $e);
     }
 
+    if (!$this->libUtil()->isValidNumber($phone_number)) {
+      throw new ParseException("Phone number is invalid for the selected country");
+    }
+
     $number_country = $this->libUtil->getRegionCodeForNumber($phone_number);
 
     if ($country && ($number_country != $country)) {
@@ -239,7 +243,7 @@ class PhoneNumberUtil implements PhoneNumberUtilInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCountryOptions(array $filter = NULL, $show_country_names = FALSE) {
+  public function getCountryOptions(?array $filter = NULL, $show_country_names = FALSE) {
 
     $libUtil = $this->libUtil;
     $regions = $libUtil->getSupportedRegions();

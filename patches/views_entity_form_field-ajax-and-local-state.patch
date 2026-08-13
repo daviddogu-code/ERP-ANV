@@ -1,0 +1,365 @@
+Recupera el estado con el que este modulo lleva anos funcionando en el ERP.
+
+La carpeta del disco era la 8.x-1.0 con el parche de AJAX del issue #2998721
+aplicado a mano, mas un retoque de formato en la hoja de estilos. El parche de
+drupal.org ya no encaja con la 8.x-1.0 publicada, asi que esto es la diferencia
+real entre el paquete oficial y lo que habia instalado, sacada con git diff.
+
+Lo que anade, en resumen:
+  - soporte de AJAX en la tabla editable, que es lo que permite guardar una
+    linea de pedido sin recargar la pagina entera
+  - un manejo distinto del titulo del widget cuando el campo viene envuelto en
+    un contenedor
+  - deja de calcular can_edit_any, que ya no se usaba
+
+Se encontro al reconciliar el sitio con Composer en agosto de 2026. Sin esto,
+una instalacion desde cero se lleva por delante la tabla de lineas de pedido.
+git : warning: in the working copy of '.gitlab-ci.yml', LF will be replaced by CRLF the next time Git touches it
+At C:\Users\Acer\AppData\Local\Temp\ps-script-1c53b5fb-0634-462d-b9d9-79394e9e49a2.ps1:113 char:1
++ git diff --no-index --no-color -- "vef-limpio" "vef-nuestro" 2>&1 | O ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of '.gitlab-ci.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'LICENSE.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'LICENSE.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'composer.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'composer.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'css/views-form.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'css/views-form.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/Plugin/views/field/EntityFormField.php', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/Plugin/views/field/EntityFormField.php', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'views_entity_form_field.info.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'views_entity_form_field.info.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'views_entity_form_field.install', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'views_entity_form_field.install', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'views_entity_form_field.libraries.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'views_entity_form_field.libraries.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'views_entity_form_field.module', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'views_entity_form_field.module', LF will be replaced by CRLF the next time Git touches it
+diff --git a/css/views-form.css b/css/views-form.css
+index f9ad526..d3f0e8e 100644
+--- a/css/views-form.css
++++ b/css/views-form.css
+@@ -6,13 +6,7 @@
+ }
+ 
+ .views-entity-form-field-field-description-hidden > .form-item > .description,
+-.views-entity-form-field-field-description-hidden
+-  > fieldset.form-item
+-  > .fieldset-wrapper
+-  > .description,
+-.views-entity-form-field-field-description-hidden
+-  > *
+-  > .form-item
+-  > .description {
++.views-entity-form-field-field-description-hidden > fieldset.form-item > .fieldset-wrapper > .description,
++.views-entity-form-field-field-description-hidden > * > .form-item > .description {
+   display: none;
+ }
+diff --git a/src/Plugin/views/field/EntityFormField.php b/src/Plugin/views/field/EntityFormField.php
+index 8b617ca..d4872af 100644
+--- a/src/Plugin/views/field/EntityFormField.php
++++ b/src/Plugin/views/field/EntityFormField.php
+@@ -6,14 +6,17 @@ use Drupal\Component\Plugin\DependentPluginInterface;
+ use Drupal\Component\Plugin\Factory\DefaultFactory;
+ use Drupal\Core\Cache\Cache;
+ use Drupal\Core\Cache\CacheableDependencyInterface;
++use Drupal\Core\Datetime\DrupalDateTime;
+ use Drupal\Core\Entity\EntityFieldManagerInterface;
+ use Drupal\Core\Entity\EntityInterface;
+ use Drupal\Core\Entity\EntityTypeManagerInterface;
+ use Drupal\Core\Field\FieldDefinitionInterface;
+ use Drupal\Core\Field\WidgetPluginManager;
++use Drupal\Core\Form\FormBuilderInterface;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Language\LanguageManagerInterface;
+ use Drupal\Core\Plugin\PluginDependencyTrait;
++use Drupal\Core\Url;
+ use Drupal\views\Entity\Render\EntityTranslationRenderTrait;
+ use Drupal\views\Plugin\DependentWithRemovalPluginInterface;
+ use Drupal\views\Plugin\views\field\FieldPluginBase;
+@@ -476,11 +479,9 @@ class EntityFormField extends FieldPluginBase implements CacheableDependencyInte
+     $form['#tree'] = TRUE;
+     $form += ['#parents' => []];
+ 
+-    // Hide the submit button if the user can't edit anything.
+-    $can_edit_any = FALSE;
+-
+     // Only add the buttons if there are results.
+     if (!empty($this->getView()->result)) {
++      $ajax_enabled = $this->getView()->display_handler->ajaxEnabled();
+       $form[$this->options['id']]['#tree'] = TRUE;
+       $form[$this->options['id']]['#entity_form_field'] = TRUE;
+       foreach ($this->getView()->result as $row_index => $row) {
+@@ -492,14 +493,13 @@ class EntityFormField extends FieldPluginBase implements CacheableDependencyInte
+         // Make sure there's an entity for this row (relationships can be null).
+         if ($this->getEntity($row)) {
+           // Load field definition based on current entity bundle.
+-          $entity = $this->getEntityTranslationByRelationship($this->getEntity($row), $row);
++          $entity = $this->getEntityTranslation($this->getEntity($row), $row);
+           if ($entity->hasField($field_name) && $this->getBundleFieldDefinition($entity->bundle())->isDisplayConfigurable('form')) {
+             $items = $entity->get($field_name)->filterEmptyItems();
+-            $can_edit_row = ($entity->access('update') && $items->access('edit'));
+-            $can_edit_any = $can_edit_any || $can_edit_row;
++
+             // Add widget to form and add field overrides.
+             $form[$this->options['id']][$row_index][$field_name] = $this->getPluginInstance()->form($items, $form[$this->options['id']][$row_index], $form_state);
+-            $form[$this->options['id']][$row_index][$field_name]['#access'] = $can_edit_row;
++            $form[$this->options['id']][$row_index][$field_name]['#access'] = ($entity->access('update') && $items->access('edit'));
+             $form[$this->options['id']][$row_index][$field_name]['#cache']['contexts'] = $entity->getCacheContexts();
+             $form[$this->options['id']][$row_index][$field_name]['#cache']['tags'] = $entity->getCacheTags();
+             $form[$this->options['id']][$row_index][$field_name]['#parents'] = [
+@@ -510,22 +510,102 @@ class EntityFormField extends FieldPluginBase implements CacheableDependencyInte
+ 
+             // Hide field widget title.
+             if ($this->options['plugin']['hide_title']) {
+-              $form[$this->options['id']][$row_index][$field_name]['#attributes']['class'][] = 'views-entity-form-field-field-label-hidden';
++              if ($form[$this->options['id']][$row_index][$field_name]['#type'] == 'container') {
++                if (isset($form[$this->options['id']][$row_index][$field_name]['widget'][0]['container']['value']['#title'])) {
++                  unset($form[$this->options['id']][$row_index][$field_name]['widget'][0]['container']['value']['#title']);
++                }
++              }
++              else {
++                $form[$this->options['id']][$row_index][$field_name]['#attributes']['class'][] = 'views-entity-form-field-field-label-hidden';
++              }
+             }
+ 
+             // Hide field widget description.
+             if ($this->options['plugin']['hide_description']) {
+-              $form[$this->options['id']][$row_index][$field_name]['#attributes']['class'][] = 'views-entity-form-field-field-description-hidden';
++              if ($form[$this->options['id']][$row_index][$field_name]['#type'] == 'container') {
++                if (isset($form[$this->options['id']][$row_index][$field_name]['widget'][0]['container']['value']['#description'])) {
++                  unset($form[$this->options['id']][$row_index][$field_name]['widget'][0]['container']['value']['#description']);
++                }
++              }
++              else {
++                $form[$this->options['id']][$row_index][$field_name]['#attributes']['class'][] = 'views-entity-form-field-field-description-hidden';
++              }
++            }
++
++            // Set AJAX callback only if the view uses ajax.
++            if ($ajax_enabled === TRUE) {
++              // Set callback only on visible form elements.
++              if ($this->options['exclude'] == FALSE) {
++                $target_element = $form[$this->options['id']][$row_index][$field_name];
++                $path = \Drupal::service('path.current')->getPath();
++
++                $ajax_settings = [
++                  'callback' => [
++                    'Drupal\views_entity_form_field\Plugin\views\field\EntityFormField',
++                    'updateEntity',
++                  ],
++                  'event' => 'change',
++                  'disable-refocus' => TRUE,
++                  'progress' => [
++                    'type' => 'throbber',
++                    'message' => $this->t('Saving'),
++                  ],
++                  'url' => Url::fromUserInput($path),
++                  'options' => [
++                    'query' => [
++                      FormBuilderInterface::AJAX_FORM_REQUEST => TRUE,
++                    ],
++                  ],
++                ];
++                $ajax_settings['options']['query'] += \Drupal::request()->query->all();
++
++                // For a boolean (single checkbox).
++                if (isset($target_element['widget']['value'])) {
++                  $form[$this->options['id']][$row_index][$field_name]['widget']['value']['#ajax'] = $ajax_settings;
++                  $form[$this->options['id']][$row_index][$field_name]['widget']['value']['#relationship'] = $this->options['relationship'];
++                }
++                // For boolean (checkboxes, radios, toggle), number, text, date.
++                elseif (isset($target_element['widget'][0]['value'])) {
++                  $form[$this->options['id']][$row_index][$field_name]['widget'][0]['value']['#ajax'] = $ajax_settings;
++                  $form[$this->options['id']][$row_index][$field_name]['widget'][0]['value']['#relationship'] = $this->options['relationship'];
++                  // date triggeringElements lose the relationship
++                  $form[$this->options['id']][$row_index][$field_name]['widget'][0]['value']['#ajax']['#relationship'] = $this->options['relationship'];
++                }
++                // For end date (date) field.
++                elseif (isset($target_element['widget'][0]['container']['value'])) {
++                  $form[$this->options['id']][$row_index][$field_name]['widget'][0]['container']['value']['#ajax'] = $ajax_settings;
++                  $form[$this->options['id']][$row_index][$field_name]['widget'][0]['container']['value']['#relationship'] = $this->options['relationship'];
++                }
++                // For entity_reference (autocomplete).
++                elseif (isset($target_element['widget'][0]['target_id'])) {
++                  $form[$this->options['id']][$row_index][$field_name]['widget'][0]['target_id']['#ajax'] = $ajax_settings;
++                  $form[$this->options['id']][$row_index][$field_name]['widget'][0]['target_id']['#relationship'] = $this->options['relationship'];
++                }
++                // For entity_reference (tag style).
++                elseif (isset($target_element['widget']['target_id'])) {
++                  $form[$this->options['id']][$row_index][$field_name]['widget']['target_id']['#ajax'] = $ajax_settings;
++                  $form[$this->options['id']][$row_index][$field_name]['widget']['target_id']['#relationship'] = $this->options['relationship'];
++                }
++                // For entity_reference (select, checkboxes).
++                elseif (isset($target_element['widget']['#type'])) {
++                  $form[$this->options['id']][$row_index][$field_name]['widget']['#ajax'] = $ajax_settings;
++                  $form[$this->options['id']][$row_index][$field_name]['widget']['#relationship'] = $this->options['relationship'];
++                }
++                // And for the rest yet unknown.
++                else {
++                  $form[$this->options['id']][$row_index][$field_name]['widget']['#ajax'] = $ajax_settings;
++                  $form[$this->options['id']][$row_index][$field_name]['widget']['#relationship'] = $this->options['relationship'];
++                }
++                // Remove the save button from the form.
++                if (isset($form['actions']['submit'])) {
++                  $form['actions']['submit']['#access'] = FALSE;
++                }
++              }
+             }
+           }
+         }
+       }
+     }
+-
+-    // Hide submit button if there's no results or can not edit.
+-    if (empty($this->getView()->result) || (!$can_edit_any)) {
+-      $form['actions']['submit']['#access'] = FALSE;
+-    }
+   }
+ 
+   /**
+@@ -615,22 +695,18 @@ class EntityFormField extends FieldPluginBase implements CacheableDependencyInte
+         $entity = $this->getEntity($row);
+ 
+         if ($entity) {
+-          $entity = $this->getEntityTranslationByRelationship($entity, $row);
+-          $old = $storage->loadUnchanged($entity->id());
+-
+-          if ($old) {
+-            $original_entity = $this->getEntityTranslation($old, $row);
++          $entity = $this->getEntityTranslation($entity, $row);
++          $original_entity = $this->getEntityTranslation($storage->loadUnchanged($entity->id()), $row);
+ 
+-            try {
+-              if ($this->entityShouldBeSaved($entity, $original_entity)) {
+-                $storage->save($entity);
+-                $rows_saved[$row_index] = $entity->label();
+-              }
+-            }
+-            catch (\Exception $exception) {
+-              $rows_failed[$row_index] = $entity->label();
++          try {
++            if ($this->entityShouldBeSaved($entity, $original_entity)) {
++              $storage->save($entity);
++              $rows_saved[$row_index] = $entity->label();
+             }
+           }
++          catch (\Exception $exception) {
++            $rows_failed[$row_index] = $entity->label();
++          }
+         }
+       }
+ 
+@@ -661,9 +737,9 @@ class EntityFormField extends FieldPluginBase implements CacheableDependencyInte
+   /**
+    * Determines if an entity should be saved.
+    *
+-   * @param EntityInterface $entity
++   * @param \Drupal\Core\Entity\EntityInterface $entity
+    *   The possibly modified entity in question.
+-   * @param EntityInterface $original_entity
++   * @param \Drupal\Core\Entity\EntityInterface $original_entity
+    *   The original unmodified entity.
+    *
+    * @return bool
+@@ -699,4 +775,94 @@ class EntityFormField extends FieldPluginBase implements CacheableDependencyInte
+     return \Drupal::service('entity.repository');
+   }
+ 
++  /**
++   * AJAX callback to save te current entity.
++   *
++   * @param array $form
++   *   An associative array containing the structure of the form.
++   * @param \Drupal\Core\Form\FormStateInterface $form_state
++   *   The current state of the form.
++   */
++  public static function updateEntity(array &$form, FormStateInterface $form_state) {
++    $trigger = $form_state->getTriggeringElement();
++
++    // The field, current row and value type are set in the #parents array.
++    $field = $trigger['#parents'][2];
++    $row = $trigger['#parents'][1];
++    $value_type = array_key_exists(4, $trigger['#parents']) ? $trigger['#parents'][4] : '';
++
++    // Get the proper value from the element.
++    if (isset($value_type) && $value_type == 'target_id') {
++      if (isset($trigger['#default_value']) && is_object($trigger['#default_value'])) {
++        $value = $trigger['#default_value']->id();
++      }
++      else {
++        // Need an empty array as value to delete the entity reference.
++        $value = [];
++      }
++    }
++    else {
++      if (isset($trigger['#type']) && $trigger['#type'] == 'date') {
++        $value_type = 'date';
++        $input_value = $form_state->getUserInput()['form_field_' . $field][$row][$field];
++        // For End date widgets the value is in a container.
++        if (isset($input_value[0]['container']['value'])) {
++          $date_value = $input_value[0]['container']['value'];
++        }
++        else {
++          $date_value = $input_value[0]['value'];
++        }
++
++        // If both values are empty - user has deleted the field values.
++        if (empty($date_value['date']) && empty($date_value['time'])) {
++          $value = '';
++        }
++        else {
++          $connector = !empty($date_value['time']) ? 'T' : '';
++          $value = $date_value['date'];
++          $format = 'Y-m-d';
++          if (isset($date_value['time'])) {
++            $value = $value . $connector . $date_value['time'];
++            $format = 'Y-m-d\TH:i:s';
++            // Get the Drupal site default timezone.
++            $timezone = new \DateTimeZone(date_default_timezone_get());
++            $value = new DrupalDateTime($value, $timezone);
++            // Convert to UTC and the DB storage format.
++            $value = $value->setTimeZone(new \DateTimeZone('UTC'))->format($format);
++          }
++        }
++      }
++      else {
++        $value = $trigger['#value'];
++      }
++    }
++
++    // Get the entity to update from the views row.
++    if (!empty($trigger['#relationship']) && $trigger['#relationship'] != 'none') {
++      $entity = $form['output'][0]['#rows'][$row]->_relationship_entities[$trigger['#relationship']];
++    }
++    elseif (!empty($trigger['#ajax']['#relationship'])) {
++      $entity = $form['output'][0]['#rows'][$row]->_relationship_entities[$trigger['#ajax']['#relationship']];
++    }
++    else {
++      $entity = $form['output'][0]['#rows'][$row]->_entity;
++    }
++
++    // reload the entity
++    $entity_type = $entity->getEntityTypeId();
++    $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity->id());
++
++    // If the entity has the field - write the value.
++    if (is_object($entity) && $entity->hasField($field)) {
++      if (in_array($value_type, ['target_id', 'date'])) {
++        $entity->set($field, [$value_type = $value]);
++      }
++      else {
++        $entity->set($field, $value);
++      }
++      $entity->save();
++      return ['#markup' => "Ok"];
++    }
++  }
++
+ }
+

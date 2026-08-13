@@ -5,40 +5,37 @@
  * Render content with tabs and other display styles.
  */
 
+use Drupal\Core\Hook\Attribute\LegacyHook;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Url;
-
-// Store quicktabs preprocess theme functions in a separate .inc file.
-\Drupal::moduleHandler()->loadInclude('quicktabs', 'inc', 'quicktabs.theme');
+use Drupal\quicktabs\Hook\QuicktabsHooks;
+use Drupal\quicktabs\Hook\QuicktabsThemeHooks;
 
 /**
  * Implements hook_help().
  */
+#[LegacyHook]
 function quicktabs_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    case 'quicktabs.admin':
-      return '<p>' . t('Each QuickTabs instance has a corresponding block that is managed on the <a href=":link">blocks administration page</a>.',
-          [':link' => Url::fromRoute('block.admin_display')->setAbsolute()->toString()]) . '</p>';
-  }
+  return \Drupal::service(QuicktabsHooks::class)->help($route_name, $route_match);
 }
 
 /**
  * Implements hook_theme().
  */
-function quicktabs_theme($existing, $type, $theme, $path) {
-  return [
-    'quicktabs_block_content' => [
-      'variables' => [
-        'title' => NULL,
-        'block' => NULL,
-        'classes' => NULL,
-        'id' => NULL,
-        'tabid' => NULL,
-      ],
-      'template' => 'quicktabs-block-content',
-    ],
-    'quicktabs_view_quicktabs' => [
-      'file' => 'quicktabs.theme.inc',
-    ],
-  ];
+#[LegacyHook]
+function quicktabs_theme($existing, $type, $theme, $path): array {
+  return \Drupal::service(QuicktabsHooks::class)->theme($existing, $type, $theme, $path);
+}
+
+/**
+ * Prepares variables for quicktabs view template.
+ *
+ * Default template: quicktabs-view-quicktabs.html.twig.
+ *
+ * Create a tabbed view
+ *
+ * @param array $variables
+ *   An associative array.
+ */
+function template_preprocess_quicktabs_view_quicktabs(array &$variables): void {
+  QuicktabsThemeHooks::preprocessQuicktabsViewQuicktabs($variables);
 }

@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_bulk_operations\Form;
 
+use Drupal\Component\Plugin\ConfigurableInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionManager;
 use Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionProcessorInterface;
+use Drupal\views_bulk_operations\Traits\ViewsBulkOperationsFormTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -17,20 +22,10 @@ class ConfigureAction extends FormBase {
 
   use ViewsBulkOperationsFormTrait;
 
-  /**
-   * The tempstore service.
-   */
-  protected PrivateTempStoreFactory $tempStoreFactory;
-
-  /**
-   * Views Bulk Operations action manager.
-   */
-  protected ViewsBulkOperationsActionManager $actionManager;
-
-  /**
-   * Views Bulk Operations action processor.
-   */
-  protected ViewsBulkOperationsActionProcessorInterface $actionProcessor;
+  // We need this if we want to keep the readonly in constructor property
+  // promotion and not have errors in plugins that use AJAX in their
+  // buildConfigurationForm() method.
+  use DependencySerializationTrait;
 
   /**
    * Constructor.
@@ -43,19 +38,15 @@ class ConfigureAction extends FormBase {
    *   Views Bulk Operations action processor.
    */
   public function __construct(
-    PrivateTempStoreFactory $tempStoreFactory,
-    ViewsBulkOperationsActionManager $actionManager,
-    ViewsBulkOperationsActionProcessorInterface $actionProcessor
-  ) {
-    $this->tempStoreFactory = $tempStoreFactory;
-    $this->actionManager = $actionManager;
-    $this->actionProcessor = $actionProcessor;
-  }
+    protected readonly PrivateTempStoreFactory $tempStoreFactory,
+    protected readonly ViewsBulkOperationsActionManager $actionManager,
+    protected readonly ViewsBulkOperationsActionProcessorInterface $actionProcessor,
+  ) {}
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): self {
     return new static(
       $container->get('tempstore.private'),
       $container->get('plugin.manager.views_bulk_operations_action'),
@@ -73,11 +64,11 @@ class ConfigureAction extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $view_id = NULL, $display_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?string $view_id = NULL, ?string $display_id = NULL): array {
 
     $form_data = $this->getFormData($view_id, $display_id);
 
-    if (!isset($form_data['action_id'])) {
+    if (!\array_key_exists('action_id', $form_data)) {
       return [
         '#markup' => $this->t('No items selected. Go back and try again.'),
       ];
@@ -110,7 +101,7 @@ class ConfigureAction extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     $form_data = $form_state->get('views_bulk_operations');
 
     $action = $this->actionManager->createInstance($form_data['action_id']);
@@ -122,11 +113,11 @@ class ConfigureAction extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $form_data = $form_state->get('views_bulk_operations');
 
     $action = $this->actionManager->createInstance($form_data['action_id']);
-    if (\method_exists($action, 'submitConfigurationForm')) {
+    if ($action instanceof ConfigurableInterface && \method_exists($action, 'submitConfigurationForm')) {
       $action->submitConfigurationForm($form, $form_state);
       $form_data['configuration'] = $action->getConfiguration();
     }
@@ -135,7 +126,7 @@ class ConfigureAction extends FormBase {
       $form_data['configuration'] = $form_state->getValues();
     }
 
-    if (!empty($form_data['confirm_route'])) {
+    if (\array_key_exists('confirm_route', $form_data) && $form_data['confirm_route'] !== '') {
       // Update tempStore data.
       $this->setTempstoreData($form_data, $form_data['view_id'], $form_data['display_id']);
       // Go to the confirm route.

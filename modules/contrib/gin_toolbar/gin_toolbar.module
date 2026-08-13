@@ -5,9 +5,11 @@
  * gin_toolbar.module
  */
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
 use Drupal\gin\GinNavigation;
 use Drupal\gin\GinSettings;
 use Drupal\gin\GinUserPicture;
@@ -45,6 +47,23 @@ function gin_toolbar_preprocess_html(&$variables) {
 
   // Only check for new Drupal navigation if we are not in a maintenance page.
   if (isset($variables['page']['#theme']) && $variables['page']['#theme'] === 'maintenance_page') {
+    // Gin's custom styling for the maintenance page.
+    $variables['#attached']['library'][] = 'gin/maintenance_page';
+
+    // Get theme settings.
+    /** @var \Drupal\gin\GinSettings $settings */
+    $settings = \Drupal::classResolver(GinSettings::class);
+
+    // Expose settings to JS.
+    $variables['#attached']['drupalSettings']['gin']['darkmode'] = $settings->get('enable_darkmode');
+    $variables['#attached']['drupalSettings']['gin']['darkmode_class'] = 'gin--dark-mode';
+    $variables['#attached']['drupalSettings']['gin']['preset_accent_color'] = $settings->get('preset_accent_color');
+    $variables['#attached']['drupalSettings']['gin']['accent_color'] = $settings->get('accent_color');
+    $variables['#attached']['drupalSettings']['gin']['preset_focus_color'] = $settings->get('preset_focus_color');
+    $variables['#attached']['drupalSettings']['gin']['focus_color'] = $settings->get('focus_color');
+    $variables['#attached']['drupalSettings']['gin']['highcontrastmode'] = $settings->get('high_contrast_mode');
+    $variables['#attached']['drupalSettings']['gin']['highcontrastmode_class'] = 'gin--high-contrast-mode';
+
     return;
   }
 
@@ -98,6 +117,19 @@ function gin_toolbar_page_attachments_alter(&$page) {
   // Get theme settings.
   /** @var \Drupal\gin\GinSettings $settings */
   $settings = \Drupal::classResolver(GinSettings::class);
+
+  // Inject enable darkmode.
+  $page['#attached']['html_head'][] = [
+    [
+      '#tag' => 'script',
+      '#attributes' => [
+        'type' => 'application/json',
+        'id' => 'gin-setting-darkmode',
+      ],
+      '#value' => new FormattableMarkup('{ "ginDarkmode": "@value" }', ['@value' => $settings->get('enable_darkmode')]),
+    ],
+    'gin_darkmode',
+  ];
 
   // Expose settings to JS.
   $page['#attached']['drupalSettings']['gin']['darkmode'] = $settings->get('enable_darkmode');
@@ -237,11 +269,18 @@ function gin_toolbar_preprocess_toolbar(&$variables) {
 
   if (preg_match('#entity\.(?<entity_type_id>.+)\.(canonical|latest_version)#', $variables['route_name'], $matches)) {
     $entity = \Drupal::request()->attributes->get($matches['entity_type_id']);
-
     if ($entity instanceof EntityInterface && $entity->hasLinkTemplate('edit-form')) {
-      $variables['entity_title'] = $entity->label();
-      $variables['entity_edit_url'] = $entity->toUrl('edit-form');
+      $url = $entity->toUrl('edit-form');
+      if ($url->access()) {
+        $variables['entity_title'] = $entity->label();
+        $variables['entity_edit_url'] = $url;
+      }
     }
+  }
+
+  $contentUrl = Url::fromRoute('system.admin_content');
+  if ($contentUrl->access()) {
+    $variables['admin_content_url'] = $contentUrl;
   }
 }
 
@@ -249,7 +288,7 @@ function gin_toolbar_preprocess_toolbar(&$variables) {
  * Implements hook_preprocess_menu().
  */
 function gin_toolbar_preprocess_menu(&$variables) {
-  if (isset($variables['theme_hook_original']) && $variables['theme_hook_original'] == 'menu__toolbar__admin') {
+  if (isset($variables['theme_hook_original']) && strpos($variables['theme_hook_original'], 'menu__toolbar__') === 0) {
     // Check if the admin_toolbar module is installed.
     foreach ($variables['items'] as $key => $item) {
       $gin_id = str_replace('.', '-', $key);
@@ -301,21 +340,8 @@ function gin_toolbar_preprocess_navigation(&$variables) {
   $logo_default = $settings->getDefault('logo.use_default');
   $variables['icon_path'] = !$logo_default ? $settings->getDefault('logo.path') : '';
   $variables['toolbar_variant'] = $settings->get('classic_toolbar');
-  $variables['secondary_toolbar_frontend'] = $settings->get('secondary_toolbar_frontend');
-
-  if (!$logo_default) {
-    $variables['icon_path'] = $settings->getDefault('logo.path');
-  }
-}
-
-/**
- * Implements hook_top_bar().
- */
-function gin_toolbar_preprocess_top_bar(&$variables) {
-  // Get theme configs.
-  /** @var \Drupal\gin\GinSettings $settings */
-  $settings = \Drupal::classResolver(GinSettings::class);
   $variables['core_navigation'] = _gin_toolbar_module_is_active('navigation');
+  $variables['is_backend'] = \Drupal::service('router.admin_context')->isAdminRoute();
   $variables['secondary_toolbar_frontend'] = $settings->get('secondary_toolbar_frontend');
   $variables['gin_secondary_toolbar'] = [
     '#type' => 'toolbar',
@@ -328,6 +354,16 @@ function gin_toolbar_preprocess_top_bar(&$variables) {
       'id' => 'toolbar-administration-secondary',
     ],
   ];
+
+  if (!$logo_default) {
+    $variables['icon_path'] = $settings->getDefault('logo.path');
+  }
+}
+
+/**
+ * Implements hook_top_bar().
+ */
+function gin_toolbar_preprocess_top_bar(&$variables) {
   $variables['#attached']['library'][] = 'gin/top_bar';
 }
 
@@ -576,4 +612,13 @@ function _gin_toolbar_module_is_active($module) {
   }
 
   return FALSE;
+}
+
+/**
+ * Implements hook_requirements_alter().
+ */
+function gin_toolbar_requirements_alter(array &$requirements) {
+  if (isset($requirements['toolbar'])) {
+    unset($requirements['toolbar']);
+  }
 }

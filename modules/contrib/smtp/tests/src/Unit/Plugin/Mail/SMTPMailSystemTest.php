@@ -2,27 +2,27 @@
 
 namespace Drupal\Tests\smtp\Unit\Plugin\Mail;
 
-use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Session\AccountProxyInterface;
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Component\Utility\EmailValidator;
 use Drupal\Component\Utility\EmailValidatorInterface;
 use Drupal\Core\File\FileSystem;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\MimeType\MimeTypeGuesser;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountProxy;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\smtp\Plugin\Mail\SMTPMailSystem;
 use Drupal\Tests\UnitTestCase;
-use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
+use PHPMailer\PHPMailer\PHPMailer;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Mime\MimeTypeGuesserInterface;
-use Drupal\Core\Render\RendererInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
 /**
  * Validate requirements for SMTPMailSystem.
@@ -372,7 +372,7 @@ class SMTPMailSystemTest extends UnitTestCase {
   /**
    * Tests #3308653 and duplicated headers.
    */
-  public function testFromHeaders_3308653() {
+  public function testFromHeaders3308653() {
     $mailer = new class (
       [],
       'SMTPMailSystem',
@@ -413,6 +413,7 @@ class SMTPMailSystemTest extends UnitTestCase {
            * @return array
            *   The MIMEHeader as an array.
            */
+          //phpcs:ignore
           public function getMIMEHeaders() {
             return array_filter(explode(static::$LE, $this->MIMEHeader));
           }

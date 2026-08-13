@@ -56,7 +56,7 @@ class PhoneNumberFieldWidgetSettingsTest extends BrowserTestBase {
     $this->drupalGet('node/add/article');
     $this->assertSession()->fieldValueEquals("field_phone_number[0][country-code]", 'US');
     $this->assertSession()->fieldValueEquals("field_phone_number[0][phone]", '');
-    $this->assertSession()->elementAttributeContains('css', 'input[name="field_phone_number[0][phone]"]', 'size', 60);
+    $this->assertSession()->elementAttributeContains('css', 'input[name="field_phone_number[0][phone]"]', 'size', 15);
     $this->assertSession()->elementAttributeContains('css', 'input[name="field_phone_number[0][phone]"]', 'placeholder', 'Phone number');
   }
 

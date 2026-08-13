@@ -1,14 +1,21 @@
-(function ($) {
+(function () {
   /**
    * Attaches the behavior to bootstrap carousel view.
    */
   Drupal.behaviors.views_bootstrap_carousel = {
     attach(context, settings) {
-      $('.carousel-inner').each(function () {
-        if ($(this).children('div').length === 1) {
-          $(this).siblings('.carousel-control, .carousel-indicators').hide();
+      const carousels = document.querySelectorAll('.carousel-inner');
+      carousels.forEach(function (carousel) {
+        const children = carousel.querySelectorAll('div');
+        if (children.length === 1) {
+          const siblings = carousel.parentElement.querySelectorAll(
+            '.carousel-control, .carousel-indicators',
+          );
+          siblings.forEach(function (sibling) {
+            sibling.style.display = 'none';
+          });
         }
       });
     },
   };
-})(jQuery);
+})();

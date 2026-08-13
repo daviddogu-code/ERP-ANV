@@ -1,0 +1,13 @@
+# DDEV
+/.ddev/
+
+# Drupal webroot (managed by composer)
+/web/
+
+# Composer dependencies
+/vendor/
+
+# DDEV scaffold files
+.editorconfig
+.gitattributes
+/recipes/

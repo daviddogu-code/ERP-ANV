@@ -1,0 +1,15 @@
+{%
+  set classes = [
+  'ajax-progress',
+  'ajax-progress-throbber',
+  'quicktabs-loading',
+  'qt-' ~ instance.id|clean_class,
+  'tab-' ~ tabid,
+]
+%}
+<div{{ attributes.addClass(classes) }}>
+  <span class="throbber"></span>
+  {% if message %}
+    <span class="message">{{ message }}</span>
+  {% endif %}
+</div>

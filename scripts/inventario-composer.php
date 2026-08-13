@@ -56,6 +56,25 @@ function titulo(string $t): void {
 }
 
 /**
+ * Deja una version en una forma comparable.
+ *
+ * El mismo modulo se escribe distinto segun quien lo escriba: drupal.org pone
+ * 8.x-1.0-beta7 en el .info.yml y Composer apunta 1.0.0-beta7 en el lock. Sin
+ * esto, la mitad de los modulos del sitio parecen descuadrados y no lo estan.
+ */
+function normalizaVersion(string $v): string {
+  $v = ltrim(preg_replace('/^8\.x-/', '', trim($v)), 'v');
+  if (!preg_match('/^(\d+(?:\.\d+)*)(.*)$/', $v, $p)) {
+    return $v;
+  }
+  $numeros = explode('.', $p[1]);
+  while (count($numeros) < 3) {
+    $numeros[] = '0';
+  }
+  return implode('.', $numeros) . $p[2];
+}
+
+/**
  * Un paquete puede cubrir varios modulos (los submodulos viven dentro).
  */
 function cubierto(string $paquete, array $activos, string $raiz): bool {
@@ -159,6 +178,45 @@ foreach ($flojos as $p => $v) {
 }
 
 // -----------------------------------------------------------------------------
+titulo('DESCUADRES - la version del disco no coincide con la del lock');
+$descuadres = [];
+foreach ($apuntados as $n => $vLock) {
+  if (!isset($enDisco[$n])) {
+    continue;
+  }
+  $f = "$raiz/{$enDisco[$n]}/$n/$n.info.yml";
+  if (!file_exists($f) || !preg_match("/^version:\s*'?([^'\n\r]+)'?/m", file_get_contents($f), $m)) {
+    continue;
+  }
+  $vDisco = trim($m[1], " '\"");
+  if (normalizaVersion($vLock) === normalizaVersion($vDisco)) {
+    continue;
+  }
+  $descuadres[$n] = ['lock' => $vLock, 'disco' => $vDisco];
+}
+echo count($descuadres) . " descuadres:\n";
+foreach ($descuadres as $n => $d) {
+  $uso = cubierto($n, $activos, $raiz) ? 'EN USO' : 'sin usar';
+  printf("  %-38s lock: %-16s disco: %-16s %s\n", $n, $d['lock'], $d['disco'], $uso);
+}
+
+// -----------------------------------------------------------------------------
+titulo('SIN VERSION - el disco no dice que version es');
+$sinVersion = [];
+foreach ($enDisco as $n => $carpeta) {
+  $f = "$raiz/$carpeta/$n/$n.info.yml";
+  if (file_exists($f) && !preg_match("/^version:/m", file_get_contents($f))) {
+    $sinVersion[] = $n;
+  }
+}
+echo count($sinVersion) . " sin numero de version en su .info.yml:\n";
+foreach ($sinVersion as $n) {
+  $uso = cubierto($n, $activos, $raiz) ? 'EN USO' : 'sin usar';
+  $lockV = $apuntados[$n] ?? 'no esta en el lock';
+  printf("  %-38s lock: %-16s %s\n", $n, $lockV, $uso);
+}
+
+// -----------------------------------------------------------------------------
 titulo('RESUMEN');
 printf("  composer.json pide          %d modulos/temas\n", count($pedidos));
 printf("  composer.lock tiene         %d\n", count($apuntados));
@@ -169,4 +227,5 @@ printf("  a quitar de composer.json   %d fantasmas + %d sin usar\n", count($fant
 printf("  a anclar (llegan de rebote) %d\n", count(array_filter($rebote, fn($v, $n) => cubierto($n, $activos, $raiz), ARRAY_FILTER_USE_BOTH)));
 printf("  a meter (huerfanos en uso)  %d\n", count($enUso));
 printf("  a fijar (comodines y dev)   %d\n", count($flojos));
+printf("  a reconciliar (descuadres)  %d\n", count($descuadres));
 echo "\n";

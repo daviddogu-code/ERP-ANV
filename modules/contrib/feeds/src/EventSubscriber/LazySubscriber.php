@@ -2,6 +2,7 @@
 
 namespace Drupal\feeds\EventSubscriber;
 
+use Drupal\Core\Utility\Error;
 use Drupal\feeds\Event\CleanEvent;
 use Drupal\feeds\Event\ClearEvent;
 use Drupal\feeds\Event\ExpireEvent;
@@ -14,6 +15,7 @@ use Drupal\feeds\FeedTypeInterface;
 use Drupal\feeds\Plugin\Type\CleanableInterface;
 use Drupal\feeds\Plugin\Type\ClearableInterface;
 use Drupal\feeds\StateInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -42,6 +44,23 @@ class LazySubscriber implements EventSubscriberInterface {
    * @var bool
    */
   protected $expireInited = FALSE;
+
+  /**
+   * A logger instance.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
+   * Constructs a new LazySubscriber object.
+   *
+   * @param \Psr\Log\LoggerInterface $logger
+   *   A logger instance.
+   */
+  public function __construct(LoggerInterface $logger) {
+    $this->logger = $logger;
+  }
 
   /**
    * {@inheritdoc}
@@ -95,6 +114,13 @@ class LazySubscriber implements EventSubscriberInterface {
             }
           }
 
+          // Initialize the feed immediately after parsing, this ensures that
+          // item clean ups are triggered even if there are no items to process.
+          $feed
+            ->getType()
+            ->getProcessor()
+            ->initialize($feed);
+
           // Finally set the parser result on the event.
           $event->setParserResult($result);
         });
@@ -111,21 +137,20 @@ class LazySubscriber implements EventSubscriberInterface {
         break;
 
       case 'clean':
-        foreach ($event->getFeed()->getType()->getPlugins() as $plugin) {
-          if (!$plugin instanceof CleanableInterface) {
-            continue;
-          }
-
-          $dispatcher->addListener(FeedsEvents::CLEAN, function (CleanEvent $event) use ($plugin) {
+        $dispatcher->addListener(FeedsEvents::CLEAN, function (CleanEvent $event) {
+          $feed = $event->getFeed();
+          foreach ($feed->getType()->getPlugins() as $plugin) {
+            if (!$plugin instanceof CleanableInterface) {
+              continue;
+            }
             try {
-              $feed = $event->getFeed();
               $plugin->clean($feed, $event->getEntity(), $feed->getState(StateInterface::CLEAN));
             }
             catch (\Exception $e) {
-              watchdog_exception('feeds', $e);
+              Error::logException($this->logger, $e);
             }
-          });
-        }
+          }
+        });
         break;
 
     }

@@ -1,0 +1,11 @@
+name: 'Quick Tabs test block'
+type: module
+description: 'Provides a block with a special character in its admin label for testing.'
+package: Testing
+dependencies:
+  - drupal:block
+
+# Information added by Drupal.org packaging script on 2026-08-12
+version: '4.3.1'
+project: 'quicktabs'
+datestamp: 1786549797

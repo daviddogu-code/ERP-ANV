@@ -2,27 +2,51 @@
 
 namespace Drupal\quicktabs_jqueryui\Plugin\TabRenderer;
 
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\quicktabs\Attribute\TabRenderer;
 use Drupal\quicktabs\TabRendererBase;
 use Drupal\quicktabs\Entity\QuickTabsInstance;
 use Drupal\Core\Template\Attribute;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\quicktabs\TabTypeManager;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'ui tabs' tab renderer.
- *
- * @TabRenderer(
- *   id = "ui_tabs",
- *   name = @Translation("jquery ui"),
- * )
  */
-class UiTabs extends TabRendererBase {
+#[TabRenderer(
+  id: 'ui_tabs',
+  name: new TranslatableMarkup('jquery ui'),
+)]
+class UiTabs extends TabRendererBase implements ContainerFactoryPluginInterface {
+
+  use StringTranslationTrait;
+
+  /**
+   * {@inheritDoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected TabTypeManager $tabTypeManager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('plugin.manager.tab_type')
+    );
+  }
 
   /**
    * {@inheritdoc}
    */
-  public function render(QuickTabsInstance $instance) {
+  public function render(QuickTabsInstance $instance): array {
     $qt_id = $instance->id();
-    $type = \Drupal::service('plugin.manager.tab_type');
 
     // The render array used to build the block.
     $build = [];
@@ -35,7 +59,7 @@ class UiTabs extends TabRendererBase {
     $titles = [];
 
     foreach ($instance->getConfigurationData() as $index => $tab) {
-      $object = $type->createInstance($tab['type']);
+      $object = $this->tabTypeManager->createInstance($tab['type']);
       $render = $object->render($tab);
 
       // If user wants to hide empty tabs and there is no content
@@ -57,7 +81,8 @@ class UiTabs extends TabRendererBase {
       $build['pages'][$index]['#theme'] = 'quicktabs_block_content';
 
       $href = '#qt-' . $qt_id . '-ui-tabs' . $tab_num;
-      $titles[] = ['#markup' => '<a href="' . $href . '">' . new TranslatableMarkup($tab['title']) . '</a>'];
+      $title = $this->t('@title', ['@title' => $tab['title']]);
+      $titles[] = ['#markup' => '<a href="' . $href . '">' . $title . '</a>'];
 
       $tab_pages[] = $tab;
     }

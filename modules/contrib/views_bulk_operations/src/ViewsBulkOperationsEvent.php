@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_bulk_operations;
 
 use Drupal\Component\EventDispatcher\Event;
@@ -11,23 +13,6 @@ use Drupal\views\ViewExecutable;
 class ViewsBulkOperationsEvent extends Event {
 
   public const NAME = 'views_bulk_operations.view_data';
-
-  /**
-   * The provider of the current view.
-   */
-  protected string $provider;
-
-  /**
-   * The views data of the current view.
-   *
-   * @var array
-   */
-  protected array $viewData;
-
-  /**
-   * The current view object.
-   */
-  protected ViewExecutable $view;
 
   /**
    * IDs of entity types returned by the view.
@@ -53,11 +38,11 @@ class ViewsBulkOperationsEvent extends Event {
    * @param \Drupal\views\ViewExecutable $view
    *   The current view.
    */
-  public function __construct($provider, array $viewData, ViewExecutable $view) {
-    $this->provider = $provider;
-    $this->viewData = $viewData;
-    $this->view = $view;
-  }
+  public function __construct(
+    protected string $provider,
+    protected array $viewData,
+    protected ViewExecutable $view,
+  ) {}
 
   /**
    * Get view provider.
@@ -126,7 +111,7 @@ class ViewsBulkOperationsEvent extends Event {
    *   Entity getter information.
    */
   public function setEntityGetter(array $entityGetter): void {
-    if (!isset($entityGetter['callable'])) {
+    if (!\array_key_exists('callable', $entityGetter)) {
       throw new \Exception('Views Bulk Operations entity getter callable is not defined.');
     }
     $this->entityGetter = $entityGetter;

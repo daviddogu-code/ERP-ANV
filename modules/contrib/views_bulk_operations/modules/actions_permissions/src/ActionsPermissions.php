@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\actions_permissions;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -11,37 +13,22 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Create permissions for existing actions.
  */
-class ActionsPermissions implements ContainerInjectionInterface {
+final class ActionsPermissions implements ContainerInjectionInterface {
 
   use StringTranslationTrait;
 
   /**
-   * VBO Action manager service.
-   */
-  protected ViewsBulkOperationsActionManager $actionManager;
-
-  /**
-   * The entity type manager.
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
    * Constructor.
-   *
-   * @param \Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionManager $actionManager
-   *   The action manager.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   Entity type manager.
    */
-  public function __construct(ViewsBulkOperationsActionManager $actionManager, EntityTypeManagerInterface $entityTypeManager) {
-    $this->actionManager = $actionManager;
-    $this->entityTypeManager = $entityTypeManager;
-  }
+  public function __construct(
+    protected readonly ViewsBulkOperationsActionManager $actionManager,
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
+  ) {}
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): self {
     return new static(
       $container->get('plugin.manager.views_bulk_operations_action'),
       $container->get('entity_type.manager')
@@ -65,22 +52,22 @@ class ActionsPermissions implements ContainerInjectionInterface {
     ]) as $definition) {
 
       // Skip actions that define their own requirements.
-      if (!empty($definition['requirements'])) {
+      if (\array_key_exists('requirements', $definition) && \count($definition['requirements']) !== 0) {
         continue;
       }
 
       $id = 'execute ' . $definition['id'];
       $entity_type = NULL;
-      if (empty($definition['type'])) {
+      if ($definition['type'] === '') {
         $entity_type = $this->t('all entity types');
         $id .= ' all';
       }
-      elseif (isset($entity_type_definitions[$definition['type']])) {
+      elseif (\array_key_exists($definition['type'], $entity_type_definitions)) {
         $entity_type = $entity_type_definitions[$definition['type']]->getLabel();
         $id .= ' ' . $definition['type'];
       }
 
-      if (isset($entity_type)) {
+      if ($entity_type !== NULL) {
         $permissions[$id] = [
           'title' => $this->t('Execute the %action action on %type.', [
             '%action' => $definition['label'],
@@ -89,12 +76,6 @@ class ActionsPermissions implements ContainerInjectionInterface {
         ];
       }
     }
-
-    // Rebuild VBO action definitions cache with
-    // included action_permissions modifications.
-    $this->actionManager->getDefinitions([
-      'nocache' => TRUE,
-    ]);
 
     return $permissions;
   }

@@ -39,11 +39,12 @@ class ViewsBootstrapAccordion extends StylePluginBase {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
+    $options['panel_output'] = ['default' => 'single'];
     $options['panel_title_field'] = ['default' => ''];
     $options['label_field'] = ['default' => NULL];
     $options['flush'] = ['default' => FALSE];
     $options['behavior'] = ['default' => 'closed'];
-    $options['sections'] = ['default' => NULL];
+    $options['sections'] = ['default' => []];
 
     return $options;
   }
@@ -59,20 +60,53 @@ class ViewsBootstrapAccordion extends StylePluginBase {
         [':docs' => 'https://www.drupal.org/docs/extending-drupal/contributed-modules/contributed-module-documentation/views-bootstrap-for-bootstrap-5/accordion']),
       '#weight' => -99,
     ];
+
+    $form['panel_output'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Accordion grouping'),
+      '#options' => [
+        'single' => $this->t('One accordion item per result'),
+        'grouped' => $this->t('Accordion content by grouped field'),
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="style_options[grouping][0][field]"]' => ['filled' => FALSE],
+        ],
+      ],
+      '#description' => $this->t('Select how to organize your content into accordion items: either group by individual field values or aggregate by a field.'),
+      '#default_value' => $this->options['panel_output'],
+    ];
+
+    $form['group_help_container'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="style_options[panel_output]"]' => ['value' => 'grouped'],
+        ],
+      ],
+    ];
+
+    $form['group_help_container']['group_help'] = [
+      '#markup' => $this->t('When grouping content by a specific field, the displayed results depend on the total number of records returned. Please make sure the results include all the entries you expect to see.'),
+    ];
+
     $form['panel_title_field'] = [
       '#type' => 'select',
       '#title' => $this->t('Panel title field'),
+      '#empty_option' => $this->t('- Select -'),
       '#options' => $this->displayHandler->getFieldLabels(TRUE),
       '#required' => TRUE,
       '#default_value' => $this->options['panel_title_field'],
       '#description' => $this->t('Select the field that will be used as the accordion panel titles.'),
     ];
+
     $form['flush'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Flush Borders'),
       '#description' => $this->t('Add accordion-flush class to remove some borders and rounded corners to render accordions edge-to-edge with their parent container.'),
       '#default_value' => $this->options['flush'],
     ];
+
     $form['behavior'] = [
       '#type' => 'radios',
       '#title' => $this->t('Collapse Options'),
@@ -85,6 +119,7 @@ class ViewsBootstrapAccordion extends StylePluginBase {
       '#description' => $this->t('Default panel state for collapse behavior.'),
       '#default_value' => $this->options['behavior'],
     ];
+
     $form['sections'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Open Elements'),
@@ -101,6 +136,22 @@ class ViewsBootstrapAccordion extends StylePluginBase {
       ],
       '#default_value' => $this->options['sections'],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validate() {
+    $errors = parent::validate();
+    if (!$this->options['panel_title_field']) {
+      $errors[] = $this->t('@style style will not display without the "@field" setting.',
+        [
+          '@style' => $this->definition['title'],
+          '@field' => $this->t('Panel title field'),
+        ]
+      );
+    }
+    return $errors;
   }
 
 }

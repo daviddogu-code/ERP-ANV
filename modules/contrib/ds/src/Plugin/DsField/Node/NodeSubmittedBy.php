@@ -4,35 +4,35 @@ namespace Drupal\ds\Plugin\DsField\Node;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
-use Drupal\Core\Url;
-use Drupal\ds\Plugin\DsField\Date;
-use Drupal\Core\Render\Renderer;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ds\Attribute\DsField;
+use Drupal\ds\Plugin\DsField\Date;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin that renders the submitted by field.
- *
- * @DsField(
- *   id = "node_submitted_by",
- *   title = @Translation("Submitted by"),
- *   entity_type = "node",
- *   provider = "node"
- * )
  */
+#[DsField(
+  id: 'node_submitted_by',
+  title: new TranslatableMarkup('Submitted by'),
+  entity_type: 'node',
+  provider: 'node'
+)]
 class NodeSubmittedBy extends Date {
 
   /**
    * Drupal core Render service.
    *
-   * @var \Drupal\Core\Render\Renderer
+   * @var \Drupal\Core\Render\RendererInterface
    */
   protected $renderer;
 
   /**
    * Constructs a Display Suite field plugin.
    */
-  public function __construct($configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, Renderer $renderer, DateFormatterInterface $date_formatter, TimeInterface $time) {
+  public function __construct($configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, DateFormatterInterface $date_formatter, TimeInterface $time) {
     $this->renderer = $renderer;
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $date_formatter, $time);
   }
@@ -58,10 +58,10 @@ class NodeSubmittedBy extends Date {
   public function build() {
     $field = $this->getFieldConfiguration();
 
-    /* @var $node \Drupal\node\NodeInterface */
+    /** @var \Drupal\node\NodeInterface $node */
     $node = $this->entity();
 
-    /* @var $account \Drupal\user\UserInterface */
+    /** @var \Drupal\user\UserInterface $account */
     $account = $node->getOwner();
 
     $date_format = str_replace('ds_post_date_', '', $field['formatter']);

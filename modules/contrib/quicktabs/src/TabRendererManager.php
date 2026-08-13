@@ -5,7 +5,8 @@ namespace Drupal\quicktabs;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Component\Plugin\Factory\DefaultFactory;
+use Drupal\quicktabs\Annotation\TabRenderer as TabRendererAnnotation;
+use Drupal\quicktabs\Attribute\TabRenderer;
 
 /**
  * Quick Tabs renderer plugin manager.
@@ -24,11 +25,10 @@ class TabRendererManager extends DefaultPluginManager {
    *   The module handler to invoke the later hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/TabRenderer', $namespaces, $module_handler, 'Drupal\quicktabs\TabRendererInterface', 'Drupal\quicktabs\Annotation\TabRenderer');
+    parent::__construct('Plugin/TabRenderer', $namespaces, $module_handler, TabRendererInterface::class, TabRenderer::class, TabRendererAnnotation::class);
 
     $this->alterInfo('quicktabs_tab_renderer_info');
     $this->setCacheBackend($cache_backend, 'quicktabs_tab_renderers');
-    $this->factory = new DefaultFactory($this->getDiscovery());
   }
 
 }

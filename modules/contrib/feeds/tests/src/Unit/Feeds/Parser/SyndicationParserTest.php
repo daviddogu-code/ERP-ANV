@@ -3,12 +3,11 @@
 namespace Drupal\Tests\feeds\Unit\Feeds\Parser;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Tests\feeds\Unit\FeedsUnitTestCase;
 use Drupal\feeds\Component\ZfExtensionManagerSfContainer;
 use Drupal\feeds\Exception\EmptyFeedException;
 use Drupal\feeds\Feeds\Parser\SyndicationParser;
 use Drupal\feeds\Result\RawFetcherResult;
-use Drupal\feeds\State;
-use Drupal\Tests\feeds\Unit\FeedsUnitTestCase;
 use Laminas\Feed\Reader\StandaloneExtensionManager;
 
 /**
@@ -72,8 +71,7 @@ class SyndicationParserTest extends FeedsUnitTestCase {
     parent::setUp();
 
     $container = new ContainerBuilder();
-    $manager = new ZfExtensionManagerSfContainer('feed.reader.');
-    $manager->setContainer($container);
+    $manager = new ZfExtensionManagerSfContainer($container, 'feed.reader.');
     $manager->setStandalone(StandaloneExtensionManager::class);
 
     foreach ($this->readerExtensions as $key => $class) {
@@ -87,12 +85,12 @@ class SyndicationParserTest extends FeedsUnitTestCase {
     $this->parser = new SyndicationParser($configuration, 'syndication', [], $manager);
     $this->parser->setStringTranslation($this->getStringTranslationStub());
 
-    $this->state = new State();
+    $this->state = $this->createFeedsState();
 
     $this->feed = $this->createMock('Drupal\feeds\FeedInterface');
     $this->feed->expects($this->any())
       ->method('getType')
-      ->will($this->returnValue($this->feedType));
+      ->willReturn($this->feedType);
   }
 
   /**
@@ -105,13 +103,30 @@ class SyndicationParserTest extends FeedsUnitTestCase {
     $fetcher_result = new RawFetcherResult(file_get_contents($file), $this->getMockFileSystem());
 
     $result = $this->parser->parse($this->feed, $fetcher_result, $this->state);
-    $this->assertSame(count($result), 6);
-    $this->assertSame($result[0]->get('title'), "First thoughts: Dems' Black Tuesday - msnbc.com");
-    $this->assertSame($result[0]->get('author_name'), 'Person Name');
-    $this->assertSame($result[0]->get('timestamp'), 1262805987);
-    $this->assertSame($result[0]->get('updated'), 1262805987);
-    $this->assertSame($result[0]->get('guid'), 'tag:news.google.com,2005:cluster=17593687403189');
-    $this->assertSame($result[3]->get('title'), 'NEWSMAKER-New Japan finance minister a fiery battler - Reuters');
+    $this->assertCount(6, $result);
+    $this->assertSame("First thoughts: Dems' Black Tuesday - msnbc.com", $result[0]->get('title'));
+    $this->assertSame('Person Name', $result[0]->get('author_name'));
+    $this->assertSame(['Person Name'], $result[0]->get('authors'));
+    $this->assertSame(1262805987, $result[0]->get('timestamp'));
+    $this->assertSame(1262805987, $result[0]->get('updated'));
+    $this->assertSame('tag:news.google.com,2005:cluster=17593687403189', $result[0]->get('guid'));
+    $this->assertSame('NEWSMAKER-New Japan finance minister a fiery battler - Reuters', $result[3]->get('title'));
+  }
+
+  /**
+   * Tests parsing a RSS feed using the Dublin Core namespace.
+   *
+   * @covers ::parse
+   */
+  public function testParseDublinCoreFeed() {
+    $file = $this->resourcesPath() . '/rss/dublin-core.rss2';
+    $fetcher_result = new RawFetcherResult(file_get_contents($file), $this->getMockFileSystem());
+
+    $result = $this->parser->parse($this->feed, $fetcher_result, $this->state);
+    $this->assertCount(1, $result);
+    $this->assertSame('A lovely evening in ChrisBurg', $result[0]->get('title'));
+    $this->assertSame('Chris the Koala', $result[0]->get('author_name'));
+    $this->assertSame(['Chris the Koala', 'Rosje'], $result[0]->get('authors'));
   }
 
   /**

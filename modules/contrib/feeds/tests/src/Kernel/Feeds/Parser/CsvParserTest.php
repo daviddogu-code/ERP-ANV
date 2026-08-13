@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\feeds\Kernel\Feeds\Parser;
 
-use Drupal\node\Entity\Node;
 use Drupal\Tests\feeds\Kernel\FeedsKernelTestBase;
+use Drupal\node\Entity\Node;
 
 /**
  * @coversDefaultClass \Drupal\feeds\Feeds\Parser\CsvParser
@@ -157,7 +157,6 @@ class CsvParserTest extends FeedsKernelTestBase {
    * Tests that Blank sources are ignored by the CSV parser.
    */
   public function testImportWithBlankSource() {
-    $this->setUpBodyField();
     $this->createFieldWithStorage('field_alpha');
 
     // Create a feed type using the XML parser.

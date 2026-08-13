@@ -43,7 +43,7 @@ class PhoneNumberConstraint extends Constraint {
   /**
    * {@inheritdoc}
    */
-  public function validatedBy() {
+  public function validatedBy(): string {
     return '\Drupal\phone_number\Plugin\Validation\Constraint\PhoneNumberValidator';
   }
 

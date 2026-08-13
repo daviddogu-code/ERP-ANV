@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\smtp\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Component\Utility\EmailValidatorInterface;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Mail\MailManagerInterface;
@@ -15,6 +15,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\smtp\Form\SMTPConfigForm;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -25,6 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SMTPConfigFormTest extends UnitTestCase {
 
   use ProphecyTrait;
+
   /**
    * Test setup.
    */
@@ -39,6 +41,7 @@ class SMTPConfigFormTest extends UnitTestCase {
     $this->mockConfigSystemSite->get('name')->willReturn('Site name');
     $this->mockConfigFactory->get('system.site')->willReturn($this->mockConfigSystemSite->reveal());
 
+    $this->mockTypedConfigManager = $this->prophesize(TypedConfigManagerInterface::class);
     $this->mockMessenger = $this->prophesize(MessengerInterface::class);
     $this->mockEmailValidator = $this->prophesize(EmailValidatorInterface::class);
     $this->mockCurrentUser = $this->prophesize(AccountProxyInterface::class);
@@ -47,6 +50,7 @@ class SMTPConfigFormTest extends UnitTestCase {
 
     $mockContainer = $this->mockContainer = $this->prophesize(ContainerInterface::class);
     $mockContainer->get('config.factory')->willReturn($this->mockConfigFactory->reveal());
+    $mockContainer->get('config.typed')->willReturn($this->mockTypedConfigManager->reveal());
     $mockContainer->get('messenger')->willReturn($this->mockMessenger->reveal());
     $mockContainer->get('email.validator')->willReturn($this->mockEmailValidator->reveal());
     $mockContainer->get('current_user')->willReturn($this->mockCurrentUser->reveal());
@@ -77,7 +81,7 @@ class SMTPConfigFormTest extends UnitTestCase {
     $this->mockConfig->get('smtp_password')->willReturn('');
     $this->mockConfig->get('smtp_from')->willReturn('');
     $this->mockConfig->get('smtp_fromname')->willReturn('');
-    $this->mockConfig->get('smtp_allowhtml')->willReturn('');
+    $this->mockConfig->get('smtp_allowhtml')->willReturn(FALSE);
     $this->mockConfig->get('smtp_client_hostname')->willReturn('');
     $this->mockConfig->get('smtp_client_helo')->willReturn('');
     $this->mockConfig->get('smtp_debugging')->willReturn('');

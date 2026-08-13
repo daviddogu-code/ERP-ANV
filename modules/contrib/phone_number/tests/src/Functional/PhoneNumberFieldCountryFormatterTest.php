@@ -70,7 +70,7 @@ class PhoneNumberFieldCountryFormatterTest extends BrowserTestBase {
   /**
    * Provides the phone numbers to check and expected results.
    */
-  public function providerPhoneNumbersCountry() {
+  public static function providerPhoneNumbersCountry() {
     return [
       'standard phone number from US' => [
         '(650) 253-0000', 'United States', 'US',

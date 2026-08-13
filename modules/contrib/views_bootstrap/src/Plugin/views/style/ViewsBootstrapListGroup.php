@@ -67,13 +67,11 @@ class ViewsBootstrapListGroup extends StylePluginBase {
 
     $form['row_class']['#weight'] = 2;
 
-    $fields = ['' => $this->t('<None>')];
-    $fields += $this->displayHandler->getFieldLabels(TRUE);
-
     $form['title_field'] = [
       '#type' => 'select',
       '#title' => $this->t('Title field'),
-      '#options' => $fields,
+      '#empty_option' => $this->t('- None -'),
+      '#options' => $this->displayHandler->getFieldLabels(TRUE),
       '#required' => FALSE,
       '#default_value' => $this->options['title_field'],
       '#description' => $this->t('Select the field that will be used as the title.'),

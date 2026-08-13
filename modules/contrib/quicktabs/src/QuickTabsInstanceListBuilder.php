@@ -36,21 +36,21 @@ class QuickTabsInstanceListBuilder extends EntityListBuilder {
   public function getDefaultOperations(EntityInterface $entity) {
     $operations = parent::getDefaultOperations($entity);
 
-    if ($entity->hasLinkTemplate('edit')) {
+    if ($entity->hasLinkTemplate('edit-form')) {
       $operations['edit'] = [
         'title' => $this->t('Edit Quick Tab'),
         'weight' => 10,
-        'url' => $entity->toUrl('edit'),
+        'url' => $entity->toUrl('edit-form'),
       ];
       $operations['delete'] = [
         'title' => $this->t('Delete Quick Tab'),
         'weight' => 20,
-        'url' => $entity->toUrl('delete'),
+        'url' => $entity->toUrl('delete-form'),
       ];
       $operations['duplicate'] = [
         'title' => $this->t('Duplicate Quick Tab'),
         'weight' => 40,
-        'url' => $entity->toUrl('duplicate'),
+        'url' => $entity->toUrl('duplicate-form'),
       ];
     }
     return $operations;

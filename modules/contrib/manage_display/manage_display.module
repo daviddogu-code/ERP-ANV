@@ -11,8 +11,26 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
+
+/**
+ * Implements hook_help().
+ */
+function manage_display_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.manage_display':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t("This project makes base fields such as 'title' available in 'Manage Display'. This very simple module uses the framework that is already in Core rather than inventing anything new. The goal is that most or all of this module will be absorbed into core.") . '</p>';
+      $output .= '<h3>' . t('Formatters:') . '</h3>';
+      $output .= '<ul><li>' . t("Title - The Title formatter is designed for any label or title field. It is based on the Core 'Plain text' formatter with an additional setting to select the Tag to wrap around the title.") . '</li>';
+      $output .= '<li>' . t("Submitted - The Submitted formatter matches the sentence shown by Drupal Core for nodes and comments: 'Submitted by AAA on DDD' (AAA is the author and DDD is the date).") . '</li>';
+      $output .= '<li>' . t("In reply to - The 'In reply to' formatter is intended specifically for the comment 'Parent ID' field, to be used in combination with the Submitted formatter.") . '</li></ul>';
+      return $output;
+  }
+}
 
 /**
  * Implements hook_entity_type_build().

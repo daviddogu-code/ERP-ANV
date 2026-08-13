@@ -114,7 +114,7 @@ class HttpFetcher extends PluginBase implements ClearableInterface, FetcherInter
     // Get cache key if caching is enabled.
     $cache_key = $this->useCache() ? $this->getCacheKey($feed) : FALSE;
 
-    $response = $this->get($feed->getSource(), $sink, $cache_key);
+    $response = $this->get($feed->getSource(), $sink, $cache_key, [], $feed->getConfigurationFor($this) ?: []);
     // @todo Handle redirects.
     // @codingStandardsIgnoreStart
     // $feed->setSource($response->getEffectiveUrl());
@@ -161,6 +161,8 @@ class HttpFetcher extends PluginBase implements ClearableInterface, FetcherInter
    * @param array $options
    *   (optional) Additional options to pass to the request.
    *   See https://docs.guzzlephp.org/en/stable/request-options.html.
+   * @param array $feed_configuration
+   *   (optional) Feed entity configuration.
    *
    * @return \Guzzle\Http\Message\Response
    *   A Guzzle response.
@@ -170,7 +172,7 @@ class HttpFetcher extends PluginBase implements ClearableInterface, FetcherInter
    *
    * @see \GuzzleHttp\RequestOptions
    */
-  protected function get($url, $sink, $cache_key = FALSE, array $options = []) {
+  protected function get($url, $sink, $cache_key = FALSE, array $options = [], array $feed_configuration = []) {
     $url = Feed::translateSchemes($url);
 
     $options += [
@@ -180,12 +182,6 @@ class HttpFetcher extends PluginBase implements ClearableInterface, FetcherInter
     ];
 
     $headers = [];
-
-    // Adding User-Agent header from the default guzzle client config for feeds
-    // that require that.
-    if (isset($this->client->getConfig('headers')['User-Agent'])) {
-      $headers['User-Agent'] = $this->client->getConfig('headers')['User-Agent'];
-    }
 
     // Add cached headers if requested.
     if ($cache_key && ($cache = $this->cache->get($cache_key))) {

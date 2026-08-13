@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_bulk_operations\EventSubscriber;
 
 use Drupal\views_bulk_operations\Service\ViewsBulkOperationsViewDataInterface;
@@ -18,41 +20,34 @@ class ViewsBulkOperationsEventSubscriber implements EventSubscriberInterface {
   private const PRIORITY = 999;
 
   /**
-   * Object that gets the current view data.
-   */
-  protected ViewsbulkOperationsViewDataInterface $viewData;
-
-  /**
    * Object constructor.
    *
    * @param \Drupal\views_bulk_operations\Service\ViewsBulkOperationsViewDataInterface $viewData
    *   The VBO View Data provider service.
    */
-  public function __construct(ViewsBulkOperationsViewDataInterface $viewData) {
-    $this->viewData = $viewData;
-  }
+  public function __construct(
+    protected readonly ViewsBulkOperationsViewDataInterface $viewData,
+  ) {}
 
   /**
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    $events[ViewsBulkOperationsEvent::NAME][] = [
-      'provideViewData',
-      self::PRIORITY,
+    return [
+      ViewsBulkOperationsEvent::NAME => [
+        ['provideViewData', self::PRIORITY],
+      ],
     ];
-    return $events;
   }
 
   /**
    * Respond to view data request event.
-   *
-   * @var \Drupal\views_bulk_operations\ViewsBulkOperationsEvent $event
-   *   The event to respond to.
    */
   public function provideViewData(ViewsBulkOperationsEvent $event): void {
     $view_data = $event->getViewData();
-    if (!empty($view_data['table']['entity type'])) {
-      $event->setEntityTypeIds([$view_data['table']['entity type']]);
+    $entity_type = $view_data['table']['entity type'] ?? '';
+    if ($entity_type !== '') {
+      $event->setEntityTypeIds([$entity_type]);
       $event->setEntityGetter([
         'callable' => [$this->viewData, 'getEntityDefault'],
       ]);

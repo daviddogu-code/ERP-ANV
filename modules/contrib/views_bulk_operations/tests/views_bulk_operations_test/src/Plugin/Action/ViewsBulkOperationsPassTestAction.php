@@ -1,28 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\views_bulk_operations_test\Plugin\Action;
 
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\node\NodeInterface;
 use Drupal\views_bulk_operations\Action\ViewsBulkOperationsActionBase;
 
 /**
  * Action for test purposes only.
- *
- * @Action(
- *   id = "views_bulk_operations_passing_test_action",
- *   label = @Translation("VBO parameters passing test action"),
- *   type = "node",
- * )
  */
-class ViewsBulkOperationsPassTestAction extends ViewsBulkOperationsActionBase {
+#[Action(
+  id: 'views_bulk_operations_passing_test_action',
+  label: new TranslatableMarkup('VBO parameters passing test action'),
+  type: 'node'
+)]
+final class ViewsBulkOperationsPassTestAction extends ViewsBulkOperationsActionBase {
   use MessengerTrait;
 
   /**
    * {@inheritdoc}
    */
   public function executeMultiple(array $nodes): array {
-    if (!empty($this->context['sandbox'])) {
+    if (
+      \array_key_exists('sandbox', $this->context) &&
+      \array_key_exists('processed', $this->context['sandbox'])
+    ) {
       $this->messenger()->addMessage(\sprintf(
         'Processed %s of %s.',
         $this->context['sandbox']['processed'],
@@ -31,7 +38,7 @@ class ViewsBulkOperationsPassTestAction extends ViewsBulkOperationsActionBase {
     }
 
     // Check if the passed view result rows contain the correct nodes.
-    if (empty($this->context['sandbox']['result_pass_error'])) {
+    if (!\array_key_exists('result_pass_error', $this->context['sandbox'])) {
       $this->view->result = \array_values($this->view->result);
       foreach ($nodes as $index => $node) {
         $result_node = $this->view->result[$index]->_entity;
@@ -50,7 +57,7 @@ class ViewsBulkOperationsPassTestAction extends ViewsBulkOperationsActionBase {
 
     // On last batch display message if passed rows match.
     if ($processed + $batch_size >= $total) {
-      if (empty($this->context['sandbox']['result_pass_error'])) {
+      if (!\array_key_exists('result_pass_error', $this->context['sandbox'])) {
         $this->messenger()->addMessage('Passed view results match the entity queue.');
       }
     }
@@ -61,7 +68,7 @@ class ViewsBulkOperationsPassTestAction extends ViewsBulkOperationsActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL) {
+  public function execute(?NodeInterface $entity = NULL): void {
     $this->executeMultiple([$entity]);
   }
 

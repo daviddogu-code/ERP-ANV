@@ -3,54 +3,42 @@
  * Provides widget behaviors.
  */
 
-(($, Drupal, once) => {
-  /**
-   * Handles the sms phone number element.
-   *
-   * @type {{attach: Drupal.behaviors.smsPhoneNumberFormElement.attach}}
-   */
+((Drupal, once) => {
   Drupal.behaviors.smsPhoneNumberFormElement = {
+    /**
+     * Handles the sms phone number element.
+     *
+     * @type {{attach: Drupal.behaviors.smsPhoneNumberFormElement.attach}}
+     */
     attach(context, settings) {
       once(
         'field-setup',
         '.sms-phone-number-field .local-number',
         context,
-      ).forEach((value) => {
-        const $input = $(value);
-        let val = $input.val();
+      ).forEach((element) => {
+        let val = element.value;
 
-        $input.keyup((event) => {
-          const newVal = $(event.target).val();
+        element.addEventListener('keyup', (event) => {
+          const newVal = event.target.value;
           if (val !== newVal) {
             val = newVal;
-            $input
-              .parents('.sms-phone-number-field')
-              .find('.send-button')
-              .addClass('show');
-            $input
-              .parents('.sms-phone-number-field')
-              .find('.verified')
-              .addClass('hide');
+            const field = element.closest('.sms-phone-number-field');
+            field.querySelector('.send-button').classList.add('show');
+            field.querySelector('.verified').classList.add('hide');
           }
         });
       });
 
       once('field-setup', '.sms-phone-number-field .country', context).forEach(
-        (value) => {
-          const $input = $(value);
-          let val = $(value).val();
-          $(value).change((event) => {
-            const newVal = $(event.target).val();
+        (element) => {
+          let val = element.value;
+          element.addEventListener('change', (event) => {
+            const newVal = event.target.value;
             if (val !== newVal) {
               val = newVal;
-              $input
-                .parents('.sms-phone-number-field')
-                .find('.send-button')
-                .addClass('show');
-              $input
-                .parents('.sms-phone-number-field')
-                .find('.verified')
-                .addClass('hide');
+              const field = element.closest('.sms-phone-number-field');
+              field.querySelector('.send-button').classList.add('show');
+              field.querySelector('.verified').classList.add('hide');
             }
           });
         },
@@ -60,32 +48,50 @@
         'field-setup',
         '.sms-phone-number-field .send-button',
         context,
-      ).click((value) => {
-        const $button = $(value);
-        $button.parent().find('[type="hidden"]').val('');
+      ).forEach((element) => {
+        element.addEventListener('click', () => {
+          element.parentElement.querySelector('[type="hidden"]').value = '';
+        });
       });
 
       if (settings.smsPhoneNumberVerificationPrompt) {
-        $(
+        const verification = document.querySelector(
           `#${settings.smsPhoneNumberVerificationPrompt} .verification`,
-        ).addClass('show');
-        $(
+        );
+        if (verification) {
+          verification.classList.add('show');
+        }
+        const verificationInput = document.querySelector(
           `#${settings.smsPhoneNumberVerificationPrompt} .verification input[type="text"]`,
-        ).val('');
+        );
+        if (verificationInput) {
+          verificationInput.value = '';
+        }
       }
 
       if (settings.smsPhoneNumberHideVerificationPrompt) {
-        $(
+        const verification = document.querySelector(
           `#${settings.smsPhoneNumberHideVerificationPrompt} .verification`,
-        ).removeClass('show');
+        );
+        if (verification) {
+          verification.classList.remove('show');
+        }
       }
 
       if (settings.smsPhoneNumberVerified) {
-        $(`#${settings.smsPhoneNumberVerified} .send-button`).removeClass(
-          'show',
+        const sendButton = document.querySelector(
+          `#${settings.smsPhoneNumberVerified} .send-button`,
         );
-        $(`#${settings.smsPhoneNumberVerified} .verified`).addClass('show');
+        if (sendButton) {
+          sendButton.classList.remove('show');
+        }
+        const verified = document.querySelector(
+          `#${settings.smsPhoneNumberVerified} .verified`,
+        );
+        if (verified) {
+          verified.classList.add('show');
+        }
       }
     },
   };
-})(jQuery, Drupal, once);
+})(Drupal, once);

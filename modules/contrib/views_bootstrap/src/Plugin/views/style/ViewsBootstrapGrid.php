@@ -60,6 +60,7 @@ class ViewsBootstrapGrid extends StylePluginBase {
         [':docs' => 'https://www.drupal.org/docs/extending-drupal/contributed-modules/contributed-module-documentation/views-bootstrap-for-bootstrap-5/grid']),
       '#weight' => -99,
     ];
+
     $form['grid_class'] = [
       '#title' => $this->t('Grid row custom class'),
       '#description' => $this->t('Additional classes to provide on the grid row. Separated by a space.'),
@@ -74,7 +75,8 @@ class ViewsBootstrapGrid extends StylePluginBase {
 
     foreach (ViewsBootstrap::getBreakpoints() as $breakpoint) {
       $breakpoint_option = "col_$breakpoint";
-      $prefix = 'col' . ($breakpoint != 'xs' ? '-' . $breakpoint : '');
+      $prefix = ViewsBootstrap::getColumnPrefix($breakpoint);
+
       $form[$breakpoint_option] = [
         '#type' => 'select',
         '#title' => $this->t("Column width of items at @breakpoint breakpoint", ['@breakpoint' => $breakpoint]),
@@ -87,6 +89,7 @@ class ViewsBootstrapGrid extends StylePluginBase {
           $prefix . '-auto' => $this->t('Fit to content'),
         ],
       ];
+
       foreach ([1, 2, 3, 4, 6, 12] as $width) {
         $form[$breakpoint_option]['#options'][$prefix . "-$width"] = $this->formatPlural(12 / $width, '@width (@count column per row)', '@width (@count columns per row)', ['@width' => $width]);
       }

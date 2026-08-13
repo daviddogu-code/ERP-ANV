@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Generates CSV source files.
  */
-class CsvController extends ControllerBase {
+final class CsvController extends ControllerBase {
 
   /**
    * Date format not defined in PHP 5.
@@ -45,7 +45,7 @@ class CsvController extends ControllerBase {
    * @param Drupal\Core\Extension\ModuleExtensionList $extensionList
    *   The module extension list service.
    */
-  public function __construct(StateInterface $state, ModuleExtensionList $extensionList = NULL) {
+  public function __construct(StateInterface $state, ModuleExtensionList $extensionList) {
     $this->state = $state;
     $this->extensionList = $extensionList;
   }

@@ -190,7 +190,7 @@ interface PhoneNumberUtilInterface {
    * @return array
    *   Array of options, with country code as keys. (Eg. ['IL' => 'IL (+972)'])
    */
-  public function getCountryOptions(array $filter = NULL, $show_country_names = FALSE);
+  public function getCountryOptions(?array $filter = NULL, $show_country_names = FALSE);
 
   /**
    * Get all supported phone number types.

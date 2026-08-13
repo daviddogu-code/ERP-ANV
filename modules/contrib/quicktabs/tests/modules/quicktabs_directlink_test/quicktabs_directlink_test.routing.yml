@@ -1,0 +1,15 @@
+quicktabs_directlink_test.page:
+  path: '/quicktabs-directlink-test'
+  defaults:
+    _controller: '\Drupal\quicktabs_directlink_test\Controller\DirectLinkTestController::page'
+    _title: 'Quick Tabs direct link test'
+  requirements:
+    _access: 'TRUE'
+
+quicktabs_directlink_test.multiple:
+  path: '/quicktabs-directlink-test/multiple'
+  defaults:
+    _controller: '\Drupal\quicktabs_directlink_test\Controller\DirectLinkTestController::multiple'
+    _title: 'Quick Tabs direct link test (multiple)'
+  requirements:
+    _access: 'TRUE'

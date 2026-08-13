@@ -65,6 +65,7 @@ class PhoneNumberCountryFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
+    $form = parent::settingsForm($form, $form_state);
     $settings = $this->getSettings() + static::defaultSettings();
 
     $form['type'] = [
@@ -76,7 +77,7 @@ class PhoneNumberCountryFormatter extends FormatterBase {
       '#default_value' => $settings['type'],
     ];
 
-    return parent::settingsForm($form, $form_state);
+    return $form;
   }
 
   /**

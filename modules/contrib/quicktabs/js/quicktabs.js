@@ -1,205 +1,310 @@
-(function ($, Drupal, drupalSettings, once, cookies) {
+/**
+ * @file
+ * QuickTabs JavaScript functionality.
+ *
+ * Provides tab switching functionality including:
+ * - Click handlers for tab navigation
+ * - Keyboard navigation support
+ * - Direct linking via URL fragments
+ * - Browser back/forward support
+ * - localStorage-based tab memory
+ */
 
-'use strict';
+(function ($, Drupal, drupalSettings, once) {
+  Drupal.quicktabs = Drupal.quicktabs || {};
 
-Drupal.quicktabs = Drupal.quicktabs || {};
+  Drupal.quicktabs.getQTName = function (el) {
+    return el.attr('id').substring(el.attr('id').indexOf('-') + 1);
+  };
 
-Drupal.quicktabs.getQTName = function (el) {
-  return el.attr('id').substring(el.attr('id').indexOf('-') + 1);
-}
+  // Returns the direct-link slug for a tab element (server-provided attribute).
+  Drupal.quicktabs.getTabSlug = function (element) {
+    const slug = $(element).attr('data-quicktabs-tab-name');
+    if (typeof slug !== 'undefined' && slug !== null && slug !== '') {
+      return slug;
+    }
+    // Fallback: derive from the instance name and tab index.
+    const tabIndex =
+      typeof element.myTabIndex !== 'undefined'
+        ? element.myTabIndex
+        : $(element).data('myTabIndex');
+    return `${element.qtName}-${tabIndex}`;
+  };
 
-Drupal.behaviors.quicktabs = {
-  attach: function (context, settings) {
-    $(once('quicktabs-wrapper', 'div.quicktabs-wrapper', context)).each(function() {
-      var el = $(this);
-      Drupal.quicktabs.prepare(el);
+  // Parses the selector-safe fragment ("#qt-<name>--<slug>") into a
+  // {qtName: slug} map.
+  Drupal.quicktabs.parseFragment = function () {
+    const map = {};
+    const hash = window.location.hash.replace(/^#/, '');
+    if (!hash) {
+      return map;
+    }
+
+    // Avoid "=" because Drupal core form.js treats hashes as selectors.
+    const canonicalMatch = hash.match(/^qt-(.+?)--(.+)$/);
+    if (canonicalMatch) {
+      map[canonicalMatch[1]] = canonicalMatch[2];
+    }
+    return map;
+  };
+
+  // Serializes one active Quicktabs instance back into a selector-safe fragment
+  // (without leading "#").
+  Drupal.quicktabs.serializeFragment = function (qtName, slug) {
+    return `qt-${qtName}--${slug}`;
+  };
+
+  Drupal.behaviors.quicktabs = {
+    attach(context, settings) {
+      $(once('quicktabs-wrapper', 'div.quicktabs-wrapper', context)).each(
+        function () {
+          const el = $(this);
+          Drupal.quicktabs.prepare(el);
+          Drupal.quicktabs.processDirectLink(el);
+        },
+      );
+    },
+  };
+
+  // Setting up the initial behaviors
+  Drupal.quicktabs.prepare = function (el) {
+    // el.id format: "quicktabs-$name"
+    const qtName = Drupal.quicktabs.getQTName(el);
+    const $ul = $(el).find('ul.quicktabs-tabs:first');
+    $ul.find('li a').each(function (i, element) {
+      element.myTabIndex = i;
+      element.qtName = qtName;
+      const tab = new Drupal.quicktabs.tab(element);
+      $(element).parents('li').get(0);
+      $(element).on('click', { tab }, Drupal.quicktabs.clickHandler);
+      $(element).on(
+        'keydown',
+        { myTabIndex: i },
+        Drupal.quicktabs.keyDownHandler,
+      );
     });
-  }
-}
+  };
 
-// Setting up the inital behaviours
-Drupal.quicktabs.prepare = function(el) {
-  // el.id format: "quicktabs-$name"
-  var qt_name = Drupal.quicktabs.getQTName(el);
-  var $ul = $(el).find('ul.quicktabs-tabs:first');
-  $ul.find('li a').each(function(i, element){
-    element.myTabIndex = i;
-    element.qt_name = qt_name;
-    var tab = new Drupal.quicktabs.tab(element);
-    var parent_li = $(element).parents('li').get(0);
+  // Process direct links from URL fragments.
+  Drupal.quicktabs.processDirectLink = function (el) {
+    const qtName = Drupal.quicktabs.getQTName(el);
 
-    $(element).bind('click', {tab: tab}, Drupal.quicktabs.clickHandler);
-    $(element).bind('keydown', {myTabIndex: i}, Drupal.quicktabs.keyDownHandler);
-  });
-}
-
-Drupal.quicktabs.clickHandler = function(event) {
-  var tab = event.data.tab;
-  var element = this;
-  // Set clicked tab to active.
-  // Flip the aria-selected attribute.
-  // The tabindex takes inactive tabs out of the tab pool,
-  // they can be accessed by keyboard navigation.
-  // This is a recommendation of the WAI-ARIA example:
-  // https://www.w3.org/TR/wai-aria-practices-1.1/examples/tabs/tabs-2/tabs.html
-  $(this).parents('li').siblings().removeClass('active');
-  $(this).parents('li').siblings().attr('aria-selected', 'false');
-  $(this).parents('li').siblings().attr('tabindex', '-1');
-  $(this).parents('li').siblings().find('a').attr('tabindex', '-1');
-  $(this).parents('li').addClass('active');
-  $(this).parents('li').attr('aria-selected', 'true');
-  $(this).attr('tabindex', '0');
-
-  if ($(this).hasClass('use-ajax')) {
-    $(this).addClass('quicktabs-loaded');
-  }
-
-  // Hide all tabpages.
-  tab.container.children().addClass('quicktabs-hide');
-
-  if (!tab.tabpage.hasClass("quicktabs-tabpage")) {
-    tab = new Drupal.quicktabs.tab(element);
-  }
-
-  tab.tabpage.removeClass('quicktabs-hide');
-  return false;
-}
-
-Drupal.quicktabs.keyDownHandler = function(event) {
-  var tabIndex = event.data.myTabIndex;
-
-  // This element should be a link element inside an
-  // unordered list of tabs. Get all links in the list.
-  var tabs = $(this).parent('li').parent("ul").find("li a");
-
-  // Trigger the click and focus events for the individual tabs.
-    switch (event.key) {
-        case 'ArrowLeft':
-        case 'ArrowUp':
-            event.preventDefault();
-            if (tabIndex <= 0) {
-                tabs[tabs.length - 1].click();
-                tabs[tabs.length - 1].focus();
-            } else {
-                tabs[tabIndex - 1].click();
-                tabs[tabIndex - 1].focus();
-            }
-            break;
-        case'ArrowRight':
-        case'ArrowDown':
-            event.preventDefault();
-            if (tabIndex >= tabs.length - 1) {
-                tabs[0].click();
-                tabs[0].focus();
-            } else {
-                tabs[tabIndex + 1].click();
-                tabs[tabIndex + 1].focus();
-            }
+    // Check if direct linking is enabled for this instance.
+    const qtKey = `qt_${qtName}`;
+    if (
+      !drupalSettings.quicktabs ||
+      !drupalSettings.quicktabs[qtKey] ||
+      drupalSettings.quicktabs[qtKey].directLinking !== true
+    ) {
+      return; // Direct linking is disabled, skip processing.
     }
-}
 
-// Constructor for an individual tab
-Drupal.quicktabs.tab = function (el) {
-  this.element = el;
-  this.tabIndex = el.myTabIndex;
-  var qtKey = 'qt_' + el.qt_name;
-  var i = 0;
-  for (var i = 0; i < drupalSettings.quicktabs[qtKey].tabs.length; i++) {
-    if (i == this.tabIndex) {
-      this.tabObj = drupalSettings.quicktabs[qtKey].tabs[i];
-      this.tabKey = typeof el.dataset.quicktabsTabIndex !== 'undefined' ? el.dataset.quicktabsTabIndex : i;
-    }
-  }
-  this.tabpage_id = 'quicktabs-tabpage-' + el.qt_name + '-' + this.tabKey;
-  this.container = $('#quicktabs-container-' + el.qt_name);
-  this.tabpage = this.container.find('#' + this.tabpage_id);
-}
+    // Activate the tab named in this instance's fragment segment, if any.
+    const activate = function () {
+      const slug = Drupal.quicktabs.parseFragment()[qtName];
+      if (!slug) {
+        return;
+      }
+      const targetTab = Drupal.quicktabs.findTabBySlug(el, slug);
+      if (targetTab) {
+        targetTab.click();
+      }
+    };
 
-// Enable tab memory.
-// Relies on the jQuery Cookie plugin.
-// @see http://plugins.jquery.com/cookie
-  Drupal.behaviors.quicktabsmemory = {
-    attach: function (context, settings) {
-      // The .each() is in case there is more than one quicktab on a page.
-      $(once('form-group', 'div.quicktabs-wrapper', context)).each(function () {
-        var el = $(this);
+    // Defer the initial activation so memory restore and DOM setup run first.
+    setTimeout(activate, 0);
 
-        // el.id format: "quicktabs-$name"
-        var qt_name = Drupal.quicktabs.getQTName(el);
-        var $ul = $(el).find('ul.quicktabs-tabs:first');
+    // Re-activate on back/forward navigation. Namespaced and de-duped so the
+    // handler is not bound twice if the wrapper is re-attached.
+    $(window)
+      .off(`hashchange.quicktabs-${qtName}`)
+      .on(`hashchange.quicktabs-${qtName}`, activate);
+  };
 
-        // Default cookie options.
-        var cookieOptions = {path: '/'};
-        var cookieName = 'Drupal-quicktabs-active-tab-id-' + qt_name;
-
-        $ul.find('li a').each(function (i, element) {
-          var $link = $(element);
-          $link.data('myTabIndex', i);
-
-          // Click the tab ID if a cookie exists.
-          var $cookieValue = cookies.get(cookieName);
-          if ($cookieValue !== '' && $link.data('myTabIndex') == $cookieValue) {
-            $(element).click();
-          }
-
-          // Set the click handler for all tabs, this updates the cookie on
-          // every tab click.
-          $link.on('click', function () {
-            var $linkdata = $(this);
-            var tabIndex = $linkdata.data('myTabIndex');
-            cookies.set(cookieName, tabIndex, cookieOptions);
-          });
-        });
+  // Find a tab in an instance by its direct-link slug.
+  Drupal.quicktabs.findTabBySlug = function (el, slug) {
+    let targetTab = null;
+    $(el)
+      .find('ul.quicktabs-tabs:first li a')
+      .each(function (i, element) {
+        if (Drupal.quicktabs.getTabSlug(element) === slug) {
+          targetTab = element;
+          return false; // Break the loop.
+        }
       });
+    return targetTab;
+  };
+
+  Drupal.quicktabs.clickHandler = function (event) {
+    let tab = event.data.tab;
+    const element = this;
+
+    // Set clicked tab to active.
+    $(this).parents('li').siblings().removeClass('active');
+    $(this).parents('li').siblings().attr('aria-selected', 'false');
+    $(this).parents('li').siblings().find('a').attr('tabindex', '-1');
+    $(this).parents('li').addClass('active');
+    $(this).parents('li').attr('aria-selected', 'true');
+    $(this).attr('tabindex', '0');
+
+    if ($(this).hasClass('use-ajax')) {
+      $(this).addClass('quicktabs-loaded');
+    }
+
+    // Hide all tabpages.
+    tab.container.children().addClass('quicktabs-hide');
+
+    if (!tab.tabpage.hasClass('quicktabs-tabpage')) {
+      tab = new Drupal.quicktabs.tab(element);
+    }
+
+    tab.tabpage.removeClass('quicktabs-hide');
+
+    // Update the URL fragment only for genuine user interactions. Programmatic
+    // clicks (memory restore, direct-link activation) have no originalEvent, so
+    // restoring a tab on page load does not rewrite the URL.
+    if (event && event.originalEvent) {
+      Drupal.quicktabs.updateUrlFragment(element);
+    }
+
+    return false;
+  };
+
+  // Update the URL fragment when a tab is activated. The URL records only the
+  // last clicked Quicktabs instance so the hash remains selector-safe.
+  Drupal.quicktabs.updateUrlFragment = function (element) {
+    const qtName = element.qtName;
+    const qtKey = `qt_${qtName}`;
+    if (
+      !drupalSettings.quicktabs ||
+      !drupalSettings.quicktabs[qtKey] ||
+      drupalSettings.quicktabs[qtKey].directLinking !== true
+    ) {
+      return;
+    }
+    window.location.hash = Drupal.quicktabs.serializeFragment(
+      qtName,
+      Drupal.quicktabs.getTabSlug(element),
+    );
+  };
+
+  Drupal.quicktabs.keyDownHandler = function (event) {
+    const tabIndex = event.data.myTabIndex;
+
+    const tabs = $(this).parent('li').parent('ul').find('li a');
+
+    switch (event.key) {
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        event.preventDefault();
+        if (tabIndex <= 0) {
+          tabs[tabs.length - 1].click();
+          tabs[tabs.length - 1].focus();
+        } else {
+          tabs[tabIndex - 1].click();
+          tabs[tabIndex - 1].focus();
+        }
+        break;
+      case 'ArrowRight':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (tabIndex >= tabs.length - 1) {
+          tabs[0].click();
+          tabs[0].focus();
+        } else {
+          tabs[tabIndex + 1].click();
+          tabs[tabIndex + 1].focus();
+        }
     }
   };
 
+  // Constructor for an individual tab
+  Drupal.quicktabs.tab = function (el) {
+    this.element = el;
+    this.tabIndex = el.myTabIndex;
+    const qtKey = `qt_${el.qtName}`;
 
-if (Drupal.Ajax) {
-
-  /**
-   * Handle an event that triggers an AJAX response.
-   *
-   * We unfortunately need to override this function, which originally comes
-   * from misc/ajax.js, in order to be able to cache loaded tabs, i.e., once a
-   * tab content has loaded it should not need to be loaded again.
-   *
-   * I have removed all comments that were in the original core function, so
-   * that the only comments inside this function relate to the Quicktabs
-   * modification of it.
-   */
-  Drupal.Ajax.prototype.eventResponse = function (element, event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    // Create a synonym for this to reduce code confusion.
-    var ajax = this;
-
-    // Do not perform another Ajax command if one is already in progress.
-    if (ajax.ajaxing) {
-      return;
+    let i;
+    for (i = 0; i < drupalSettings.quicktabs[qtKey].tabs.length; i++) {
+      if (i === this.tabIndex) {
+        this.tabObj = drupalSettings.quicktabs[qtKey].tabs[i];
+        this.tabKey =
+          typeof el.dataset.quicktabsTabIndex !== 'undefined'
+            ? el.dataset.quicktabsTabIndex
+            : i;
+      }
     }
 
-    try {
-      if (ajax.$form) {
-        if (ajax.setClick) {
-          element.form.clk = element;
-        }
+    this.tabpageId = `quicktabs-tabpage-${el.qtName}-${this.tabKey}`;
+    this.container = $(`#quicktabs-container-${el.qtName}`);
+    this.tabpage = this.container.find(`#${this.tabpageId}`);
+  };
 
-        ajax.$form.ajaxSubmit(ajax.options);
+  // Enable tab memory (using localStorage)
+  Drupal.behaviors.quicktabsmemory = {
+    attach(context, settings) {
+      $(once('form-group', 'div.quicktabs-wrapper', context)).each(function () {
+        const el = $(this);
+
+        // Only remember last clicked tab if the option is enabled.
+        if (el.data('rememberLast')) {
+          const qtName = Drupal.quicktabs.getQTName(el);
+          const $ul = $(el).find('ul.quicktabs-tabs:first');
+          const storageKey = `Drupal.quicktabs.activeTab.${qtName}`;
+
+          $ul.find('li a').each(function (i, element) {
+            const $link = $(element);
+            $link.data('myTabIndex', i);
+
+            // Click the tab if a saved index exists in localStorage.
+            const savedIndex = localStorage.getItem(storageKey);
+            if (
+              savedIndex !== null &&
+              parseInt(savedIndex, 10) === $link.data('myTabIndex')
+            ) {
+              $(element).trigger('click');
+            }
+
+            // Set the click handler for all tabs, this updates localStorage on every tab click.
+            $link.on('click', function () {
+              const $linkdata = $(this);
+              const tabIndex = $linkdata.data('myTabIndex');
+              localStorage.setItem(storageKey, tabIndex);
+            });
+          });
+        }
+      });
+    },
+  };
+
+  if (Drupal.Ajax) {
+    Drupal.Ajax.prototype.eventResponse = function (element, event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const ajax = this;
+
+      if (ajax.ajaxing) {
+        return;
       }
-      else {
-        if (!$(element).hasClass('quicktabs-loaded')) {
+
+      try {
+        if (ajax.$form) {
+          if (ajax.setClick) {
+            element.form.clk = element;
+          }
+
+          ajax.$form.ajaxSubmit(ajax.options);
+        } else if (!$(element).hasClass('quicktabs-loaded')) {
           ajax.beforeSerialize(ajax.element, ajax.options);
           $.ajax(ajax.options);
         }
+      } catch (e) {
+        ajax.ajaxing = false;
+        window.alert(
+          `An error occurred while attempting to process ${ajax.options.url}: ${e.message}`,
+        );
       }
-    }
-    catch (e) {
-      ajax.ajaxing = false;
-      window.alert('An error occurred while attempting to process ' + ajax.options.url + ': ' + e.message);
-    }
-  };
-}
-
-})(jQuery, Drupal, drupalSettings, once, window.Cookies);
+    };
+  }
+})(jQuery, Drupal, drupalSettings, once);

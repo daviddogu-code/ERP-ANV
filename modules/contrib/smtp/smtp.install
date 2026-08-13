@@ -59,6 +59,15 @@ function smtp_update_8005() {
 }
 
 /**
+ * Convert smtp_allowhtml to a boolean.
+ */
+function smtp_update_8006() {
+  $config = \Drupal::configFactory()->getEditable('smtp.settings');
+  $config->set('smtp_allowhtml', (bool) $config->get('smtp_allowhtml'))
+    ->save(TRUE);
+}
+
+/**
  * Implements hook_requirements().
  */
 function smtp_requirements(string $phase) {

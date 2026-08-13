@@ -1,0 +1,4 @@
+entity.quicktabs_instance.edit_form:
+  title: 'Edit QuickTabs instance'
+  route_name: entity.quicktabs_instance.edit_form
+  group: quicktabs_instance

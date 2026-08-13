@@ -28,7 +28,8 @@ class ViewsBootstrapTable extends Table {
     $options = parent::defineOptions();
     $options['table_class_custom'] = ['default' => NULL];
     $options['responsive'] = ['default' => FALSE];
-    $options['bootstrap_styles'] = ['default' => NULL];
+    $options['responsive_size'] = ['default' => ''];
+    $options['bootstrap_styles'] = ['default' => []];
 
     return $options;
   }
@@ -54,9 +55,29 @@ class ViewsBootstrapTable extends Table {
 
     $form['responsive'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Responsive'),
+      '#title' => $this->t('Enable responsive table'),
       '#default_value' => $this->options['responsive'],
-      '#description' => $this->t('To make a table scroll horizontally on small devices.'),
+      '#description' => $this->t('Make the table scrollable horizontally on smaller screens by wrapping it in a responsive container.'),
+    ];
+
+    $form['responsive_size'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Responsive breakpoint behavior'),
+      '#options' => [
+        '' => $this->t('Always responsive (all screen sizes)'),
+        '-sm' => $this->t('Responsive up to small screens'),
+        '-md' => $this->t('Responsive up to medium screens'),
+        '-lg' => $this->t('Responsive up to large screens'),
+        '-xl' => $this->t('Responsive up to extra-large screens'),
+        '-xxl' => $this->t('Responsive up to extra-extra-large screens'),
+      ],
+      '#default_value' => $this->options['responsive_size'] ?? '',
+      '#description' => $this->t('Choose the maximum screen size at which the table will be responsive. For example, selecting "Responsive up to medium screens" will make the table scrollable horizontally on screens smaller than medium size.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="style_options[responsive]"]' => ['checked' => TRUE],
+        ],
+      ],
     ];
 
     $form['bootstrap_styles'] = [

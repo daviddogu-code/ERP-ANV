@@ -1,0 +1,5 @@
+
+services:
+  Drupal\quicktabs_accordion\Hook\QuicktabsAccordionHooks:
+    class: Drupal\quicktabs_accordion\Hook\QuicktabsAccordionHooks
+    autowire: true

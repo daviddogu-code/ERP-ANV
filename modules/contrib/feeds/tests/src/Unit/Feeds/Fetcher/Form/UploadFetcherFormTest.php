@@ -7,9 +7,9 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Drupal\Tests\feeds\Unit\FeedsUnitTestCase;
 use Drupal\feeds\Feeds\Fetcher\Form\UploadFetcherForm;
 use Drupal\feeds\Plugin\Type\FeedsPluginInterface;
-use Drupal\Tests\feeds\Unit\FeedsUnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\feeds\Feeds\Fetcher\Form\UploadFetcherForm
@@ -57,12 +57,12 @@ class UploadFetcherFormTest extends FeedsUnitTestCase {
     $form_state->setValue(['allowed_extensions'], 'csv');
 
     $form_object->validateConfigurationForm($form, $form_state);
-    $this->assertSame(0, count($form_state->getErrors()));
+    $this->assertCount(0, $form_state->getErrors());
 
     // Validate.
     $form_state->setValue(['directory'], 'vfs://noroot');
     $form_object->validateConfigurationForm($form, $form_state);
-    $this->assertSame('The chosen directory does not exist and attempts to create it failed.', (string) $form_state->getError($form['directory']));
+    $this->assertSame('The chosen directory "vfs://noroot" does not exist and attempts to create it failed.', (string) $form_state->getError($form['directory']));
   }
 
 }

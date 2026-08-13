@@ -2,28 +2,50 @@
 
 namespace Drupal\quicktabs_accordion\Plugin\TabRenderer;
 
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\quicktabs\Attribute\TabRenderer;
 use Drupal\quicktabs\TabRendererBase;
 use Drupal\quicktabs\Entity\QuickTabsInstance;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\quicktabs\TabTypeManager;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an 'AccordionTabs' tab renderer.
- *
- * @TabRenderer(
- *   id = "accordion_tabs",
- *   name = @Translation("accordion"),
- * )
  */
-class AccordionTabs extends TabRendererBase {
+#[TabRenderer(
+  id: 'accordion_tabs',
+  name: new TranslatableMarkup('accordion'),
+)]
+class AccordionTabs extends TabRendererBase implements ContainerFactoryPluginInterface {
 
   use StringTranslationTrait;
 
   /**
+   * {@inheritDoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected TabTypeManager $tabType) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('plugin.manager.tab_type')
+    );
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function optionsForm(QuickTabsInstance $instance) {
-    $options = $instance->getOptions()['accordion_tabs'];
+  public function optionsForm(QuickTabsInstance $instance): array {
+    $options = $instance->getOptions()['accordion_tabs'] ?? $this->defaultConfiguration();
     $form = [];
     $form['jquery_ui'] = [
       '#type' => 'fieldset',
@@ -32,7 +54,7 @@ class AccordionTabs extends TabRendererBase {
     $form['jquery_ui']['collapsible'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Collapsible'),
-      '#default_value' => ($options['jquery_ui']['collapsible'] != NULL && $instance->getRenderer() == 'accordion_tabs') ? $options['jquery_ui']['collapsible'] : 0,
+      '#default_value' => $options['jquery_ui']['collapsible'],
     ];
     $form['jquery_ui']['heightStyle'] = [
       '#type' => 'radios',
@@ -42,7 +64,7 @@ class AccordionTabs extends TabRendererBase {
         'fill' => $this->t('fill'),
         'content' => $this->t('content'),
       ],
-      '#default_value' => ($options['jquery_ui']['heightStyle'] != NULL && $instance->getRenderer() == 'accordion_tabs') ? $options['jquery_ui']['heightStyle'] : 'auto',
+      '#default_value' => $options['jquery_ui']['heightStyle'],
     ];
     return $form;
   }
@@ -50,9 +72,8 @@ class AccordionTabs extends TabRendererBase {
   /**
    * {@inheritdoc}
    */
-  public function render(QuickTabsInstance $instance) {
+  public function render(QuickTabsInstance $instance): array {
     $qt_id = $instance->id();
-    $type = \Drupal::service('plugin.manager.tab_type');
 
     // The render array used to build the block.
     $build = [];
@@ -71,7 +92,7 @@ class AccordionTabs extends TabRendererBase {
     $tab_pages = [];
     foreach ($instance->getConfigurationData() as $index => $tab) {
       $qsid = 'quickset-' . $qt_id;
-      $object = $type->createInstance($tab['type']);
+      $object = $this->tabType->createInstance($tab['type']);
       $render = $object->render($tab);
 
       // If user wants to hide empty tabs and there is no content
@@ -84,7 +105,8 @@ class AccordionTabs extends TabRendererBase {
         $build['pages'][$index]['#title'] = $tab['content'][$tab['type']]['options']['block_title'];
       }
       $build['pages'][$index]['#block'] = $render;
-      $build['pages'][$index]['#prefix'] = '<h3><a href= "#' . $qsid . '_' . $index . '">' . new TranslatableMarkup($tab['title']) . '</a></h3><div>';
+      $tab_title = $this->t('@title', ['@title' => $tab['title']]);
+      $build['pages'][$index]['#prefix'] = '<h3><a href= "#' . $qsid . '_' . $index . '">' . $tab_title . '</a></h3><div>';
       $build['pages'][$index]['#suffix'] = '</div>';
       $build['pages'][$index]['#theme'] = 'quicktabs_block_content';
 
@@ -115,6 +137,21 @@ class AccordionTabs extends TabRendererBase {
     ];
 
     return $build;
+  }
+
+  /**
+   * Get the default configuration.
+   *
+   * @return array[]
+   *   Array of default configuration.
+   */
+  private function defaultConfiguration(): array {
+    return [
+      'jquery_ui' => [
+        'collapsible' => 0,
+        'heightStyle' => 'auto',
+      ],
+    ];
   }
 
 }

@@ -1,0 +1,14 @@
+name: 'QuickTabs test views'
+type: module
+description: 'Provides Views fixtures for QuickTabs tests.'
+package: Testing
+dependencies:
+  - drupal:node
+  - drupal:text
+  - drupal:user
+  - drupal:views
+
+# Information added by Drupal.org packaging script on 2026-08-12
+version: '4.3.1'
+project: 'quicktabs'
+datestamp: 1786549797

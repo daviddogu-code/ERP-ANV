@@ -5,8 +5,8 @@ namespace Drupal\Tests\feeds\Unit\Element {
   use Drupal\Core\DependencyInjection\ContainerBuilder;
   use Drupal\Core\Form\FormState;
   use Drupal\Core\StreamWrapper\StreamWrapperManager;
-  use Drupal\feeds\Element\Uri;
   use Drupal\Tests\feeds\Unit\FeedsUnitTestCase;
+  use Drupal\feeds\Element\Uri;
 
   /**
    * @coversDefaultClass \Drupal\feeds\Element\Uri
@@ -19,7 +19,7 @@ namespace Drupal\Tests\feeds\Unit\Element {
      */
     public function setUp(): void {
       parent::setUp();
-      
+
       // Set a stub for the string translation service.
       $container = new ContainerBuilder();
       $container->set('string_translation', $this->getStringTranslationStub());
@@ -34,7 +34,7 @@ namespace Drupal\Tests\feeds\Unit\Element {
       $form_state = new FormState();
       /** @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager */
       $stream_wrapper_manager = new StreamWrapperManager($this->createMock('\Psr\Container\ContainerInterface'));
-      $element_object = new Uri([], '', []);
+      $element_object = $this->createPartialMock(Uri::class, []);
 
       $element = ['#value' => ' public://test', '#parents' => ['element']];
       $element += $element_object->getInfo();

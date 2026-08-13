@@ -2,16 +2,17 @@
 
 namespace Drupal\ds\Plugin\DsField;
 
+use Drupal\ds\Attribute\DsField;
+use Drupal\ds\Plugin\Derivative\DynamicTwigField as DynamicTwigFieldDerivative;
 use Drupal\filter\Render\FilteredMarkup;
 
 /**
  * Defines a generic dynamic twig field.
- *
- * @DsField(
- *   id = "dynamic_twig_field",
- *   deriver = "Drupal\ds\Plugin\Derivative\DynamicTwigField"
- * )
  */
+#[DsField(
+  id: 'dynamic_twig_field',
+  deriver: DynamicTwigFieldDerivative::class
+)]
 class DynamicTwigField extends TokenBase {
 
   /**
@@ -27,7 +28,7 @@ class DynamicTwigField extends TokenBase {
       '#context' => [
         $this->getEntityTypeId() => $this->entity(),
         'entity' => $this->entity(),
-      ]
+      ],
     ];
 
     try {

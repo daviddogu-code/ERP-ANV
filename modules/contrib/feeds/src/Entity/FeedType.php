@@ -5,8 +5,10 @@ namespace Drupal\feeds\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\feeds\Exception\MissingTargetException;
 use Drupal\feeds\Feeds\FeedsSingleLazyPluginCollection;
+use Drupal\feeds\FeedTypeImportPeriodPerFeedInterface;
 use Drupal\feeds\FeedTypeInterface;
 use Drupal\feeds\Plugin\DependentWithRemovalPluginInterface;
 use Drupal\feeds\Plugin\Type\LockableInterface;
@@ -46,6 +48,7 @@ use Drupal\feeds\Plugin\Type\Target\ConfigurableTargetInterface;
  *     "description",
  *     "help",
  *     "import_period",
+ *     "import_period_per_feed",
  *     "fetcher",
  *     "fetcher_configuration",
  *     "parser",
@@ -65,7 +68,7 @@ use Drupal\feeds\Plugin\Type\Target\ConfigurableTargetInterface;
  *   admin_permission = "administer feeds"
  * )
  */
-class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, EntityWithPluginCollectionInterface {
+class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, FeedTypeImportPeriodPerFeedInterface, EntityWithPluginCollectionInterface {
 
   /**
    * The feed type ID.
@@ -101,6 +104,13 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
    * @var int
    */
   protected $import_period = 3600;
+
+  /**
+   * Whether the import period is allowed per feed.
+   *
+   * @var bool
+   */
+  protected bool $import_period_per_feed = FALSE;
 
   /**
    * The types of plugins we support.
@@ -207,16 +217,17 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $vars = parent::__sleep();
 
     // Do not serialize pluginCollection as this can contain a
     // \Drupal\Core\Entity\EntityType instance which can contain a
     // stringTranslation object that is not serializable.
     // @see https://www.drupal.org/project/drupal/issues/2893029
-    $vars = array_flip($vars);
-    unset($vars['pluginCollection']);
-    $vars = array_flip($vars);
+    $key = array_search('pluginCollection', $vars);
+    if ($key !== FALSE) {
+      unset($vars[$key]);
+    }
 
     return $vars;
   }
@@ -271,6 +282,20 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
    */
   public function setImportPeriod($import_period) {
     $this->import_period = (int) $import_period;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isImportPeriodPerFeedAllowed(): bool {
+    return $this->import_period_per_feed;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setImportPeriodPerFeedAllowed(bool $import_period_per_feed): void {
+    $this->import_period_per_feed = $import_period_per_feed;
   }
 
   /**
@@ -582,7 +607,7 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
     return [
       'path' => 'admin/structure/feeds/manage/' . $this->id(),
       'options' => [
-        'entity_type' => $this->entityType,
+        'entity_type' => $this->entityTypeId,
         'entity' => $this,
       ],
     ];
@@ -591,8 +616,9 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
   /**
    * {@inheritdoc}
    */
-  public function preSave(EntityStorageInterface $storage_controller, $update = TRUE) {
+  public function preSave(EntityStorageInterface $storage_controller) {
     foreach ($this->getPlugins() as $plugin) {
+      $update = !$this->isNew();
       $plugin->onFeedTypeSave($update);
     }
 
@@ -606,7 +632,7 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
     }
 
     $this->mappings = array_values($this->mappings);
-    parent::preSave($storage_controller, $update);
+    parent::preSave($storage_controller);
   }
 
   /**
@@ -691,7 +717,7 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
       }
       catch (MissingTargetException $e) {
         // Log an error when a target is not found.
-        watchdog_exception('feeds', $e);
+        Error::logException(\Drupal::logger('feeds'), $e);
       }
     }
 

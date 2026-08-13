@@ -82,7 +82,7 @@ class PhoneNumberFieldLocalFormatterTest extends BrowserTestBase {
   /**
    * Provides the phone numbers to check and expected results.
    */
-  public function providerPhoneNumbersLocal() {
+  public static function providerPhoneNumbersLocal() {
     return [
       'standard phone number from US' => [
         '(650) 253-0000', '(650) 253-0000', 'US',
@@ -135,7 +135,7 @@ class PhoneNumberFieldLocalFormatterTest extends BrowserTestBase {
   /**
    * Provides the phone numbers to check and expected results.
    */
-  public function providerPhoneNumbersLocalLink() {
+  public static function providerPhoneNumbersLocalLink() {
     return [
       'standard phone number from US' => [
         '(650) 253-0000', '(650) 253-0000', '+1-650-253-0000', 'US',

@@ -2,9 +2,12 @@
 
 namespace Drupal\quicktabs\Plugin\views\style;
 
-use Drupal\core\form\FormStateInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\views\Attribute\ViewsStyle;
 use Drupal\views\Plugin\views\style\StylePluginBase;
 use Drupal\Core\Link;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Component\Utility\Xss;
@@ -13,16 +16,17 @@ use Drupal\Component\Utility\Xss;
  * Style plugin to render views rows as tabs.
  *
  * @ingroup views_style_plugins
- *
- * @ViewsStyle(
- *   id = "quicktabs",
- *   title = @Translation("Quick Tabs"),
- *   help = @Translation("Render each views row as a tab."),
- *   theme = "quicktabs_view_quicktabs",
- *   display_types = { "normal" }
- * )
  */
+#[ViewsStyle(
+  id: "quicktabs",
+  title: new TranslatableMarkup("Quick Tabs"),
+  help: new TranslatableMarkup("Render each views row as a tab."),
+  theme: "quicktabs_view_quicktabs",
+  display_types: ["normal"],
+)]
 class Quicktabs extends StylePluginBase {
+
+  use StringTranslationTrait;
 
   /**
    * Does the style plugin allows to use style plugins.
@@ -62,7 +66,7 @@ class Quicktabs extends StylePluginBase {
   /**
    * Set default options.
    */
-  protected function defineOptions() {
+  protected function defineOptions(): array {
     $options = parent::defineOptions();
     $options['path'] = ['default' => 'quicktabs'];
     return $options;
@@ -71,35 +75,35 @@ class Quicktabs extends StylePluginBase {
   /**
    * Set the tabs.
    */
-  public function setTabs(array $tabs) {
+  public function setTabs(array $tabs): void {
     $this->tabs = $tabs;
   }
 
   /**
    * Get the tabs.
    */
-  public function getTabs() {
+  public function getTabs(): bool|array {
     return $this->tabs;
   }
 
   /**
    * Set the set mapping.
    */
-  public function setSetMapping(array $setMapping) {
+  public function setSetMapping(array $setMapping): void {
     $this->setMapping = $setMapping;
   }
 
   /**
    * Get the set mapping.
    */
-  public function getSetMapping() {
+  public function getSetMapping(): array {
     return $this->setMapping;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state): void {
     parent::buildOptionsForm($form, $form_state);
 
     foreach ($form['grouping'] as $index => &$field) {
@@ -122,10 +126,11 @@ class Quicktabs extends StylePluginBase {
   /**
    * {@inheritdoc}
    */
-  public function renderGroupingSets($sets, $level = 0) {
+  public function renderGroupingSets($sets, $level = 0): array {
     $output = [];
     $theme_functions = $this->view->buildThemeFunctions($this->groupingTheme);
     $tab_titles = [];
+    $set_mapping = [];
     $link_classes = ['loaded'];
     $quicktab_id = str_replace('_', '-', $this->view->id());
     $set_count = 0;
@@ -136,10 +141,24 @@ class Quicktabs extends StylePluginBase {
       if ($set_count === 0) {
         $wrapper_attributes['class'] = ['active'];
       }
-
       $tab_titles[] = [
         '0' => Link::fromTextAndUrl(
-          new TranslatableMarkup(Xss::filter($index, ['img', 'em', 'strong', 'h2', 'h3', 'h4', 'h5', 'h6', 'small', 'span', 'i', 'br'])),
+          // Wrap the filtered title in Markup so Link does not re-encode it,
+          // which would double-encode entities (e.g. "&amp;" -> "&amp;amp;").
+          Markup::create(Xss::filter($index, [
+            'img',
+            'em',
+            'strong',
+            'h2',
+            'h3',
+            'h4',
+            'h5',
+            'h6',
+            'small',
+            'span',
+            'i',
+            'br',
+          ])),
           Url::fromRoute(
             '<current>',
             [],
@@ -153,7 +172,7 @@ class Quicktabs extends StylePluginBase {
         '#wrapper_attributes' => $wrapper_attributes,
       ];
 
-      $level = isset($set['level']) ? $set['level'] : 0;
+      $level = $set['level'] ?? 0;
       $row = reset($set['rows']);
       // Render as a grouping set.
       if (is_array($row) && isset($row['group'])) {
@@ -195,7 +214,7 @@ class Quicktabs extends StylePluginBase {
     }
 
     $this->setSetMapping($set_mapping);
-    unset($this->view->row_index);
+    $this->view->row_index = NULL;
 
     // Create the tabs for rendering.
     $tabs = [

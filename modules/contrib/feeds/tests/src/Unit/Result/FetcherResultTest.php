@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\feeds\Unit\Result;
 
-use Drupal\feeds\Result\FetcherResult;
 use Drupal\Tests\feeds\Unit\FeedsUnitTestCase;
+use Drupal\feeds\Result\FetcherResult;
 
 /**
  * @coversDefaultClass \Drupal\feeds\Result\FetcherResult
@@ -41,7 +41,7 @@ class FetcherResultTest extends FeedsUnitTestCase {
   /**
    * @covers ::getRaw
    */
-  public function testNonExistantFile() {
+  public function testNonExistentFile() {
     $result = new FetcherResult('IDONOTEXIST');
     $this->expectException(\RuntimeException::class);
     $result->getRaw();

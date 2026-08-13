@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\feeds\FunctionalJavascript\Form;
 
-use Drupal\filter\Entity\FilterFormat;
 use Drupal\Tests\feeds\FunctionalJavascript\FeedsJavascriptTestBase;
+use Drupal\filter\Entity\FilterFormat;
 
 /**
  * @coversDefaultClass \Drupal\feeds\Form\MappingForm
@@ -21,7 +21,7 @@ class MappingFormTest extends FeedsJavascriptTestBase {
     ]);
 
     // Add body field.
-    node_add_body_field($this->nodeType);
+    $this->setUpBodyField();
 
     // Create a filter format.
     $format = FilterFormat::create([

@@ -7,6 +7,7 @@ use Drupal\feeds\Entity\Feed;
 use Drupal\feeds\Event\FeedsEvents;
 use Drupal\feeds\Event\ImportFinishedEvent;
 use Drupal\feeds\Exception\LockException;
+use Drupal\feeds\FeedImportPeriodInterface;
 use Drupal\feeds\Feeds\State\CleanStateInterface;
 use Drupal\feeds\FeedTypeInterface;
 use Drupal\feeds\Plugin\Type\FeedsPluginInterface;
@@ -119,6 +120,101 @@ class FeedTest extends FeedsKernelTestBase {
   }
 
   /**
+   * Checks using periodic import override setting on the feed.
+   *
+   * Checks if the import period from the feed gets used when periodic import
+   * per feed is allowed.
+   *
+   * @covers ::getImportPeriod
+   * @covers ::getNextImportTime
+   */
+  public function testGetImportPeriodWithAllowedOverride() {
+    $feed = $this->createFeed($this->feedType->id());
+
+    // Since there is nothing imported yet, there is no import time.
+    $this->assertSame(-2, $feed->getImportPeriod());
+    // And there is also no next import time yet.
+    $this->assertSame(-1, $feed->getNextImportTime());
+
+    // Setup periodic import and import something.
+    $this->feedType->set('import_period', 3600);
+    $this->feedType->setImportPeriodPerFeedAllowed(TRUE);
+    $this->feedType->save();
+    $feed->set('periodic_import', 1800);
+    $feed->setSource($this->resourcesPath() . '/rss/googlenewstz.rss2');
+    $feed->save();
+    $feed = $this->reloadEntity($feed);
+    $feed->import();
+
+    $this->assertGreaterThanOrEqual(\Drupal::time()->getRequestTime(), $feed->getImportedTime());
+    $this->assertSame($feed->getImportedTime() + 1800, $feed->getNextImportTime());
+  }
+
+  /**
+   * Checks using the feed type periodic import setting.
+   *
+   * Checks if the import period from the feed type gets used when periodic
+   * import per feed is not allowed, even if an override value is set on the
+   * feed.
+   *
+   * @covers ::getImportPeriod
+   * @covers ::getNextImportTime
+   */
+  public function testGetImportPeriodNoOverride() {
+    $feed = $this->createFeed($this->feedType->id());
+
+    // Since there is nothing imported yet, there is no import time.
+    $this->assertSame(-2, $feed->getImportPeriod());
+    // And there is also no next import time yet.
+    $this->assertSame(-1, $feed->getNextImportTime());
+
+    // Setup periodic import and import something.
+    $this->feedType->set('import_period', 3600);
+    $this->feedType->setImportPeriodPerFeedAllowed(FALSE);
+    $feed->set('periodic_import', 1800);
+    $this->feedType->save();
+    $feed->setSource($this->resourcesPath() . '/rss/googlenewstz.rss2');
+    $feed->save();
+    $feed = $this->reloadEntity($feed);
+    $feed->import();
+
+    $this->assertGreaterThanOrEqual(\Drupal::time()->getRequestTime(), $feed->getImportedTime());
+    $this->assertSame($feed->getImportedTime() + 3600, $feed->getNextImportTime());
+  }
+
+  /**
+   * Checks using the default periodic import setting.
+   *
+   * Checks if the import period from the feed type gets used when periodic
+   * import per feed is allowed, but the 'periodic_import' field is configured
+   * to use the feed type default.
+   *
+   * @covers ::getImportPeriod
+   * @covers ::getNextImportTime
+   */
+  public function testGetImportPeriodUseDefault() {
+    $feed = $this->createFeed($this->feedType->id());
+
+    // Since there is nothing imported yet, there is no import time.
+    $this->assertSame(-2, $feed->getImportPeriod());
+    // And there is also no next import time yet.
+    $this->assertSame(-1, $feed->getNextImportTime());
+
+    // Setup periodic import and import something.
+    $this->feedType->set('import_period', 3600);
+    $this->feedType->setImportPeriodPerFeedAllowed(TRUE);
+    $this->feedType->save();
+    $feed->set('periodic_import', FeedImportPeriodInterface::USE_FEED_TYPE_IMPORT_PERIOD);
+    $feed->setSource($this->resourcesPath() . '/rss/googlenewstz.rss2');
+    $feed->save();
+    $feed = $this->reloadEntity($feed);
+    $feed->import();
+
+    $this->assertGreaterThanOrEqual(\Drupal::time()->getRequestTime(), $feed->getImportedTime());
+    $this->assertSame($feed->getImportedTime() + 3600, $feed->getNextImportTime());
+  }
+
+  /**
    * @covers ::startBatchImport
    */
   public function testStartBatchImport() {
@@ -142,13 +238,6 @@ class FeedTest extends FeedsKernelTestBase {
    * @covers ::getQueuedTime
    */
   public function testStartCronImport() {
-    // @todo Remove installSchema() when Drupal 9.0 is no longer supported.
-    // https://www.drupal.org/node/3143286
-    if (version_compare(\Drupal::VERSION, '9.1', '<')) {
-      // Install key/value expire schema.
-      $this->installSchema('system', ['key_value_expire']);
-    }
-
     $feed = $this->createFeed($this->feedType->id(), [
       'source' => $this->resourcesPath() . '/rss/googlenewstz.rss2',
     ]);
@@ -169,13 +258,6 @@ class FeedTest extends FeedsKernelTestBase {
    * @covers ::startCronImport
    */
   public function testStartCronImportFailsOnLockedFeed() {
-    // @todo Remove installSchema() when Drupal 9.0 is no longer supported.
-    // https://www.drupal.org/node/3143286
-    if (version_compare(\Drupal::VERSION, '9.1', '<')) {
-      // Install key/value expire schema.
-      $this->installSchema('system', ['key_value_expire']);
-    }
-
     $feed = $this->createFeed($this->feedType->id(), [
       'source' => $this->resourcesPath() . '/rss/googlenewstz.rss2',
     ]);
@@ -281,7 +363,7 @@ class FeedTest extends FeedsKernelTestBase {
   public function testDispatchImportFinishedEvent() {
     $dispatcher = new EventDispatcher();
     $feed = $this->getMockBuilder(Feed::class)
-      ->setMethods(['eventDispatcher', 'getType'])
+      ->onlyMethods(['eventDispatcher', 'getType', 'label'])
       ->setConstructorArgs([
         ['type' => $this->feedType->id()],
         'feeds_feed',
@@ -296,6 +378,10 @@ class FeedTest extends FeedsKernelTestBase {
     $feed->expects($this->once())
       ->method('eventDispatcher')
       ->willReturn($dispatcher);
+
+    $feed->expects($this->any())
+      ->method('label')
+      ->willReturn('Foo');
 
     $dispatcher->addListener(FeedsEvents::IMPORT_FINISHED, function (ImportFinishedEvent $event) {
       throw new \Exception();
@@ -473,7 +559,7 @@ class FeedTest extends FeedsKernelTestBase {
       $plugin = $this->createMock($class);
       $plugin->expects($this->atLeastOnce())
         ->method('defaultFeedConfiguration')
-        ->will($this->returnValue([]));
+        ->willReturn([]);
 
       $this->assertIsArray($feed->getConfigurationFor($plugin));
     }
@@ -498,7 +584,7 @@ class FeedTest extends FeedsKernelTestBase {
       $plugin = $this->createMock($class);
       $plugin->expects($this->atLeastOnce())
         ->method('defaultFeedConfiguration')
-        ->will($this->returnValue([]));
+        ->willReturn([]);
 
       $feed->setConfigurationFor($plugin, [
         'foo' => 'bar',
@@ -541,15 +627,15 @@ class FeedTest extends FeedsKernelTestBase {
 
     // Activate feed.
     $feed->setActive(TRUE);
-    $this->assertSame(TRUE, $feed->isActive());
+    $this->assertTrue($feed->isActive());
 
     // Deactivate feed.
     $feed->setActive(FALSE);
-    $this->assertSame(FALSE, $feed->isActive());
+    $this->assertFalse($feed->isActive());
 
     // Activate feed again.
     $feed->setActive(TRUE);
-    $this->assertSame(TRUE, $feed->isActive());
+    $this->assertTrue($feed->isActive());
   }
 
   /**
@@ -562,15 +648,15 @@ class FeedTest extends FeedsKernelTestBase {
 
     // Lock feed.
     $feed->lock();
-    $this->assertSame(TRUE, $feed->isLocked());
+    $this->assertTrue($feed->isLocked());
 
     // Unlock feed.
     $feed->unlock();
-    $this->assertSame(FALSE, $feed->isLocked());
+    $this->assertFalse($feed->isLocked());
 
     // Lock feed again.
     $feed->lock();
-    $this->assertSame(TRUE, $feed->isLocked());
+    $this->assertTrue($feed->isLocked());
   }
 
 }

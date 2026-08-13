@@ -48,7 +48,7 @@ class NodeManageDisplayTest extends BrowserTestBase {
 
     // Create user and node.
     $user = $this->drupalCreateUser();
-    $node = $this->drupalCreateNode(['uid' => $user->id()]);
+    $node = $this->drupalCreateNode(['uid' => $user->id(), 'promote' => 1]);
     $assert = $this->assertSession();
 
     // Check page display.

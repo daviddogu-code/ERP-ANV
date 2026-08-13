@@ -54,7 +54,7 @@ class ImportLog extends ContentEntityBase implements ImportLogInterface {
    */
   public function logSource(FetcherResultInterface $result): string {
     $file_manager = $this->getFeedsLogFileManager();
-    $file_path = \Drupal::service('file_system')->basename($result->getFilePath());
+    $file_path = basename($result->getFilePath());
     $destination = $file_manager->saveData($result->getRaw(), $this->id() . '/source/' . $file_path);
     $this->sources[] = $destination;
 
@@ -101,9 +101,14 @@ class ImportLog extends ContentEntityBase implements ImportLogInterface {
 
     $this->sanitizeLogEntry($entry);
 
+    // Update entry without passing 'lid' again to fix issue with alternative
+    // database drivers.
+    $record = $entry;
+    unset($record['lid']);
+
     return $database->update(static::ENTRY_TABLE)
       ->condition('lid', $entry['lid'])
-      ->fields($entry)
+      ->fields($record)
       ->execute();
   }
 

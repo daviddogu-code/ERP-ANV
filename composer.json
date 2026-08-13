@@ -95,9 +95,9 @@
         "drupal/gin_toolbar": "^1.0@RC",
         "drupal/ief_table_view_mode": "^3.0",
         "drupal/inline_entity_form": "3.0.0-rc19",
-        "drupal/jquery_ui": "1.6.0",
-        "drupal/jquery_ui_autocomplete": "2.0.0",
-        "drupal/jquery_ui_menu": "2.0.0",
+        "drupal/jquery_ui": "^1.7",
+        "drupal/jquery_ui_autocomplete": "^2.1",
+        "drupal/jquery_ui_menu": "^2.1",
         "drupal/layout_builder_component_attributes": "^2.1",
         "drupal/layout_custom_section_classes": "^1.0",
         "drupal/mail_login": "4.2.2",
@@ -105,7 +105,7 @@
         "drupal/manage_display": "^3.0",
         "drupal/markup": "2.0.0-beta6",
         "drupal/masquerade": "^2.0@RC",
-        "drupal/media_library_form_element": "2.0.6",
+        "drupal/media_library_form_element": "^2.1",
         "drupal/mimemail": "1.x-dev@dev",
         "drupal/module_filter": "^4.0",
         "drupal/name": "^1.0@RC",
@@ -113,6 +113,7 @@
         "drupal/pdf_serialization": "2.2.0",
         "drupal/phone_number": "^2.0@alpha",
         "drupal/pwa": "^2.1@beta",
+        "drupal/quicktabs": "^4.0",
         "drupal/r4032login": "^2.2",
         "drupal/redirect": "^1.8",
         "drupal/scan_code": "^1.0@beta",
@@ -121,16 +122,17 @@
         "drupal/smtp": "^1.2",
         "drupal/tamper": "1.0.0-alpha4",
         "drupal/taxonomy_unique": "^2.5",
-        "drupal/token": "1.13.0",
+        "drupal/token": "^1.14",
         "drupal/ultimate_cron": "2.x-dev@dev",
         "drupal/verf": "2.0.2",
-        "drupal/viewfield": "3.0.0-beta7",
+        "drupal/viewfield": "^3.0@beta",
         "drupal/views_aggregator": "2.1.1",
         "drupal/views_bootstrap": "^5.5@alpha",
         "drupal/views_bulk_edit": "^2.9",
-        "drupal/views_bulk_operations": "4.2.6",
+        "drupal/views_bulk_operations": "^4.2.7",
         "drupal/views_conditional": "1.10.0",
         "drupal/views_data_export": "1.4.0",
+        "drupal/views_entity_form_field": "1.0.0",
         "drupal/views_field_view": "^1.0@beta",
         "drupal/views_infinite_scroll": "^2.0",
         "drupal/views_simple_math_field": "^3.0",
@@ -199,6 +201,15 @@
                 "Update autocomplete (#12)": "patches/verf-update-autocomplete-12.patch",
                 "Introduce correct hook, deprecate the old one (#14)": "patches/verf-introduce-correct-hook-14.patch",
                 "Offer only the values actually in use (#2998697-26)": "patches/verf-load-only-used-options-2998697-26.patch"
+            },
+            "drupal/select2": {
+                "Guard against an undefined config (#3279387-6)": "patches/select2-js-error-when-config-is-undefined-3279387-6.patch"
+            },
+            "drupal/tamper": {
+                "Cast to float before multiplying, so decimals survive": "patches/tamper-math-multiplication-cast-to-float.patch"
+            },
+            "drupal/views_entity_form_field": {
+                "AJAX in the editable table, plus the local state it was installed with": "patches/views_entity_form_field-ajax-and-local-state.patch"
             }
         },
         "installer-paths": {

@@ -62,7 +62,7 @@ class PhoneNumberWidget extends WidgetBase {
       'default_country' => 'US',
       'country_selection' => 'flag',
       'placeholder' => t('Phone number'),
-      'phone_size' => 60,
+      'phone_size' => 15,
       'extension_size' => 5,
     ];
   }

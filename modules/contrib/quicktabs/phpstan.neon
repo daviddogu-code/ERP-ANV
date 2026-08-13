@@ -1,11 +1,16 @@
-# Configuration file for PHPStan static code checking, see https://phpstan.org.
 includes:
-  - phar://phpstan.phar/conf/bleedingEdge.neon
-
+  # This placeholder filename will be replaced with the value of variable $_PHPSTAN_BASELINE_FILENAME
+  - phpstan-baseline.neon
 parameters:
-  level: 2
-  paths:
-    - .
-  ignoreErrors:
-    # new static() is a best practice in Drupal, so we cannot fix that.
-    - "#^Unsafe usage of new static#"
+    level: 0
+    fileExtensions:
+        - php
+        - module
+        - inc
+        - install
+        - theme
+        - profile
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # new static() is a best practice in Drupal, so we cannot fix that.
+        - "#^Unsafe usage of new static#"

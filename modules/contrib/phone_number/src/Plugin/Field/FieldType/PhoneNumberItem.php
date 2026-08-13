@@ -223,7 +223,7 @@ class PhoneNumberItem extends FieldItemBase {
           $phone_number = $util->getPhoneNumber($number, $country);
         }
         $count = ($count + 1) % pow(10, strlen($example));
-      };
+      }
     }
     $value = [];
     if ($phone_number) {

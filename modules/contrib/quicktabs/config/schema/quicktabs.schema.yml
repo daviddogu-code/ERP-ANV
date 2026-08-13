@@ -1,34 +1,42 @@
 quicktabs.quicktabs_instance.*:
   type: config_entity
   label: 'Quick Tabs settings'
+  constraints:
+    FullyValidatable: ~
   mapping:
     id:
-      type: string
-      label: ID
+      type: machine_name
+      label: 'ID'
     label:
-      type: string
-      label: Label
+      type: required_label
+      label: 'Label'
     uuid:
-      type: string
-      label: UUID
+      type: uuid
+      label: 'UUID'
     status:
       type: boolean
-      label: Status
+      label: 'Status'
     renderer:
-      type: string
-      label: Renderer
+      type: machine_name
+      label: 'Renderer'
     hide_empty_tabs:
       type: boolean
       label: 'Hide Empty Tabs'
+    remember_last_clicked_tab:
+      type: boolean
+      label: 'Remember last clicked tab'
     default_tab:
       type: integer
       label: 'Default Tab'
+      constraints:
+        Range:
+          min: 0
     dependencies:
       type: sequence
-      label: Dependencies
+      label: 'Dependencies'
     options:
       type: sequence
-      label: Options
+      label: 'Options'
       sequence:
         type: quicktabs.options.[%key]
     configuration_data:
@@ -40,16 +48,16 @@ quicktabs.quicktabs_instance.*:
         mapping:
           title:
             type: text
-            label: Title
+            label: 'Title'
           weight:
-            type: integer
-            label: Weight
+            type: weight
+            label: 'Weight'
           type:
-            type: string
-            label: Type
+            type: machine_name
+            label: 'Type'
           content:
             type: sequence
-            label: Content
+            label: 'Content'
             sequence:
               type: quicktabs.configuration_data.[%key]
 
@@ -68,6 +76,11 @@ quicktabs.options.accordion_tabs:
         heightStyle:
           type: string
           label: 'Height Style'
+          constraints:
+            Choice:
+              - auto
+              - fill
+              - content
 
 # Quick Tabs Renderer Plugin
 quicktabs.options.quick_tabs:
@@ -76,8 +89,24 @@ quicktabs.options.quick_tabs:
   mapping:
     ajax:
       type: boolean
-      label: Ajax
-
+      label: 'Ajax'
+    class:
+      type: string
+      nullable: true
+      label: 'Classes'
+    style:
+      type: string
+      label: 'Style'
+      constraints:
+        Choice:
+          - ''
+          - pamela
+          - on-the-gray
+          - tabsbar
+          - material-tabs
+    direct_linking:
+      type: boolean
+      label: 'Direct Linking'
 
 # Block Tab Type Plugin
 quicktabs.configuration_data.block_content:
@@ -86,13 +115,13 @@ quicktabs.configuration_data.block_content:
   mapping:
     options:
       type: mapping
-      label: Options
+      label: 'Options'
       mapping:
         bid:
           type: string
-          label: nid
+          label: 'bid'
         block_title:
-          type: string
+          type: text
           label: 'Block Title'
         display_title:
           type: boolean
@@ -108,10 +137,10 @@ quicktabs.configuration_data.node_content:
       label: Options
       mapping:
         nid:
-          type: string
-          label: nid
+          type: machine_name
+          label: 'nid'
         view_mode:
-          type: string
+          type: machine_name
           label: 'View Mode'
         hide_title:
           type: boolean
@@ -124,10 +153,10 @@ quicktabs.configuration_data.qtabs_content:
   mapping:
     options:
       type: mapping
-      label: Options
+      label: 'Options'
       mapping:
         machine_name:
-          type: string
+          type: machine_name
           label: 'Machine Name'
 
 # View Tab Type Plugin
@@ -140,11 +169,21 @@ quicktabs.configuration_data.view_content:
       label: Options
       mapping:
         vid:
-          type: string
-          label: vid
+          type: machine_name
+          label: 'vid'
         display:
-          type: string
-          label: Display
+          type: machine_name
+          label: 'Display'
         args:
           type: string
-          label: Arguments
+          nullable: true
+          label: 'Arguments'
+
+# Views style plugin.
+views.style.quicktabs:
+  type: views_style
+  label: 'Quick Tabs'
+  mapping:
+    path:
+      type: string
+      label: 'Path'

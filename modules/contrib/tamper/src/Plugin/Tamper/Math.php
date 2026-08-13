@@ -153,7 +153,7 @@ class Math extends TamperBase {
         break;
 
       case 'multiplication':
-        $data = (float)$data * (float)$value;
+        $data = (float) $data * (float) $value;
         break;
 
       case 'division':

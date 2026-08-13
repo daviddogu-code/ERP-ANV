@@ -1,12 +1,10 @@
 name: media_library_form_element_test
 type: module
 description: 'Test media library form element integration'
-core_version_requirement: ^10.3
+core_version_requirement: ^10.3 || ^11.2 || ^12
 package: Testing
-dependencies:
-  - webform:webform
 
-# Information added by Drupal.org packaging script on 2024-07-01
-version: '2.1.0'
+# Information added by Drupal.org packaging script on 2026-08-07
+version: '2.1.5'
 project: 'media_library_form_element'
-datestamp: 1719852878
+datestamp: 1786134761
