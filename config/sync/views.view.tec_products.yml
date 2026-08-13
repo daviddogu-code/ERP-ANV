@@ -1048,48 +1048,48 @@ display:
           bef:
             general:
               autosubmit: false
+              auto_submit_sort_only: false
+              autosubmit_breakpoint: ''
               autosubmit_exclude_textfield: false
               autosubmit_textfield_delay: 500
+              autosubmit_textfield_minimum_length: 3
               autosubmit_hide: false
               input_required: false
               allow_secondary: false
               secondary_label: 'Advanced options'
               secondary_open: false
               reset_button_always_show: false
-              autosubmit_textfield_minimum_length: 3
-              autosubmit_breakpoint: ''
-              auto_submit_sort_only: false
             sort:
               plugin_id: default
             filter:
               field_tec_product_type_target_id:
                 plugin_id: default
                 advanced:
-                  field_classes: ''
-                  open_by_default: false
                   sort_options_method: alphabetical_asc
                   sort_options_natural: true
+                  open_by_default: false
+                  field_classes: ''
               field_tec_brand_target_id:
                 plugin_id: default
                 advanced:
-                  field_classes: ''
-                  open_by_default: false
                   sort_options_method: alphabetical_asc
                   sort_options_natural: true
+                  open_by_default: false
+                  field_classes: ''
               field_tec_pattern_target_id:
                 plugin_id: default
                 advanced:
-                  field_classes: ''
-                  open_by_default: false
                   sort_options_method: alphabetical_asc
                   sort_options_natural: true
+                  open_by_default: false
+                  field_classes: ''
               field_tec_colors_target_id:
                 plugin_id: default
                 advanced:
-                  field_classes: ''
-                  open_by_default: false
                   sort_options_method: alphabetical_asc
                   sort_options_natural: true
+                  open_by_default: false
+                  field_classes: ''
       access:
         type: none
         options: {  }
@@ -1192,12 +1192,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -1243,12 +1237,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -1294,12 +1282,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -1345,12 +1327,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -1380,17 +1356,6 @@ display:
           grouping: {  }
           row_class: ''
           default_row_class: false
-          responsive: false
-          bootstrap_styles:
-            bordered: bordered
-            sm: sm
-            hover: hover
-            striped: striped
-          override: 1
-          sticky: 0
-          caption: ''
-          summary: ''
-          description: ''
           columns:
             entity_browser_select: entity_browser_select
             id: id
@@ -1410,131 +1375,142 @@ display:
             field_tec_brand_1: field_tec_brand_1
             field_tec_pattern_1: field_tec_pattern_1
             changed: changed
+          default: '-1'
           info:
             entity_browser_select:
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             id:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_images:
               align: views-align-center
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             edit_tec_product:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: views-align-center
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_product_name_1:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_product_type:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_pattern:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_colors:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-center
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_size:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-center
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_brand:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-center
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_customer:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_price:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             delete_tec_product:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: views-align-center
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_logo:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_product_type_1:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_brand_1:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_pattern_1:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             changed:
-              sortable: 1
+              sortable: true
               default_sort_order: desc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
-          default: '-1'
-          empty_table: 0
+          override: true
+          sticky: false
+          summary: ''
+          empty_table: false
+          caption: ''
+          description: ''
+          responsive: false
+          bootstrap_styles:
+            bordered: bordered
+            sm: sm
+            hover: hover
+            striped: striped
       row:
         type: fields
       query:
@@ -2258,30 +2234,30 @@ display:
           bef:
             general:
               autosubmit: false
+              auto_submit_sort_only: false
+              autosubmit_breakpoint: ''
               autosubmit_exclude_textfield: false
               autosubmit_textfield_delay: 400
+              autosubmit_textfield_minimum_length: 3
               autosubmit_hide: true
               input_required: false
               allow_secondary: false
               secondary_label: 'Advanced options'
               secondary_open: false
               reset_button_always_show: true
-              autosubmit_textfield_minimum_length: 3
-              autosubmit_breakpoint: ''
-              auto_submit_sort_only: false
             filter:
               combine:
                 plugin_id: default
                 advanced:
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: ''
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
                 options_show_only_used: false
                 options_show_only_used_filtered: false
                 options_hide_when_empty: false
@@ -2290,50 +2266,50 @@ display:
                 plugin_id: bef_select2
                 advanced:
                   sort_options: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: '- None -'
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
               field_tec_customer_target_id_verf:
                 plugin_id: bef_select2
                 advanced:
                   sort_options: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: '- None -'
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
               field_tec_product_type_target_id_verf:
                 plugin_id: bef_select2
                 advanced:
                   sort_options: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: '- None -'
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
       cache:
         type: none
         options: {  }
@@ -2436,12 +2412,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             placeholder: 'Type to search...'
           is_grouped: false
           group_info:
@@ -2487,12 +2457,6 @@ display:
             multiple: true
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: 0
           is_grouped: false
           group_info:
@@ -2544,12 +2508,6 @@ display:
             multiple: true
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: 0
           is_grouped: false
           group_info:
@@ -2593,12 +2551,6 @@ display:
             multiple: true
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: 0
           is_grouped: false
           group_info:
@@ -4162,6 +4114,7 @@ display:
           empty_table: false
           caption: ''
           description: ''
+          class: ''
       row:
         type: fields
         options: {  }
@@ -5077,6 +5030,7 @@ display:
           empty_table: false
           caption: ''
           description: ''
+          class: ''
       row:
         type: fields
         options: {  }
@@ -6542,82 +6496,82 @@ display:
           bef:
             general:
               autosubmit: true
+              auto_submit_sort_only: false
+              autosubmit_breakpoint: ''
               autosubmit_exclude_textfield: false
               autosubmit_textfield_delay: 500
+              autosubmit_textfield_minimum_length: 3
               autosubmit_hide: true
               input_required: false
               allow_secondary: false
               secondary_label: 'Advanced options'
               secondary_open: false
               reset_button_always_show: false
-              autosubmit_textfield_minimum_length: 3
-              autosubmit_breakpoint: ''
-              auto_submit_sort_only: false
             filter:
               field_tec_product_type_target_id:
                 plugin_id: bef_select2
                 advanced:
                   sort_options: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: '- None -'
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
               field_tec_brand_target_id:
                 plugin_id: bef_select2
                 advanced:
                   sort_options: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: '- None -'
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
               field_tec_pattern_target_id:
                 plugin_id: bef_select2
                 advanced:
                   sort_options: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: '- None -'
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
               field_tec_colors_target_id:
                 plugin_id: bef_select2
                 advanced:
                   sort_options: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: '- None -'
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
       cache:
         type: none
         options: {  }
@@ -11137,6 +11091,7 @@ display:
           empty_table: false
           caption: ''
           description: ''
+          class: ''
       row:
         type: fields
         options: {  }

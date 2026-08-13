@@ -54,14 +54,13 @@
         "drupal/bpmn_io": "^2.0",
         "drupal/cancel_button": "^1.5",
         "drupal/coffee": "^2.0",
-        "drupal/color": "1.0.3",
         "drupal/color_field": "^3.0",
         "drupal/conditional_fields": "4.0.0-alpha6",
         "drupal/context": "5.0.0-rc2",
-        "drupal/core-composer-scaffold": "^10.0",
-        "drupal/core-project-message": "^10.0",
-        "drupal/core-recommended": "^10.0",
-        "drupal/core-vendor-hardening": "^10.0",
+        "drupal/core-composer-scaffold": "^11",
+        "drupal/core-project-message": "^11",
+        "drupal/core-recommended": "^11",
+        "drupal/core-vendor-hardening": "^11",
         "drupal/csv_serialization": "^4.0",
         "drupal/draggableviews": "2.1.4",
         "drupal/ds": "^3.15",
@@ -90,9 +89,9 @@
         "drupal/flag": "^5.0",
         "drupal/float_labels": "^2.0",
         "drupal/flood_control": "^3.0",
-        "drupal/gin": "^4.0",
+        "drupal/gin": "^5.0",
         "drupal/gin_login": "^2.0",
-        "drupal/gin_toolbar": "^2.0",
+        "drupal/gin_toolbar": "^3.0",
         "drupal/ief_table_view_mode": "^3.0",
         "drupal/inline_entity_form": "^3.0",
         "drupal/jquery_ui": "^1.7",
@@ -137,13 +136,14 @@
         "drupal/views_infinite_scroll": "^2.0.3",
         "drupal/views_simple_math_field": "^3.0",
         "drupal/xls_serialization": "^2.1",
-        "drush/drush": "^12.4",
+        "drush/drush": "^13",
         "dynamicweb/swiffy-slider": "1.6.0",
         "ganlanyuan/tiny-slider": "2.9.3",
         "geocoder-php/google-maps-provider": "^4.7",
         "giggsey/libphonenumber-for-php": "^8.13",
+        "mglaman/composer-drupal-lenient": "^1.0",
         "oomphinc/composer-installers-extender": "^2.0",
-        "symfony/mailer": "^6.2"
+        "symfony/mailer": "^7.0"
     },
     "conflict": {
         "drupal/drupal": "*"
@@ -160,7 +160,9 @@
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "cweagans/composer-patches": true,
             "php-http/discovery": true,
-            "oomphinc/composer-installers-extender": true
+            "oomphinc/composer-installers-extender": true,
+            "mglaman/composer-drupal-lenient": true,
+            "symfony/runtime": true
         },
         "sort-packages": true,
         "preferred-install": {
@@ -185,6 +187,13 @@
         "installer-types": [
             "npm-asset"
         ],
+        "drupal-lenient": {
+            "allowed-list": [
+                "drupal/editablefields",
+                "drupal/pdf_serialization",
+                "drupal/simple_popup_views"
+            ]
+        },
         "composer-exit-on-patch-failure": true,
         "patches": {
             "drupal/editablefields": {

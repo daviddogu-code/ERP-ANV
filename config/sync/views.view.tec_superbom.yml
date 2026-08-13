@@ -468,7 +468,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -1532,7 +1532,7 @@ display:
           precision: '0'
           decimal: .
           separator: ','
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -1685,7 +1685,7 @@ display:
           precision: '2'
           decimal: .
           separator: ','
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -1836,7 +1836,7 @@ display:
           precision: '2'
           decimal: .
           separator: ','
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -1987,7 +1987,7 @@ display:
           precision: '2'
           decimal: .
           separator: ','
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -2079,7 +2079,7 @@ display:
           precision: '2'
           decimal: .
           separator: ','
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -2286,7 +2286,7 @@ display:
           precision: '2'
           decimal: .
           separator: ','
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: '฿ '
           suffix: ''
@@ -2310,91 +2310,91 @@ display:
           bef:
             general:
               autosubmit: true
+              auto_submit_sort_only: false
+              autosubmit_breakpoint: ''
               autosubmit_exclude_textfield: false
               autosubmit_textfield_delay: 420
+              autosubmit_textfield_minimum_length: 3
               autosubmit_hide: true
               input_required: false
               allow_secondary: false
               secondary_label: 'Advanced options'
               secondary_open: false
               reset_button_always_show: true
-              autosubmit_textfield_minimum_length: 3
-              autosubmit_breakpoint: ''
-              auto_submit_sort_only: false
             filter:
               field_tec_order_status_value:
                 plugin_id: bef
                 advanced:
                   sort_options: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
                 select_all_none: false
                 select_all_none_nested: false
                 display_inline: false
-                options_show_only_used: false
-                options_show_only_used_filtered: false
-                options_hide_when_empty: false
-                options_show_items_count: 0
-                scrollable: false
-                scrollable_height: 300
                 soft_limit: 0
                 soft_limit_label_less: 'Show less'
                 soft_limit_label_more: 'Show more'
                 soft_limit_include_children: false
+                scrollable: false
+                scrollable_height: 300
+                options_show_only_used: false
+                options_show_only_used_filtered: false
+                options_hide_when_empty: false
+                options_show_items_count: 0
               field_tec_customer_target_id_verf:
                 plugin_id: bef_select2
                 advanced:
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: '- None -'
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
               field_tec_order_target_id_verf:
                 plugin_id: bef_select2
                 advanced:
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: '- None -'
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
               field_tec_vendor_target_id_verf:
                 plugin_id: bef_select2
                 advanced:
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                   placeholder_text: Supplier(s)
                   rewrite:
                     filter_rewrite_values: ''
                     filter_rewrite_values_key: false
                   collapsible: false
                   collapsible_disable_automatic_open: false
+                  open_by_default: false
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-                  open_by_default: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
       access:
         type: perm
         options:
@@ -2490,12 +2490,6 @@ display:
             multiple: true
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: true
           is_grouped: false
           group_info:
@@ -2536,12 +2530,6 @@ display:
             multiple: true
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: 0
           is_grouped: false
           group_info:
@@ -2586,12 +2574,6 @@ display:
             multiple: true
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: 0
           is_grouped: false
           group_info:
@@ -2637,12 +2619,6 @@ display:
             multiple: true
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: 0
           is_grouped: false
           group_info:
@@ -2671,17 +2647,6 @@ display:
           grouping: {  }
           row_class: ''
           default_row_class: true
-          responsive: false
-          bootstrap_styles:
-            bordered: bordered
-            sm: sm
-            hover: hover
-            striped: striped
-          override: 1
-          sticky: 0
-          caption: ''
-          summary: ''
-          description: ''
           columns:
             field_tec_inventory_image: field_tec_inventory_image
             field_tec_inventory_image_1: field_tec_inventory_image_1
@@ -2715,221 +2680,232 @@ display:
             views_conditional_field_1: views_conditional_field_1
             field_tec_unit_symbol: field_tec_unit_symbol
             views_conditional_field: views_conditional_field
+          default: '-1'
           info:
             field_tec_inventory_image:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_inventory_image_1:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             simple_popup_views_field:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: views-align-center
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             name:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             view_tec_crm:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_vendor:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_quantity:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_split_inventory:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_quantity_input:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_views_simple_math_field_1:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_package_units:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_unit_purchase:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_packaging:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             tid:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_material_type:
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_unit_use:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_split_inventory_1:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_split_into:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_views_simple_math_field:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             views_conditional_field_2:
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_uos:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_unit_symbol_1:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_split_into_1:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             views_conditional_field_4:
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_units:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_uou_split_qty:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_views_simple_math_field_2:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_views_simple_math_field_3:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             views_conditional_field_3:
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             views_conditional_field_1:
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_unit_symbol:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             views_conditional_field:
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
-          default: '-1'
-          empty_table: 0
+          override: true
+          sticky: false
+          summary: ''
+          empty_table: false
+          caption: ''
+          description: ''
+          responsive: false
+          bootstrap_styles:
+            bordered: bordered
+            sm: sm
+            hover: hover
+            striped: striped
       row:
         type: fields
       query:

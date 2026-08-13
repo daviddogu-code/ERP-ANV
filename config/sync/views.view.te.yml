@@ -365,12 +365,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -390,37 +384,37 @@ display:
           grouping: {  }
           row_class: ''
           default_row_class: true
+          columns:
+            name: name
+            tid: tid
+          default: tid
+          info:
+            name:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            tid:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+          override: true
+          sticky: false
+          summary: ''
+          empty_table: false
+          caption: ''
+          description: ''
           responsive: false
           bootstrap_styles:
             bordered: '0'
             sm: '0'
             hover: '0'
             striped: '0'
-          override: 1
-          sticky: 0
-          caption: ''
-          summary: ''
-          description: ''
-          columns:
-            name: name
-            tid: tid
-          info:
-            name:
-              sortable: 0
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: 0
-              responsive: ''
-            tid:
-              sortable: 0
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: 0
-              responsive: ''
-          default: tid
-          empty_table: 0
       row:
         type: fields
       query:

@@ -293,7 +293,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -366,7 +366,7 @@ display:
           set_precision: false
           precision: 0
           decimal: .
-          format_plural: 0
+          format_plural: false
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
@@ -665,17 +665,6 @@ display:
               rendered_strip: false
           row_class: ''
           default_row_class: true
-          responsive: true
-          bootstrap_styles:
-            bordered: bordered
-            sm: sm
-            hover: hover
-            striped: striped
-          override: 1
-          sticky: 0
-          caption: ''
-          summary: ''
-          description: ''
           columns:
             id: id
             field_tec_inventory_image: field_tec_inventory_image
@@ -684,56 +673,67 @@ display:
             field_tec_unit_use: field_tec_unit_use
             field_tec_quantity: field_tec_quantity
             field_tec_material_type: field_tec_material_type
+          default: '-1'
           info:
             id:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_inventory_image:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: views-align-center
               separator: ''
-              empty_column: 1
+              empty_column: true
               responsive: ''
             field_tec_inventory:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_standard_unit:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_unit_use:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_quantity:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_material_type:
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
-          default: '-1'
-          empty_table: 0
+          override: true
+          sticky: false
+          summary: ''
+          empty_table: false
+          caption: ''
+          description: ''
+          responsive: true
+          bootstrap_styles:
+            bordered: bordered
+            sm: sm
+            hover: hover
+            striped: striped
       row:
         type: fields
       query:

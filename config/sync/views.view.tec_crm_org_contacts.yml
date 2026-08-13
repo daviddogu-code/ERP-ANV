@@ -249,6 +249,7 @@ display:
           summary: ''
           empty_table: true
           caption: ''
+          class: ''
       row:
         type: fields
       query:

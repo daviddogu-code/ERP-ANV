@@ -225,12 +225,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             placeholder: ''
           is_grouped: false
           group_info:

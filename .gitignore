@@ -27,3 +27,4 @@ sites/simpletest
 /config/sync.pre-restore-*/
 /modules/custom.pre-restore-*/
 /tmp_*
+/autoload_runtime.php

@@ -82,6 +82,7 @@ display:
         type: mini
         options:
           offset: 0
+          pagination_heading_level: h4
           items_per_page: 60
           total_pages: null
           id: 0
@@ -96,7 +97,6 @@ display:
             items_per_page_options_all_label: '- All -'
             offset: false
             offset_label: Offset
-          pagination_heading_level: h4
       exposed_form:
         type: basic
         options:
@@ -190,12 +190,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              tec_customer: '0'
-              tec_supervisor: '0'
-              tec_manager: '0'
-              tec_executive: '0'
-              administrator: '0'
             placeholder: 'Type to search...'
           is_grouped: false
           group_info:
@@ -465,30 +459,30 @@ display:
           bef:
             general:
               autosubmit: true
+              auto_submit_sort_only: false
+              autosubmit_breakpoint: ''
               autosubmit_exclude_textfield: false
               autosubmit_textfield_delay: 400
+              autosubmit_textfield_minimum_length: 3
               autosubmit_hide: true
               input_required: false
               allow_secondary: false
               secondary_label: 'Advanced options'
               secondary_open: false
               reset_button_always_show: false
-              autosubmit_textfield_minimum_length: 3
-              autosubmit_breakpoint: ''
-              auto_submit_sort_only: false
             filter:
               combine:
                 plugin_id: default
                 advanced:
-                  placeholder_text: ''
-                  collapsible: false
-                  is_secondary: false
-                  collapsible_disable_automatic_open: false
-                  hide_label: false
-                  field_classes: ''
-                  open_by_default: false
                   sort_options_method: alphabetical_asc
                   sort_options_natural: true
+                  placeholder_text: ''
+                  collapsible: false
+                  collapsible_disable_automatic_open: false
+                  open_by_default: false
+                  is_secondary: false
+                  hide_label: false
+                  field_classes: ''
                 options_show_only_used: false
                 options_show_only_used_filtered: false
                 options_hide_when_empty: false
@@ -534,16 +528,7 @@ display:
         - url
         - url.query_args
         - user.roles
-      tags:
-        - 'config:core.entity_view_display.taxonomy_term.tec_brands.default'
-        - 'config:core.entity_view_display.taxonomy_term.tec_colors.default'
-        - 'config:core.entity_view_display.taxonomy_term.tec_colors.tec_color_swatch'
-        - 'config:core.entity_view_display.taxonomy_term.tec_inventory.default'
-        - 'config:core.entity_view_display.taxonomy_term.tec_inventory.full'
-        - 'config:core.entity_view_display.taxonomy_term.tec_inventory.ief_table'
-        - 'config:core.entity_view_display.taxonomy_term.tec_patterns.default'
-        - 'config:core.entity_view_display.taxonomy_term.tec_patterns.full'
-        - 'config:core.entity_view_display.taxonomy_term.tec_units.default'
+      tags: {  }
   page_1:
     id: page_1
     display_title: Page
@@ -749,30 +734,30 @@ display:
           bef:
             general:
               autosubmit: true
+              auto_submit_sort_only: false
+              autosubmit_breakpoint: ''
               autosubmit_exclude_textfield: false
               autosubmit_textfield_delay: 500
+              autosubmit_textfield_minimum_length: 3
               autosubmit_hide: true
               input_required: false
               allow_secondary: false
               secondary_label: 'Advanced options'
               secondary_open: false
               reset_button_always_show: false
-              autosubmit_textfield_minimum_length: 3
-              autosubmit_breakpoint: ''
-              auto_submit_sort_only: false
             filter:
               combine:
                 plugin_id: default
                 advanced:
-                  placeholder_text: ''
-                  collapsible: false
-                  is_secondary: false
-                  collapsible_disable_automatic_open: false
-                  hide_label: false
-                  field_classes: ''
-                  open_by_default: false
                   sort_options_method: alphabetical_asc
                   sort_options_natural: true
+                  placeholder_text: ''
+                  collapsible: false
+                  collapsible_disable_automatic_open: false
+                  open_by_default: false
+                  is_secondary: false
+                  hide_label: false
+                  field_classes: ''
                 options_show_only_used: false
                 options_show_only_used_filtered: false
                 options_hide_when_empty: false
@@ -818,13 +803,4 @@ display:
         - url
         - url.query_args
         - user.roles
-      tags:
-        - 'config:core.entity_view_display.taxonomy_term.tec_brands.default'
-        - 'config:core.entity_view_display.taxonomy_term.tec_colors.default'
-        - 'config:core.entity_view_display.taxonomy_term.tec_colors.tec_color_swatch'
-        - 'config:core.entity_view_display.taxonomy_term.tec_inventory.default'
-        - 'config:core.entity_view_display.taxonomy_term.tec_inventory.full'
-        - 'config:core.entity_view_display.taxonomy_term.tec_inventory.ief_table'
-        - 'config:core.entity_view_display.taxonomy_term.tec_patterns.default'
-        - 'config:core.entity_view_display.taxonomy_term.tec_patterns.full'
-        - 'config:core.entity_view_display.taxonomy_term.tec_units.default'
+      tags: {  }
