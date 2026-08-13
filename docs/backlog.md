@@ -31,6 +31,13 @@ por error algo que estaba puesto a propósito.
   Ubuntu 24.04 para que coincidiera con Laragon, y resulta que eso es exactamente lo que pide
   Drupal 11. La decisión de "aburrirse a propósito" se acaba de pagar sola.
 
+  **Hay que tener a mano la contraseña de `sudo` de `david`.** Se descubrió el 13 de agosto: por
+  SSH se entra sin problema con la llave, pero todo lo que necesita el despliegue —tocar
+  `settings.php`, importar la base de datos, cambiar dueños de carpetas, reiniciar Apache— pide
+  `root`, y `root` no admite entrar directamente. Sin esa contraseña el despliegue se para en el
+  primer paso. Está en LastPass o en la cabeza del dueño; conviene sacarla antes de empezar y no
+  a mitad de faena.
+
   **Propuesta: reemplazar la base de datos entera con la de local**, en vez de actualizar la del
   servidor paso a paso. Local es la copia maestra, allí no hay datos reales, y así el servidor
   queda idéntico a lo que se probó. Lo único que se pierde es la cuenta de Lukpla, que se vuelve
@@ -45,14 +52,19 @@ por error algo que estaba puesto a propósito.
   `composer install`, que además lo reinstala todo desde archivo y cierra esa clase de problema
   para siempre.
 
-  **Y una que no viaja por git.** `settings.php` está en `.gitignore`, y con razón, así que **el
-  apagado de `rebuild_access` del 13 de agosto no llega al servidor con el `git pull`**. Como el
-  `settings.php` de allí se escribió a mano y es probable que se copiara del de local, hay que
-  **comprobar a mano si `rebuild_access` está en `TRUE` en el servidor**. Si lo está, ahora mismo
-  cualquiera puede entrar a `https://erp.anvfightgear.com/core/rebuild.php` y vaciar las cachés
-  del sitio sin ninguna credencial. Lo mismo vale para cualquier otro ajuste de `settings.php`:
-  ese fichero se mantiene a mano en cada sitio, y por eso conviene revisarlo entero al desplegar,
-  no solo esta línea.
+  **Y una que no viaja por git, ya comprobada.** `settings.php` está en `.gitignore`, y con
+  razón, así que el apagado de `rebuild_access` del 13 de agosto no llega al servidor con el
+  `git pull`. Se temía que allí siguiera en `TRUE`, porque ese fichero se escribió a mano y
+  parecía probable que se hubiera copiado del de local. **No es el caso: está en `FALSE`**,
+  comprobado el 13 de agosto. No hay ningún agujero abierto por ahí. El fichero del servidor no
+  es una copia del de local sino uno nuevo escrito en el propio despliegue, de 1.569 bytes
+  frente a los 37.314 de aquí, y de paso quedaron verificados los otros cuatro ajustes:
+  `update_free_access` en `FALSE`, el dominio de confianza solo `erp.anvfightgear.com`, los
+  archivos privados en `/var/www/erp-private` (fuera de la carpeta que sirve Apache) y los
+  errores en el registro y no en pantalla.
+
+  Aun así la lección de fondo sigue en pie: **`settings.php` se mantiene a mano en cada sitio**,
+  así que conviene revisarlo entero al desplegar, no solo esta línea.
 
   Y dos comprobaciones nuevas, ahora que el `lock` manda de verdad. **Pasar
   `scripts/comparar-con-original.php` en el servidor antes de desplegar**: si allí hay algún
@@ -727,10 +739,110 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 - **Mirar las versiones móviles de GitHub y Cursor.** GitHub tiene aplicación de iOS y
   Android, con la que se puede leer y editar este backlog desde el teléfono. Cursor tiene
   agentes en la nube que se lanzan desde el navegador del móvil.
+- **Quince avisos de PHP por cada carga de la pantalla de líneas de pedido.**
+  `views_simple_math_field` hace `$entity->get($campo)->getValue()[0]['value']` sin comprobar que
+  el campo tenga algo, así que cada línea con un campo vacío deja dos avisos en el registro
+  (`SimpleMathField.php:346`). No rompe nada, la página responde 200, pero ensucia el registro y
+  ahí es donde se buscan los fallos de verdad. Salieron a la luz el 13 de agosto, cuando la prueba
+  de humo empezó a ejecutar esa vista de verdad. Se arregla con un parche de una línea.
 
 ---
 
 ## Hecho
+
+### 2026-08-13 — El error 500 al editar las líneas de un pedido: lo rompía un parche nuestro, no el módulo
+
+La revisión visual posterior al salto a Drupal 11 dio con un 500 en `/o/draft/755`, la pantalla
+donde se editan las líneas de un pedido, que es de las más usadas de la fábrica. Crear el pedido
+funcionaba y publicarlo también; lo que moría era volver a entrar a tocarlo.
+
+La causa inmediata era `views_entity_form_field` llamando a `getEntityTranslation()`, un método que
+Drupal 10 tenía marcado como obsoleto y que Drupal 11 ha borrado. Lo interesante es de dónde salía
+esa llamada. **El módulo publicado ya estaba corregido**: la 8.x-1.0 de drupal.org usa el nombre
+nuevo, `getEntityTranslationByRelationship()`. Quien la revertía era nuestro propio parche.
+
+**La trampa, que es lo que hay que recordar.** Ese parche nació el 12 de agosto, al reconciliar el
+sitio con Composer: la carpeta del disco era una versión antigua con el parche de AJAX aplicado a
+mano, y para no perderlo se sacó la diferencia con `git diff` contra el paquete oficial. El
+problema es que un `git diff` no distingue entre lo que añadiste tú y lo que el proyecto arregló
+mientras tu copia se quedaba quieta. Todo aparece como "cambio local". Así que el parche llevaba
+dentro, además del AJAX, **una vuelta atrás a la versión vieja del método**, invisible mientras el
+sitio corría en Drupal 10 porque allí el método viejo seguía existiendo. El día que se subió a la
+11, la página cayó.
+
+Se revisaron los trece parches del proyecto buscando lo mismo. Solo este se sacó de una carpeta
+instalada; los otros doce vienen de issues de drupal.org o se escribieron a mano para un fallo
+concreto, y ninguno revierte nada del núcleo. La trampa estaba aislada.
+
+**Cómo queda el parche.** Ya no toca esas tres llamadas: deja las dos que el módulo trae bien y
+corrige la tercera, que el propio módulo tiene mal (`getEntityTranslation($old, $row)`, que solo
+salta al guardar y por eso nadie lo había visto). Se deja a propósito una diferencia con el paquete
+oficial, apuntada en la cabecera: la versión publicada comprueba que `loadUnchanged()` haya
+devuelto algo antes de usarlo y la nuestra no. Con filas que vienen de una vista la entidad siempre
+existe, así que no da problemas, pero conviene saberlo si algún día se rehace el parche.
+
+**Y un detalle de fontanería que costó una hora.** En el tercer bloque del parche hay una línea que
+se quita y se vuelve a poner exactamente igual. Parece una tontería y lo es, pero convertirla en
+línea de contexto normal —que es lo correcto— hace que **GNU `patch` rechace el bloque entero**,
+mientras que `git apply` lo acepta sin pestañear. Y el que acaba aplicando los parches aquí es GNU
+`patch`, porque `composer-patches` intenta primero `git apply` desde dentro de la carpeta del
+módulo, que está dentro de un repositorio, y ahí Git resuelve las rutas contra la raíz del
+repositorio, no encuentra los ficheros y responde `Skipped patch`. Composer lo toma por un fallo y
+cae al respaldo. Peor todavía: GNU `patch` aplica los bloques que puede y deja un `.rej` con el que
+falló, así que un parche a medias deja el módulo **mitad parcheado**, que es el estado más
+confuso posible para diagnosticar. Se comprobó contra el paquete limpio, con la misma herramienta
+que usa Composer: con el par se aplica, sin el par no. Queda escrito en la cabecera del parche para
+que nadie lo "limpie" y lo vuelva a romper.
+
+**La prueba de humo tenía un agujero, y taparlo mal es peor que no taparlo.** `cargan-las-paginas.php`
+se saltaba a propósito las vistas con argumento, dando por hecho que las fichas de ejemplo ya las
+cubrían. No las cubren: la ficha va a la dirección canónica de la entidad, y las pantallas de
+trabajo del ERP son vistas con el identificador en la dirección. Por eso el 500 pudo sobrevivir un
+día entero diciendo la prueba que todo cargaba.
+
+El primer arreglo rellenaba el `%` con la entidad más reciente del tipo de la tabla base, y salió
+mal de una forma instructiva: la vista de líneas se apoya en `tec_line_item`, así que metía un
+identificador de línea donde va uno de pedido, y `/o/draft/4192` devolvía **200 pintando una tabla
+vacía**. Con cero filas el fallo no aparece, porque el módulo que se rompía solo trabaja dentro del
+bucle de filas. O sea, un aprobado falso, que es peor que no mirar. La versión definitiva pregunta
+a la propia vista de qué tabla y columna sale el argumento, coge valores que están en los datos y
+**ejecuta la vista antes de pedir la página**, aceptando solo los que traen filas. Ahora elige el
+755 él solo, que es justo el pedido que fallaba. Treinta y ocho páginas, todas con 200.
+
+De paso, el analizador de código obsoleto sobre este módulo: limpio. Lo único que señala es
+`views_ui_build_form_url()`, que solo se llama al editar la vista desde la interfaz de Views, donde
+ese módulo está cargado por definición, y un aviso de que `^10 || ^11` no servirá para Drupal 12.
+
+### 2026-08-13 — El `settings.php` del servidor, revisado: no había ningún agujero, y de paso se aprende a leerlo sin contraseña
+
+La sospecha era razonable y resultó infundada. `rebuild_access` está en **`FALSE`** en el
+servidor, así que nunca hubo nadie pudiendo vaciar las cachés del ERP sin identificarse. El
+fichero de allí no es una copia del de local: se generó desde cero durante el despliegue del 12
+de agosto, con los cinco ajustes de producción puestos a mano y explicados uno por uno. Mide
+1.569 bytes frente a los 37.314 del de local, que arrastra todos los comentarios del original de
+Drupal.
+
+Ya que se entraba a mirar, se comprobaron los cinco de una vez: `rebuild_access` en `FALSE`,
+`update_free_access` en `FALSE`, dominio de confianza únicamente `erp.anvfightgear.com`,
+archivos privados en `/var/www/erp-private` —fuera de la carpeta que sirve Apache— y errores al
+registro en vez de a la pantalla del cliente. Los cinco, correctos.
+
+**Lo que costó, y cómo se resolvió, que es la parte reutilizable.** El fichero es
+`root:www-data` con permisos `640`: el usuario con el que se entra por SSH (`david`) no lo puede
+leer, `root` no admite entrar directamente por SSH, y `sudo` pide una contraseña que solo tiene
+el dueño. Y desde fuera no sirve de nada pedir `/core/rebuild.php`, porque **redirige igual en
+los dos casos**: la única diferencia es que, si estuviera abierto, la petición vaciaría de
+verdad las cachés del sitio. O sea que la prueba obvia solo distingue haciendo el daño que
+quieres descartar, y en un servidor de 2 GB sin memoria de intercambio eso puede acabar en un
+sitio caído que además no podríamos levantar sin la contraseña.
+
+La salida es que **el código del ERP pertenece a `david`**, así que se puede dejar un `.php` de
+diez líneas en la raíz, pedirlo por el navegador y dejar que lo ejecute Apache, que sí es
+`www-data` y sí puede leer `settings.php`. El fichero solo responde si se le pasa un testigo
+aleatorio en la dirección, imprime los cinco ajustes y ni menciona la contraseña de la base de
+datos ni el `hash_salt`. Se borra en el mismo paso y se confirma con un 404 que ya no está.
+Estuvo vivo unos segundos. Es la forma de leer cualquier cosa de `settings.php` en el servidor
+sin despertar al dueño para pedirle la contraseña.
 
 ### 2026-08-13 — El ERP corre en Drupal 11.4.5, y los ochenta y dos avisos de seguridad se quedan en cero
 

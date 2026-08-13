@@ -14,32 +14,31 @@ Lo que anade, en resumen:
 
 Se encontro al reconciliar el sitio con Composer en agosto de 2026. Sin esto,
 una instalacion desde cero se lleva por delante la tabla de lineas de pedido.
-git : warning: in the working copy of '.gitlab-ci.yml', LF will be replaced by CRLF the next time Git touches it
-At C:\Users\Acer\AppData\Local\Temp\ps-script-1c53b5fb-0634-462d-b9d9-79394e9e49a2.ps1:113 char:1
-+ git diff --no-index --no-color -- "vef-limpio" "vef-nuestro" 2>&1 | O ...
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
-    + FullyQualifiedErrorId : NativeCommandError
- 
-warning: in the working copy of '.gitlab-ci.yml', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'LICENSE.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'LICENSE.txt', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'composer.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'composer.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'css/views-form.css', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'css/views-form.css', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'src/Plugin/views/field/EntityFormField.php', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'src/Plugin/views/field/EntityFormField.php', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'views_entity_form_field.info.yml', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'views_entity_form_field.info.yml', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'views_entity_form_field.install', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'views_entity_form_field.install', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'views_entity_form_field.libraries.yml', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'views_entity_form_field.libraries.yml', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'views_entity_form_field.module', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'views_entity_form_field.module', LF will be replaced by CRLF the next time Git touches it
+
+CORREGIDO EL 13 DE AGOSTO DE 2026, y conviene entender por que. La primera
+version de este parche se saco con git diff contra el paquete oficial, y se
+trajo de vuelta, sin que nadie lo notara, una llamada que la version publicada
+ya tenia corregida: getEntityTranslationByRelationship, que en la 8.x-1.0
+sustituye a getEntityTranslation. En Drupal 10 daba igual, porque el metodo
+viejo seguia existiendo marcado como obsoleto. En Drupal 11 esta borrado, y las
+paginas de editar lineas de pedido, /o/draft/% y /po/draft/%, morian con un
+error 500 en cuanto se pedian. Ahora el parche deja esas tres llamadas con el
+nombre nuevo y solo aporta lo que de verdad es nuestro.
+
+Queda a proposito una diferencia con el paquete oficial, para que el parche siga
+siendo minimo: la version publicada comprueba que loadUnchanged() haya devuelto
+algo antes de usarlo, y esta no. Con filas que vienen de una vista la entidad
+siempre existe, asi que no da problemas, pero hay que recordarlo si algun dia se
+rehace este parche desde cero.
+
+Y un detalle raro que NO hay que "arreglar". En el tercer bloque hay una linea
+que se quita y se vuelve a poner igual, la del getEntityTranslationByRelationship
+dentro del formulario. Parece tonto y lo es, pero convertirla en linea de
+contexto normal hace que GNU patch rechace el bloque entero, y GNU patch es el
+que acaba aplicando esto porque el git apply de composer-patches falla al correr
+dentro de un repositorio. Comprobado el 13 de agosto de 2026 contra el paquete
+limpio: con el par se aplica, sin el par no. Se deja asi.
+
 diff --git a/css/views-form.css b/css/views-form.css
 index f9ad526..d3f0e8e 100644
 --- a/css/views-form.css
@@ -100,7 +99,7 @@ index 8b617ca..d4872af 100644
          if ($this->getEntity($row)) {
            // Load field definition based on current entity bundle.
 -          $entity = $this->getEntityTranslationByRelationship($this->getEntity($row), $row);
-+          $entity = $this->getEntityTranslation($this->getEntity($row), $row);
++          $entity = $this->getEntityTranslationByRelationship($this->getEntity($row), $row);
            if ($entity->hasField($field_name) && $this->getBundleFieldDefinition($entity->bundle())->isDisplayConfigurable('form')) {
              $items = $entity->get($field_name)->filterEmptyItems();
 -            $can_edit_row = ($entity->access('update') && $items->access('edit'));
@@ -232,8 +231,8 @@ index 8b617ca..d4872af 100644
 -
 -          if ($old) {
 -            $original_entity = $this->getEntityTranslation($old, $row);
-+          $entity = $this->getEntityTranslation($entity, $row);
-+          $original_entity = $this->getEntityTranslation($storage->loadUnchanged($entity->id()), $row);
++          $entity = $this->getEntityTranslationByRelationship($entity, $row);
++          $original_entity = $this->getEntityTranslationByRelationship($storage->loadUnchanged($entity->id()), $row);
  
 -            try {
 -              if ($this->entityShouldBeSaved($entity, $original_entity)) {

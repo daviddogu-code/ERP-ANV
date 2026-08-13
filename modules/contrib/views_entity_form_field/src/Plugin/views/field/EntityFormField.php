@@ -493,7 +493,7 @@ class EntityFormField extends FieldPluginBase implements CacheableDependencyInte
         // Make sure there's an entity for this row (relationships can be null).
         if ($this->getEntity($row)) {
           // Load field definition based on current entity bundle.
-          $entity = $this->getEntityTranslation($this->getEntity($row), $row);
+          $entity = $this->getEntityTranslationByRelationship($this->getEntity($row), $row);
           if ($entity->hasField($field_name) && $this->getBundleFieldDefinition($entity->bundle())->isDisplayConfigurable('form')) {
             $items = $entity->get($field_name)->filterEmptyItems();
 
@@ -695,8 +695,8 @@ class EntityFormField extends FieldPluginBase implements CacheableDependencyInte
         $entity = $this->getEntity($row);
 
         if ($entity) {
-          $entity = $this->getEntityTranslation($entity, $row);
-          $original_entity = $this->getEntityTranslation($storage->loadUnchanged($entity->id()), $row);
+          $entity = $this->getEntityTranslationByRelationship($entity, $row);
+          $original_entity = $this->getEntityTranslationByRelationship($storage->loadUnchanged($entity->id()), $row);
 
           try {
             if ($this->entityShouldBeSaved($entity, $original_entity)) {

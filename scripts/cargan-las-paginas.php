@@ -21,7 +21,7 @@
  * pintarse, que en un ERP de solo lectura no deberia ser nada.
  */
 
-use Drupal\Core\Session\UserSession;
+use Drupal\views\Views;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
@@ -60,7 +60,6 @@ if (!$rutas) {
 function exportaciones(): array {
   $rutas = [];
   $factory = \Drupal::configFactory();
-  $gestor = \Drupal::entityTypeManager();
 
   foreach ($factory->listAll('views.view.') as $nombre) {
     $vista = $factory->get($nombre);
@@ -68,7 +67,8 @@ function exportaciones(): array {
       continue;
     }
     $base = $vista->get('base_table');
-    foreach ($vista->get('display') ?? [] as $display) {
+    $vistaId = substr($nombre, strlen('views.view.'));
+    foreach ($vista->get('display') ?? [] as $displayId => $display) {
       if (($display['display_plugin'] ?? '') !== 'data_export') {
         continue;
       }
@@ -76,21 +76,9 @@ function exportaciones(): array {
       if (!$ruta) {
         continue;
       }
-      // Las que llevan argumento necesitan uno de verdad; se coge la entidad
-      // mas reciente del tipo sobre el que va la vista.
-      if (str_contains($ruta, '%')) {
-        // La tabla base no es el tipo de entidad: cuando la entidad tiene datos
-        // traducibles, Views apunta a `<tipo>_field_data`.
-        $tipo = preg_replace('/_field_data$|_data$/', '', (string) $base);
-        if (!$tipo || !$gestor->hasDefinition($tipo)) {
-          continue;
-        }
-        $ids = $gestor->getStorage($tipo)->getQuery()
-          ->accessCheck(FALSE)->sort('id', 'DESC')->range(0, 1)->execute();
-        if (!$ids) {
-          continue;
-        }
-        $ruta = str_replace('%', (string) reset($ids), $ruta);
+      $ruta = conArgumentosReales($ruta, $vistaId, $displayId, $base);
+      if (!$ruta) {
+        continue;
       }
       $rutas[] = '/' . ltrim($ruta, '/');
     }
@@ -138,7 +126,8 @@ function paginasDeVista(): array {
     if (!$vista->get('status')) {
       continue;
     }
-    foreach ($vista->get('display') ?? [] as $display) {
+    $vistaId = substr($nombre, strlen('views.view.'));
+    foreach ($vista->get('display') ?? [] as $displayId => $display) {
       if (($display['display_plugin'] ?? '') !== 'page') {
         continue;
       }
@@ -148,14 +137,131 @@ function paginasDeVista(): array {
         continue;
       }
       $ruta = $display['display_options']['path'] ?? NULL;
-      // Las que llevan argumento en la direccion necesitan un valor real y se
-      // cubren por otro lado, con las fichas de ejemplo.
-      if ($ruta && !str_contains($ruta, '%')) {
+      if (!$ruta) {
+        continue;
+      }
+      $ruta = conArgumentosReales($ruta, $vistaId, $displayId, $vista->get('base_table'));
+      if ($ruta) {
         $rutas['/' . ltrim($ruta, '/')] = TRUE;
       }
     }
   }
   return array_keys($rutas);
+}
+
+/**
+ * Cambia el % de una direccion por un argumento que devuelve filas de verdad.
+ *
+ * Hasta agosto de 2026 las vistas con argumento se saltaban, dando por hecho
+ * que las fichas de ejemplo ya las cubrian. No las cubren: la ficha va a la
+ * direccion canonica de la entidad, y las pantallas de trabajo del ERP son
+ * vistas con el identificador en la direccion. La de editar las lineas de un
+ * pedido, /o/draft/%, llevaba devolviendo un 500 desde la subida a Drupal 11 y
+ * esta prueba decia que todo cargaba, porque nunca la pedia.
+ *
+ * Y no vale con poner cualquier numero. La primera version de esto rellenaba
+ * con la entidad mas reciente del tipo de la tabla base, y en /o/draft metia un
+ * identificador de linea donde va uno de pedido: la pagina devolvia 200 pintando
+ * una tabla vacia. Con cero filas el fallo no aparece, porque el modulo que se
+ * rompia solo trabaja dentro del bucle de filas. O sea que daba un aprobado
+ * falso, que es peor que no mirar. Ahora se prueba el argumento ejecutando la
+ * vista antes de pedir la pagina, y solo se acepta si trae filas.
+ *
+ * Devuelve NULL cuando no hay ningun argumento que sirva, que no es un fallo:
+ * significa que esa pantalla no tiene datos con los que probarse.
+ */
+function conArgumentosReales(string $ruta, string $vistaId, string $displayId, ?string $base): ?string {
+  if (!str_contains($ruta, '%')) {
+    return $ruta;
+  }
+  // Con dos argumentos habria que probar combinaciones, y no hay ninguna vista
+  // asi en el ERP. Si algun dia la hay, aparecera como pantalla sin cubrir.
+  if (substr_count($ruta, '%') !== 1) {
+    return NULL;
+  }
+  foreach (argumentosPosibles($vistaId, $displayId, $base) as $valor) {
+    if (laVistaTraeFilas($vistaId, $displayId, $valor)) {
+      return str_replace('%', (string) $valor, $ruta);
+    }
+  }
+  return NULL;
+}
+
+/**
+ * Valores que merece la pena probar como argumento, del mejor al peor.
+ *
+ * El primer sitio donde buscar es la propia vista: sus manejadores de argumento
+ * dicen de que tabla y de que columna sale el valor, asi que un valor cogido de
+ * ahi esta en los datos por definicion. Como respaldo queda la entidad mas
+ * reciente del tipo de la tabla base, que es lo que sirve para las vistas cuyo
+ * argumento es el identificador de la propia ficha.
+ */
+function argumentosPosibles(string $vistaId, string $displayId, ?string $base): array {
+  $valores = [];
+
+  $vista = Views::getView($vistaId);
+  if ($vista) {
+    $vista->setDisplay($displayId);
+    $manejadores = $vista->display_handler->getHandlers('argument');
+    $manejador = reset($manejadores);
+    if ($manejador) {
+      $campo = $manejador->realField ?: $manejador->field;
+      try {
+        $consulta = \Drupal::database()->select($manejador->table, 't');
+        $consulta->addField('t', $campo, 'v');
+        $consulta->isNotNull($campo);
+        $consulta->distinct();
+        $consulta->orderBy('v', 'DESC');
+        $consulta->range(0, 8);
+        $valores = $consulta->execute()->fetchCol();
+      }
+      catch (\Throwable $e) {
+        // Hay argumentos que no salen de una tabla; queda el respaldo.
+      }
+    }
+    $vista->destroy();
+  }
+
+  // La tabla base no es el tipo de entidad: cuando la entidad tiene datos
+  // traducibles, Views apunta a `<tipo>_field_data`.
+  $tipo = preg_replace('/_field_data$|_data$/', '', (string) $base);
+  $gestor = \Drupal::entityTypeManager();
+  if ($tipo && $gestor->hasDefinition($tipo)) {
+    $clave = $gestor->getDefinition($tipo)->getKey('id');
+    if ($clave) {
+      $ids = $gestor->getStorage($tipo)->getQuery()
+        ->accessCheck(FALSE)->sort($clave, 'DESC')->range(0, 3)->execute();
+      $valores = array_merge($valores, array_values($ids));
+    }
+  }
+
+  return array_values(array_unique($valores));
+}
+
+/**
+ * Si la vista, con ese argumento, devuelve alguna fila.
+ *
+ * Cuando la vista ni se puede ejecutar devuelve TRUE a proposito: se quiere que
+ * la pagina se pida igual, para que el fallo salga por donde tiene que salir,
+ * con su codigo HTTP y su mensaje, y no se quede escondido aqui.
+ */
+function laVistaTraeFilas(string $vistaId, string $displayId, $valor): bool {
+  $vista = Views::getView($vistaId);
+  if (!$vista) {
+    return FALSE;
+  }
+  $vista->setDisplay($displayId);
+  $vista->setArguments([$valor]);
+  try {
+    $vista->preExecute();
+    $vista->execute();
+  }
+  catch (\Throwable $e) {
+    return TRUE;
+  }
+  $filas = count($vista->result);
+  $vista->destroy();
+  return $filas > 0;
 }
 
 /**
