@@ -20,11 +20,17 @@
 // -----------------------------------------------------------------------------
 // Cifras de referencia.
 // -----------------------------------------------------------------------------
+// Tres cifras subieron la noche del 13 de agosto de 2026, y no por un fallo: son
+// los dos pedidos que se crearon a mano para comprobar que la pantalla de editar
+// lineas volvia a abrir tras el arreglo del error 500, el 755 y el 756, con ocho
+// lineas cada uno. De ahi los dos pedidos, las dieciseis lineas y los veinticuatro
+// elementos de escandallo que cuelgan de ellas. Se actualizan a proposito: una
+// cifra que falla siempre por un motivo conocido deja de servir para avisar.
 const REFERENCIA = [
   'tec_inventory' => [
     'tec_bom_item' => 4773,
     'tec_inventory_transaction' => 40,
-    'tec_line_item_bom_item' => 178,
+    'tec_line_item_bom_item' => 202,
   ],
   'tec_product' => [
     'tec_product' => 13,
@@ -32,11 +38,11 @@ const REFERENCIA = [
     'tec_size_variation' => 118,
   ],
   'tec_line_item' => [
-    'tec_sales_order_line_item' => 85,
+    'tec_sales_order_line_item' => 101,
     'tec_po_line_item' => 522,
   ],
   'tec_order' => [
-    'tec_sales_order' => 16,
+    'tec_sales_order' => 18,
     'tec_purchase_order' => 110,
   ],
   'tec_crm' => [
@@ -66,12 +72,20 @@ const REFERENCIA_VARIOS = [
   // 8 trajo los colores del tema a sus propios ajustes y desinstalo `color`, que
   // ya no estaba en el nucleo. Los veintiun ajustes de color siguen ahi y no
   // quedo ni un resto del modulo viejo.
-  'modulos' => 145,
+  //
+  // Vuelven a ser 146 el 14 de agosto: se desinstalo `upgrade_status`, que ya
+  // habia cumplido, y `update` se queda para siempre y por eso ahora si cuenta.
+  // Es el modulo del nucleo que avisa de las alertas de seguridad, o sea justo lo
+  // que le faltaba a este sitio cuando acumulo ochenta y dos sin que nadie se
+  // enterara. Si algun dia se decide apagarlo, esta cifra baja a 145.
+  'modulos' => 146,
 ];
 
-// Herramientas de diagnostico que se instalan durante la actualizacion y se
-// quitan al terminar. No cuentan para el total.
-const MODULOS_TEMPORALES = ['upgrade_status', 'update'];
+// Herramientas de diagnostico que se instalan durante una actualizacion y se
+// quitan al terminar. No cuentan para el total. Vacia desde el 14 de agosto de
+// 2026; se deja el mecanismo puesto porque en la proxima subida hara falta otra
+// vez.
+const MODULOS_TEMPORALES = [];
 
 // -----------------------------------------------------------------------------
 // Utilidades.

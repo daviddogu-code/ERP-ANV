@@ -163,7 +163,7 @@ actions:
     label: Log
     configuration:
       channel: ''
-      severity: '0'
+      severity: '7'
       message: 'Running: "TEC Inventory: Calculation data" ECA Model.'
     successors:
       -

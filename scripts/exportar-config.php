@@ -7,11 +7,16 @@
  *   php vendor/bin/drush scr scripts/exportar-config.php -- eca.settings
  *   php vendor/bin/drush scr scripts/exportar-config.php -- "quicktabs.*"
  *
- * `drush config:export` exporta todo, y ahora mismo eso seria un error: tenemos
- * encendidos update y upgrade_status para diagnosticar la subida, asi que una
- * exportacion completa metaria esos dos modulos en core.extension y sus ajustes
- * en config/sync, y de ahi al servidor. Esto exporta lo que se le pide y nada
- * mas.
+ * `drush config:export` exporta todo, y mientras duro la subida eso era un error:
+ * estaban encendidos update y upgrade_status para diagnosticar, y una exportacion
+ * completa los habria metido en core.extension y de ahi al servidor. Desde el 14
+ * de agosto de 2026 ya no hay nada que esconder: upgrade_status esta desinstalado,
+ * update se queda a proposito y sus ajustes estan exportados, y `config:status`
+ * dice que no hay ninguna diferencia.
+ *
+ * Sigue mereciendo la pena para dos cosas: exportar un objeto suelto sin arrastrar
+ * lo que este a medias, y la proxima vez que se encienda una herramienta de
+ * diagnostico, que volvera a pasar.
  *
  * Acepta comodines con *.
  */

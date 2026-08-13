@@ -300,7 +300,7 @@ modeldata: |
             <camunda:string></camunda:string>
           </camunda:field>
           <camunda:field name="severity">
-            <camunda:string>0</camunda:string>
+            <camunda:string>7</camunda:string>
           </camunda:field>
           <camunda:field name="message">
             <camunda:string>Running: "TEC Inventory: Calculation data" ECA Model.</camunda:string>

@@ -78,10 +78,13 @@ por error algo que estaba puesto a propósito.
   y allí es donde está la máquina abierta a internet. Es el motivo más fuerte para que el
   despliegue no espere: de todo lo que hay en este backlog, es lo único que empeora solo con el
   paso del tiempo.
-- **Un cabo suelto de dos minutos, mejor antes de desplegar: desinstalar `upgrade_status`.** Ya
-  cumplió su función. Mientras siga puesto, `config/sync` arrastra dos exclusiones permanentes
-  —`update.settings` y `upgrade_status.settings`— y la cuenta de módulos de la comprobación se
-  queda turbia, con ese "más update y upgrade_status de diagnóstico" pegado detrás.
+- ~~**Un cabo suelto de dos minutos, mejor antes de desplegar: desinstalar `upgrade_status`.**~~
+  Hecho el 14 de agosto de 2026. De paso hubo que decidir qué pasaba con `update`, que estaba
+  encendido solo porque `upgrade_status` lo arrastra: **se queda, y ahora a propósito**. Es el
+  módulo del núcleo que avisa de las alertas de seguridad, o sea exactamente lo que le faltaba a
+  este sitio cuando acumuló ochenta y dos sin que nadie se enterara. Sus ajustes ya están
+  exportados, así que `config:status` dice por fin **"no differences"**. Si se decide apagarlo, es
+  un `drush pm:uninstall update` y bajar la cifra de módulos de la comprobación de 146 a 145.
 - ~~**Decidir hasta dónde se sigue con las fases 3 y 4.**~~ Decidido y hecho el 13 de agosto: se
   fue hasta el final. ECA a la 2.1.22, los temas al día y el núcleo en Drupal 11.4.5.
 
@@ -586,15 +589,11 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   morirse. Mientras tanto, la señal para detectarlo es que queden banderas `%lock%` puestas:
   `SELECT flag_id, COUNT(*) FROM flagging WHERE flag_id LIKE '%lock%' GROUP BY flag_id`. En
   reposo solo debe salir `tec_eca_gui_lock` con una.
-- **Una errata mete "emergencias" falsas en el registro.** El proceso `process_rxuimsq` ("TEC
-  Inventory: Calculation data") escribe su mensaje de arranque con nivel **0, que es
-  *Emergencia*, el más grave que existe**, mientras que el de fin lo escribe con nivel 7, que es
-  *depuración*. Es evidente que se tecleó un `0` donde iba un `7`. El mensaje en sí es
-  inofensivo, dice solo "Running: ...", pero entra una emergencia falsa en el registro cada vez
-  que se guarda un inventario. Ensucia el registro y engañaría a cualquier alerta que se monte
-  el día de mañana. Se arregla cambiando un carácter en
-  `config/sync/eca.eca.process_rxuimsq.yml`, línea 166. No se ha tocado para no meter cambios de
-  configuración no pedidos justo antes del despliegue al servidor.
+- ~~**Una errata mete "emergencias" falsas en el registro.**~~ Arreglado el 14 de agosto de 2026,
+  y no era un carácter sino dos: ver abajo, en Hecho. El aviso que aquí quedaba escrito —"se
+  arregla cambiando un carácter en `config/sync/eca.eca.process_rxuimsq.yml`, línea 166"— habría
+  durado hasta que alguien abriera el modelo en el editor de ECA, porque la severidad está
+  **duplicada** en el XML del BPMN.
 - **La tabla de líneas de pedido no tiene modo de vista configurado.** El formulario del pedido
   de venta usa el widget de `ief_table_view_mode`, pero con el ajuste `view_mode` vacío, así que
   dibuja las columnas genéricas de Inline Entity Form: Título, Tipo y Operaciones. Es decir, el
@@ -749,6 +748,57 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-14 — Las 505 emergencias falsas del registro, y `upgrade_status` fuera
+
+Dos cabos sueltos de los baratos, cerrados de madrugada después de confirmar el arreglo del error
+500. Los dos han dado más información de la que prometían.
+
+**La errata del registro no era un carácter, eran dos.** El proceso `process_rxuimsq` escribía su
+mensaje de arranque con nivel 0, *Emergencia*, en vez de 7, *depuración*. Lo que aquí estaba
+apuntado —cambiar un carácter en `config/sync/eca.eca.process_rxuimsq.yml`, línea 166— habría
+funcionado justo hasta que alguien abriera el modelo en el editor de ECA, porque **la severidad
+está duplicada**: una vez en la configuración del proceso y otra dentro del XML del BPMN, en
+`eca.model.process_rxuimsq.yml`. Ese fichero es el dibujo, y el dibujo manda cuando se guarda desde
+la interfaz. Arreglar solo uno de los dos es dejar una mina.
+
+De paso salió el tamaño real del problema: **505 entradas de nivel Emergencia en el registro, y las
+505 son ese mensaje**. Ninguna de verdad. Eso es la mitad de la mala noticia y la mitad de la buena:
+significa que el ERP no ha tenido nunca una emergencia real, pero también que si la hubiera tenido
+habría entrado en una lista de 505 falsas y nadie la habría visto.
+
+Comprobado en marcha, que es la única forma de darlo por bueno: la última emergencia es de las
+18:22 del 13 de agosto, y las tres entradas de ese mismo mensaje posteriores al arreglo —de las
+00:24 del 14, generadas al pasar la comprobación— entran con nivel 7. El contador de emergencias
+queda congelado en 505. Esas 505 viejas siguen en el registro; se pueden borrar con una consulta si
+molestan, pero se han dejado porque el registro rota solo.
+
+**`upgrade_status` desinstalado, y una decisión que no se podía esquivar.** El módulo ya había
+cumplido. Lo que no era obvio es qué hacer con `update`, que estaba encendido solo porque
+`upgrade_status` lo arrastra como dependencia, y que era la otra mitad de las dos exclusiones
+permanentes que ensuciaban `config/sync`. Había que decidir algo sí o sí, porque desinstalar solo
+uno deja la cuenta igual de turbia.
+
+**Se queda `update`, y ahora a propósito.** Es el módulo del núcleo cuyo único trabajo es avisar de
+las alertas de seguridad, es decir exactamente lo que le faltó a este sitio mientras acumulaba
+ochenta y dos sin que nadie se enterara, una de ellas un CSRF crítico. Apagar el vigía justo después
+de esa historia sería la lección equivocada. En Drupal 11 ya no instala nada, solo informa, así que
+no añade superficie. Sus ajustes están exportados y el módulo sigue en `core.extension`, de modo que
+**`config:status` dice por fin "no differences"**, algo que no pasaba desde antes de la subida. Si
+algún día se quiere apagar, es un `drush pm:uninstall update` y bajar la cifra de la comprobación.
+
+**La comprobación queda en 35 de 35, con cuatro cifras actualizadas.** La de módulos sube a 146,
+porque `update` deja de contar como herramienta temporal y pasa a ser un módulo más; la lista
+`MODULOS_TEMPORALES` se queda vacía pero el mecanismo se deja puesto, que en la próxima subida hará
+falta otra vez. Y tres cifras de contenido suben —18 pedidos de venta, 101 líneas y 202 elementos de
+escandallo— porque son **los pedidos 755 y 756 creados a mano anoche** para comprobar que la pantalla
+de líneas volvía a abrir, con ocho líneas cada uno. Se actualizan a propósito: una cifra que falla
+siempre por un motivo conocido deja de servir para avisar de nada.
+
+Y la trampa del UTF-16 volvió a picar, esta vez en `scripts/exportar-config.php`. Van tres sesiones
+seguidas. El detector ya está en la rutina de trabajo —mirar si el segundo byte es cero antes de dar
+nada por bueno— pero esto refuerza lo que hay apuntado más arriba: merece la pena montar el *hook*
+de Cursor que lo convierta solo.
 
 ### 2026-08-13 — El error 500 al editar las líneas de un pedido: lo rompía un parche nuestro, no el módulo
 
