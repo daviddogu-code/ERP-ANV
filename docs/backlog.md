@@ -31,10 +31,16 @@ por error algo que estaba puesto a propósito.
   `vendor/symfony/css-selector`, `drush updatedb` sin funcionar y las versiones de esquema que no
   se guardan.
 
-  Y una comprobación nueva, ahora que el `lock` manda de verdad: **en el servidor hay que pasar
-  `scripts/comparar-con-original.php` antes de desplegar**. Si allí hay algún módulo retocado a
-  mano que aquí no tenemos localizado, el `composer install` del despliegue se lo lleva por
-  delante sin decir nada. En local había tres.
+  Y dos comprobaciones nuevas, ahora que el `lock` manda de verdad. **Pasar
+  `scripts/comparar-con-original.php` en el servidor antes de desplegar**: si allí hay algún
+  módulo retocado a mano que aquí no tenemos localizado, el `composer install` del despliegue se
+  lo lleva por delante sin decir nada. En local había tres. Y **pasar `scripts/ramas-dev.php`**,
+  que descubre lo mismo pero en los módulos anclados a un commit, que es donde se nos escondió
+  el fallo crítico de ECA.
+
+  Sobre ese fallo: el servidor corre el mismo ECA 1.1.7 que corríamos aquí, así que **también
+  está expuesto al CSRF crítico de `SA-CONTRIB-2025-031`**, con `eca_ui` activado. Es un motivo
+  más para que el despliegue no espere.
 - **Decidir hasta dónde se sigue con las fases 3 y 4.** Lo que queda es ECA de la rama 1 a la 2
   —que ya no urge, ver el punto 4 del apartado 8— y los temas, que son la parte cara. El resto de
   módulos ya está al día.
@@ -501,6 +507,12 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   antes de simular. Si se usa, hay que deshacer el cambio a mano, no con `git checkout` del
   fichero, porque eso también borra el trabajo sin confirmar que haya en él. Costó hora y media
   el 13 de agosto.
+- **El `PATH` de Windows se trunca a 8.191 caracteres, y en una sesión larga eso pasa.** El 13 de
+  agosto la ruta de Git había acabado repetida 72 veces, el `PATH` llegó a 8.823 caracteres y
+  Windows cortó por lo sano. El síntoma fue que dos guiones que habían funcionado media hora
+  antes empezaron a devolver resultados absurdos, sin decir en ningún momento que no encontraban
+  Git. Los guiones ya localizan el ejecutable por su ruta completa, pero el aviso vale para
+  cualquier orden: si algo deja de funcionar sin motivo, mirar `$env:PATH.Length` antes que nada.
 - **Quedan tres módulos anclados a un commit en vez de a una versión publicada**: `eck`,
   `conditional_fields` y `ultimate_cron`. Los tres están a medio camino entre dos versiones, así
   que anclar el commit era lo único que reproducía exactamente lo que corre. Funciona y es
@@ -627,10 +639,19 @@ limpia se pasa a uno. Los paquetes con versión se bajan empaquetados; solo los 
 commit se clonan.
 
 **Dos cosas menores que salieron por el camino.** `feeds_tamper` y `editablefields` estaban en
-disco como copias de repositorio en vez de versiones empaquetadas; el código es el mismo salvo
-tres métodos de `editablefields` que no llama nadie. Y `drupal/address`, que sí tenía versión
-fijada, arrastraba un clon de 0,7 MB de una instalación vieja; reinstalado, ya es un paquete
-normal.
+disco como copias de repositorio en vez de versiones empaquetadas; el código era el mismo salvo
+tres métodos de `editablefields` que no llama nadie, comprobado en todos los módulos y temas del
+proyecto antes de quitarlos. Los dos se reinstalaron empaquetados. Y `drupal/address`, que sí
+tenía versión fijada, arrastraba un clon de 0,7 MB de una instalación vieja; reinstalado, ya es
+un paquete normal.
+
+**Cómo quedó la prueba.** Se repitió tres veces, clonando y reinstalando desde cero cada vez.
+La primera dio 44 ficheros distintos, la segunda 5 y la tercera **ninguno**: el repositorio
+reproduce el ERP exactamente. Repositorios Git anidados, de 7 a 3, y los tres que quedan son los
+anclados por commit a propósito. Y una cosa que conviene tener presente para el servidor: en la
+primera pasada Composer se plantó al no encontrar el `.git` de módulos que creía instalados
+desde repositorio. La salida es borrar esas carpetas y dejar que las ponga de nuevo; los
+ficheros están todos en Git, así que no se pierde nada.
 
 ### 2026-08-13 — Disco y `composer.lock` por fin dicen lo mismo, y aparecen tres parches que nadie había apuntado
 

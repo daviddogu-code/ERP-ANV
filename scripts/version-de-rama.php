@@ -6,6 +6,7 @@
  * desarrollo.
  *
  *   php scripts/version-de-rama.php eca 1.1
+ *   php scripts/version-de-rama.php eca 1.1 C:/ruta/al/repo/.git
  *
  * Los paquetes de rama no llevan numero de version en su .info.yml, asi que ni
  * el inventario ni el comparador normal pueden decir si el disco coincide con
@@ -13,26 +14,44 @@
  * deja al clonar un paquete de rama: extrae cada etiqueta publicada y la
  * compara fichero a fichero con la carpeta del sitio.
  *
+ * Hace falta, por tanto, un sitio del que sacar ese repositorio. La forma de
+ * conseguirlo es clonar el proyecto en una carpeta aparte y lanzar alli un
+ * `composer install`: Composer clona los paquetes anclados a un commit y deja
+ * su historial completo. El tercer argumento apunta a ese .git; si no se pasa,
+ * se busca en las rutas de abajo.
+ *
  * Solo lee. No toca ni el repositorio ni la carpeta del sitio.
  */
 
 $modulo = $argv[1] ?? NULL;
 $rama = $argv[2] ?? NULL;
+$gitDir = $argv[3] ?? NULL;
 
 if (!$modulo) {
-  echo "Uso: php scripts/version-de-rama.php <modulo> [prefijo-de-rama]\n";
+  echo "Uso: php scripts/version-de-rama.php <modulo> [prefijo-de-rama] [ruta-al-.git]\n";
   exit(1);
 }
 
-$sitio = "C:/laragon/www/tec/modules/contrib/$modulo";
-$gitDir = "C:/laragon/tmp/clon-prueba-20260813/modules/contrib/$modulo/.git";
+$sitio = dirname(__DIR__) . "/modules/contrib/$modulo";
+
+if (!$gitDir) {
+  foreach (glob('C:/laragon/tmp/clon-prueba*') ?: [] as $clon) {
+    if (is_dir("$clon/modules/contrib/$modulo/.git")) {
+      $gitDir = "$clon/modules/contrib/$modulo/.git";
+      break;
+    }
+  }
+}
+$gitDir = $gitDir ?? '';
 
 if (!is_dir($sitio)) {
   echo "No encuentro la carpeta del sitio: $sitio\n";
   exit(1);
 }
 if (!is_dir($gitDir)) {
-  echo "No encuentro el repositorio clonado: $gitDir\n";
+  echo "No encuentro el repositorio Git de $modulo.\n";
+  echo "Clona el proyecto en una carpeta aparte, lanza alli composer install y\n";
+  echo "pasa la ruta a su .git como tercer argumento.\n";
   exit(1);
 }
 
@@ -63,7 +82,25 @@ function huellas(string $base): array {
   return $salida;
 }
 
-$git = sprintf('git --git-dir="%s"', $gitDir);
+/**
+ * Devuelve con que hay que invocar a Git.
+ *
+ * No basta con poner "git" y confiar en el PATH. En Windows el PATH se trunca a
+ * 8191 caracteres, y en una sesion larga de consola donde se ha ido anadiendo
+ * rutas es facil pasarse sin enterarse: la orden deja de encontrarse y el
+ * script falla de una forma que no se parece en nada a la causa. Con la ruta
+ * completa esto no puede pasar.
+ */
+function ordenGit(): string {
+  foreach (['C:/laragon/bin/git/cmd/git.exe', 'C:/Program Files/Git/cmd/git.exe'] as $ruta) {
+    if (file_exists($ruta)) {
+      return sprintf('"%s"', $ruta);
+    }
+  }
+  return 'git';
+}
+
+$git = sprintf('%s --git-dir="%s"', ordenGit(), $gitDir);
 exec("$git tag --list 2>&1", $etiquetas);
 
 $candidatas = [];
