@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
@@ -18,6 +19,7 @@ use Drupal\eca\Plugin\FormPluginTrait;
  *   id = "eca_content_set_form_display",
  *   label = @Translation("Entity: set form display"),
  *   description = @Translation("Change to a specific form display mode. Only works when reacting upon the event <em>Prepare content entity form</em>."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
@@ -70,17 +72,21 @@ class SetFormDisplay extends ConfigurableActionBase {
     if (!($form_object instanceof ContentEntityFormInterface)) {
       return NULL;
     }
-    $display_mode = trim((string) $this->tokenServices->replaceClear($this->configuration['display_mode'] ?? 'default'));
+    $display_mode = trim((string) $this->tokenService->replaceClear($this->configuration['display_mode'] ?? 'default'));
     if ($display_mode === '') {
       return NULL;
     }
 
-    $display = EntityFormDisplay::collectRenderDisplay($form_object->getEntity(), $display_mode, $display_mode === 'default');
-    if ($display->isNew()) {
-      return NULL;
+    $entity = $form_object->getEntity();
+    if ($entity instanceof FieldableEntityInterface) {
+      $display = EntityFormDisplay::collectRenderDisplay($entity, $display_mode, $display_mode === 'default');
+      if ($display->isNew()) {
+        return NULL;
+      }
+      return $display;
     }
 
-    return $display;
+    return NULL;
   }
 
   /**
@@ -96,7 +102,6 @@ class SetFormDisplay extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['display_mode'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Form display mode'),
@@ -104,7 +109,7 @@ class SetFormDisplay extends ConfigurableActionBase {
       '#default_value' => $this->configuration['display_mode'],
       '#weight' => -10,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -120,7 +125,7 @@ class SetFormDisplay extends ConfigurableActionBase {
    */
   public function calculateDependencies(): array {
     $dependencies = parent::calculateDependencies();
-    $display_mode = trim((string) $this->tokenServices->replaceClear($this->configuration['display_mode'] ?? 'default'));
+    $display_mode = trim((string) $this->tokenService->replaceClear($this->configuration['display_mode'] ?? 'default'));
     if ($display_mode !== '') {
       foreach (EntityFormDisplay::loadMultiple() as $display) {
         if ($display->get('mode') === $display_mode) {

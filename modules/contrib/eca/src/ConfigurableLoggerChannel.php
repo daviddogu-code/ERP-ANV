@@ -2,7 +2,6 @@
 
 namespace Drupal\eca;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
@@ -46,18 +45,11 @@ class ConfigurableLoggerChannel extends LoggerChannel {
   protected int $maximumLogLevel;
 
   /**
-   * Collected logdata for the current request.
+   * Collected log data for the current request.
    *
    * @var array
    */
   protected array $dataCurrentRequest = [];
-
-  /**
-   * Flag to indicate if webprofiler is enabled.
-   *
-   * @var bool
-   */
-  protected bool $webprofilerEnabled;
 
   /**
    * The config factory.
@@ -74,9 +66,9 @@ class ConfigurableLoggerChannel extends LoggerChannel {
   protected ModuleHandlerInterface $moduleHandler;
 
   /**
-   * Indicates when logging is in progress to prevent recurions.
-   * 
-   * @var bool 
+   * Indicates when logging is in progress to prevent recursions.
+   *
+   * @var bool
    */
   protected bool $alreadyLogging = FALSE;
 
@@ -111,28 +103,10 @@ class ConfigurableLoggerChannel extends LoggerChannel {
    */
   protected function token(): TokenInterface {
     if ($this->token === NULL) {
+      // @codingStandardsIgnoreLine @phpstan-ignore-next-line
       $this->token = \Drupal::service('eca.service.token');
     }
     return $this->token;
-  }
-
-  /**
-   * Determines once per request if webprofiler is enabled.
-   *
-   * @return bool
-   *   TRUE, if the webprofiler is enabled, FALSE otheriwse.
-   */
-  protected function webprofilerEnabled(): bool {
-    if (!isset($this->webprofilerEnabled)) {
-      $this->webprofilerEnabled = FALSE;
-      if ($this->moduleHandler->moduleExists('webprofiler')) {
-        if (($items = $this->configFactory->get('webprofiler.config')->get('active_toolbar_items')) ||
-          ($items = $this->configFactory->get('webprofiler.settings')->get('active_toolbar_items'))) {
-          $this->webprofilerEnabled = (bool) ($items['eca'] ?? FALSE);
-        }
-      }
-    }
-    return $this->webprofilerEnabled;
   }
 
   /**
@@ -157,12 +131,9 @@ class ConfigurableLoggerChannel extends LoggerChannel {
       // Convert to integer equivalent for consistency with RFC 5424.
       $level = $this->levelTranslation[$level];
     }
-    if (($level <= $this->maximumLogLevel) || $this->webprofilerEnabled()) {
+    if ($level <= $this->maximumLogLevel) {
       $tokens = [];
-      $fullMessage = $this->webprofilerEnabled() ?
-        new FormattableMarkup($message, $context) :
-        '';
-      if (($level === RfcLogLevel::DEBUG) || $this->webprofilerEnabled()) {
+      if ($level === RfcLogLevel::DEBUG) {
         $token = $this->token();
         $data = $token->getTokenData();
         // Explicitly lookup for some often but ambiguously used token names
@@ -174,15 +145,10 @@ class ConfigurableLoggerChannel extends LoggerChannel {
         }
         if ($data) {
           $this->getTokenInfo($context, $tokens, $data, 'eca_token', 0);
-          $message .= '<br>' . implode('<br>', $tokens);
+          $message .= '<br />' . implode('<br />', $tokens);
         }
       }
-      if ($level <= $this->maximumLogLevel) {
-        $this->loggerChannel->log($level, $message, $context);
-      }
-      if ($this->webprofilerEnabled()) {
-        $this->dataCurrentRequest[] = [$level, $fullMessage, $tokens, $context];
-      }
+      $this->loggerChannel->log($level, $message, $context);
     }
     $this->alreadyLogging = FALSE;
   }
@@ -190,14 +156,14 @@ class ConfigurableLoggerChannel extends LoggerChannel {
   /**
    * {@inheritdoc}
    */
-  public function setRequestStack(RequestStack $requestStack = NULL): void {
+  public function setRequestStack(?RequestStack $requestStack = NULL): void {
     $this->loggerChannel->setRequestStack($requestStack);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setCurrentUser(AccountInterface $current_user = NULL): void {
+  public function setCurrentUser(?AccountInterface $current_user = NULL): void {
     $this->loggerChannel->setCurrentUser($current_user);
   }
 
@@ -223,7 +189,7 @@ class ConfigurableLoggerChannel extends LoggerChannel {
    * @param array $tokens
    *   The list of lines to be added to the message.
    * @param array $data
-   *   The token data to be analysed.
+   *   The token data to be analyzed.
    * @param string $prefix
    *   The prefix for variables in the context array.
    * @param int $level
@@ -254,14 +220,12 @@ class ConfigurableLoggerChannel extends LoggerChannel {
           $properties = $value->getProperties(TRUE);
           $context[$id] = 'DTO';
         }
-        catch (MissingDataException $e) {
+        catch (MissingDataException) {
           $properties = [];
           $context[$id] = 'DTO - properties not available';
         }
-        if (empty($properties)) {
-          if (($dto_string = $value->getString()) !== '') {
-            $context[$id] .= ' "' . $dto_string . '"';
-          }
+        if (empty($properties) && ($dto_string = $value->getString()) !== '') {
+          $context[$id] .= ' "' . $dto_string . '"';
         }
         $this->getTokenInfo($context, $tokens, $properties, $prefix . '_' . $key, $level);
       }

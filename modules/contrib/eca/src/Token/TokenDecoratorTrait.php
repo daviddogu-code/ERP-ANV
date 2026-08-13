@@ -5,11 +5,14 @@ namespace Drupal\eca\Token;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
-use Drupal\Core\Utility\Token;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
+use Drupal\Core\Utility\Token;
+use Drupal\eca\EcaEvents;
+use Drupal\eca\Event\TokenGenerateEvent;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * A trait for ECA-specific token service decorators.
@@ -23,13 +26,6 @@ use Drupal\eca\Plugin\DataType\DataTransferObject;
  * @see \Drupal\eca\Token\TokenInterface
  */
 trait TokenDecoratorTrait {
-
-  /**
-   * The decorated token service.
-   *
-   * @var \Drupal\Core\Utility\Token
-   */
-  protected Token $token;
 
   /**
    * An array of currently hold token data.
@@ -46,13 +42,45 @@ trait TokenDecoratorTrait {
   protected array $dataProviders = [];
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+   */
+  protected EventDispatcherInterface $eventDispatcher;
+
+  /**
+   * The current recursion level.
+   *
+   * @var int
+   */
+  protected int $recursionLevel = 0;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDataProviders(): array {
+    return $this->dataProviders;
+  }
+
+  /**
    * Set the token service that is being decorated by this service.
    *
    * @param \Drupal\Core\Utility\Token $token
    *   The token service to decorate.
    */
   public function setDecoratedToken(Token $token): void {
+    // @phpstan-ignore-next-line
     $this->token = $token;
+  }
+
+  /**
+   * Set the event dispatcher.
+   *
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   The event dispatcher.
+   */
+  public function setEventDispatcher(EventDispatcherInterface $event_dispatcher): void {
+    $this->eventDispatcher = $event_dispatcher;
   }
 
   /**
@@ -104,7 +132,9 @@ trait TokenDecoratorTrait {
       elseif (!($dto->get($key) instanceof DataTransferObject)) {
         $dto->set($key, DataTransferObject::create($dto->get($key)->getValue(), $dto, $key));
       }
-      /** @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto */
+      /**
+       * @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto
+       */
       $dto = $dto->get($key);
     }
     if (is_scalar($data)) {
@@ -168,7 +198,9 @@ trait TokenDecoratorTrait {
   public function getTokenTypeForEntityType(string $entity_type_id): ?string {
     $tokenType = NULL;
     if (\Drupal::hasService('token.entity_mapper')) {
-      /** @var \Drupal\token\TokenEntityMapperInterface $token_entity_mapper */
+      /**
+       * @var \Drupal\token\TokenEntityMapperInterface $token_entity_mapper
+       */
       $token_entity_mapper = \Drupal::service('token.entity_mapper');
       $tokenType = $token_entity_mapper->getTokenTypeForEntityType($entity_type_id, TRUE);
     }
@@ -191,7 +223,9 @@ trait TokenDecoratorTrait {
   public function getEntityTypeForTokenType(string $token_type): ?string {
     $entity_type_id = NULL;
     if (\Drupal::hasService('token.entity_mapper')) {
-      /** @var \Drupal\token\TokenEntityMapperInterface $token_entity_mapper */
+      /**
+       * @var \Drupal\token\TokenEntityMapperInterface $token_entity_mapper
+       */
       $token_entity_mapper = \Drupal::service('token.entity_mapper');
       $entity_type_id = $token_entity_mapper->getEntityTypeForTokenType($token_type) ?: NULL;
     }
@@ -281,6 +315,8 @@ trait TokenDecoratorTrait {
    * {@inheritdoc}
    */
   public function generate($type, array $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
+    $this->recursionLevel++;
+
     if ($type === '_eca_root_token') {
       // Check for each item when generating values for root-level tokens.
       foreach (array_keys($tokens) as $root_level_token) {
@@ -294,6 +330,15 @@ trait TokenDecoratorTrait {
       // Use previously set data in case it's not given otherwise.
       $data[$type] = $this->getTokenData($type);
     }
+
+    if (1 === $this->recursionLevel) {
+      foreach ($tokens as $name => $original) {
+        $token_event = new TokenGenerateEvent($type, $name, $original, $data, $options, $bubbleable_metadata);
+        $this->eventDispatcher->dispatch($token_event, EcaEvents::TOKEN);
+        $data = $token_event->getData() + $data;
+      }
+    }
+
     if (isset($data[$type])) {
       $hold_token_data = $data[$type];
       $real_token_type = $this->getTokenType($hold_token_data);
@@ -344,13 +389,15 @@ trait TokenDecoratorTrait {
     // will not overwrite any other aliased data, because the returned token
     // replacements are keyed by their "raw" original token input, and that
     // always includes the alias as a prefix.
-    return $this->token->generate($type, $tokens, $data, $options, $bubbleable_metadata);
+    $replacements = $this->token->generate($type, $tokens, $data, $options, $bubbleable_metadata);
+    $this->recursionLevel--;
+    return $replacements;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function replace($text, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function replace($text, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL) {
     // Replacement of aliased tokens can only work within the scope of this
     // decorator. Thus we call it on its own.
     $text = parent::replace($text, $data, $options, $bubbleable_metadata);
@@ -359,7 +406,10 @@ trait TokenDecoratorTrait {
     // or from the Contrib token service (if available). Just in case we
     // actually received a decorated service that differs from these two
     // implementation variants, give it a chance to execute its own logic.
-    if (!in_array(get_class($this->token), ['Drupal\Core\Utility\Token', 'Drupal\token\Token'], TRUE)) {
+    if (!in_array(get_class($this->token), [
+      'Drupal\Core\Utility\Token',
+      'Drupal\token\Token',
+    ], TRUE)) {
       $text = $this->token->replace($text, $data, $options, $bubbleable_metadata);
     }
     return $text;
@@ -368,7 +418,7 @@ trait TokenDecoratorTrait {
   /**
    * {@inheritdoc}
    */
-  public function replaceClear($text, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function replaceClear($text, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL) {
     $options['clear'] = TRUE;
     return $this->replace($text, $data, $options, $bubbleable_metadata);
   }
@@ -378,13 +428,13 @@ trait TokenDecoratorTrait {
    *
    * Logical-wise, this behaves the same as ::replace(). See the comments there.
    */
-  public function replacePlain(string $plain, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL): string {
+  public function replacePlain(string $plain, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL): string {
     $plain = parent::replacePlain($plain, $data, $options, $bubbleable_metadata);
 
     if (!in_array(get_class($this->token), [
       'Drupal\Core\Utility\Token',
       'Drupal\token\Token',
-    ], TRUE) && method_exists($this->token, 'replacePlain')) {
+    ], TRUE)) {
       $plain = $this->token->replacePlain($plain, $data, $options, $bubbleable_metadata);
     }
     return $plain;
@@ -393,7 +443,7 @@ trait TokenDecoratorTrait {
   /**
    * {@inheritdoc}
    */
-  public function getOrReplace($text, array $data = [], ?array $options = NULL, BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function getOrReplace($text, array $data = [], ?array $options = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
     $string = (string) $text;
     if ((mb_substr($string, 0, 1) === '[') && (mb_substr($string, -1, 1) === ']') && (mb_strlen($string) <= 255)) {
       $string = mb_substr($string, 1, -1);

@@ -6,7 +6,6 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -25,8 +24,7 @@ abstract class ConfigActionBase extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_config\Plugin\Action\ConfigActionBase $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setConfigFactory($container->get('config.factory'));
     return $instance;
@@ -57,7 +55,6 @@ abstract class ConfigActionBase extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['config_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Config name'),
@@ -73,7 +70,7 @@ abstract class ConfigActionBase extends ConfigurableActionBase {
       '#default_value' => $this->configuration['config_key'],
       '#weight' => -80,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -93,6 +90,7 @@ abstract class ConfigActionBase extends ConfigurableActionBase {
    */
   public function getConfigFactory(): ConfigFactoryInterface {
     if (!isset($this->configFactory)) {
+      // @phpstan-ignore-next-line
       $this->configFactory = \Drupal::configFactory();
     }
     return $this->configFactory;

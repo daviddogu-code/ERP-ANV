@@ -9,11 +9,15 @@ use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Event\RenderEventInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
+use Drupal\eca\Plugin\FormFieldMachineName;
 
 /**
  * Base class for actions that build up a render element.
  */
 abstract class RenderElementActionBase extends RenderActionBase {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -29,11 +33,11 @@ abstract class RenderElementActionBase extends RenderActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute() {
+  public function execute(): void {
     $build = [];
     $this->doBuild($build);
     if ($this->configuration['weight'] !== '') {
-      $weight = trim((string) $this->tokenServices->replaceClear($this->configuration['weight']));
+      $weight = trim((string) $this->tokenService->replaceClear($this->configuration['weight']));
       if ($weight !== '' && is_numeric($weight)) {
         $build['#weight'] = $weight;
       }
@@ -42,14 +46,14 @@ abstract class RenderElementActionBase extends RenderActionBase {
     $token_name = trim((string) ($this->configuration['token_name'] ?? ''));
     if ($token_name !== '') {
       if (isset($build['#markup']) && empty(Element::children($build))) {
-        $this->tokenServices->addTokenData($token_name, $build['#markup']);
+        $this->tokenService->addTokenData($token_name, $build['#markup']);
       }
       elseif (isset($build['#serialized'])) {
         $method = $build['#method'] ?? 'serialize';
-        $this->tokenServices->addTokenData($token_name, $method === 'serialize' ? $build['#serialized'] : $build['#data']);
+        $this->tokenService->addTokenData($token_name, $method === 'serialize' ? $build['#serialized'] : $build['#data']);
       }
       else {
-        $this->tokenServices->addTokenData($token_name, $build);
+        $this->tokenService->addTokenData($token_name, $build);
       }
     }
 
@@ -59,7 +63,7 @@ abstract class RenderElementActionBase extends RenderActionBase {
     }
     $target = &$event->getRenderArray();
 
-    // Collect cache metatdata, and add some sensible defaults.
+    // Collect cache metadata, and add some sensible defaults.
     $metadata = BubbleableMetadata::createFromRenderArray($target)
       ->merge(BubbleableMetadata::createFromRenderArray($build))
       ->addCacheContexts([
@@ -70,12 +74,16 @@ abstract class RenderElementActionBase extends RenderActionBase {
       ])
       ->addCacheTags(['config:eca_list']);
 
-    $name = trim((string) $this->tokenServices->replaceClear($this->configuration['name']));
+    $name = trim((string) $this->tokenService->replaceClear($this->configuration['name']));
     if ($name !== '') {
       $name = $this->getElementNameAsArray($name);
     }
 
-    switch ($this->configuration['mode']) {
+    $mode = $this->configuration['mode'];
+    if ($mode === '_eca_token') {
+      $mode = $this->getTokenValue('mode', 'append');
+    }
+    switch ($mode) {
 
       case 'set:clear:defined':
         if ($name === '') {
@@ -129,6 +137,10 @@ abstract class RenderElementActionBase extends RenderActionBase {
         }
         break;
 
+      case 'nothing':
+        // This mode does nothing with the current build.
+        break;
+
     }
 
     // Make sure to not lose any cache metadata.
@@ -159,21 +171,21 @@ abstract class RenderElementActionBase extends RenderActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['name'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('Machine name'),
       '#description' => $this->t('Optionally define a machine name of this render element. It will be made available under that name in the render array of the current event in scope. Nested elements can be set with using "][" brackets, for example <em>details][title</em>.'),
       '#default_value' => $this->configuration['name'],
       '#required' => FALSE,
       '#weight' => -30,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['token_name'] = [
       '#type' => 'textfield',
       '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('Token name'),
       '#description' => $this->t('Optionally define a token name of this render element. It will be made available under that token name for later usage.'),
       '#default_value' => $this->configuration['token_name'],
@@ -198,11 +210,13 @@ abstract class RenderElementActionBase extends RenderActionBase {
         'merge' => $this->t('Merge with existing values'),
         'prepend' => $this->t('Prepend to existing values'),
         'append' => $this->t('Append to existing values'),
+        'nothing' => $this->t('Do nothing'),
       ],
       '#default_value' => $this->configuration['mode'],
       '#required' => TRUE,
+      '#eca_token_select_option' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

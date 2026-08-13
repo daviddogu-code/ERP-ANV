@@ -3,8 +3,8 @@
 namespace Drupal\Tests\eca_ui\Unit\Service;
 
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\eca_ui\Service\TokenBrowserService;
 use Drupal\Tests\eca\Unit\EcaUnitTestBase;
+use Drupal\eca_ui\Service\TokenBrowserService;
 
 /**
  * Tests the token browser service.

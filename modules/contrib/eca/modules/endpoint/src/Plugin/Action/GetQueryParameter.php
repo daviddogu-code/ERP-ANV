@@ -9,7 +9,8 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @Action(
  *   id = "eca_endpoint_get_query_parameter",
- *   label = @Translation("Request: Get URL query parameter")
+ *   label = @Translation("Request: Get URL query parameter"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class GetQueryParameter extends RequestActionBase {
@@ -17,9 +18,9 @@ class GetQueryParameter extends RequestActionBase {
   /**
    * {@inheritdoc}
    */
-  protected function getRequestValue() {
+  protected function getRequestValue(): mixed {
     $query = $this->getRequest()->query->all();
-    $name = trim((string) $this->tokenServices->replaceClear($this->configuration['name']));
+    $name = trim((string) $this->tokenService->replaceClear($this->configuration['name']));
     if ($name === '') {
       return $query;
     }
@@ -39,16 +40,16 @@ class GetQueryParameter extends RequestActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Query parameter name'),
-      '#description' => $this->t('The name of the URL query parameter. Example: To get the parameter of the destination parameter <em>?destination=...</em>, then set <em>destination</em> as the parameter name. This field supports tokens. When this field is empty, then all parameters will be returned as a list, keyed by parameter name.'),
+      '#description' => $this->t('The name of the URL query parameter. Example: To get the parameter of the destination parameter <em>?destination=...</em>, then set <em>destination</em> as the parameter name. When this field is empty, then all parameters will be returned as a list, keyed by parameter name.'),
       '#default_value' => $this->configuration['name'],
       '#weight' => -20,
       '#required' => FALSE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

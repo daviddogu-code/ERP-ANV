@@ -77,6 +77,7 @@ class Action extends ActionManager {
    */
   protected function getEntityTypeManager(): EntityTypeManagerInterface {
     if (!isset($this->entityTypeManager)) {
+      // @codingStandardsIgnoreLine @phpstan-ignore-next-line
       $this->entityTypeManager = \Drupal::entityTypeManager();
     }
     return $this->entityTypeManager;
@@ -92,7 +93,7 @@ class Action extends ActionManager {
   /**
    * {@inheritdoc}
    */
-  public function setCacheBackend(CacheBackendInterface $cache_backend, $cache_key, array $cache_tags = []) {
+  public function setCacheBackend(CacheBackendInterface $cache_backend, $cache_key, array $cache_tags = []): void {
     if (empty($cache_tags)) {
       // By default, use the cache tags of the action entity type. This makes
       // sure, that newly added pre-configured actions are available.
@@ -108,9 +109,7 @@ class Action extends ActionManager {
    * {@inheritdoc}
    */
   public function getDefinitions() {
-    if (!isset($this->definitions)) {
-      $this->definitions = $this->filterEcaDefinitions($this->decoratedManager->getDefinitions());
-    }
+    $this->definitions = $this->filterEcaDefinitions($this->decoratedManager->getDefinitions());
     return $this->definitions;
   }
 
@@ -131,7 +130,7 @@ class Action extends ActionManager {
   /**
    * {@inheritdoc}
    */
-  public function clearCachedDefinitions() {
+  public function clearCachedDefinitions(): void {
     $this->decoratedManager->clearCachedDefinitions();
     parent::clearCachedDefinitions();
   }
@@ -139,7 +138,7 @@ class Action extends ActionManager {
   /**
    * {@inheritdoc}
    */
-  public function useCaches($use_caches = FALSE) {
+  public function useCaches($use_caches = FALSE): void {
     $this->decoratedManager->useCaches($use_caches);
     parent::useCaches($use_caches);
   }
@@ -147,7 +146,7 @@ class Action extends ActionManager {
   /**
    * {@inheritdoc}
    */
-  public function processDefinition(&$definition, $plugin_id) {
+  public function processDefinition(&$definition, $plugin_id): void {
     $this->decoratedManager->processDefinition($definition, $plugin_id);
   }
 
@@ -196,7 +195,7 @@ class Action extends ActionManager {
     return array_filter($definitions, static function ($definition) {
       if ($class = ($definition['class'] ?? NULL)) {
         if (is_a($class, ActionInterface::class, TRUE)) {
-          return defined($class . '::EXTERNALLY_AVAILABLE') && constant($class . '::EXTERNALLY_AVAILABLE');
+          return $class::externallyAvailable();
         }
       }
       return TRUE;

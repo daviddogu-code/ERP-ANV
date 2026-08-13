@@ -2,12 +2,11 @@
 
 namespace Drupal\Tests\eca_misc\Kernel;
 
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\Core\DrupalKernelInterface;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_test_array\Plugin\Action\ArrayIncrement;
 use Drupal\eca_test_array\Plugin\Action\ArrayWrite;
-use Drupal\KernelTests\KernelTestBase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
@@ -21,6 +20,7 @@ use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Kernel event tests provided by "eca_misc".
@@ -210,7 +210,7 @@ class KernelEventTest extends KernelTestBase {
           'label' => 'request write',
           'configuration' => [
             'key' => 'request',
-            'value' => 'request [event:machine-name] [event:method]',
+            'value' => 'request [event:machine_name] [event:method]',
           ],
           'successors' => [],
         ],
@@ -252,33 +252,33 @@ class KernelEventTest extends KernelTestBase {
     $kernel = $this->container->get('kernel');
     $request = Request::create('http://www.example.local');
     $response = new Response();
-    $event_dispatcher->dispatch(new RequestEvent($kernel, $request, HttpKernelInterface::MASTER_REQUEST), KernelEvents::REQUEST);
+    $event_dispatcher->dispatch(new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST), KernelEvents::REQUEST);
     $this->assertSame(1, ArrayIncrement::$array['request']);
-    $this->assertSame('request Symfony\Component\HttpKernel\Event\RequestEvent GET', ArrayWrite::$array['request']);
+    $this->assertSame('request kernel.request GET', ArrayWrite::$array['request']);
 
     $controller = function () {};
-    $event = new ControllerEvent($kernel, $controller, $request, HttpKernelInterface::MASTER_REQUEST);
+    $event = new ControllerEvent($kernel, $controller, $request, HttpKernelInterface::MAIN_REQUEST);
     $event_dispatcher->dispatch($event, KernelEvents::CONTROLLER);
     $controller = $event->getController();
     $this->assertSame(1, ArrayIncrement::$array['controller']);
 
-    $event = new ControllerArgumentsEvent($kernel, $controller, [], $request, HttpKernelInterface::MASTER_REQUEST);
+    $event = new ControllerArgumentsEvent($kernel, $controller, [], $request, HttpKernelInterface::MAIN_REQUEST);
     $event_dispatcher->dispatch($event, KernelEvents::CONTROLLER_ARGUMENTS);
     $this->assertSame(1, ArrayIncrement::$array['controller_arguments']);
 
-    $event_dispatcher->dispatch(new FinishRequestEvent($kernel, $request, HttpKernelInterface::MASTER_REQUEST), KernelEvents::FINISH_REQUEST);
+    $event_dispatcher->dispatch(new FinishRequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST), KernelEvents::FINISH_REQUEST);
     $this->assertSame(1, ArrayIncrement::$array['finish_request']);
 
-    $event = new ViewEvent($kernel, $request, HttpKernelInterface::MASTER_REQUEST, $response);
+    $event = new ViewEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
     $event_dispatcher->dispatch($event, KernelEvents::VIEW);
     $this->assertSame(1, ArrayIncrement::$array['view']);
 
-    $response_event = new ResponseEvent(\Drupal::service('http_kernel'), Request::createFromGlobals(), HttpKernelInterface::MASTER_REQUEST, $response);
+    $response_event = new ResponseEvent(\Drupal::service('http_kernel'), Request::createFromGlobals(), HttpKernelInterface::MAIN_REQUEST, $response);
     $event_dispatcher->dispatch($response_event, KernelEvents::RESPONSE);
     $this->assertSame(1, ArrayIncrement::$array['response']);
 
     $e = new MethodNotAllowedHttpException(['POST', 'PUT'], 'test');
-    $event = new ExceptionEvent($kernel, $request, HttpKernelInterface::MASTER_REQUEST, $e);
+    $event = new ExceptionEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $e);
     $event_dispatcher->dispatch($event, KernelEvents::EXCEPTION);
     $this->assertSame(1, ArrayIncrement::$array['exception']);
 

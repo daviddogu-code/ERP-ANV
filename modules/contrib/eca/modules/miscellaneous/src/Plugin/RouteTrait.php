@@ -3,6 +3,7 @@
 namespace Drupal\eca_misc\Plugin;
 
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Trait for route related actions and conditions.
@@ -11,6 +12,8 @@ use Drupal\Core\Routing\RouteMatchInterface;
  * @see \Drupal\eca_misc\Plugin\ECA\Condition\RouteMatch
  */
 trait RouteTrait {
+
+  use PluginFormTrait;
 
   /**
    * Builds and returns the route match depending on the plugin configuration.
@@ -21,8 +24,12 @@ trait RouteTrait {
   protected function getRouteMatch(): RouteMatchInterface {
     /** @var \Drupal\Core\Routing\CurrentRouteMatch $currentRouteMatch */
     $currentRouteMatch = \Drupal::service('current_route_match');
-    //TODO Consider using the match function provided by PHP 8
-    switch ($this->configuration['request']) {
+    // @todo Consider using the match function provided by PHP 8.
+    $request = $this->configuration['request'];
+    if ($request === '_eca_token') {
+      $request = $this->getTokenValue('request', '');
+    }
+    switch ($request) {
       case RouteInterface::ROUTE_MAIN:
         return $currentRouteMatch->getMasterRouteMatch();
 
@@ -57,6 +64,7 @@ trait RouteTrait {
         RouteInterface::ROUTE_MAIN => $this->t('main'),
       ],
       '#weight' => -110,
+      '#eca_token_select_option' => TRUE,
     ];
   }
 

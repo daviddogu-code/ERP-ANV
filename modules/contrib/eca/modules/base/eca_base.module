@@ -20,6 +20,6 @@ function _eca_base_hook_handler(): HookHandler {
 /**
  * Implements hook_cron().
  */
-function eca_base_cron() {
+function eca_base_cron(): void {
   _eca_base_hook_handler()->cron();
 }

@@ -2,20 +2,23 @@
 
 namespace Drupal\eca_form\Plugin\Action;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\eca\Plugin\FormFieldYamlTrait;
 use Drupal\eca\Service\YamlParser;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
 
 /**
  * Trait for actions setting available options on a form field.
  */
 trait FormFieldSetOptionsTrait {
+
+  use FormFieldYamlTrait;
 
   /**
    * The YAML parser.
@@ -27,11 +30,17 @@ trait FormFieldSetOptionsTrait {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_form\Plugin\Action\FormFieldSetOptions $instance */
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->setYamlParser($container->get('eca.service.yaml_parser'));
-    return $instance;
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $result = parent::access($object, $account, TRUE);
+    if ($result->isAllowed() && $this->configuration['use_yaml'] && $this->configuration['validate_yaml']) {
+      try {
+        $this->yamlParser->parse($this->configuration['value']);
+      }
+      catch (ParseException) {
+        $result = AccessResult::forbidden('YAML data is not valid.');
+      }
+    }
+    return $return_as_object ? $result : $result->isAllowed();
   }
 
   /**
@@ -53,7 +62,7 @@ trait FormFieldSetOptionsTrait {
         $options = $this->yamlParser->parse($options);
       }
       catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing a options in action "eca_form_field_set_options" as YAML format, but parsing failed.');
+        $this->logger->error('Tried parsing a options in action "eca_form_field_set_options" as YAML format, but parsing failed.');
         return;
       }
     }
@@ -78,6 +87,7 @@ trait FormFieldSetOptionsTrait {
     return [
       'options' => '',
       'use_yaml' => FALSE,
+      'validate_yaml' => FALSE,
     ] + parent::defaultConfiguration();
   }
 
@@ -85,7 +95,6 @@ trait FormFieldSetOptionsTrait {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['options'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Options'),
@@ -93,14 +102,13 @@ trait FormFieldSetOptionsTrait {
       '#default_value' => $this->configuration['options'],
       '#weight' => -49,
     ];
-    $form['use_yaml'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Interpret above value as YAML format'),
-      '#description' => $this->t('When using YAML format to define the options above, this option needs to be enabled.'),
-      '#default_value' => $this->configuration['use_yaml'],
-      '#weight' => -48,
-    ];
-    return $form;
+    $this->buildYamlFormFields(
+      $form,
+      $this->t('Interpret above value as YAML format'),
+      $this->t('When using YAML format to define the options above, this option needs to be enabled.'),
+      -48,
+    );
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -109,6 +117,7 @@ trait FormFieldSetOptionsTrait {
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->configuration['options'] = $form_state->getValue('options');
     $this->configuration['use_yaml'] = !empty($form_state->getValue('use_yaml'));
+    $this->configuration['validate_yaml'] = !empty($form_state->getValue('validate_yaml'));
     parent::submitConfigurationForm($form, $form_state);
   }
 
@@ -126,14 +135,14 @@ trait FormFieldSetOptionsTrait {
    * Builds up an array of options, directly usable in a form element.
    *
    * @param string $input
-   *  The unprocessed configuration input, which may hold a token or a fixed
-   *  value, or any other sort of values.
+   *   The unprocessed configuration input, which may hold a token or a fixed
+   *   value, or any other sort of values.
    *
    * @return array
    *   The options array.
    */
   protected function buildOptionsArray(string $input): array {
-    $token = $this->tokenServices;
+    $token = $this->tokenService;
     $options = (mb_substr($input, 0, 1) === '[') && (mb_substr($input, -1, 1) === ']') && (mb_strlen($input) <= 255) && $token->hasTokenData($input) ? $token->getTokenData($input) : (string) $token->replaceClear($input);
     $options_array = [];
     if (is_string($options)) {

@@ -11,7 +11,8 @@ use Drupal\eca\Plugin\Action\ListAddBase;
  * @Action(
  *   id = "eca_list_add",
  *   label = @Translation("List: add item"),
- *   description = @Translation("Add an item to a list using a specified token.")
+ *   description = @Translation("Add an item to a list using a specified token."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class ListAdd extends ListAddBase {
@@ -19,8 +20,8 @@ class ListAdd extends ListAddBase {
   /**
    * {@inheritdoc}
    */
-  public function execute() {
-    $value = $this->tokenServices->getOrReplace($this->configuration['value']);
+  public function execute(): void {
+    $value = $this->tokenService->getOrReplace($this->configuration['value']);
     $this->addItem($value);
   }
 
@@ -37,15 +38,14 @@ class ListAdd extends ListAddBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['value'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Value to add'),
-      '#description' => $this->t('This field supports tokens.'),
       '#default_value' => $this->configuration['value'],
       '#weight' => 20,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

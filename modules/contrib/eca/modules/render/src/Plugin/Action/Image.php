@@ -4,6 +4,7 @@ namespace Drupal\eca_render\Plugin\Action;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\FormFieldMachineName;
 
 /**
  * Build an image HTML element (not responsive).
@@ -12,6 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "eca_render_image",
  *   label = @Translation("Render: image"),
  *   description = @Translation("Build an image HTML element (not responsive)."),
+ *   eca_version_introduced = "1.1.0",
  *   deriver = "Drupal\eca_render\Plugin\Action\ImageDeriver"
  * )
  */
@@ -35,19 +37,19 @@ class Image extends RenderElementActionBase {
    * {@inheritdoc}
    */
   protected function doBuild(array &$build): void {
-    $uri = trim((string) $this->tokenServices->replaceClear($this->configuration['uri']));
+    $uri = trim((string) $this->tokenService->replaceClear($this->configuration['uri']));
     if ($uri === '') {
       throw new \InvalidArgumentException("No URI given for rendering an image element.");
     }
-    $style_name = trim((string) $this->tokenServices->replaceClear($this->configuration['style_name']));
+    $style_name = trim((string) $this->tokenService->replaceClear($this->configuration['style_name']));
     $build = [
       '#theme' => $style_name === '' ? 'image' : 'image_style',
       '#uri' => $uri,
       '#style_name' => $style_name,
-      '#width' => $this->tokenServices->replaceClear($this->configuration['width']),
-      '#height' => $this->tokenServices->replaceClear($this->configuration['height']),
-      '#alt' => $this->tokenServices->replaceClear($this->configuration['alt']),
-      '#title' => $this->tokenServices->replaceClear($this->configuration['title']),
+      '#width' => $this->tokenService->replaceClear($this->configuration['width']),
+      '#height' => $this->tokenService->replaceClear($this->configuration['height']),
+      '#alt' => $this->tokenService->replaceClear($this->configuration['alt']),
+      '#title' => $this->tokenService->replaceClear($this->configuration['title']),
       '#attributes' => [
         'id' => Html::getUniqueId('eca-image'),
         'class' => ['eca-image'],
@@ -59,7 +61,6 @@ class Image extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['uri'] = [
       '#type' => 'textfield',
       '#title' => $this->t('URI'),
@@ -69,15 +70,15 @@ class Image extends RenderElementActionBase {
       '#required' => TRUE,
     ];
     $form['style_name'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('Style name'),
       '#description' => $this->t('Optionally, specify the configuration ID of the image style to use.'),
       '#weight' => -90,
       '#default_value' => $this->configuration['style_name'],
       '#required' => FALSE,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['alt'] = [
       '#type' => 'textfield',
@@ -111,7 +112,7 @@ class Image extends RenderElementActionBase {
       '#default_value' => $this->configuration['height'],
       '#required' => FALSE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

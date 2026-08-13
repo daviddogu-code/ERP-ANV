@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "eca_form_state_get_property_value",
  *   label = @Translation("Form state: get property value"),
  *   description = @Translation("Get a property value of the current form state in scope and set it as a token."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
@@ -23,12 +24,13 @@ class FormStateGetPropertyValue extends FormStatePropertyActionBase {
     if (!($form_state = $this->getCurrentFormState())) {
       return;
     }
-    $token = $this->tokenServices;
+    $token = $this->tokenService;
 
-    $name = explode('.', $this->normalizePropertyPath($token->replace($this->configuration['property_name'])));
-    if (empty($name)) {
+    $property_name = $this->normalizePropertyPath($token->replace($this->configuration['property_name']));
+    if (empty($property_name)) {
       return;
     }
+    $name = explode('.', $property_name);
     // An enforced "eca" key is being used at root level at
     // FormStateSetPropertyValue, therefore lookup there first.
     $eca_name = array_merge(['eca'], $name);
@@ -51,7 +53,6 @@ class FormStateGetPropertyValue extends FormStatePropertyActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -61,7 +62,7 @@ class FormStateGetPropertyValue extends FormStatePropertyActionBase {
       '#weight' => -49,
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

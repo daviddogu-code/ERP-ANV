@@ -1,6 +1,6 @@
 {
   "name": "drupal/bpmn_io",
-  "license": "GPL-2.0+",
+  "license": "GPL-2.0-or-later",
   "type": "drupal-module",
   "description": "BPMN modeller for ECA, integrated into Drupal's admin UI.",
   "support": {
@@ -8,7 +8,7 @@
     "source": "https://drupal.org/project/bpmn_io"
   },
   "require": {
-    "php": ">=7.4",
-    "drupal/eca": "^1.0"
+    "php": ">=8.1",
+    "drupal/eca": "^2.0"
   }
 }

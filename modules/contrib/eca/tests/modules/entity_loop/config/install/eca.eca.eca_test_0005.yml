@@ -11,7 +11,7 @@ dependencies:
 id: eca_test_0005
 modeller: bpmn_io
 label: Views
-version: 1.0.0
+version: v1
 weight: null
 events:
   Event_1up81dz:

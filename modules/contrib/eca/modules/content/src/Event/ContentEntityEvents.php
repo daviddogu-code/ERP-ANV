@@ -113,7 +113,7 @@ final class ContentEntityEvents {
    *
    * @var string
    */
-  public const TRANSLATIONINSERT = 'eca.content_entity.translationsinsert';
+  public const TRANSLATIONINSERT = 'eca.content_entity.translationinsert';
 
   /**
    * Identifies \Drupal\eca_content\Event\ContentEntityTranslationDelete event.
@@ -161,6 +161,15 @@ final class ContentEntityEvents {
   public const VIEW = 'eca.content_entity.view';
 
   /**
+   * Identifies \Drupal\eca_content\Event\ContentEntityView event.
+   *
+   * @Event
+   *
+   * @var string
+   */
+  public const VIEWMODEALTER = 'eca.content_entity.view_mode_alter';
+
+  /**
    * Identifies \Drupal\eca_content\Event\ContentEntityPrepareView event.
    *
    * @Event
@@ -177,6 +186,15 @@ final class ContentEntityEvents {
    * @var string
    */
   public const PREPAREFORM = 'eca.content_entity.prepareform';
+
+  /**
+   * Identifies \Drupal\eca_content\Event\ContentEntityValidate event.
+   *
+   * @Event
+   *
+   * @var string
+   */
+  public const VALIDATE = 'eca.content_entity.validate';
 
   /**
    * Identifies \Drupal\eca_content\Event\ContentEntityFieldValuesInit event.

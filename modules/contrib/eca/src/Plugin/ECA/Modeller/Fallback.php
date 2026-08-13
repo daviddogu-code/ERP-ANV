@@ -25,14 +25,14 @@ class Fallback extends ModellerBase {
   /**
    * {@inheritdoc}
    */
-  public function createNewModel(string $id, string $model_data, string $filename = NULL, bool $save = FALSE): Eca {
+  public function createNewModel(string $id, string $model_data, ?string $filename = NULL, bool $save = FALSE): Eca {
     return $this->eca;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function save(string $data, string $filename = NULL, bool $status = NULL): bool {
+  public function save(string $data, ?string $filename = NULL, ?bool $status = NULL): bool {
     return FALSE;
   }
 

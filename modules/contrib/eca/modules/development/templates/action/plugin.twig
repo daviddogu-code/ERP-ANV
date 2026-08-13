@@ -1,8 +1,9 @@
-{{ phpprefix|raw }}
+{{ php_prefix|raw }}
 
 namespace Drupal\{{ machine_name }}\Plugin\Action;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
@@ -12,7 +13,9 @@ use Drupal\eca\Plugin\Action\ConfigurableActionBase;
  *
  * @Action(
  *   id = "{{ machine_name }}_{{ id }}",
- *   label = @Translation("{{ purpose }}"){% if type %},
+ *   label = @Translation("{{ purpose }}"),
+ *   description = @Translation("{{ description }}"),
+ *   eca_version_introduced = "{{ module_version }}"{% if type %},
  *   type = "{{ type }}"{% endif %}
  * )
  */
@@ -21,7 +24,7 @@ class {{ class }} extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE): bool|AccessResultInterface {
     $access_result = AccessResult::allowed();
     return $return_as_object ? $access_result : $access_result->isAllowed();
   }
@@ -29,7 +32,7 @@ class {{ class }} extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute({% if type %}${{ type }} = NULL{% endif %}) {
+  public function execute({% if type %}${{ type }} = NULL{% endif %}): void {
     // @todo implement the required action.
   }
 

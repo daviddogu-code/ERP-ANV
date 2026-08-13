@@ -49,12 +49,12 @@ class YamlParser {
    * @throws \Symfony\Component\Yaml\Exception\ParseException
    *   When parsing failed.
    */
-  public function parse(string $yaml_string, bool $replace_tokens = TRUE) {
+  public function parse(string $yaml_string, bool $replace_tokens = TRUE): mixed {
     $parsed = $this->parser->parse($yaml_string);
     if ($replace_tokens) {
       $token = $this->token;
       if (is_array($parsed)) {
-        array_walk_recursive($parsed, function (&$value) use ($token) {
+        array_walk_recursive($parsed, static function (&$value) use ($token) {
           if (!empty($value) && is_string($value)) {
             $value = (string) $token->replaceClear($value);
           }

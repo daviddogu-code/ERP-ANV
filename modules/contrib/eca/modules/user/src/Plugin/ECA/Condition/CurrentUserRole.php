@@ -3,6 +3,7 @@
 namespace Drupal\eca_user\Plugin\ECA\Condition;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 use Drupal\user\Entity\Role;
 
 /**
@@ -11,17 +12,24 @@ use Drupal\user\Entity\Role;
  * @EcaCondition(
  *   id = "eca_current_user_role",
  *   label = @Translation("Role of current user"),
- *   description = @Translation("Checks, whether the current user has a given role.")
+ *   description = @Translation("Checks, whether the current user has a given role."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class CurrentUserRole extends BaseUser {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
    */
   public function evaluate(): bool {
     $userRoles = $this->currentUser->getRoles();
-    $result = in_array($this->configuration['role'], $userRoles, TRUE);
+    $role = $this->configuration['role'];
+    if ($role === '_eca_token') {
+      $role = $this->getTokenValue('role', '');
+    }
+    $result = in_array($role, $userRoles, TRUE);
     return $this->negationCheck($result);
   }
 
@@ -38,7 +46,6 @@ class CurrentUserRole extends BaseUser {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $roles = [];
     /** @var \Drupal\user\RoleInterface $role */
     foreach (Role::loadMultiple() as $role) {
@@ -51,8 +58,9 @@ class CurrentUserRole extends BaseUser {
       '#default_value' => $this->configuration['role'],
       '#options' => $roles,
       '#weight' => -10,
+      '#eca_token_select_option' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

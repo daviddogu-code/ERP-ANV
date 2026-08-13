@@ -27,12 +27,20 @@ abstract class ModuleDeriverBase extends DeriverBase implements ContainerDeriver
   protected ModuleHandlerInterface $moduleHandler;
 
   /**
+   * Constructs the ModuleDeriver base class.
+   *
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   *   The module handler service.
+   */
+  final public function __construct(ModuleHandlerInterface $moduleHandler) {
+    $this->moduleHandler = $moduleHandler;
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, $base_plugin_id) {
-    $instance = new static();
-    $instance->moduleHandler = $container->get('module_handler');
-    return $instance;
+  public static function create(ContainerInterface $container, $base_plugin_id): ModuleDeriverBase {
+    return new static($container->get('module_handler'));
   }
 
   /**

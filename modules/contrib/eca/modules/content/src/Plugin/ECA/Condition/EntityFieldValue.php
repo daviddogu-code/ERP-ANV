@@ -5,6 +5,7 @@ namespace Drupal\eca_content\Plugin\ECA\Condition;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\Core\TypedData\Plugin\DataType\BooleanData;
 use Drupal\Core\TypedData\PrimitiveInterface;
 use Drupal\Core\TypedData\TraversableTypedDataInterface;
 use Drupal\eca\Plugin\ECA\Condition\ConditionInterface;
@@ -18,6 +19,7 @@ use Drupal\eca\TypedData\PropertyPathTrait;
  *   id = "eca_entity_field_value",
  *   label = @Translation("Entity: compare field value"),
  *   description = @Translation("Compares a field value with an expected custom value."),
+ *   eca_version_introduced = "1.0.0",
  *   context_definitions = {
  *     "entity" = @ContextDefinition("entity", label = @Translation("Entity"))
  *   }
@@ -94,7 +96,7 @@ class EntityFieldValue extends StringComparisonBase {
    */
   protected function getFieldName(): string {
     if (!isset($this->fieldName)) {
-      $this->fieldName = trim((string) $this->tokenServices->replaceClear($this->configuration['field_name'] ?? ''));
+      $this->fieldName = trim((string) $this->tokenService->replaceClear($this->configuration['field_name'] ?? ''));
     }
     return $this->fieldName;
   }
@@ -107,7 +109,7 @@ class EntityFieldValue extends StringComparisonBase {
    */
   protected function getExpectedValue(): string {
     if (!isset($this->expectedValue)) {
-      $this->expectedValue = trim((string) $this->tokenServices->replaceClear($this->configuration['expected_value'] ?? ''));
+      $this->expectedValue = trim((string) $this->tokenService->replaceClear($this->configuration['expected_value'] ?? ''));
     }
     return $this->expectedValue;
   }
@@ -168,7 +170,9 @@ class EntityFieldValue extends StringComparisonBase {
       if (!($list instanceof TraversableTypedDataInterface)) {
         $list = [$list];
       }
-      /** @var \Drupal\Core\TypedData\TypedDataInterface $property */
+      /**
+       * @var \Drupal\Core\TypedData\TypedDataInterface $property
+       */
       foreach ($list as $property) {
         if ($property instanceof ComplexDataInterface) {
           $main_property = $property->getDataDefinition()->getMainPropertyName();
@@ -176,7 +180,10 @@ class EntityFieldValue extends StringComparisonBase {
             $property = $property->get($main_property);
           }
         }
-        if ($property instanceof PrimitiveInterface) {
+        if ($property instanceof BooleanData) {
+          $values[] = (string) (int) $property->getValue();
+        }
+        elseif ($property instanceof PrimitiveInterface) {
           $values[] = (string) $property->getValue();
         }
       }

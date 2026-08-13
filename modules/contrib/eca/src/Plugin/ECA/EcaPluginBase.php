@@ -45,7 +45,7 @@ abstract class EcaPluginBase extends DrupalPluginBase implements ContainerFactor
    *
    * @var \Drupal\eca\Token\TokenInterface
    */
-  protected TokenInterface $tokenServices;
+  protected TokenInterface $tokenService;
 
   /**
    * Current user account.
@@ -93,7 +93,7 @@ abstract class EcaPluginBase extends DrupalPluginBase implements ContainerFactor
    *   The plugin definition.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
-   * @param \Drupal\eca\Token\TokenInterface $token_services
+   * @param \Drupal\eca\Token\TokenInterface $token_service
    *   The ECA token service.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current user account.
@@ -106,9 +106,9 @@ abstract class EcaPluginBase extends DrupalPluginBase implements ContainerFactor
    * @param \Drupal\eca\EcaState $state
    *   The ECA state service.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, MessengerInterface $messenger, TokenInterface $token_services, AccountProxyInterface $current_user, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, RequestStack $requestStack, EcaState $state) {
+  final public function __construct(array $configuration, string $plugin_id, array $plugin_definition, MessengerInterface $messenger, TokenInterface $token_service, AccountProxyInterface $current_user, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, RequestStack $requestStack, EcaState $state) {
     $this->messenger = $messenger;
-    $this->tokenServices = $token_services;
+    $this->tokenService = $token_service;
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
@@ -120,7 +120,7 @@ abstract class EcaPluginBase extends DrupalPluginBase implements ContainerFactor
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EcaPluginBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(
       $configuration,
       $plugin_id,

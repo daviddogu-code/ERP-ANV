@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "eca_form_set_action",
  *   label = @Translation("Form: set action"),
  *   description = @Translation("Set the action URL to use when submitting the form."),
+ *   eca_version_introduced = "1.1.0",
  *   type = "form"
  * )
  */
@@ -23,7 +24,7 @@ class FormSetAction extends FormActionBase {
     if (!($form = &$this->getCurrentForm())) {
       return;
     }
-    $form['#action'] = trim((string) $this->tokenServices->replaceClear($this->configuration['action']));
+    $form['#action'] = trim((string) $this->tokenService->replaceClear($this->configuration['action']));
   }
 
   /**
@@ -39,16 +40,16 @@ class FormSetAction extends FormActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['action'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Action URL'),
-      '#description' => $this->t('The URL of a form action like <em>www.example.com/search</em>. This field supports tokens.'),
+      '#description' => $this->t('The URL of a form action like <em>www.example.com/search</em>.'),
       '#weight' => -10,
       '#default_value' => $this->configuration['action'],
       '#required' => TRUE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

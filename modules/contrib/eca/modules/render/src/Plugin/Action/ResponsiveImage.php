@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "eca_render_responsive_image",
  *   label = @Translation("Render: responsive image"),
  *   description = @Translation("Build an image HTML element (responsive)."),
+ *   eca_version_introduced = "1.1.0",
  *   deriver = "Drupal\eca_render\Plugin\Action\ResponsiveImageDeriver"
  * )
  */

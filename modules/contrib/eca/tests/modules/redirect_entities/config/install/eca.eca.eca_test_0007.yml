@@ -7,7 +7,7 @@ dependencies:
 id: eca_test_0007
 modeller: bpmn_io
 label: 'Redirects for deleted entities'
-version: 1.0.0
+version: v1
 weight: null
 events:
   Event_13udgh1:

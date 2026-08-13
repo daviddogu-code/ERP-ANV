@@ -2,16 +2,18 @@
 
 namespace Drupal\eca\EventSubscriber;
 
+use Drupal\Core\Entity\EntityFormInterface;
+use Drupal\eca\Attribute\Token;
 use Drupal\eca\EcaEvents;
 use Drupal\eca\Event\AfterInitialExecutionEvent;
 use Drupal\eca\Event\BeforeInitialExecutionEvent;
+use Drupal\eca\Event\EntityEventInterface;
 use Drupal\eca\Event\FormEventInterface;
-use Drupal\Core\Entity\EntityFormInterface;
 
 /**
  * Adds currently involved form events into a publicly available stack.
  */
-class EcaExecutionFormSubscriber extends EcaBase {
+class EcaExecutionFormSubscriber extends EcaExecutionSubscriberBase {
 
   /**
    * A stack of form events, which the subscriber involved for execution.
@@ -38,13 +40,23 @@ class EcaExecutionFormSubscriber extends EcaBase {
    * @param \Drupal\eca\Event\BeforeInitialExecutionEvent $before_event
    *   The according event.
    */
+  #[Token(
+    name: 'entity',
+    description: 'The entity of the event.',
+    classes: [EntityFormInterface::class],
+  )]
+  #[Token(
+    name: 'ENTITY_TYPE',
+    description: 'The entity of the event under the name of its entity type.',
+    classes: [EntityFormInterface::class],
+  )]
   public function onBeforeInitialExecution(BeforeInitialExecutionEvent $before_event): void {
     $event = $before_event->getEvent();
     if ($event instanceof FormEventInterface) {
       array_unshift($this->eventStack, $event);
       $form_state = $event->getFormState();
       $form_object = $form_state->getFormObject();
-      if ($form_object instanceof EntityFormInterface) {
+      if (($form_object instanceof EntityFormInterface) && !($event instanceof EntityEventInterface)) {
         // Only build automatically when the form is properly submitted, and has
         // no errors. For any other case, there is "eca_form_build_entity".
         if ($event->getForm()

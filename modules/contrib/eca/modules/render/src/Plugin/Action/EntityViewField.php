@@ -7,7 +7,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
+use Drupal\eca\Plugin\FormFieldMachineName;
 use Drupal\eca\Service\YamlParser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -19,6 +19,7 @@ use Symfony\Component\Yaml\Exception\ParseException;
  *   id = "eca_render_entity_view_field",
  *   label = @Translation("Render: view field"),
  *   description = @Translation("View a field of a specified entity."),
+ *   eca_version_introduced = "1.1.0",
  *   type = "entity"
  * )
  */
@@ -41,8 +42,7 @@ class EntityViewField extends RenderElementActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_render\Plugin\Action\Build $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setYamlParser($container->get('eca.service.yaml_parser'));
     return $instance;
@@ -63,28 +63,27 @@ class EntityViewField extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['field_name'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('Field name'),
       '#default_value' => $this->configuration['field_name'],
       '#description' => $this->t('The machine name of the field. Example: <em>field_tags</em>'),
       '#required' => TRUE,
       '#weight' => -40,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['view_mode'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('View mode'),
       '#default_value' => $this->configuration['view_mode'],
       '#description' => $this->t('Example: <em>default, teaser</em>'),
       '#required' => FALSE,
       '#weight' => -30,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['display_options'] = [
       '#type' => 'textarea',
@@ -94,7 +93,7 @@ class EntityViewField extends RenderElementActionBase {
       '#required' => FALSE,
       '#weight' => -20,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -112,7 +111,7 @@ class EntityViewField extends RenderElementActionBase {
    */
   public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $access_result = parent::access($object, $account, TRUE);
-    $name = $this->tokenServices->replace($this->configuration['field_name']);
+    $name = $this->tokenService->replace($this->configuration['field_name']);
     if ($access_result->isAllowed()) {
       if (!($object instanceof FieldableEntityInterface)) {
         $access_result = AccessResult::forbidden("The given object is not a fieldable entity.");
@@ -133,7 +132,7 @@ class EntityViewField extends RenderElementActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL): void {
+  public function execute(mixed $entity = NULL): void {
     if (!($entity instanceof EntityInterface)) {
       return;
     }
@@ -149,15 +148,15 @@ class EntityViewField extends RenderElementActionBase {
       throw new \InvalidArgumentException("No fieldable entity given for building the entity field view.");
     }
 
-    $name = $this->tokenServices->replace($this->configuration['field_name']);
-    $view_mode = trim((string) $this->tokenServices->replaceClear($this->configuration['view_mode']));
+    $name = $this->tokenService->replace($this->configuration['field_name']);
+    $view_mode = trim((string) $this->tokenService->replaceClear($this->configuration['view_mode']));
     $display_options = $this->configuration['display_options'] ?? NULL;
     if ($display_options) {
       try {
         $display_options = $this->yamlParser->parse($display_options);
       }
       catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing a state value item in action "eca_render_entity_view_field" as YAML format, but parsing failed.');
+        $this->logger->error('Tried parsing a state value item in action "eca_render_entity_view_field" as YAML format, but parsing failed.');
         $build = [];
         return;
       }

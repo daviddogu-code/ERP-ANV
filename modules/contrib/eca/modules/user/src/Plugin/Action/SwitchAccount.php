@@ -3,10 +3,9 @@
 namespace Drupal\eca_user\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountSwitcherInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca\Plugin\CleanupInterface;
+use Drupal\eca_user\AccountSwitcher;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -15,32 +14,25 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Action(
  *   id = "eca_switch_account",
  *   label = @Translation("User: switch current account"),
- *   description = @Translation("Switch to given user account.")
+ *   description = @Translation("Switch to given user account."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class SwitchAccount extends ConfigurableActionBase implements CleanupInterface {
 
   /**
-   * The account switcher service.
+   * The ECA account switcher service.
    *
-   * @var \Drupal\Core\Session\AccountSwitcherInterface
+   * @var \Drupal\eca_user\AccountSwitcher
    */
-  protected AccountSwitcherInterface $accountSwitcher;
-
-  /**
-   * A flag indicating whether an account switch was done.
-   *
-   * @var bool
-   */
-  protected bool $switched = FALSE;
+  protected AccountSwitcher $accountSwitcher;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_user\Plugin\Action\SwitchAccount $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->accountSwitcher = $container->get('account_switcher');
+    $instance->accountSwitcher = $container->get('eca_user.account_switcher');
     return $instance;
   }
 
@@ -57,15 +49,15 @@ class SwitchAccount extends ConfigurableActionBase implements CleanupInterface {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['user_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('User ID (UID)'),
-      '#default_value' => $this->configuration['user_id'],
-      '#description' => $this->t('The numeric ID of the user account to switch to. This field supports tokens.'),
+      '#default_value' => $this->configuration['user_id'] ?? '',
+      '#description' => $this->t('The numeric ID of the user account to switch to.'),
       '#weight' => -10,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -83,17 +75,14 @@ class SwitchAccount extends ConfigurableActionBase implements CleanupInterface {
     if (!isset($this->configuration['user_id']) || $this->configuration['user_id'] === '') {
       return;
     }
-    $user = NULL;
-
-    $uid = (string) $this->tokenServices->replaceClear($this->configuration['user_id']);
-    if ($uid !== '' && ctype_digit(strval($uid))) {
+    $uid = (string) $this->tokenService->replaceClear($this->configuration['user_id']);
+    if ($uid !== '' && ctype_digit($uid)) {
       $uid = (int) $uid;
-      /** @var \Drupal\user\UserInterface $user */
+      /**
+       * @var \Drupal\user\UserInterface|null $user
+       */
       $user = $this->entityTypeManager->getStorage('user')->load($uid);
-    }
-    if ($user && !$this->switched) {
-      $this->accountSwitcher->switchTo($user);
-      $this->switched = TRUE;
+      $this->accountSwitcher->switchTo($this, $user);
     }
   }
 
@@ -101,10 +90,7 @@ class SwitchAccount extends ConfigurableActionBase implements CleanupInterface {
    * {@inheritdoc}
    */
   public function cleanupAfterSuccessors(): void {
-    if ($this->switched) {
-      $this->accountSwitcher->switchBack();
-      $this->switched = FALSE;
-    }
+    $this->accountSwitcher->cleanup($this);
   }
 
 }

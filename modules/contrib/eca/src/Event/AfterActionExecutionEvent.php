@@ -2,9 +2,9 @@
 
 namespace Drupal\eca\Event;
 
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\eca\Entity\Objects\EcaAction;
 use Drupal\eca\Entity\Objects\EcaObject;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Dispatches after a single action got executed.
@@ -23,14 +23,14 @@ class AfterActionExecutionEvent extends Event {
    *
    * @var mixed
    */
-  protected $object;
+  protected mixed $object;
 
   /**
    * The triggering system event.
    *
-   * @var \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event
+   * @var \Symfony\Contracts\EventDispatcher\Event
    */
-  protected object $event;
+  protected Event $event;
 
   /**
    * The predecessor.
@@ -46,7 +46,7 @@ class AfterActionExecutionEvent extends Event {
    *
    * @var array
    */
-  protected $prestate = [];
+  protected array $prestate = [];
 
   /**
    * Whether access was granted or not.
@@ -69,7 +69,7 @@ class AfterActionExecutionEvent extends Event {
    *   The action object as part of an ECA configuration.
    * @param mixed &$object
    *   The object that the action operates on.
-   * @param \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event $event
+   * @param \Symfony\Contracts\EventDispatcher\Event $event
    *   The triggering system event.
    * @param \Drupal\eca\Entity\Objects\EcaObject $predecessor
    *   The predecessor.
@@ -80,9 +80,9 @@ class AfterActionExecutionEvent extends Event {
    * @param bool $exception_thrown
    *   Whether an exception was thrown or not.
    */
-  public function __construct(EcaAction $ecaAction, &$object, object $event, EcaObject $predecessor, array &$prestate, bool $access_granted, bool $exception_thrown) {
+  public function __construct(EcaAction $ecaAction, mixed &$object, Event $event, EcaObject $predecessor, array &$prestate, bool $access_granted, bool $exception_thrown) {
     $this->ecaAction = $ecaAction;
-    $this->object = $object;
+    $this->object = &$object;
     $this->event = $event;
     $this->predecessor = $predecessor;
     $this->prestate = &$prestate;
@@ -106,17 +106,17 @@ class AfterActionExecutionEvent extends Event {
    * @return mixed
    *   The object.
    */
-  public function &getObject() {
+  public function &getObject(): mixed {
     return $this->object;
   }
 
   /**
    * Get the applying system event.
    *
-   * @return \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event
+   * @return \Symfony\Contracts\EventDispatcher\Event
    *   The applying system event.
    */
-  public function getEvent(): object {
+  public function getEvent(): Event {
     return $this->event;
   }
 
@@ -139,7 +139,7 @@ class AfterActionExecutionEvent extends Event {
    * @return mixed
    *   The value. Returns NULL if not present.
    */
-  public function &getPrestate(?string $name) {
+  public function &getPrestate(?string $name): mixed {
     if (!isset($name)) {
       return $this->prestate;
     }

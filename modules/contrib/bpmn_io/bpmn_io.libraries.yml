@@ -2,19 +2,17 @@ core:
   remote: https://github.com/bpmn-io/bpmn-js
   version: 13.2.2
   js:
-    webpack/bpmn-modeller.js: { preprocess: false }
+    js/bpmn-modeller.js: { preprocess: false }
   css:
     component:
-      webpack/vendor/bpmn-js/assets/bpmn-js.css: {}
-      webpack/vendor/bpmn-js/assets/diagram-js.css: {}
-      webpack/vendor/bpmn-js/assets/bpmn-font/css/bpmn.css: {}
-      webpack/vendor/bpmn-js/assets/bpmn-font/css/bpmn-codes.css: {}
-      webpack/vendor/bpmn-js/assets/bpmn-font/css/bpmn-embedded.css: {}
-      webpack/vendor/bpmn-js-element-templates/assets/element-templates.css: {}
-      webpack/vendor/bpmn-js-element-templates/assets/properties-panel.css: {}
-      webpack/vendor/bpmn-js-properties-panel/assets/properties-panel.css: {}
-      webpack/vendor/bpmn-js-properties-panel/assets/element-templates.css: {}
-      webpack/vendor/bpmn-js-properties-panel/assets/element-template-chooser.css: {}
+      css/bpmn-js.css: {}
+      css/diagram-js.css: {}
+      css/element-templates.css: {}
+      css/element-template-chooser.css: {}
+      css/properties-panel.css: {}
+      css/bpmn-font/css/bpmn.css: {}
+      css/bpmn-font/css/bpmn-codes.css: {}
+      css/bpmn-font/css/bpmn-embedded.css: {}
   license:
     name: MIT
     url: https://github.com/bpmn-io/bpmn-js/raw/develop/LICENSE
@@ -32,3 +30,9 @@ ui:
     - core/drupal.message
     - core/drupalSettings
     - core/jquery
+convert:
+  js:
+    js/bpmn_io.convert.js: {}
+  dependencies:
+    - bpmn_io/ui
+    - core/once

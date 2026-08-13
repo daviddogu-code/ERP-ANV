@@ -2,14 +2,13 @@
 
 namespace Drupal\Tests\eca_content\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca_content\Event\ContentEntityCustomEvent;
 use Drupal\eca_content\Event\ContentEntityEvents;
 use Drupal\eca_content\Event\ContentEntityPreSave;
-use Drupal\eca\Service\ContentEntityTypes;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 
 /**
@@ -19,6 +18,8 @@ use Drupal\user\Entity\User;
  * @group eca_content
  */
 class TriggerContentEntityCustomEventTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * The modules.
@@ -55,13 +56,11 @@ class TriggerContentEntityCustomEventTest extends KernelTestBase {
     $this->installConfig(static::$modules);
     User::create(['uid' => 0, 'name' => 'anonymous'])->save();
     // Create an article content type.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create([
+    $this->createContentType([
       'type' => 'article',
       'name' => 'Article',
       'new_revision' => FALSE,
     ]);
-    $node_type->save();
     $node = Node::create([
       'type' => 'article',
       'title' => 'A title',
@@ -87,7 +86,7 @@ class TriggerContentEntityCustomEventTest extends KernelTestBase {
       'tokens' => '',
     ]);
     // Fake an origin by using the presave event.
-    $action->setEvent(new ContentEntityPreSave($this->node, ContentEntityTypes::get()));
+    $action->setEvent(new ContentEntityPreSave($this->node, _eca_content_entity_types()));
     $this->assertFalse($action->access(NULL), 'Access must be revoked when no entity is provided.');
     $this->assertTrue($action->access($this->node), 'Access must be granted when an entity is provided.');
 
@@ -114,7 +113,7 @@ class TriggerContentEntityCustomEventTest extends KernelTestBase {
       'tokens' => 'my_tokens_1, my_tokens_2',
     ]);
     // Fake an origin by using the presave event.
-    $action->setEvent(new ContentEntityPreSave($this->node, ContentEntityTypes::get()));
+    $action->setEvent(new ContentEntityPreSave($this->node, _eca_content_entity_types()));
     $this->assertFalse($action->access(NULL), 'Access must be revoked when no entity is provided.');
     $this->assertTrue($action->access($this->node), 'Access must be granted when an entity is provided.');
 

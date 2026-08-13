@@ -8,7 +8,8 @@ namespace Drupal\eca_user\Plugin\ECA\Condition;
  * @EcaCondition(
  *   id = "eca_user_role",
  *   label = @Translation("Role of user"),
- *   description = @Translation("Checks, whether a given user account has a given role.")
+ *   description = @Translation("Checks, whether a given user account has a given role."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class UserRole extends CurrentUserRole {

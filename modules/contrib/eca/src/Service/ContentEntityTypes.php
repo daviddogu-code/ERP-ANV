@@ -41,16 +41,6 @@ class ContentEntityTypes {
   private ?array $typesAndBundles = NULL;
 
   /**
-   * Get the service instance of this class.
-   *
-   * @return \Drupal\eca_content\Service\ContentEntityTypes
-   *   The service instance.
-   */
-  public static function get(): ContentEntityTypes {
-    return \Drupal::service('eca.service.content_entity_types');
-  }
-
-  /**
    * Constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -127,6 +117,37 @@ class ContentEntityTypes {
       $this->typesAndBundles[$idx1][$idx2] = $this->doGetTypesAndBundles($include_any, $include_bundles_any);
     }
     return $this->typesAndBundles[$idx1][$idx2];
+  }
+
+  /**
+   * Gets the entity types.
+   *
+   * @return array
+   *   The entity types.
+   */
+  public function getTypes(): array {
+    $result = [];
+    foreach ($this->entityTypeManager->getDefinitions() as $definition) {
+      if ($definition instanceof ContentEntityTypeInterface) {
+        $result[$definition->id()] = $definition->getLabel();
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * Gets the bundles of an entity type.
+   *
+   * @return array
+   *   The bundles of the entity type.
+   */
+  public function getBundles(string $entity_type_id): array {
+    $result = [];
+    $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
+    foreach ($bundles as $bundle => $bundleDef) {
+      $result[$bundle] = $bundleDef['label'];
+    }
+    return $result;
   }
 
   /**

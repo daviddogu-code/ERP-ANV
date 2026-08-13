@@ -9,8 +9,10 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\ListDataDefinition;
 use Drupal\Core\TypedData\Plugin\DataType\ItemList;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 use Drupal\views\Entity\View;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
+use Drupal\views\Plugin\views\query\Sql;
 use Drupal\views\ViewExecutable;
 
 /**
@@ -19,11 +21,13 @@ use Drupal\views\ViewExecutable;
  * @Action(
  *   id = "eca_views_query",
  *   label = @Translation("Views: Execute query"),
- *   description = @Translation("Use a View to execute a query and store the results in a token that contains an indexed list of the results.
- *   Despite the type of view that you use, always get the complete entities obtained by the view. You can access the entity properties using the token style."),
+ *   description = @Translation("Use a View to execute a query and store the results in a token that contains an indexed list of the results. Despite the type of view that you use, always get the complete entities obtained by the view. You can access the entity properties using the token style."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class ViewsQuery extends ConfigurableActionBase {
+
+  use PluginFormTrait;
 
   /**
    * The executable view.
@@ -46,7 +50,7 @@ class ViewsQuery extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($object = NULL): void {
+  public function execute(mixed $object = NULL): void {
     if (!$this->getDisplay() || !isset($this->view)) {
       return;
     }
@@ -63,13 +67,13 @@ class ViewsQuery extends ConfigurableActionBase {
     }
     $entities = ItemList::createInstance(ListDataDefinition::create('entity'));
     $entities->setValue($this->getEntities());
-    $this->tokenServices->addTokenData($token_name, $entities);
+    $this->tokenService->addTokenData($token_name, $entities);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $result = AccessResult::forbidden();
     if (($display = $this->getDisplay()) && $display->access($account)) {
       $result = AccessResult::allowed();
@@ -93,7 +97,6 @@ class ViewsQuery extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $views = [];
     foreach (View::loadMultiple() as $view) {
       if ($view->status()) {
@@ -116,6 +119,7 @@ class ViewsQuery extends ConfigurableActionBase {
       '#weight' => -50,
       '#options' => $views,
       '#required' => TRUE,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['display_id'] = [
       '#type' => 'textfield',
@@ -132,7 +136,7 @@ class ViewsQuery extends ConfigurableActionBase {
       '#maxlength' => 512,
       '#weight' => -30,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -197,7 +201,11 @@ class ViewsQuery extends ConfigurableActionBase {
    *   The view ID.
    */
   protected function getViewId(): string {
-    return trim((string) $this->tokenServices->replaceClear($this->configuration['view_id']));
+    $id = trim((string) $this->tokenService->replaceClear($this->configuration['view_id']));
+    if ($id === '_eca_token') {
+      $id = $this->getTokenValue('view_id', $id);
+    }
+    return $id;
   }
 
   /**
@@ -207,17 +215,17 @@ class ViewsQuery extends ConfigurableActionBase {
    *   The display ID.
    */
   protected function getDisplayId(): string {
-    return trim((string) $this->tokenServices->replaceClear($this->configuration['display_id']));
+    return trim((string) $this->tokenService->replaceClear($this->configuration['display_id']));
   }
 
   /**
    * Get the configured Views arguments.
    *
    * @return string
-   *   The arguments, multiple arguments are seraparated by "/".
+   *   The arguments, multiple arguments are separated by "/".
    */
   protected function getArguments(): string {
-    return trim((string) $this->tokenServices->replaceClear($this->configuration['arguments']));
+    return trim((string) $this->tokenService->replaceClear($this->configuration['arguments']));
   }
 
   /**
@@ -231,12 +239,13 @@ class ViewsQuery extends ConfigurableActionBase {
 
     $view = $this->view;
     foreach ($view->result as $row) {
-      $entity = $row->_entity ?? NULL;
-      if (!$entity) {
+      $entity = $row->_entity;
+      // @phpstan-ignore-next-line
+      if ($entity === NULL) {
         continue;
       }
 
-      if ($entity instanceof TranslatableInterface && $entity->isTranslatable()) {
+      if (($view->query instanceof Sql) && ($entity instanceof TranslatableInterface) && $entity->isTranslatable()) {
         // Try to find a field alias for the langcode.
         // Assumption: translatable entities always
         // have a langcode key.

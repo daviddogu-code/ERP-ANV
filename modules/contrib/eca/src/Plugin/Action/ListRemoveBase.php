@@ -2,15 +2,20 @@
 
 namespace Drupal\eca\Plugin\Action;
 
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Base class for actions removing an item from a list.
  */
 abstract class ListRemoveBase extends ListOperationBase {
+
+  use PluginFormTrait;
 
   /**
    * Removes an item from a list as configured.
@@ -18,14 +23,18 @@ abstract class ListRemoveBase extends ListOperationBase {
    * @return mixed
    *   The removed item. May be NULL if no item was removed.
    */
-  protected function removeItem() {
+  protected function removeItem(): mixed {
     if (!($list = $this->getItemList())) {
       return NULL;
     }
 
     $item = NULL;
 
-    switch ($this->configuration['method']) {
+    $method = $this->configuration['method'];
+    if ($method === '_eca_token') {
+      $method = $this->getTokenValue('method', 'first');
+    }
+    switch ($method) {
 
       case 'first':
         if ($list instanceof DataTransferObject) {
@@ -48,8 +57,8 @@ abstract class ListRemoveBase extends ListOperationBase {
         break;
 
       case 'index':
-        $index = trim((string) $this->tokenServices->replaceClear($this->configuration['index']));
-        if (!$index || ctype_digit($index) || !($list instanceof ComplexDataInterface)) {
+        $index = trim((string) $this->tokenService->replaceClear($this->configuration['index']));
+        if (!$index || !($list instanceof ComplexDataInterface) || ctype_digit($index)) {
           $index = (int) $index;
         }
         if ($list instanceof DataTransferObject) {
@@ -71,6 +80,19 @@ abstract class ListRemoveBase extends ListOperationBase {
           $item = $list->remove($value);
         }
         elseif ($values = $list->getValue()) {
+          if (is_scalar($value) && ($list instanceof FieldItemListInterface)) {
+            // Flatten the list of values for finding the specified value.
+            $item_definition = $list->getFieldDefinition()->getItemDefinition();
+            $property_name = NULL;
+            if ($item_definition instanceof ComplexDataDefinitionInterface) {
+              $property_name = $item_definition->getMainPropertyName();
+            }
+            foreach ($values as $i => $item) {
+              if (is_array($item)) {
+                $values[$i] = isset($property_name) ? ($item[$property_name] ?? NULL) : reset($item);
+              }
+            }
+          }
           $index = array_search($value, $values, TRUE);
           if ($index !== FALSE) {
             $item = $values[$index];
@@ -99,7 +121,6 @@ abstract class ListRemoveBase extends ListOperationBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['method'] = [
       '#type' => 'select',
       '#title' => $this->t('Method'),
@@ -112,16 +133,18 @@ abstract class ListRemoveBase extends ListOperationBase {
         'value' => $this->t('Drop by specified value'),
       ],
       '#required' => TRUE,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['index'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Index key'),
-      '#description' => $this->t('When using the method <em>Drop by specified index key</em>, then an index key must be specified here. This field supports tokens.'),
+      '#description' => $this->t('When using the method <em>Drop by specified index key</em>, then an index key must be specified here.'),
       '#default_value' => $this->configuration['index'],
       '#weight' => 10,
       '#required' => FALSE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -149,6 +172,6 @@ abstract class ListRemoveBase extends ListOperationBase {
    * @return mixed
    *   The value to remove.
    */
-  abstract protected function getValueToRemove();
+  abstract protected function getValueToRemove(): mixed;
 
 }

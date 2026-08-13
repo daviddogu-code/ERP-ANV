@@ -4,8 +4,10 @@ namespace Drupal\eca_user\Plugin\ECA\Event;
 
 use Drupal\Core\Session\AccountEvents;
 use Drupal\Core\Session\AccountSetEvent;
+use Drupal\eca\Attribute\Token;
 use Drupal\eca\Event\Tag;
 use Drupal\eca\Plugin\ECA\Event\EventBase;
+use Drupal\eca_user\Event\UserBase;
 use Drupal\eca_user\Event\UserCancel;
 use Drupal\eca_user\Event\UserEvents;
 use Drupal\eca_user\Event\UserLogin;
@@ -18,7 +20,8 @@ use Drupal\user\Event\UserFloodEvent;
  *
  * @EcaEvent(
  *   id = "user",
- *   deriver = "Drupal\eca_user\Plugin\ECA\Event\UserEventDeriver"
+ *   deriver = "Drupal\eca_user\Plugin\ECA\Event\UserEventDeriver",
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class UserEvent extends EventBase {
@@ -65,6 +68,40 @@ class UserEvent extends EventBase {
         'tags' => Tag::WRITE | Tag::RUNTIME | Tag::AFTER,
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[Token(
+    name: 'account',
+    description: 'The user entity of the event.',
+    classes: [UserBase::class, AccountSetEvent::class],
+    aliases: ['entity'],
+  )]
+  #[Token(
+    name: 'account',
+    description: 'The flooding user entity.',
+    classes: [UserFloodEvent::class],
+    aliases: ['entity'],
+  )]
+  public function getData(string $key): mixed {
+    if (in_array($key, ['entity', 'account'], TRUE)) {
+      $event = $this->event;
+      if ($event instanceof UserBase || $event instanceof AccountSetEvent) {
+        $account_id = $event->getAccount()->id();
+      }
+      elseif ($event instanceof UserFloodEvent) {
+        $account_id = $event->getUid();
+      }
+      else {
+        $account_id = NULL;
+      }
+      if (isset($account_id) && ($user = $this->entityTypeManager->getStorage('user')->load($account_id))) {
+        return $user;
+      }
+    }
+    return parent::getData($key);
   }
 
 }

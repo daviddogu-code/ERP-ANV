@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\eca\Plugin\FormFieldMachineName;
 
 /**
  * View a specified entity.
@@ -14,6 +15,7 @@ use Drupal\Core\Session\AccountInterface;
  *   id = "eca_render_entity_view",
  *   label = @Translation("Render: view entity"),
  *   description = @Translation("View a specified entity."),
+ *   eca_version_introduced = "1.1.0",
  *   type = "entity"
  * )
  */
@@ -39,19 +41,18 @@ class EntityView extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['view_mode'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('View mode'),
       '#default_value' => $this->configuration['view_mode'],
       '#description' => $this->t('Example: <em>default, teaser</em>'),
       '#required' => TRUE,
       '#weight' => -30,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -82,7 +83,7 @@ class EntityView extends RenderElementActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL): void {
+  public function execute(mixed $entity = NULL): void {
     if (!($entity instanceof EntityInterface)) {
       return;
     }
@@ -95,7 +96,7 @@ class EntityView extends RenderElementActionBase {
    */
   protected function doBuild(array &$build): void {
     if ($this->entity instanceof EntityInterface) {
-      $view_mode = trim((string) $this->tokenServices->replaceClear($this->configuration['view_mode']));
+      $view_mode = trim((string) $this->tokenService->replaceClear($this->configuration['view_mode']));
       if ($view_mode === '') {
         throw new \InvalidArgumentException("No view mode specified.");
       }
@@ -109,4 +110,3 @@ class EntityView extends RenderElementActionBase {
   }
 
 }
-

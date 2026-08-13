@@ -2,6 +2,8 @@
 
 namespace Drupal\eca_form\Plugin\Action;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
 /**
  * Set a form field as disabled.
  *
@@ -9,6 +11,7 @@ namespace Drupal\eca_form\Plugin\Action;
  *   id = "eca_form_field_disable",
  *   label = @Translation("Form field: set as disabled"),
  *   description = @Translation("Disable a form field."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
@@ -17,7 +20,7 @@ class FormFieldDisable extends FormFlagFieldActionBase {
   /**
    * {@inheritdoc}
    */
-  protected function getFlagName(bool $human_readable = FALSE) {
+  protected function getFlagName(bool $human_readable = FALSE): string|TranslatableMarkup {
     return $human_readable ? $this->t('disabled') : 'disabled';
   }
 

@@ -78,10 +78,11 @@ trait FormFieldPluginTrait {
     $form['field_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Field name'),
-      '#description' => $this->t('The input name of the form field. This is mostly found in the "name" attribute of an &lt;input&gt; form element. <em>For submit buttons within content forms:</em> Use "submit" for the labeled "Save" button, and "preview" for the labeled "Preview" button. This property supports tokens.'),
+      '#description' => $this->t('The input name of the form field. This is mostly found in the "name" attribute of an &lt;input&gt; form element. <em>For submit buttons within content forms:</em> Use "submit" for the labeled "Save" button, and "preview" for the labeled "Preview" button.'),
       '#default_value' => $this->configuration['field_name'],
       '#required' => TRUE,
       '#weight' => -50,
+      '#eca_token_replacement' => TRUE,
     ];
     if ($this->useFilters) {
       $form['strip_tags'] = [
@@ -143,7 +144,7 @@ trait FormFieldPluginTrait {
    * @param mixed &$value
    *   The value to apply filtering on.
    */
-  protected function filterFormFieldValue(&$value): void {
+  protected function filterFormFieldValue(mixed &$value): void {
     $config = &$this->configuration;
     if (!$config['trim'] && !$config['strip_tags'] && !$config['xss_filter']) {
       return;
@@ -201,12 +202,14 @@ trait FormFieldPluginTrait {
           // a form field element here, catch the first defined child element.
           $element = &$this->jumpToFirstFieldChild($element);
         }
+        elseif (isset($element[$key])) {
+          // If the element contains a children element with the same key, then
+          // the found element is a container, and the children element should
+          // be returned.
+          $element = $element[$key];
+        }
 
         return $element;
-      }
-
-      if (empty($name_array)) {
-        continue;
       }
 
       // For early form builds, parents and array_parents may not be available.
@@ -247,6 +250,7 @@ trait FormFieldPluginTrait {
       }
       unset($parent);
     }
+    unset($element);
 
     // Although not officially supported, try to get a target element using
     // either "." or ":" as a separator for nested form elements. The official
@@ -256,11 +260,15 @@ trait FormFieldPluginTrait {
     $field_name = $this->configuration['field_name'];
     if (mb_strpos($field_name, '.')) {
       $this->configuration['field_name'] = str_replace('.', '][', $field_name);
-      return $this->getTargetElement();
+      $result = &$this->getTargetElement();
+      $this->configuration['field_name'] = $field_name;
+      return $result;
     }
     if (mb_strpos($field_name, ':')) {
       $this->configuration['field_name'] = str_replace(':', '][', $field_name);
-      return $this->getTargetElement();
+      $result = &$this->getTargetElement();
+      $this->configuration['field_name'] = $field_name;
+      return $result;
     }
 
     return $nothing;
@@ -319,12 +327,12 @@ trait FormFieldPluginTrait {
    *   The key to lookup.
    * @param bool $is_root_call
    *   (optional) This is a recursive function, and this flag indicates whether
-   *   the invokation is the root one.
+   *   the invocation is the root one.
    *
    * @return array
    *   The found element candidates.
    */
-  protected function lookupFormElements(&$element, $key, bool $is_root_call = TRUE): array {
+  protected function lookupFormElements(mixed &$element, mixed $key, bool $is_root_call = TRUE): array {
     $found = [];
     $lookup_keys = $this->lookupKeys;
     foreach ($lookup_keys as $lookup_key) {
@@ -382,13 +390,13 @@ trait FormFieldPluginTrait {
   /**
    * Get the submitted value specified by the configured form field name.
    *
-   * @param mixed &$found
+   * @param mixed|null &$found
    *   (Optional) Stores a boolean whether a value was found.
    *
    * @return mixed
    *   The submitted value. May return NULL if no submitted value exists.
    */
-  protected function &getSubmittedValue(&$found = NULL) {
+  protected function &getSubmittedValue(mixed &$found = NULL): mixed {
     // Initialize the value and found state.
     $value = NULL;
     if ($found === NULL) {
@@ -420,11 +428,15 @@ trait FormFieldPluginTrait {
       $field_name = $this->configuration['field_name'];
       if (mb_strpos($field_name, '.')) {
         $this->configuration['field_name'] = str_replace('.', '][', $field_name);
-        return $this->getSubmittedValue($found);
+        $value = &$this->getSubmittedValue($found);
+        $this->configuration['field_name'] = $field_name;
+        return $value;
       }
       if (mb_strpos($field_name, ':')) {
         $this->configuration['field_name'] = str_replace(':', '][', $field_name);
-        return $this->getSubmittedValue($found);
+        $value = &$this->getSubmittedValue($found);
+        $this->configuration['field_name'] = $field_name;
+        return $value;
       }
     }
 
@@ -432,19 +444,19 @@ trait FormFieldPluginTrait {
   }
 
   /**
-   * Helper method to get the first occurence of $key in the given array.
+   * Helper method to get the first occurrence of $key in the given array.
    *
    * @param array &$keys
    *   The nested keys to lookup.
    * @param array &$array
    *   The array to look into.
-   * @param mixed &$found
+   * @param mixed|null &$found
    *   (Optional) Stores a boolean whether a value was found.
    *
    * @return mixed
    *   The found element as reference. Returns NULL if not found.
    */
-  protected function &getFirstNestedOccurrence(array &$keys, array &$array, &$found = NULL) {
+  protected function &getFirstNestedOccurrence(array &$keys, array &$array, mixed &$found = NULL): mixed {
     $value = &NestedArray::getValue($array, $keys, $found);
     if ($found) {
       return $value;

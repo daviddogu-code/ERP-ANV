@@ -2,18 +2,14 @@
 
 namespace Drupal\eca_access\Event;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\eca\Event\AccessEventInterface;
-use Drupal\eca\Event\ConditionalApplianceInterface;
 use Drupal\eca\Event\EntityApplianceTrait;
 use Drupal\eca\Event\EntityEventInterface;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
-use Drupal\eca\Token\DataProviderInterface;
-use Drupal\eca_access\AccessEvents;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Dispatched when an entity is being asked for access.
@@ -22,7 +18,7 @@ use Drupal\eca_access\AccessEvents;
  *   This class is not meant to be used as a public API. It is subject for name
  *   change or may be removed completely, also on minor version updates.
  */
-class EntityAccess extends Event implements AccessEventInterface, ConditionalApplianceInterface, EntityEventInterface, DataProviderInterface {
+class EntityAccess extends Event implements AccessEventInterface, EntityEventInterface {
 
   use EntityApplianceTrait;
 
@@ -104,54 +100,6 @@ class EntityAccess extends Event implements AccessEventInterface, ConditionalApp
   /**
    * {@inheritdoc}
    */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    [$w_entity_type_ids, $w_bundles, $w_operations] = explode(':', $wildcard);
-
-    if (($w_entity_type_ids !== '*') && !in_array($this->getEntity()->getEntityTypeId(), explode(',', $w_entity_type_ids), TRUE)) {
-      return FALSE;
-    }
-
-    if (($w_bundles !== '*') && !in_array($this->getEntity()->bundle(), explode(',', $w_bundles), TRUE)) {
-      return FALSE;
-    }
-
-    if (($w_operations !== '*') && !in_array($this->getOperation(), explode(',', $w_operations), TRUE)) {
-      return FALSE;
-    }
-
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    if (!$this->appliesForEntityTypeOrBundle($this->getEntity(), $arguments)) {
-      return FALSE;
-    }
-
-    if (!empty($arguments['operation']) && $arguments['operation'] !== '*') {
-      $contains_operation = FALSE;
-      foreach (explode(',', $arguments['operation']) as $c_operation) {
-        $c_operation = trim($c_operation);
-        if ($contains_operation = ($c_operation === $this->getOperation())) {
-          break;
-        }
-      }
-      if (!$contains_operation) {
-        return FALSE;
-      }
-    }
-
-    // Initialize with a neutral result.
-    $this->accessResult = AccessResult::neutral();
-
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getAccessResult(): ?AccessResultInterface {
     return $this->accessResult;
   }
@@ -160,40 +108,13 @@ class EntityAccess extends Event implements AccessEventInterface, ConditionalApp
    * {@inheritdoc}
    */
   public function setAccessResult(AccessResultInterface $result): EntityAccess {
-    $this->accessResult = $result;
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getData(string $key): ?DataTransferObject {
-    if ($key === 'event') {
-      if (!isset($this->eventData)) {
-        $data = [
-          'machine-name' => AccessEvents::ENTITY,
-          'operation' => $this->getOperation(),
-          'uid' => $this->getAccount()->id(),
-          'entity-type' => $this->entity->getEntityTypeId(),
-          'entity-bundle' => $this->entity->bundle(),
-        ];
-        if (!$this->entity->isNew()) {
-          $data['entity-id'] = $this->entity->id();
-        }
-        $this->eventData = DataTransferObject::create($data);
-      }
-
-      return $this->eventData;
+    if ($this->accessResult === NULL) {
+      $this->accessResult = $result;
     }
-
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasData(string $key): bool {
-    return $this->getData($key) !== NULL;
+    else {
+      $this->accessResult = $this->accessResult->orIf($result);
+    }
+    return $this;
   }
 
 }

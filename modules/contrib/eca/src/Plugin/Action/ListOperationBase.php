@@ -35,7 +35,6 @@ abstract class ListOperationBase extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['list_token'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Token containing the list'),
@@ -44,7 +43,7 @@ abstract class ListOperationBase extends ConfigurableActionBase {
       '#weight' => -20,
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -67,7 +66,7 @@ abstract class ListOperationBase extends ConfigurableActionBase {
    */
   protected function getItemList(): ?TraversableTypedDataInterface {
     $list_token = trim((string) $this->configuration['list_token']);
-    $token = $this->tokenServices;
+    $token = $this->tokenService;
     if (!$token->hasTokenData($list_token)) {
       $token->addTokenData($list_token, DataTransferObject::create([]));
     }

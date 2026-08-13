@@ -2,11 +2,7 @@
 
 namespace Drupal\eca_render\Event;
 
-use Drupal\eca\Event\ConditionalApplianceInterface;
-use Drupal\eca\Plugin\DataType\DataTransferObject;
-use Drupal\eca\Token\DataProviderInterface;
 use Drupal\eca_render\Plugin\Block\EcaBlock;
-use Drupal\eca_render\RenderEvents;
 
 /**
  * Dispatched when an ECA Block is being rendered.
@@ -17,7 +13,7 @@ use Drupal\eca_render\RenderEvents;
  *
  * @package Drupal\eca_render\Event
  */
-class EcaRenderBlockEvent extends EcaRenderEventBase implements ConditionalApplianceInterface, DataProviderInterface {
+class EcaRenderBlockEvent extends EcaRenderEventBase {
 
   /**
    * The block plugin instance.
@@ -25,13 +21,6 @@ class EcaRenderBlockEvent extends EcaRenderEventBase implements ConditionalAppli
    * @var \Drupal\eca_render\Plugin\Block\EcaBlock
    */
   protected EcaBlock $block;
-
-  /**
-   * An instance holding event data accessible as Token.
-   *
-   * @var \Drupal\eca\Plugin\DataType\DataTransferObject|null
-   */
-  protected ?DataTransferObject $eventData = NULL;
 
   /**
    * Constructs a new EcaRenderBlockEvent object.
@@ -51,52 +40,6 @@ class EcaRenderBlockEvent extends EcaRenderEventBase implements ConditionalAppli
    */
   public function getBlock(): EcaBlock {
     return $this->block;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    return ($this->block->getDerivativeId() === $wildcard);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    return ($this->block->getDerivativeId() === ($arguments['block_machine_name'] ?? ''));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getData(string $key) {
-    if ($key === 'event') {
-      if (!isset($this->eventData)) {
-        $this->eventData = DataTransferObject::create([
-          'machine-name' => RenderEvents::BLOCK,
-        ]);
-      }
-
-      return $this->eventData;
-    }
-
-    $context_definitions = $this->block->getContextDefinitions();
-    if (isset($context_definitions[$key])) {
-      $context = $this->block->getContext($key);
-      if ($context->hasContextValue()) {
-        return $context->getContextValue();
-      }
-    }
-
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasData(string $key): bool {
-    return $this->getData($key) !== NULL;
   }
 
   /**

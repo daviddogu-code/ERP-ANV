@@ -2,8 +2,10 @@
 
 namespace Drupal\Tests\eca_base\Kernel;
 
-use Drupal\eca\Plugin\DataType\DataTransferObject;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\user\Entity\User;
 
 /**
@@ -25,6 +27,8 @@ class ListOperationTest extends KernelTestBase {
     'user',
     'eca',
     'eca_base',
+    'field',
+    'options',
   ];
 
   /**
@@ -82,9 +86,9 @@ class ListOperationTest extends KernelTestBase {
       'method' => 'append',
       'value' => '[auth_user]',
     ]);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $action->execute();
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $this->assertSame($auth_user, $users->get(2)->getValue());
 
     $users = DataTransferObject::create([User::load(0), User::load(1)]);
@@ -96,9 +100,9 @@ class ListOperationTest extends KernelTestBase {
       'method' => 'prepend',
       'value' => '[auth_user]',
     ]);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $action->execute();
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $this->assertSame($auth_user, $users->get(0)->getValue());
     $this->assertSame(User::load(1)->id(), $users->get(2)->getValue()->id());
 
@@ -112,9 +116,9 @@ class ListOperationTest extends KernelTestBase {
       'index' => '1',
       'value' => '[auth_user]',
     ]);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $action->execute();
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertSame($auth_user, $users->get(1)->getValue());
     $this->assertSame(User::load(0)->id(), $users->get(0)->getValue()->id());
   }
@@ -139,9 +143,9 @@ class ListOperationTest extends KernelTestBase {
       'token_name' => 'removed_user',
       'value' => '[auth_user]',
     ]);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $action->execute();
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertFalse($token_services->hasTokenData('removed_user'));
 
     $users = DataTransferObject::create([
@@ -158,9 +162,9 @@ class ListOperationTest extends KernelTestBase {
       'token_name' => 'removed_user',
       'value' => '[auth_user]',
     ]);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $action->execute();
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertTrue($token_services->hasTokenData('removed_user'));
     $this->assertSame($auth_user->id(), $token_services->getTokenData('removed_user')->id());
 
@@ -178,9 +182,9 @@ class ListOperationTest extends KernelTestBase {
       'token_name' => 'removed_user',
       'index' => '2',
     ]);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $action->execute();
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertTrue($token_services->hasTokenData('removed_user'));
     $this->assertSame($auth_user->id(), $token_services->getTokenData('removed_user')->id());
 
@@ -198,9 +202,9 @@ class ListOperationTest extends KernelTestBase {
       'token_name' => 'removed_user',
       'index' => '1',
     ]);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $action->execute();
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertTrue($token_services->hasTokenData('removed_user'));
     $this->assertSame(User::load(1)->id(), $token_services->getTokenData('removed_user')->id());
 
@@ -217,9 +221,9 @@ class ListOperationTest extends KernelTestBase {
       'method' => 'first',
       'token_name' => 'removed_user',
     ]);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $action->execute();
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertTrue($token_services->hasTokenData('removed_user'));
     $this->assertSame(User::load(0)->id(), $token_services->getTokenData('removed_user')->id());
 
@@ -236,11 +240,66 @@ class ListOperationTest extends KernelTestBase {
       'method' => 'last',
       'token_name' => 'removed_user',
     ]);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $action->execute();
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertTrue($token_services->hasTokenData('removed_user'));
     $this->assertSame($auth_user->id(), $token_services->getTokenData('removed_user')->id());
+  }
+
+  /**
+   * Tests the removal of a field value using "eca_list_remove".
+   */
+  public function testListRemoveFieldValue(): void {
+    FieldStorageConfig::create([
+      'field_name' => 'field_selection',
+      'type' => 'list_string',
+      'entity_type' => 'user',
+      'settings' => [
+        'allowed_values' => [
+          'one' => 'One',
+          'two' => 'Two',
+          'three' => 'Three',
+        ],
+        'allowed_values_function' => '',
+      ],
+      'module' => 'options',
+      'cardinality' => -1,
+    ])->save();
+    FieldConfig::create([
+      'field_name' => 'field_selection',
+      'label' => 'Selection',
+      'entity_type' => 'user',
+      'bundle' => 'user',
+      'default_value' => [],
+      'field_type' => 'list_string',
+    ])->save();
+
+    $user = User::load(2);
+    $user->field_selection->setValue(['one', 'two', 'three']);
+    $user->save();
+
+    $user = User::load(2);
+    $this->assertCount(3, $user->field_selection->getValue());
+
+    /** @var \Drupal\Core\Action\ActionManager $action_manager */
+    $action_manager = \Drupal::service('plugin.manager.action');
+    /** @var \Drupal\eca\Token\TokenInterface $token_services */
+    $token_services = \Drupal::service('eca.token_services');
+
+    $token_services->addTokenData('user', $user);
+    $action = $action_manager->createInstance('eca_list_remove', [
+      'list_token' => '[user:field_selection]',
+      'method' => 'value',
+      'token_name' => '',
+      'value' => 'two',
+    ]);
+    $action->execute();
+
+    $value = $user->field_selection->getValue();
+    $this->assertCount(2, $value);
+    $this->assertSame('one', $value[0]['value']);
+    $this->assertSame('three', $value[1]['value']);
   }
 
   /**

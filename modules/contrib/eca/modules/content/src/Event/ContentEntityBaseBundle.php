@@ -70,23 +70,4 @@ abstract class ContentEntityBaseBundle extends ContentEntityBase {
     return $this->bundle;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    return in_array($wildcard, [
-      '*',
-      $this->entityTypeId,
-      $this->entityTypeId . '::' . $this->bundle,
-    ]
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    return $this->entityTypes->bundleFieldAppliesForEntityTypeAndBundle($this->entityTypeId, $this->bundle, $arguments['type']);
-  }
-
 }

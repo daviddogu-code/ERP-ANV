@@ -9,7 +9,8 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @Action(
  *   id = "eca_endpoint_set_response_status_code",
- *   label = @Translation("Response: set status code")
+ *   label = @Translation("Response: set status code"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class SetResponseStatusCode extends ResponseActionBase {
@@ -18,7 +19,7 @@ class SetResponseStatusCode extends ResponseActionBase {
    * {@inheritdoc}
    */
   protected function doExecute(): void {
-    $code = (int) trim((string) $this->tokenServices->replaceClear($this->configuration['code']));
+    $code = (int) trim((string) $this->tokenService->replaceClear($this->configuration['code']));
     $this->getResponse()->setStatusCode($code);
   }
 
@@ -35,16 +36,16 @@ class SetResponseStatusCode extends ResponseActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['code'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Status code'),
-      '#description' => $this->t('Must be a valid HTTP status code. This field supports tokens.'),
+      '#description' => $this->t('Must be a valid HTTP status code.'),
       '#default_value' => $this->configuration['code'],
       '#weight' => -20,
       '#required' => TRUE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

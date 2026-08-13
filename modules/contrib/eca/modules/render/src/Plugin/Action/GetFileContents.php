@@ -4,16 +4,20 @@ namespace Drupal\eca_render\Plugin\Action;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Render file contents.
  *
  * @Action(
  *   id = "eca_render_file_contents",
- *   label = @Translation("Render: file contents")
+ *   label = @Translation("Render: file contents"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class GetFileContents extends RenderElementActionBase {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -30,7 +34,6 @@ class GetFileContents extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['uri'] = [
       '#type' => 'textfield',
       '#title' => $this->t('URI'),
@@ -50,6 +53,7 @@ class GetFileContents extends RenderElementActionBase {
       '#weight' => -90,
       '#default_value' => $this->configuration['encoding'],
       '#required' => TRUE,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['token_mime_type'] = [
       '#type' => 'textfield',
@@ -59,7 +63,7 @@ class GetFileContents extends RenderElementActionBase {
       '#default_value' => $this->configuration['token_mime_type'],
       '#required' => FALSE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -85,7 +89,7 @@ class GetFileContents extends RenderElementActionBase {
    * {@inheritdoc}
    */
   protected function doBuild(array &$build): void {
-    $uri = trim((string) $this->tokenServices->replaceClear($this->configuration['uri']));
+    $uri = trim((string) $this->tokenService->replaceClear($this->configuration['uri']));
     if ($uri === '') {
       throw new \InvalidArgumentException("No URI given for rendering file contents.");
     }
@@ -100,10 +104,14 @@ class GetFileContents extends RenderElementActionBase {
     $mime_type = @mime_content_type($uri);
 
     if ($this->configuration['token_mime_type'] !== '') {
-      $this->tokenServices->addTokenData($this->configuration['token_mime_type'], $mime_type);
+      $this->tokenService->addTokenData($this->configuration['token_mime_type'], $mime_type);
     }
 
-    $encoding_options = explode(':', $this->configuration['encoding']);
+    $encoding = $this->configuration['encoding'];
+    if ($encoding === '_eca_token') {
+      $encoding = $this->getTokenValue('encoding', 'string:base64');
+    }
+    $encoding_options = explode(':', $encoding);
 
     foreach ($encoding_options as $option) {
       switch ($option) {

@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\eca\Kernel;
 
-use Drupal\eca\Entity\Eca;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\Entity\Eca;
 
 /**
  * Tests for ECA-extended Token replacement behavior.
@@ -46,7 +46,7 @@ class EcaTest extends KernelTestBase {
     ];
     /** @var \Drupal\eca\Entity\Eca $ecaConfig */
     $ecaConfig = Eca::create();
-    $this->assertFalse( $ecaConfig->addAction('12345', 'eca_count',
+    $this->assertFalse($ecaConfig->addAction('12345', 'eca_count',
       'Action', $fields, []));
   }
 
@@ -62,7 +62,7 @@ class EcaTest extends KernelTestBase {
     ];
     /** @var \Drupal\eca\Entity\Eca $ecaConfig */
     $ecaConfig = Eca::create();
-    $this->assertTrue( $ecaConfig->addAction('12345', 'eca_count',
+    $this->assertTrue($ecaConfig->addAction('12345', 'eca_count',
       'Action', $fields, []));
   }
 

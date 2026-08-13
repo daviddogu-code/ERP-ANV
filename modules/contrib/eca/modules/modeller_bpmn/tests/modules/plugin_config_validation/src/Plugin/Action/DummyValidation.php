@@ -19,7 +19,7 @@ class DummyValidation extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL): void {
+  public function execute(mixed $entity = NULL): void {
     // Nothing to do!
   }
 
@@ -36,14 +36,13 @@ class DummyValidation extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['dummy'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Dummy'),
       '#default_value' => $this->configuration['dummy'],
       '#weight' => -10,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

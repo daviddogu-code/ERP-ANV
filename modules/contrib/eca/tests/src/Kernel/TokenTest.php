@@ -6,10 +6,10 @@ use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\TypedData\ListDataDefinition;
 use Drupal\Core\TypedData\Plugin\DataType\ItemList;
-use Drupal\eca\Plugin\DataType\DataTransferObject;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\Plugin\DataType\DataTransferObject;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\RoleInterface;
 
 /**
@@ -19,6 +19,8 @@ use Drupal\user\RoleInterface;
  * @group eca_core
  */
 class TokenTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -50,10 +52,7 @@ class TokenTest extends KernelTestBase {
    */
   public function testTokenAlias(): void {
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create(['type' => 'article', 'name' => 'Article']);
-    $node_type->save();
-    node_add_body_field($node_type);
+    $this->createContentType(['type' => 'article', 'name' => 'Article']);
 
     $body = $this->randomMachineName(32);
     $summary = $this->randomMachineName(16);
@@ -163,10 +162,7 @@ class TokenTest extends KernelTestBase {
     $this->assertEquals('This is a string!', $token->replace('[dto]!', $token_data), "The DTO has now a string representation manually defined, thus Token replacement must include it.");
 
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create(['type' => 'article', 'name' => 'Article']);
-    $node_type->save();
-    node_add_body_field($node_type);
+    $this->createContentType(['type' => 'article', 'name' => 'Article']);
 
     $body = $this->randomMachineName(32);
     $summary = $this->randomMachineName(16);
@@ -215,7 +211,7 @@ class TokenTest extends KernelTestBase {
     $this->assertEquals($body, $dto->body->value, 'DTO must hold the same body value as the node.');
     $this->assertEquals($node->body->value, $dto->body->value, 'DTO must hold the same body value as the node.');
     $this->assertEquals('I am the node title.', $token->replace('[dto:title]', $token_data), 'The DTO must generate the same token value as the node title.');
-    $this->assertNotEquals('[dto:body]', $token->replace('[dto:body]', $token_data), 'The DTO body value must be replacable as token.');
+    $this->assertNotEquals('[dto:body]', $token->replace('[dto:body]', $token_data), 'The DTO body value must be replaceable as token.');
     $this->assertEquals($token->replace('[node:body]', ['node' => $node]), $token->replace('[dto:body]', $token_data), 'The DTO must generate the same token value as the node body.');
   }
 
@@ -262,10 +258,7 @@ class TokenTest extends KernelTestBase {
     $token_services = \Drupal::service('eca.token_services');
 
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create(['type' => 'article', 'name' => 'Article']);
-    $node_type->save();
-    node_add_body_field($node_type);
+    $this->createContentType(['type' => 'article', 'name' => 'Article']);
 
     $title1 = $this->randomMachineName(16);
     $body1 = $this->randomMachineName(32);
@@ -447,9 +440,7 @@ YAML;
     $token_services = \Drupal::service('eca.token_services');
 
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create(['type' => 'article', 'name' => 'Article']);
-    $node_type->save();
+    $this->createContentType(['type' => 'article', 'name' => 'Article']);
 
     /** @var \Drupal\node\NodeInterface $node */
     $node = Node::create([

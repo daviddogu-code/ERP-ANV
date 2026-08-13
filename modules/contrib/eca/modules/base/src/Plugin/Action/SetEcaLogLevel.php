@@ -3,11 +3,11 @@
 namespace Drupal\eca_base\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\eca\ConfigurableLoggerChannel;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca\Plugin\CleanupInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -16,10 +16,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Action(
  *   id = "eca_set_eca_log_level",
  *   label = @Translation("Set ECA log level"),
- *   description = @Translation("The log level for ECA can be changed temporarily for the processing within the current event.")
+ *   description = @Translation("The log level for ECA can be changed temporarily for the processing within the current event."),
+ *   eca_version_introduced = "2.0.0"
  * )
  */
 class SetEcaLogLevel extends ConfigurableActionBase implements CleanupInterface {
+
+  use PluginFormTrait;
 
   /**
    * A flag indicating whether an account switch was done.
@@ -36,19 +39,11 @@ class SetEcaLogLevel extends ConfigurableActionBase implements CleanupInterface 
   protected int $configuredLogLevel;
 
   /**
-   * The logger.
-   *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
-   */
-  protected LoggerChannelInterface $logger;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->configuredLogLevel = $container->get('config.factory')->get('eca.settings')->get('log_level');
-    $instance->logger = $container->get('logger.channel.eca');
     return $instance;
   }
 
@@ -57,7 +52,11 @@ class SetEcaLogLevel extends ConfigurableActionBase implements CleanupInterface 
    */
   public function execute(): void {
     if ($this->logger instanceof ConfigurableLoggerChannel) {
-      $this->logger->updateLogLevel($this->configuration['log_level']);
+      $logLevel = $this->configuration['log_level'];
+      if ($logLevel === '_eca_token') {
+        $logLevel = $this->getTokenValue('log_level', (string) $this->configuredLogLevel);
+      }
+      $this->logger->updateLogLevel((int) $logLevel);
       $this->logLevelChanged = TRUE;
     }
   }
@@ -67,7 +66,7 @@ class SetEcaLogLevel extends ConfigurableActionBase implements CleanupInterface 
    */
   public function cleanupAfterSuccessors(): void {
     if ($this->logLevelChanged && $this->logger instanceof ConfigurableLoggerChannel) {
-      $this->logger->updateLogLevel($this->configuration['log_level']);
+      $this->logger->updateLogLevel($this->configuredLogLevel);
       $this->logLevelChanged = FALSE;
     }
   }
@@ -85,15 +84,15 @@ class SetEcaLogLevel extends ConfigurableActionBase implements CleanupInterface 
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['log_level'] = [
       '#type' => 'select',
       '#title' => $this->t('Log level'),
       '#options' => RfcLogLevel::getLevels(),
       '#default_value' => $this->configuration['log_level'],
       '#weight' => -20,
+      '#eca_token_select_option' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

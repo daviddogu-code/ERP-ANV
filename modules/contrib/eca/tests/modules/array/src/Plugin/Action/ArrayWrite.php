@@ -5,7 +5,6 @@ namespace Drupal\eca_test_array\Plugin\Action;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca_test_array\Event\ArrayEvents;
 use Drupal\eca_test_array\Event\ArrayWriteEvent;
@@ -48,7 +47,7 @@ class ArrayWrite extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->eventDispatcher = $container->get('event_dispatcher');
     return $instance;
@@ -68,7 +67,6 @@ class ArrayWrite extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['key'] = [
       '#type' => 'textfield',
       '#required' => TRUE,
@@ -83,7 +81,7 @@ class ArrayWrite extends ConfigurableActionBase {
       '#title' => $this->t('Value'),
       '#weight' => 20,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -121,7 +119,7 @@ class ArrayWrite extends ConfigurableActionBase {
    */
   public function execute(): void {
     $key = $this->configuration['key'];
-    $value = $this->tokenServices->replace($this->configuration['value']);
+    $value = $this->tokenService->replace($this->configuration['value']);
     static::$array[$key] = $value;
     $this->eventDispatcher->dispatch(new ArrayWriteEvent($key, $value), ArrayEvents::WRITE);
   }

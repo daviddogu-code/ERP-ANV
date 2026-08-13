@@ -10,7 +10,8 @@ use Drupal\Core\Form\FormStateInterface;
  * @Action(
  *   id = "eca_render_lazy",
  *   label = @Translation("Render: lazy element"),
- *   description = @Translation("Build a lazy render element, optionally with arguments.")
+ *   description = @Translation("Build a lazy render element, optionally with arguments."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class Lazy extends RenderElementActionBase {
@@ -31,14 +32,13 @@ class Lazy extends RenderElementActionBase {
   protected function doBuild(array &$build): void {
     $build['#type'] = 'eca_lazy';
     $build['#name'] = (string) $this->configuration['name'];
-    $build['#argument'] = (string) $this->tokenServices->replaceClear($this->configuration['argument']);
+    $build['#argument'] = (string) $this->tokenService->replaceClear($this->configuration['argument']);
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Element name'),
@@ -50,12 +50,13 @@ class Lazy extends RenderElementActionBase {
     $form['argument'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Element argument'),
-      '#description' => $this->t('Optionally specify an argument to be passed to the lazy element. This field supports tokens.'),
+      '#description' => $this->t('Optionally specify an argument to be passed to the lazy element.'),
       '#weight' => -100,
       '#default_value' => $this->configuration['argument'],
       '#required' => FALSE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

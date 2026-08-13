@@ -4,6 +4,7 @@ namespace Drupal\eca_form\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Base class for flagging form field actions.
@@ -32,7 +33,7 @@ abstract class FormFlagFieldActionBase extends FormFieldActionBase {
    * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup
    *   The flag as machine name or human-readable name.
    */
-  abstract protected function getFlagName(bool $human_readable = FALSE);
+  abstract protected function getFlagName(bool $human_readable = FALSE): string|TranslatableMarkup;
 
   /**
    * {@inheritdoc}
@@ -58,14 +59,13 @@ abstract class FormFlagFieldActionBase extends FormFieldActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['flag'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Set as @flag', ['@flag' => $this->getFlagName(TRUE)]),
       '#default_value' => $this->configuration['flag'],
       '#weight' => -49,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -84,7 +84,7 @@ abstract class FormFlagFieldActionBase extends FormFieldActionBase {
    * @param bool $flag
    *   Whether to enable the flag or not.
    */
-  protected function flagAllChildren(&$element, bool $flag): void {
+  protected function flagAllChildren(mixed &$element, bool $flag): void {
     foreach (Element::children($element) as $key) {
       $element[$key]['#' . $this->getFlagName()] = $flag;
       $this->flagAllChildren($element[$key], $flag);

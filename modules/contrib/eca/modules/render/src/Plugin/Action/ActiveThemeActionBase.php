@@ -5,7 +5,6 @@ namespace Drupal\eca_render\Plugin\Action;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Theme\ThemeInitializationInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -38,8 +37,7 @@ abstract class ActiveThemeActionBase extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_render\Plugin\Action\ActiveThemeActionBase $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->themeManager = $container->get('theme.manager');
     $instance->themeHandler = $container->get('theme_handler');

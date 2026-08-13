@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\eca_base\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_base\BaseEvents;
 use Drupal\eca_base\Event\CustomEvent;
 use Drupal\eca_test_array\Plugin\Action\ArrayIncrement;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 
 /**
@@ -56,7 +56,7 @@ class BaseEventsTest extends KernelTestBase {
       'modeller' => 'fallback',
       'version' => '1.0.0',
       'events' => [
-        'cron_everytime' => [
+        'cron_every_time' => [
           'plugin' => 'eca_base:eca_cron',
           'label' => 'Cron event that should always match up.',
           'configuration' => [

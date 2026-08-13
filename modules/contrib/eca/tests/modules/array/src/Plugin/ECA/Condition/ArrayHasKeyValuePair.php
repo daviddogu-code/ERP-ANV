@@ -30,7 +30,7 @@ class ArrayHasKeyValuePair extends StringComparisonBase {
    * {@inheritdoc}
    */
   protected function getRightValue(): string {
-    return $this->tokenServices->replaceClear($this->configuration['value']);
+    return $this->tokenService->replaceClear($this->configuration['value']);
   }
 
   /**
@@ -47,7 +47,6 @@ class ArrayHasKeyValuePair extends StringComparisonBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['key'] = [
       '#type' => 'textfield',
       '#required' => TRUE,
@@ -62,7 +61,7 @@ class ArrayHasKeyValuePair extends StringComparisonBase {
       '#title' => $this->t('Value'),
       '#weight' => 20,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

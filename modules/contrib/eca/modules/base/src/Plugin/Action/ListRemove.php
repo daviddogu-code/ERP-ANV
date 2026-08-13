@@ -11,7 +11,8 @@ use Drupal\eca\Plugin\Action\ListRemoveBase;
  * @Action(
  *   id = "eca_list_remove",
  *   label = @Translation("List: remove item"),
- *   description = @Translation("Remove an item from a list and optionally store the item as a token.")
+ *   description = @Translation("Remove an item from a list and optionally store the item as a token."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class ListRemove extends ListRemoveBase {
@@ -19,19 +20,19 @@ class ListRemove extends ListRemoveBase {
   /**
    * {@inheritdoc}
    */
-  public function execute() {
+  public function execute(): void {
     $token_name = trim((string) $this->configuration['token_name']);
     $item = $this->removeItem();
     if ($token_name !== '') {
-      $this->tokenServices->addTokenData($token_name, $item);
+      $this->tokenService->addTokenData($token_name, $item);
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getValueToRemove() {
-    return $this->tokenServices->getOrReplace($this->configuration['value']);
+  protected function getValueToRemove(): mixed {
+    return $this->tokenService->getOrReplace($this->configuration['value']);
   }
 
   /**
@@ -48,13 +49,13 @@ class ListRemove extends ListRemoveBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['value'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Value to remove'),
-      '#description' => $this->t('When <em>Drop by specified value</em> is selected above, then a value must be specified here. This field supports tokens.'),
+      '#description' => $this->t('When <em>Drop by specified value</em> is selected above, then a value must be specified here.'),
       '#default_value' => $this->configuration['value'],
       '#weight' => 20,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['token_name'] = [
       '#type' => 'textfield',
@@ -64,7 +65,7 @@ class ListRemove extends ListRemoveBase {
       '#weight' => 30,
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

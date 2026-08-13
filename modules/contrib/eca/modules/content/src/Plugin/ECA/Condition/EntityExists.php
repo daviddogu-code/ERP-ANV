@@ -14,6 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "eca_entity_exists",
  *   label = @Translation("Entity: exists"),
  *   description = @Translation("Performs a lookup whether an entity exists and is accessible."),
+ *   eca_version_introduced = "1.0.0",
  *   context_definitions = {
  *     "entity" = @ContextDefinition("entity", label = @Translation("Entity"))
  *   }
@@ -31,8 +32,7 @@ class EntityExists extends ConditionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ConditionBase {
-    /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityExists $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setEntityLoader($container->get('eca_content.service.entity_loader'));
     return $instance;
@@ -42,7 +42,7 @@ class EntityExists extends ConditionBase {
    * {@inheritdoc}
    */
   public function evaluate(): bool {
-    if ($entity = $this->entityLoader()->loadEntity($this->getValueFromContext('entity'), $this->configuration)) {
+    if ($entity = $this->entityLoader()->loadEntity($this->getValueFromContext('entity'), $this->configuration, 'eca_entity_exists')) {
       return $this->negationCheck($entity->access('view'));
     }
     return $this->negationCheck(FALSE);
@@ -86,7 +86,11 @@ class EntityExists extends ConditionBase {
    *   The entity loader.
    */
   public function entityLoader(): EntityLoader {
-    return $this->entityLoader ?? \Drupal::service('eca_content.service.entity_loader');
+    if (!isset($this->entityLoader)) {
+      // @phpstan-ignore-next-line
+      $this->entityLoader = \Drupal::service('eca_content.service.entity_loader');
+    }
+    return $this->entityLoader;
   }
 
   /**
@@ -95,7 +99,7 @@ class EntityExists extends ConditionBase {
    * @param \Drupal\eca_content\Service\EntityLoader $entity_loader
    *   The entity loader.
    */
-  public function setEntityLoader(EntityLoader $entity_loader) {
+  public function setEntityLoader(EntityLoader $entity_loader): void {
     $this->entityLoader = $entity_loader;
   }
 

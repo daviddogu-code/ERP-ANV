@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "eca_form_state_set_rebuild",
  *   label = @Translation("Form state: set rebuild"),
  *   description = @Translation("Flag the form state to rebuild the form again after submission."),
+ *   eca_version_introduced = "1.1.0",
  *   type = "form"
  * )
  */
@@ -40,7 +41,6 @@ class FormStateSetRebuild extends FormActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['rebuild'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable rebuild'),
@@ -48,7 +48,7 @@ class FormStateSetRebuild extends FormActionBase {
       '#default_value' => $this->configuration['rebuild'],
       '#weight' => -49,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

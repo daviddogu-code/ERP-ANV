@@ -2,14 +2,16 @@
 
 namespace Drupal\eca_base\Plugin\Action;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\TranslatableInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
+use Drupal\eca\Plugin\FormFieldYamlTrait;
 use Drupal\eca\Service\YamlParser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -20,10 +22,14 @@ use Symfony\Component\Yaml\Exception\ParseException;
  * @Action(
  *   id = "eca_translate",
  *   label = @Translation("Translate"),
- *   description = @Translation("Translate a given value, and store the translated value as a token.")
+ *   description = @Translation("Translate a given value, and store the translated value as a token."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class Translate extends ConfigurableActionBase {
+
+  use FormFieldYamlTrait;
+  use PluginFormTrait;
 
   /**
    * The language manager.
@@ -42,8 +48,7 @@ class Translate extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_base\Plugin\Action\Translate $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setYamlParser($container->get('eca.service.yaml_parser'));
     $instance->setLanguageManager($container->get('language_manager'));
@@ -53,13 +58,35 @@ class Translate extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $result = parent::access($object, $account, TRUE);
+    if ($result->isAllowed() && $this->configuration['use_yaml'] && $this->configuration['validate_yaml']) {
+      try {
+        $this->yamlParser->parse($this->configuration['value']);
+      }
+      catch (ParseException) {
+        $result = AccessResult::forbidden('YAML data is not valid.');
+      }
+    }
+    return $return_as_object ? $result : $result->isAllowed();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function execute(): void {
-    $token = $this->tokenServices;
+    $token = $this->tokenService;
     $name = $this->configuration['token_name'];
     $value = $this->configuration['value'];
     $target_langcode = $this->configuration['target_langcode'];
     if ($target_langcode === '_interface') {
-      $target_langcode = $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)->getId();
+      $target_langcode = $this->languageManager->getCurrentLanguage()->getId();
+    }
+    elseif ($target_langcode === '_preferred') {
+      $target_langcode = $this->currentUser->getPreferredLangcode();
+    }
+    elseif ($target_langcode === '_eca_token') {
+      $target_langcode = $this->getTokenValue('target_langcode', $this->languageManager->getCurrentLanguage()->getId());
     }
 
     $translatable = TRUE;
@@ -69,7 +96,7 @@ class Translate extends ConfigurableActionBase {
         $value = $this->yamlParser->parse($value);
       }
       catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing a value in action "eca_translate" as YAML format, but parsing failed.');
+        $this->logger->error('Tried parsing a value in action "eca_translate" as YAML format, but parsing failed.');
         return;
       }
     }
@@ -93,9 +120,6 @@ class Translate extends ConfigurableActionBase {
         $translatable = FALSE;
         if ($value->language()->getId() !== $target_langcode) {
           $value = $value->hasTranslation($target_langcode) ? $value->getTranslation($target_langcode) : $value->addTranslation($target_langcode);
-          if (!$value->access('view')) {
-            $value = NULL;
-          }
         }
       }
       elseif (is_scalar($value) || (is_object($value) && method_exists($value, '__toString'))) {
@@ -120,10 +144,12 @@ class Translate extends ConfigurableActionBase {
     if ($translatable) {
       if (is_array($value)) {
         array_walk_recursive($value, function (&$v) use (&$target_langcode) {
+          // @codingStandardsIgnoreLine
           $v = $this->t($v, [], ['langcode' => $target_langcode]);
         });
       }
       else {
+        // @codingStandardsIgnoreLine
         $value = $this->t($value, [], ['langcode' => $target_langcode]);
       }
     }
@@ -139,6 +165,7 @@ class Translate extends ConfigurableActionBase {
       'token_name' => '',
       'value' => '',
       'use_yaml' => FALSE,
+      'validate_yaml' => FALSE,
       'target_langcode' => '_interface',
     ] + parent::defaultConfiguration();
   }
@@ -147,7 +174,6 @@ class Translate extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -162,15 +188,15 @@ class Translate extends ConfigurableActionBase {
       '#default_value' => $this->configuration['value'],
       '#weight' => -40,
     ];
-    $form['use_yaml'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Interpret above value as YAML format'),
-      '#description' => $this->t('Nested data can be set using YAML format, for example <em>mykey: "My value"</em>. When using this format, this option needs to be enabled. When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
-      '#default_value' => $this->configuration['use_yaml'],
-      '#weight' => -30,
-    ];
+    $this->buildYamlFormFields(
+      $form,
+      $this->t('Interpret above value as YAML format'),
+      $this->t('Nested data can be set using YAML format, for example <em>mykey: "My value"</em>. When using this format, this option needs to be enabled. When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
+      -30,
+    );
     $langcodes = [
       '_interface' => $this->t('Interface language'),
+      '_preferred' => $this->t('Preferred language of current user'),
     ];
     foreach ($this->languageManager->getLanguages() as $langcode => $language) {
       $langcodes[$langcode] = $language->getName();
@@ -183,8 +209,9 @@ class Translate extends ConfigurableActionBase {
       '#description' => $this->t('Define the language that the given value should be translated to.'),
       '#required' => TRUE,
       '#weight' => -10,
+      '#eca_token_select_option' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -194,6 +221,7 @@ class Translate extends ConfigurableActionBase {
     $this->configuration['token_name'] = $form_state->getValue('token_name');
     $this->configuration['value'] = $form_state->getValue('value');
     $this->configuration['use_yaml'] = !empty($form_state->getValue('use_yaml'));
+    $this->configuration['validate_yaml'] = !empty($form_state->getValue('validate_yaml'));
     $this->configuration['target_langcode'] = $form_state->getValue('target_langcode');
     parent::submitConfigurationForm($form, $form_state);
   }

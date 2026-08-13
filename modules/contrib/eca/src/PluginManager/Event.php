@@ -2,10 +2,12 @@
 
 namespace Drupal\eca\PluginManager;
 
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
-use Drupal\eca\Annotation\EcaEvent;
+use Drupal\eca\Annotation\EcaEvent as EcaEventAnnotation;
+use Drupal\eca\Attribute\EcaEvent;
 use Drupal\eca\Plugin\ECA\Event\EventInterface;
 
 /**
@@ -14,7 +16,7 @@ use Drupal\eca\Plugin\ECA\Event\EventInterface;
 class Event extends DefaultPluginManager {
 
   /**
-   * Constructs PluginManager object.
+   * Constructor of the event plugin manager.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -30,10 +32,63 @@ class Event extends DefaultPluginManager {
       $namespaces,
       $module_handler,
       EventInterface::class,
-      EcaEvent::class
+      EcaEvent::class,
+      EcaEventAnnotation::class,
     );
     $this->alterInfo('eca_event_info');
     $this->setCacheBackend($cache_backend, 'eca_event_plugins', ['eca_event_plugins']);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   */
+  protected function findDefinitions(): array {
+    $definitions = parent::findDefinitions();
+
+    // Build a mapping of system events to their according plugin.
+    $system_event_mapping = [];
+    foreach ($definitions as $id => $definition) {
+      // Assert there must only be one plugin counterpart for each system event.
+      if (isset($system_event_mapping[$definition['event_name']])) {
+        throw new InvalidPluginDefinitionException($id, sprintf('There must be only one distinct plugin definition for each system event. Affected system event: %s', $definition['event_name']));
+      }
+      $system_event_mapping[$definition['event_name']] = $id;
+    }
+
+    // Store the mapping of system events along the definitions.
+    $definitions['_mapping'] = $system_event_mapping;
+
+    return $definitions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinitions(): ?array {
+    $definitions = parent::getDefinitions();
+    unset($definitions['_mapping']);
+    return $definitions;
+  }
+
+  /**
+   * Get the according plugin ID for a system event.
+   *
+   * @param string $event_name
+   *   The name of the system event, that is usually passed along as second
+   *   argument along the event object to the event dispatcher service for
+   *   dispatching an event.
+   *
+   * @return string|null
+   *   The according plugin ID, or NULL when there is no according plugin.
+   */
+  public function getPluginIdForSystemEvent(string $event_name): ?string {
+    // @phpstan-ignore-next-line
+    if (!isset($this->definitions)) {
+      $this->getDefinitions();
+    }
+    return $this->definitions['_mapping'][$event_name] ?? NULL;
   }
 
 }

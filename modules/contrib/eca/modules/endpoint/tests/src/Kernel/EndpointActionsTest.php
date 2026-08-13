@@ -3,10 +3,10 @@
 namespace Drupal\Tests\eca_endpoint\Kernel;
 
 use Drupal\Core\Action\ActionManager;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Token\TokenInterface;
 use Drupal\eca_endpoint\EndpointEvents;
 use Drupal\eca_endpoint\Event\EndpointResponseEvent;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,7 +33,7 @@ class EndpointActionsTest extends KernelTestBase {
    *
    * @var \Drupal\eca\Token\TokenInterface|null
    */
-  protected ?TokenInterface $tokenServices;
+  protected ?TokenInterface $tokenService;
 
   /**
    * The event dispatcher.
@@ -78,7 +78,7 @@ class EndpointActionsTest extends KernelTestBase {
     $stack->push($request);
 
     $this->actionManager = \Drupal::service('plugin.manager.action');
-    $this->tokenServices = \Drupal::service('eca.token_services');
+    $this->tokenService = \Drupal::service('eca.token_services');
     $this->eventDispatcher = \Drupal::service('event_dispatcher');
   }
 
@@ -90,7 +90,7 @@ class EndpointActionsTest extends KernelTestBase {
     $action = $this->actionManager->createInstance('eca_endpoint_get_client_ip', [
       'token_name' => 'the_client_ip',
     ]);
-    $this->assertTrue(!$this->tokenServices->hasTokenData('the_client_ip'));
+    $this->assertTrue(!$this->tokenService->hasTokenData('the_client_ip'));
 
     $this->eventDispatcher->addListener(EndpointEvents::RESPONSE, function (EndpointResponseEvent $event) use (&$action) {
       $action->setEvent($event);
@@ -99,8 +99,8 @@ class EndpointActionsTest extends KernelTestBase {
 
     $this->dispatchEndpointResponseEvent();
 
-    $this->assertTrue($this->tokenServices->hasTokenData('the_client_ip'));
-    $this->assertEquals(\Drupal::requestStack()->getCurrentRequest()->getClientIp(), $this->tokenServices->getTokenData('the_client_ip'));
+    $this->assertTrue($this->tokenService->hasTokenData('the_client_ip'));
+    $this->assertEquals(\Drupal::requestStack()->getCurrentRequest()->getClientIp(), $this->tokenService->getTokenData('the_client_ip'));
   }
 
   /**
@@ -112,7 +112,7 @@ class EndpointActionsTest extends KernelTestBase {
       'index' => '1',
       'token_name' => 'path_arg',
     ]);
-    $this->assertTrue(!$this->tokenServices->hasTokenData('path_arg'));
+    $this->assertTrue(!$this->tokenService->hasTokenData('path_arg'));
 
     $this->eventDispatcher->addListener(EndpointEvents::RESPONSE, function (EndpointResponseEvent $event) use (&$action) {
       $action->setEvent($event);
@@ -121,8 +121,8 @@ class EndpointActionsTest extends KernelTestBase {
 
     $this->dispatchEndpointResponseEvent();
 
-    $this->assertTrue($this->tokenServices->hasTokenData('path_arg'));
-    $this->assertEquals('first', $this->tokenServices->getTokenData('path_arg'));
+    $this->assertTrue($this->tokenService->hasTokenData('path_arg'));
+    $this->assertEquals('first', $this->tokenService->getTokenData('path_arg'));
   }
 
   /**
@@ -134,7 +134,7 @@ class EndpointActionsTest extends KernelTestBase {
       'name' => 'a',
       'token_name' => 'query_param',
     ]);
-    $this->assertTrue(!$this->tokenServices->hasTokenData('query_param'));
+    $this->assertTrue(!$this->tokenService->hasTokenData('query_param'));
 
     $this->eventDispatcher->addListener(EndpointEvents::RESPONSE, function (EndpointResponseEvent $event) use (&$action) {
       $action->setEvent($event);
@@ -143,8 +143,8 @@ class EndpointActionsTest extends KernelTestBase {
 
     $this->dispatchEndpointResponseEvent();
 
-    $this->assertTrue($this->tokenServices->hasTokenData('query_param'));
-    $this->assertEquals('b', $this->tokenServices->getTokenData('query_param'));
+    $this->assertTrue($this->tokenService->hasTokenData('query_param'));
+    $this->assertEquals('b', $this->tokenService->getTokenData('query_param'));
   }
 
   /**
@@ -155,7 +155,7 @@ class EndpointActionsTest extends KernelTestBase {
     $action = $this->actionManager->createInstance('eca_endpoint_get_request_content', [
       'token_name' => 'content',
     ]);
-    $this->assertTrue(!$this->tokenServices->hasTokenData('content'));
+    $this->assertTrue(!$this->tokenService->hasTokenData('content'));
 
     $this->eventDispatcher->addListener(EndpointEvents::RESPONSE, function (EndpointResponseEvent $event) use (&$action) {
       $action->setEvent($event);
@@ -164,8 +164,8 @@ class EndpointActionsTest extends KernelTestBase {
 
     $this->dispatchEndpointResponseEvent();
 
-    $this->assertTrue($this->tokenServices->hasTokenData('content'));
-    $this->assertEquals('hello', $this->tokenServices->getTokenData('content'));
+    $this->assertTrue($this->tokenService->hasTokenData('content'));
+    $this->assertEquals('hello', $this->tokenService->getTokenData('content'));
   }
 
   /**
@@ -176,7 +176,7 @@ class EndpointActionsTest extends KernelTestBase {
     $action = $this->actionManager->createInstance('eca_endpoint_get_request_content_type', [
       'token_name' => 'type',
     ]);
-    $this->assertTrue(!$this->tokenServices->hasTokenData('type'));
+    $this->assertTrue(!$this->tokenService->hasTokenData('type'));
 
     $this->eventDispatcher->addListener(EndpointEvents::RESPONSE, function (EndpointResponseEvent $event) use (&$action) {
       $action->setEvent($event);
@@ -185,8 +185,8 @@ class EndpointActionsTest extends KernelTestBase {
 
     $this->dispatchEndpointResponseEvent();
 
-    $this->assertTrue($this->tokenServices->hasTokenData('type'));
-    $this->assertEquals('form', $this->tokenServices->getTokenData('type'), "A POST request will default return form as content type.");
+    $this->assertTrue($this->tokenService->hasTokenData('type'));
+    $this->assertEquals('form', $this->tokenService->getTokenData('type'), "A POST request will default return form as content type.");
   }
 
   /**
@@ -198,7 +198,7 @@ class EndpointActionsTest extends KernelTestBase {
       'name' => 'content-type',
       'token_name' => 'headers',
     ]);
-    $this->assertTrue(!$this->tokenServices->hasTokenData('headers'));
+    $this->assertTrue(!$this->tokenService->hasTokenData('headers'));
 
     $this->eventDispatcher->addListener(EndpointEvents::RESPONSE, function (EndpointResponseEvent $event) use (&$action) {
       $action->setEvent($event);
@@ -207,8 +207,8 @@ class EndpointActionsTest extends KernelTestBase {
 
     $this->dispatchEndpointResponseEvent();
 
-    $this->assertTrue($this->tokenServices->hasTokenData('headers'));
-    $this->assertEquals('application/x-www-form-urlencoded', $this->tokenServices->getTokenData('headers'), "A POST request will default return form as content-type header.");
+    $this->assertTrue($this->tokenService->hasTokenData('headers'));
+    $this->assertEquals('application/x-www-form-urlencoded', $this->tokenService->getTokenData('headers'), "A POST request will default return form as content-type header.");
   }
 
   /**
@@ -219,7 +219,7 @@ class EndpointActionsTest extends KernelTestBase {
     $action = $this->actionManager->createInstance('eca_endpoint_get_request_method', [
       'token_name' => 'method',
     ]);
-    $this->assertTrue(!$this->tokenServices->hasTokenData('method'));
+    $this->assertTrue(!$this->tokenService->hasTokenData('method'));
 
     $this->eventDispatcher->addListener(EndpointEvents::RESPONSE, function (EndpointResponseEvent $event) use (&$action) {
       $action->setEvent($event);
@@ -228,8 +228,8 @@ class EndpointActionsTest extends KernelTestBase {
 
     $this->dispatchEndpointResponseEvent();
 
-    $this->assertTrue($this->tokenServices->hasTokenData('method'));
-    $this->assertEquals('POST', $this->tokenServices->getTokenData('method'));
+    $this->assertTrue($this->tokenService->hasTokenData('method'));
+    $this->assertEquals('POST', $this->tokenService->getTokenData('method'));
   }
 
   /**
@@ -319,7 +319,7 @@ class EndpointActionsTest extends KernelTestBase {
       $response = $event->response;
     });
 
-    $this->tokenServices->addTokenData('headers', [
+    $this->tokenService->addTokenData('headers', [
       'X-ECA-Test' => 'Kernel',
     ]);
     $this->dispatchEndpointResponseEvent();

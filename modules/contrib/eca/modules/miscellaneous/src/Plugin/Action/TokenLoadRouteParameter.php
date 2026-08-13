@@ -2,8 +2,8 @@
 
 namespace Drupal\eca_misc\Plugin\Action;
 
-use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
@@ -16,7 +16,8 @@ use Drupal\eca_misc\Plugin\RouteTrait;
  * @Action(
  *   id = "eca_token_load_route_param",
  *   label = @Translation("Token: load route parameter"),
- *   description = @Translation("Loads a route parameter into the token environment.")
+ *   description = @Translation("Loads a route parameter into the token environment."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class TokenLoadRouteParameter extends ConfigurableActionBase {
@@ -26,9 +27,10 @@ class TokenLoadRouteParameter extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $allowed = FALSE;
-    if ($parameter = $this->getRouteMatch()->getParameter($this->configuration['parameter_name'])) {
+    $parameter_name = $this->tokenService->replace($this->configuration['parameter_name']);
+    if ($parameter = $this->getRouteMatch()->getParameter($parameter_name)) {
       $allowed = TRUE;
       if ($parameter instanceof AccessibleInterface) {
         $allowed = $parameter->access('view', $account);
@@ -42,10 +44,11 @@ class TokenLoadRouteParameter extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function execute(): void {
-    if ($parameter = $this->getRouteMatch()->getParameter($this->configuration['parameter_name'])) {
-      $tokenName = empty($this->configuration['token_name']) ? $this->tokenServices->getTokenType($parameter) : $this->configuration['token_name'];
+    $parameter_name = $this->tokenService->replace($this->configuration['parameter_name']);
+    if ($parameter = $this->getRouteMatch()->getParameter($parameter_name)) {
+      $tokenName = empty($this->configuration['token_name']) ? $this->tokenService->getTokenType($parameter) : $this->configuration['token_name'];
       if ($tokenName) {
-        $this->tokenServices->addTokenData($tokenName, $parameter);
+        $this->tokenService->addTokenData($tokenName, $parameter);
       }
     }
   }
@@ -65,7 +68,6 @@ class TokenLoadRouteParameter extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $this->requestFormField($form);
     $form['parameter_name'] = [
       '#type' => 'textfield',
@@ -73,6 +75,7 @@ class TokenLoadRouteParameter extends ConfigurableActionBase {
       '#description' => $this->t('The routes and their parameters can be found in the <em>MODULE.routing.yml</em> file. Example for the route <em>entity.node.preview</em>: <em>/node/preview/{node_preview}/{view_mode_id}</em> where <em>node_preview</em> and <em>view_mode_id</em> are the parameter names.'),
       '#default_value' => $this->configuration['parameter_name'],
       '#weight' => -20,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['token_name'] = [
       '#type' => 'textfield',
@@ -82,7 +85,7 @@ class TokenLoadRouteParameter extends ConfigurableActionBase {
       '#weight' => -10,
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

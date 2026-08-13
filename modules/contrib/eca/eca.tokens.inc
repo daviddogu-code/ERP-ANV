@@ -7,6 +7,8 @@
 
 use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Markup;
@@ -52,10 +54,71 @@ function eca_token_info(): array {
 }
 
 /**
+ * Implements hook_token_info_alter().
+ */
+function eca_token_info_alter(array &$data): void {
+  $definitions = \Drupal::entityTypeManager()->getDefinitions();
+  foreach ($definitions as $definition) {
+    if ($definition instanceof ContentEntityTypeInterface && isset($data['tokens'][$definition->id()])) {
+      if ($definition->hasKey('id') && !isset($data['tokens'][$definition->id()]['id'])) {
+        $data['tokens'][$definition->id()]['id'] = [
+          'name' => t('Entity ID'),
+          'description' => t('The ID of the entity.'),
+        ];
+      }
+      if ($definition->hasKey('label') && !isset($data['tokens'][$definition->id()]['label'])) {
+        $data['tokens'][$definition->id()]['label'] = [
+          'name' => t('Entity label'),
+          'description' => t('The label of the entity.'),
+        ];
+      }
+      $data['tokens'][$definition->id()]['entity_type'] = [
+        'name' => t('Entity type'),
+        'description' => t('The type ID of the entity.'),
+      ];
+      if ($definition->hasKey('bundle')) {
+        $data['tokens'][$definition->id()]['bundle_id'] = [
+          'name' => t('Entity bundle'),
+          'description' => t('The bundle ID of the entity.'),
+        ];
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_tokens().
  */
-function eca_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata): array {
+function eca_tokens(string $type, array $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata): array {
   $replacements = [];
+
+  $definitions = \Drupal::entityTypeManager()->getDefinitions();
+  if (isset($definitions[$type]) && !empty($data[$type]) && $data[$type] instanceof ContentEntityInterface) {
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'id':
+          if ($definitions[$type]->hasKey('id')) {
+            $replacements[$original] = $data[$type]->id();
+          }
+          break;
+
+        case 'label':
+          if ($definitions[$type]->hasKey('label')) {
+            $replacements[$original] = $data[$type]->label();
+          }
+          break;
+
+        case 'entity_type':
+          $replacements[$original] = $data[$type]->getEntityTypeId();
+          break;
+
+        case 'bundle_id':
+          $replacements[$original] = $data[$type]->bundle();
+          break;
+
+      }
+    }
+  }
 
   if ($type === 'dto' && !empty($data['dto'])) {
     /** @var \Drupal\eca\Token\TokenInterface $token_services */
@@ -68,6 +131,7 @@ function eca_tokens($type, $tokens, array $data, array $options, BubbleableMetad
       $typed_object = $dto;
       $entity = NULL;
       $token_type = NULL;
+      $value = NULL;
 
       // Traverse through the property path, possibly until the leaf point or
       // when we found a token type that may take over for token replacements.
@@ -76,7 +140,7 @@ function eca_tokens($type, $tokens, array $data, array $options, BubbleableMetad
         if (method_exists($typed_object, 'get') && (isset($typed_object->$property) || ($typed_object instanceof \ArrayAccess && isset($typed_object[$property])))) {
           $typed_object = $typed_object->get($property);
         }
-        elseif ($typed_object instanceof ListInterface && !ctype_digit(strval($property))) {
+        elseif ($typed_object instanceof ListInterface && !ctype_digit((string) $property)) {
           // Allow implicitly jumping to the first item of the list.
           array_unshift($parts, $property);
           $typed_object = $typed_object->first();
@@ -132,7 +196,7 @@ function eca_tokens($type, $tokens, array $data, array $options, BubbleableMetad
           break;
         }
       }
-      if (!$access_allowed || !$typed_object) {
+      if (!$access_allowed || !$typed_object || !$value) {
         continue;
       }
 
@@ -166,7 +230,7 @@ function eca_tokens($type, $tokens, array $data, array $options, BubbleableMetad
     $available = $data + TokenServices::get()->getTokenData();
     foreach ($tokens as $name => $original) {
       if (isset($available[$name])) {
-        $value = $available[$name];
+        $value = $available[$name] ?? NULL;
         $replacement = is_scalar($value) || is_null($value) || (is_object($value) && method_exists($value, '__toString')) ? (string) $value : ($value instanceof EntityInterface ? $value->id() : '');
         if ($replacement !== '') {
           $replacements[$original] = Markup::create($replacement);

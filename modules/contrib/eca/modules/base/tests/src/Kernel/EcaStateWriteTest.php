@@ -47,11 +47,12 @@ class EcaStateWriteTest extends KernelTestBase {
     /** @var \Drupal\eca\EcaState $eca_state */
     $eca_state = \Drupal::service('eca.state');
 
+    $token_services->addTokenData('myKey', 'my_key');
     $token_services->addTokenData('my_custom_token:value1', 'my_custom_value');
 
     /** @var \Drupal\eca_base\Plugin\Action\EcaStateWrite $action */
     $action = $action_manager->createInstance('eca_state_write', [
-      'key' => 'my_key',
+      'key' => '[myKey]',
       'value' => '[my_custom_token:value1]',
       'use_yaml' => FALSE,
     ]);

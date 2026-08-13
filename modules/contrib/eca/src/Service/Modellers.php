@@ -7,12 +7,12 @@ use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Archiver\ArchiveTar;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\StorageInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\eca\Entity\Eca;
+use Drupal\eca\ErrorHandlerTrait;
 use Drupal\eca\Plugin\ECA\Modeller\ModellerInterface;
 use Drupal\eca\PluginManager\Event;
 use Drupal\eca\PluginManager\Modeller;
@@ -22,21 +22,15 @@ use Drupal\eca\PluginManager\Modeller;
  */
 class Modellers {
 
+  use ErrorHandlerTrait;
   use ServiceTrait;
 
   /**
-   * ECA config entity storage manager.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected EntityStorageInterface $configStorage;
-
-  /**
-   * ECA model storage manager.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected EntityStorageInterface $modelStorage;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * ECA modeller plugin manager.
@@ -120,8 +114,7 @@ class Modellers {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, Modeller $plugin_manager_modeller, Event $plugin_manager_event, Actions $action_services, Conditions $condition_services, LoggerChannelInterface $logger, FileSystemInterface $file_system, StorageInterface $export_storage, ConfigFactoryInterface $config_factory) {
-    $this->configStorage = $entity_type_manager->getStorage('eca');
-    $this->modelStorage = $entity_type_manager->getStorage('eca_model');
+    $this->entityTypeManager = $entity_type_manager;
     $this->pluginManagerModeller = $plugin_manager_modeller;
     $this->pluginManagerEvent = $plugin_manager_event;
     $this->actionServices = $action_services;
@@ -143,7 +136,7 @@ class Modellers {
    */
   public function loadModel(string $id): ?Eca {
     /** @var \Drupal\eca\Entity\Eca $eca */
-    $eca = $this->configStorage->load(mb_strtolower($id));
+    $eca = $this->entityTypeManager->getStorage('eca')->load(mb_strtolower($id));
     return $eca;
   }
 
@@ -163,10 +156,13 @@ class Modellers {
    */
   public function saveModel(ModellerInterface $modeller): bool {
     $id = mb_strtolower($modeller->getId());
-    /** @var \Drupal\eca\Entity\Eca $config */
-    $config = $this->configStorage->load($id);
+    /** @var \Drupal\eca\Entity\Eca|null $config */
+    $config = $this->entityTypeManager->getStorage('eca')->load($id);
     if ($config === NULL) {
-      $config = $this->configStorage->create([
+      /**
+       * @var \Drupal\eca\Entity\Eca $config
+       */
+      $config = $this->entityTypeManager->getStorage('eca')->create([
         'id' => $id,
         'modeller' => $modeller->getPluginId(),
       ]);
@@ -185,7 +181,7 @@ class Modellers {
     $modeller->readComponents($config);
     if ($modeller->hasError()) {
       // If the model contains error(s), don't save it and do not ask for a
-      // page relead, because that would cause data loss.
+      // page reload, because that would cause data loss.
       return FALSE;
     }
     // Only save model if reading its components succeeded without errors.
@@ -216,11 +212,13 @@ class Modellers {
    *   The modeller instance, or NULL if the plugin doesn't exist.
    */
   public function getModeller(string $plugin_id): ?ModellerInterface {
-    /** @var \Drupal\eca\Plugin\ECA\Modeller\ModellerInterface $modeller */
     try {
+      /**
+       * @var \Drupal\eca\Plugin\ECA\Modeller\ModellerInterface $modeller
+       */
       $modeller = $this->pluginManagerModeller->createInstance($plugin_id);
     }
-    catch (PluginException $e) {
+    catch (PluginException) {
       return NULL;
     }
     return $modeller;
@@ -235,17 +233,21 @@ class Modellers {
   public function events(): array {
     static $events;
     if ($events === NULL) {
+      $this->enableExtendedErrorHandling('Collecting all available events');
       $events = [];
       foreach ($this->pluginManagerEvent->getDefinitions() as $plugin_id => $definition) {
         try {
-          $events[] = $this->pluginManagerEvent->createInstance($plugin_id);
+          /** @var \Drupal\eca\Plugin\ECA\Event\EventInterface $plugin */
+          $plugin = $this->pluginManagerEvent->createInstance($plugin_id);
+          $events[] = $plugin;
         }
-        catch (PluginException $e) {
+        catch (PluginException | \Throwable) {
           // Can be ignored.
         }
       }
+      $this->resetExtendedErrorHandling();
+      $this->sortPlugins($events);
     }
-    $this->sortPlugins($events);
     return $events;
   }
 
@@ -255,11 +257,13 @@ class Modellers {
   public function exportTemplates(): void {
     foreach ($this->pluginManagerModeller->getDefinitions() as $plugin_id => $definition) {
       try {
-        /** @var \Drupal\eca\Plugin\ECA\Modeller\ModellerInterface $modeller */
+        /**
+         * @var \Drupal\eca\Plugin\ECA\Modeller\ModellerInterface $modeller
+         */
         $modeller = $this->pluginManagerModeller->createInstance($plugin_id);
         $modeller->exportTemplates();
       }
-      catch (PluginException $e) {
+      catch (PluginException) {
         // Can be ignored.
       }
     }
@@ -293,7 +297,7 @@ class Modellers {
       try {
         @$this->fileSystem->delete($archiveFileName);
       }
-      catch (FileException $e) {
+      catch (FileException) {
         // Ignore failed deletes.
       }
     }
@@ -332,7 +336,7 @@ class Modellers {
    * @param array $dependencies
    *   The list of dependencies to be added.
    */
-  private function getNestedDependencies(array &$allDependencies, array $dependencies): void {
+  public function getNestedDependencies(array &$allDependencies, array $dependencies): void {
     foreach ($dependencies['module'] ?? [] as $module) {
       if (!in_array($module, $allDependencies['module'], TRUE)) {
         $allDependencies['module'][] = $module;

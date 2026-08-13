@@ -2,10 +2,10 @@
 
 namespace Drupal\eca_queue\Plugin\Action;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueWorkerManagerInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
 use Drupal\eca_queue\Plugin\QueueWorker\TaskWorker;
@@ -17,7 +17,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @Action(
  *   id = "eca_enqueue_task",
- *   label = @Translation("Enqueue a task")
+ *   label = @Translation("Enqueue a task"),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class EnqueueTask extends ConfigurableActionBase {
@@ -37,20 +38,27 @@ class EnqueueTask extends ConfigurableActionBase {
   protected QueueWorkerManagerInterface $queueWorkerManager;
 
   /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected TimeInterface $time;
+
+  /**
    * The name of the queue.
    *
    * @var string
    */
-  static protected string $queueName = 'eca_task';
+  protected static string $queueName = 'eca_task';
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_queue\Plugin\Action\EnqueueTask $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setQueueFactory($container->get('queue'));
     $instance->setQueueWorkerManager($container->get('plugin.manager.queue_worker'));
+    $instance->time = $container->get('datetime.time');
     return $instance;
   }
 
@@ -58,8 +66,8 @@ class EnqueueTask extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function execute(): void {
-    $task_name = $this->tokenServices->replaceClear($this->configuration['task_name']);
-    $task_value = $this->tokenServices->replaceClear($this->configuration['task_value']);
+    $task_name = $this->tokenService->replaceClear($this->configuration['task_name']);
+    $task_value = $this->tokenService->replaceClear($this->configuration['task_value']);
     $task_not_before = $this->getEarliestProcessingTime();
 
     $data = [];
@@ -67,13 +75,13 @@ class EnqueueTask extends ConfigurableActionBase {
     if ($token_names !== '') {
       foreach (DataTransferObject::buildArrayFromUserInput($token_names) as $token_name) {
         $token_name = trim($token_name);
-        if ($this->tokenServices->hasTokenData($token_name)) {
-          $data[$token_name] = $this->tokenServices->getTokenData($token_name);
+        if ($this->tokenService->hasTokenData($token_name)) {
+          $data[$token_name] = $this->tokenService->getTokenData($token_name);
         }
       }
     }
 
-    $task = new Task($task_name, $task_value, $data, $task_not_before);
+    $task = new Task($this->time, $task_name, $task_value, $data, $task_not_before);
     // Check whether the task is to be distributed into its own queue.
     $distributed_queue_name = static::$queueName . ':' . TaskWorker::normalizeTaskName($task_name);
     if ($this->queueWorkerManager->hasDefinition($distributed_queue_name)) {
@@ -136,7 +144,6 @@ class EnqueueTask extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['task_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Task name'),
@@ -159,7 +166,7 @@ class EnqueueTask extends ConfigurableActionBase {
       '#description' => $this->t('Comma separated list of token names from the current context, that will be put into the task.'),
       '#weight' => -30,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

@@ -3,14 +3,15 @@
 namespace Drupal\eca_endpoint\Plugin\Action;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca_endpoint\Event\EndpointResponseEvent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 /**
  * Base class for request actions.
@@ -27,8 +28,7 @@ abstract class RequestActionBase extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_endpoint\Plugin\Action\RequestActionBase $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->requestStack = $container->get('request_stack');
     return $instance;
@@ -43,6 +43,9 @@ abstract class RequestActionBase extends ConfigurableActionBase {
   public function getRequest(): ?Request {
     if ($this->event instanceof EndpointResponseEvent) {
       return $this->event->request;
+    }
+    if ($this->event instanceof ResponseEvent) {
+      return $this->event->getRequest();
     }
     return $this->requestStack->getCurrentRequest();
   }
@@ -60,7 +63,6 @@ abstract class RequestActionBase extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -69,7 +71,7 @@ abstract class RequestActionBase extends ConfigurableActionBase {
       '#required' => TRUE,
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -83,7 +85,7 @@ abstract class RequestActionBase extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE): AccessResultInterface|bool {
     $result = $this->getRequest() ? AccessResult::allowed() : AccessResult::forbidden("No request available.");
     return $return_as_object ? $result : $result->isAllowed();
   }
@@ -93,7 +95,7 @@ abstract class RequestActionBase extends ConfigurableActionBase {
    */
   public function execute(): void {
     if ($this->getRequest()) {
-      $this->tokenServices->addTokenData($this->configuration['token_name'], $this->getRequestValue());
+      $this->tokenService->addTokenData($this->configuration['token_name'], $this->getRequestValue());
     }
   }
 
@@ -103,6 +105,6 @@ abstract class RequestActionBase extends ConfigurableActionBase {
    * @return mixed
    *   The value.
    */
-  abstract protected function getRequestValue();
+  abstract protected function getRequestValue(): mixed;
 
 }

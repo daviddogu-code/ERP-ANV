@@ -6,7 +6,7 @@ dependencies:
 id: eca_test_0008
 modeller: bpmn_io
 label: 'Save new entity'
-version: 1.0.0
+version: v1
 weight: null
 events:
   insert_article:

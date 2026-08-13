@@ -6,6 +6,8 @@ use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Form\BaseFormIdInterface;
+use Drupal\eca\Attribute\Token;
+use Drupal\eca\Event\FormEventInterface;
 use Drupal\eca\EventSubscriber\EcaExecutionFormSubscriber;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
 use Drupal\eca\Token\DataProviderInterface;
@@ -32,7 +34,24 @@ class CurrentFormDataProvider implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getData(string $key) {
+  #[Token(
+    name: 'form',
+    description: 'The current form.',
+    classes: [FormEventInterface::class],
+    properties: [
+      new Token(name: 'id', description: 'The form ID.'),
+      new Token(name: 'base_id', description: 'The form base ID.'),
+      new Token(name: 'operation', description: 'The form operation.'),
+      new Token(name: 'mode', description: 'The form mode.'),
+      new Token(name: 'triggered', description: 'The form field name that triggered the form event.'),
+      new Token(name: 'values', description: '', properties: [
+        new Token(name: 'FIELD_NAME', description: 'The field value for each of the named fields.'),
+      ]),
+      new Token(name: 'num_errors', description: 'The number of form errors.'),
+    ],
+    aliases: ['current_form'],
+  )]
+  public function getData(string $key): mixed {
     if (!($events = $this->subscriber()->getStackedFormEvents())) {
       return NULL;
     }
@@ -46,7 +65,7 @@ class CurrentFormDataProvider implements DataProviderInterface {
         $form_object = $form_state->getFormObject();
         $dto_values = [
           'id' => $form_object->getFormId(),
-          'base-id' => $form_object instanceof BaseFormIdInterface ? $form_object->getBaseFormId() : NULL,
+          'base_id' => $form_object instanceof BaseFormIdInterface ? $form_object->getBaseFormId() : NULL,
           'operation' => $form_object instanceof EntityFormInterface ? $form_object->getOperation() : NULL,
           'mode' => $form_object instanceof ContentEntityFormInterface ? $form_object->getFormDisplay($form_state)->id() : NULL,
           'dangerous_raw_values' => array_merge($form_state->getUserInput(), $form_state->getValues()),
@@ -66,7 +85,7 @@ class CurrentFormDataProvider implements DataProviderInterface {
         else {
           $dto = DataTransferObject::create([
             'id' => $dto_values['id'],
-            'base-id' => $dto_values['base-id'],
+            'base_id' => $dto_values['base_id'],
             'operation' => $dto_values['operation'],
             'mode' => $dto_values['mode'],
             'triggered' => $dto_values['triggered'],
@@ -77,14 +96,14 @@ class CurrentFormDataProvider implements DataProviderInterface {
               if (!$value) {
                 return;
               }
-              if (is_scalar($value) || (is_object($value) && method_exists($value, '__toString' ))) {
+              if (is_scalar($value) || (is_object($value) && method_exists($value, '__toString'))) {
                 $value = trim(Xss::filter(strip_tags((string) $value)));
               }
             });
             $dto->set('values', $values_sanitized);
           }
         }
-        $dto->set('num-errors', count($form_state->getErrors()));
+        $dto->set('num_errors', count($form_state->getErrors()));
         static::$cached['form_dto_values'] = $dto_values;
         static::$cached['form_dto'] = $dto;
         return $dto;
@@ -107,6 +126,7 @@ class CurrentFormDataProvider implements DataProviderInterface {
    *
    * This service can not be obtained through dependency injection, because
    * this may lead to a circular reference.
+   *
    * @see https://www.drupal.org/project/eca/issues/3318655
    *
    * @return \Drupal\eca\EventSubscriber\EcaExecutionFormSubscriber

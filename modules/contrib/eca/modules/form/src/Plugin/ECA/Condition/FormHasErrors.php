@@ -11,7 +11,8 @@ use Drupal\eca\Plugin\FormPluginTrait;
  * @EcaCondition(
  *   id = "eca_form_has_errors",
  *   label = @Translation("Form: has any errors"),
- *   description = @Translation("Checks whether the current form state has any errors.")
+ *   description = @Translation("Checks whether the current form state has any errors."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class FormHasErrors extends ConditionBase {

@@ -1,0 +1,29 @@
+eca.event.plugin.flag:flag:
+  type: eca.event.plugin
+  label: 'Flag'
+eca.event.plugin.flag:unflag:
+  type: eca.event.plugin
+  label: 'Unflag'
+eca.event.plugin.flag:insert:
+  type: eca.event.plugin
+  label: 'Insert flagging'
+eca.event.plugin.flag:delete:
+  type: eca.event.plugin
+  label: 'Delete flagging'
+
+eca.condition.plugin.eca_flag_entity_is_flagged:
+  type: eca.condition.plugin
+  mapping:
+    flag_name:
+      type: string
+      label: 'Name of flag'
+
+action.configuration.eca_flag_get_flagging:
+  type: mapping
+  mapping:
+    flag_name:
+      type: string
+      label: 'Name of flag'
+    token_name:
+      type: string
+      label: 'Name of token'

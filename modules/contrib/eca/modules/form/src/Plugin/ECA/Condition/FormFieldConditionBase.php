@@ -24,8 +24,8 @@ abstract class FormFieldConditionBase extends ConditionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
-    return $this->buildFormFieldConfigurationForm($form, $form_state);
+    $form = $this->buildFormFieldConfigurationForm($form, $form_state);
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

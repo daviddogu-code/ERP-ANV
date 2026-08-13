@@ -6,10 +6,14 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\TypedDataInterface;
+use Drupal\eca\Attribute\Token;
 use Drupal\eca\Entity\Objects\EcaEvent;
 use Drupal\eca\Event\Tag;
 use Drupal\eca\Plugin\CleanupInterface;
 use Drupal\eca\Plugin\ECA\Event\EventBase;
+use Drupal\eca\Service\ContentEntityTypes;
+use Drupal\eca_content\Event\ContentEntityBaseBundle;
+use Drupal\eca_content\Event\ContentEntityBaseContentEntity;
 use Drupal\eca_content\Event\ContentEntityBundleCreate;
 use Drupal\eca_content\Event\ContentEntityBundleDelete;
 use Drupal\eca_content\Event\ContentEntityCreate;
@@ -21,9 +25,9 @@ use Drupal\eca_content\Event\ContentEntityInsert;
 use Drupal\eca_content\Event\ContentEntityLoad;
 use Drupal\eca_content\Event\ContentEntityPreDelete;
 use Drupal\eca_content\Event\ContentEntityPreLoad;
+use Drupal\eca_content\Event\ContentEntityPreSave;
 use Drupal\eca_content\Event\ContentEntityPrepareForm;
 use Drupal\eca_content\Event\ContentEntityPrepareView;
-use Drupal\eca_content\Event\ContentEntityPreSave;
 use Drupal\eca_content\Event\ContentEntityRevisionCreate;
 use Drupal\eca_content\Event\ContentEntityRevisionDelete;
 use Drupal\eca_content\Event\ContentEntityStorageLoad;
@@ -31,22 +35,45 @@ use Drupal\eca_content\Event\ContentEntityTranslationCreate;
 use Drupal\eca_content\Event\ContentEntityTranslationDelete;
 use Drupal\eca_content\Event\ContentEntityTranslationInsert;
 use Drupal\eca_content\Event\ContentEntityUpdate;
+use Drupal\eca_content\Event\ContentEntityValidate;
 use Drupal\eca_content\Event\ContentEntityView;
+use Drupal\eca_content\Event\ContentEntityViewModeAlter;
 use Drupal\eca_content\Event\FieldSelectionBase;
 use Drupal\eca_content\Event\OptionsSelection;
 use Drupal\eca_content\Event\ReferenceSelection;
-use Drupal\eca\Service\ContentEntityTypes;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Plugin implementation of the ECA Events for content entities.
  *
  * @EcaEvent(
  *   id = "content_entity",
- *   deriver = "Drupal\eca_content\Plugin\ECA\Event\ContentEntityEventDeriver"
+ *   deriver = "Drupal\eca_content\Plugin\ECA\Event\ContentEntityEventDeriver",
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class ContentEntityEvent extends EventBase implements CleanupInterface {
+
+  /**
+   * A stack of selection event instances.
+   *
+   * An instance will be removed by
+   * \Drupal\eca_content\Plugin\ECA\Event\ContentEntityEvent::cleanupAfterSuccessors.
+   *
+   * @var \Drupal\eca_content\Event\OptionsSelection[]
+   */
+  protected static array $optionsSelections = [];
+
+  /**
+   * A stack of selection event instances.
+   *
+   * An instance will be removed by
+   * \Drupal\eca_content\Plugin\ECA\Event\ContentEntityEvent::cleanupAfterSuccessors.
+   *
+   * @var \Drupal\eca_content\Event\ReferenceSelection[]
+   */
+  protected static array $referenceSelections = [];
 
   /**
    * The entity type service.
@@ -58,7 +85,7 @@ class ContentEntityEvent extends EventBase implements CleanupInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ContentEntityEvent {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $plugin->entityTypes = $container->get('eca.service.content_entity_types');
     return $plugin;
@@ -179,6 +206,13 @@ class ContentEntityEvent extends EventBase implements CleanupInterface {
         'event_class' => ContentEntityView::class,
         'tags' => Tag::CONTENT | Tag::RUNTIME | Tag::VIEW | Tag::BEFORE,
       ],
+      'viewmodealter' => [
+        'label' => 'Alter entity view mode',
+        'event_name' => ContentEntityEvents::VIEWMODEALTER,
+        'event_class' => ContentEntityViewModeAlter::class,
+        'tags' => Tag::CONTENT | Tag::RUNTIME | Tag::VIEW | Tag::BEFORE,
+        'eca_version_introduced' => '2.0.0',
+      ],
       'prepareview' => [
         'label' => 'Prepare content entity view',
         'event_name' => ContentEntityEvents::PREPAREVIEW,
@@ -190,6 +224,14 @@ class ContentEntityEvent extends EventBase implements CleanupInterface {
         'event_name' => ContentEntityEvents::PREPAREFORM,
         'event_class' => ContentEntityPrepareForm::class,
         'tags' => Tag::CONTENT | Tag::RUNTIME | Tag::VIEW | Tag::BEFORE,
+      ],
+      'validate' => [
+        'label' => 'Validate content entity',
+        'description' => 'When an entity is undergoing validation.',
+        'event_name' => ContentEntityEvents::VALIDATE,
+        'event_class' => ContentEntityValidate::class,
+        'tags' => Tag::RUNTIME | Tag::CONTENT,
+        'eca_version_introduced' => '2.1.0',
       ],
       'fieldvaluesinit' => [
         'label' => 'Init content entity field values',
@@ -243,7 +285,6 @@ class ContentEntityEvent extends EventBase implements CleanupInterface {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     if ($this->eventClass() === ContentEntityCustomEvent::class) {
       $form['event_id'] = [
         '#type' => 'textfield',
@@ -275,7 +316,7 @@ class ContentEntityEvent extends EventBase implements CleanupInterface {
         ];
       }
     }
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -298,7 +339,7 @@ class ContentEntityEvent extends EventBase implements CleanupInterface {
   /**
    * {@inheritdoc}
    */
-  public function lazyLoadingWildcard(string $eca_config_id, EcaEvent $ecaEvent): string {
+  public function generateWildcard(string $eca_config_id, EcaEvent $ecaEvent): string {
     /** @var \Drupal\eca\Plugin\ECA\Event\EventBase $plugin */
     $plugin = $ecaEvent->getPlugin();
     switch ($plugin->getDerivativeId()) {
@@ -356,19 +397,91 @@ class ContentEntityEvent extends EventBase implements CleanupInterface {
   /**
    * {@inheritdoc}
    */
+  public static function appliesForWildcard(Event $event, string $event_name, string $wildcard): bool {
+    if ($event instanceof ContentEntityBaseBundle) {
+      return in_array($wildcard, [
+        '*',
+        $event->getEntityTypeId(),
+        $event->getEntityTypeId() . '::' . $event->getBundle(),
+      ], TRUE);
+    }
+    if ($event instanceof ContentEntityCustomEvent) {
+      return ($event->getEventId() === $wildcard) || ($wildcard === '');
+    }
+    if ($event instanceof ContentEntityBaseContentEntity) {
+      $entity = $event->getEntity();
+      return in_array($wildcard, [
+        '*',
+        $entity->getEntityTypeId(),
+        $entity->getEntityTypeId() . '::' . $entity->bundle(),
+      ], TRUE);
+    }
+    if ($event instanceof ContentEntityPreLoad) {
+      return in_array($wildcard, ['*', $event->getEntityTypeId()], TRUE);
+    }
+    if ($event instanceof OptionsSelection) {
+      if (!$event->hasEntity()) {
+        // Can't do anything without an entity and without a specified field.
+        return FALSE;
+      }
+
+      $entity = $event->getEntity();
+      $field_name = $event->fieldStorageDefinition->getName();
+      $candidates = ['*::*::*'];
+      $candidates[] = '*::*::' . trim($field_name);
+      $candidates[] = $entity->getEntityTypeId() . '::*::*';
+      $candidates[] = $entity->getEntityTypeId() . '::' . $entity->bundle() . '::*';
+      $candidates[] = $entity->getEntityTypeId() . '::*::' . trim($field_name);
+      $candidates[] = $entity->getEntityTypeId() . '::' . $entity->bundle() . '::' . trim($field_name);
+
+      if (in_array($wildcard, $candidates, TRUE)) {
+        self::$optionsSelections[] = $event;
+        return TRUE;
+      }
+      return FALSE;
+    }
+    if ($event instanceof ReferenceSelection) {
+      $config = $event->selection->getConfiguration();
+      /** @var \Drupal\Core\Entity\ContentEntityInterface|null $entity */
+      $entity = $config['entity'] ?? NULL;
+      $field_name = $config['field_name'] ?? NULL;
+      if (!$entity || !$field_name) {
+        // Can't do anything without an entity and without a specified field.
+        return FALSE;
+      }
+
+      $candidates = ['*::*::*'];
+      $candidates[] = '*::*::' . trim($field_name);
+      $candidates[] = $entity->getEntityTypeId() . '::*::*';
+      $candidates[] = $entity->getEntityTypeId() . '::' . $entity->bundle() . '::*';
+      $candidates[] = $entity->getEntityTypeId() . '::*::' . trim($field_name);
+      $candidates[] = $entity->getEntityTypeId() . '::' . $entity->bundle() . '::' . trim($field_name);
+
+      if (in_array($wildcard, $candidates, TRUE)) {
+        self::$referenceSelections[] = $event;
+        return TRUE;
+      }
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function cleanupAfterSuccessors(): void {
     switch ($this->getDerivativeId()) {
 
       case 'reference_selection':
-        if (!($event = array_pop(ReferenceSelection::$instances))) {
+        if (!($event = array_pop(self::$referenceSelections))) {
           return;
         }
         if (!($token_name = $this->configuration['token_name'] ?? NULL)) {
           return;
         }
 
-        $entities = $this->tokenServices->hasTokenData($token_name) ?
-          $this->tokenServices->getTokenData($token_name) : [];
+        $entities = $this->tokenService->hasTokenData($token_name) ?
+          $this->tokenService->getTokenData($token_name) : [];
         if ($entities instanceof EntityInterface) {
           $entities = [$entities];
         }
@@ -376,7 +489,7 @@ class ContentEntityEvent extends EventBase implements CleanupInterface {
           $entities = [];
         }
 
-        $event->selection->referencableEntities = [];
+        $event->selection->referenceableEntities = [];
         $config = $event->selection->getConfiguration();
         $target_type = $config['target_type'];
         foreach ($entities as $entity) {
@@ -387,23 +500,23 @@ class ContentEntityEvent extends EventBase implements CleanupInterface {
             $entity = $this->entityTypeManager->getStorage($target_type)
               ->load($entity);
           }
-          if (!($entity instanceof EntityInterface) || ($target_type !== $entity->getEntityTypeId()) || in_array($entity, $event->selection->referencableEntities, TRUE)) {
+          if (!($entity instanceof EntityInterface) || ($target_type !== $entity->getEntityTypeId()) || in_array($entity, $event->selection->referenceableEntities, TRUE)) {
             continue;
           }
-          $event->selection->referencableEntities[] = $entity;
+          $event->selection->referenceableEntities[] = $entity;
         }
         return;
 
       case 'options_selection':
-        if (!($event = array_pop(OptionsSelection::$instances))) {
+        if (!($event = array_pop(self::$optionsSelections))) {
           return;
         }
         if (!($token_name = $this->configuration['token_name'] ?? NULL)) {
           return;
         }
 
-        $values = $this->tokenServices->hasTokenData($token_name) ?
-          $this->tokenServices->getTokenData($token_name) : [];
+        $values = $this->tokenService->hasTokenData($token_name) ?
+          $this->tokenService->getTokenData($token_name) : [];
         if (!is_iterable($values)) {
           $values = [];
         }
@@ -429,6 +542,86 @@ class ContentEntityEvent extends EventBase implements CleanupInterface {
         return;
 
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[Token(
+    name: 'event',
+    description: 'The event.',
+    classes: [
+      ContentEntityPreLoad::class,
+    ],
+    properties: [
+      new Token(name: 'entity_type_id', description: 'The entity type.'),
+      new Token(name: 'ids', description: 'The IDs of the entities.'),
+    ],
+  )]
+  #[Token(
+    name: 'event',
+    description: 'The event.',
+    classes: [
+      ContentEntityViewModeAlter::class,
+    ],
+    properties: [
+      new Token(name: 'view_mode', description: 'The view mode machine name.'),
+    ],
+  )]
+  #[Token(
+    name: 'event',
+    description: 'The event.',
+    classes: [
+      ContentEntityBaseBundle::class,
+    ],
+    properties: [
+      new Token(name: 'entity_type_id', description: 'The entity type.'),
+      new Token(name: 'bundle', description: 'The bundle machine name.'),
+    ],
+  )]
+  protected function buildEventData(): array {
+    $event = $this->event;
+    $data = [];
+
+    if ($event instanceof ContentEntityPreLoad) {
+      $data += [
+        'entity_type_id' => $event->getEntityTypeId(),
+        'ids' => $event->getIds(),
+      ];
+    }
+    elseif ($event instanceof ContentEntityViewModeAlter) {
+      $data += [
+        'view_mode' => $event->getViewMode(),
+      ];
+    }
+    elseif ($event instanceof ContentEntityBaseBundle) {
+      $data += [
+        'entity_type_id' => $event->getEntityTypeId(),
+        'bundle' => $event->getBundle(),
+      ];
+    }
+
+    $data += parent::buildEventData();
+    return $data;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[Token(
+    name: 'entity_view_mode',
+    description: 'The entity view mode.',
+    classes: [
+      ContentEntityPrepareView::class,
+      ContentEntityView::class,
+    ],
+  )]
+  public function getData(string $key): mixed {
+    $event = $this->event;
+    if ($key === 'entity_view_mode' && ($event instanceof ContentEntityPrepareView || $event instanceof ContentEntityView || $event instanceof ContentEntityViewModeAlter)) {
+      return $event->getViewMode();
+    }
+    return parent::getData($key);
   }
 
 }

@@ -17,7 +17,7 @@ interface DataProviderInterface {
    *   If data for the key exists, the associated data value is being
    *   returned. Otherwise, if it not exists, NULL will be returned.
    */
-  public function getData(string $key);
+  public function getData(string $key): mixed;
 
   /**
    * Determines whether Token data exists.

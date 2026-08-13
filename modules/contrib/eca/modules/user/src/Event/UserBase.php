@@ -3,8 +3,8 @@
 namespace Drupal\eca_user\Event;
 
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\eca\Event\AccountEventInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Abstract base class for user related events.

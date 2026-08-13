@@ -14,7 +14,7 @@ use Symfony\Component\Routing\RouteCollection;
  *   This class is not meant to be used as a public API. It is subject for name
  *   change or may be removed completely, also on minor version updates.
  */
-class EndpointRoutes implements ContainerInjectionInterface {
+final class EndpointRoutes implements ContainerInjectionInterface {
 
   /**
    * The ECA endpoint path.
@@ -36,16 +36,19 @@ class EndpointRoutes implements ContainerInjectionInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
+  public static function create(ContainerInterface $container): EndpointRoutes {
+    return new EndpointRoutes(
       $container->getParameter('eca_endpoint.base_path')
     );
   }
 
   /**
-   * {@inheritdoc}
+   * Provides the module's route collection.
+   *
+   * @return \Symfony\Component\Routing\RouteCollection
+   *   The module's route collection.
    */
-  public function routes() {
+  public function routes(): RouteCollection {
     $routes = new RouteCollection();
 
     $routes->add('eca_endpoint.endpoint', new Route(

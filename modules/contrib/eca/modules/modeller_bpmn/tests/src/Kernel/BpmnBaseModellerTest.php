@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\eca_modeller_bpmn\Kernel\Model;
 
+use Drupal\Tests\eca\Kernel\Model\Base;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_test_model_plugin_config_validation\Plugin\ECA\Modeller\DummyModeller;
-use Drupal\Tests\eca\Kernel\Model\Base;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**

@@ -13,7 +13,8 @@ use Drupal\eca\Plugin\FormPluginTrait;
  * @EcaCondition(
  *   id = "eca_form_operation",
  *   label = @Translation("Entity form: compare operation"),
- *   description = @Translation("Evaluates against the machine name of the entity form operation.")
+ *   description = @Translation("Evaluates against the machine name of the entity form operation."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class FormOperation extends StringComparisonBase {
@@ -52,7 +53,7 @@ class FormOperation extends StringComparisonBase {
    * {@inheritdoc}
    */
   protected function getRightValue(): string {
-    return $this->tokenServices->replaceClear($this->configuration['operation']);
+    return $this->tokenService->replaceClear($this->configuration['operation']);
   }
 
   /**
@@ -68,7 +69,6 @@ class FormOperation extends StringComparisonBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['operation'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Operation'),
@@ -76,7 +76,7 @@ class FormOperation extends StringComparisonBase {
       '#default_value' => $this->configuration['operation'],
       '#weight' => -70,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

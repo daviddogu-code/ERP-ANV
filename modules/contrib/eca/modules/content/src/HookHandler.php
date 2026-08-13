@@ -2,11 +2,11 @@
 
 namespace Drupal\eca_content;
 
-use Drupal\Core\Entity\FieldableEntityInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\eca\Event\BaseHookHandler;
 use Drupal\eca\Event\TriggerEvent;
 use Drupal\eca\Service\ContentEntityTypes;
@@ -162,9 +162,11 @@ class HookHandler extends BaseHookHandler {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    */
-  public function prepareForm(EntityInterface $entity, ?string $operation, FormStateInterface $form_state): void {
+  public function prepareForm(EntityInterface &$entity, ?string $operation, FormStateInterface $form_state): void {
     if ($entity instanceof ContentEntityInterface) {
-      $this->triggerEvent->dispatchFromPlugin('content_entity:prepareform', $entity, $this->entityTypes, $operation, $form_state);
+      /** @var \Drupal\eca_content\Event\ContentEntityPrepareForm $event */
+      $event = $this->triggerEvent->dispatchFromPlugin('content_entity:prepareform', $entity, $this->entityTypes, $operation, $form_state);
+      $entity = $event->getEntity();
     }
   }
 
@@ -312,7 +314,23 @@ class HookHandler extends BaseHookHandler {
    */
   public function view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
     if ($entity instanceof ContentEntityInterface) {
-      $this->triggerEvent->dispatchFromPlugin('content_entity:view', $entity, $this->entityTypes);
+      $this->triggerEvent->dispatchFromPlugin('content_entity:view', $entity, $this->entityTypes, $build, $display, $view_mode);
+    }
+  }
+
+  /**
+   * Dispatches event view mode alter.
+   *
+   * @param string $view_mode
+   *   The view_mode that is to be used to display the entity.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity that is being viewed.
+   */
+  public function viewModeAlter(string &$view_mode, EntityInterface $entity): void {
+    if ($entity instanceof ContentEntityInterface) {
+      /** @var \Drupal\eca_content\Event\ContentEntityViewModeAlter $event */
+      $event = $this->triggerEvent->dispatchFromPlugin('content_entity:viewmodealter', $entity, $this->entityTypes, $view_mode);
+      $view_mode = $event->getViewMode();
     }
   }
 

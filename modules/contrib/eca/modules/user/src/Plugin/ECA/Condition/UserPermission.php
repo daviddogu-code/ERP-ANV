@@ -8,7 +8,8 @@ namespace Drupal\eca_user\Plugin\ECA\Condition;
  * @EcaCondition(
  *   id = "eca_user_permission",
  *   label = @Translation("User has permission"),
- *   description = @Translation("Checks, whether a given user account has a given permission.")
+ *   description = @Translation("Checks, whether a given user account has a given permission."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class UserPermission extends CurrentUserPermission {

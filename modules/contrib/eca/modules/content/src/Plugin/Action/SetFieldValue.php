@@ -12,6 +12,7 @@ use Drupal\Core\TypedData\TypedDataInterface;
  *   id = "eca_set_field_value",
  *   label = @Translation("Entity: set field value"),
  *   description = @Translation("Allows to set, unset or change the value(s) of any field in an entity."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "entity"
  * )
  */
@@ -21,20 +22,20 @@ class SetFieldValue extends FieldUpdateActionBase implements EcaFieldUpdateActio
    * {@inheritdoc}
    */
   protected function getFieldsToUpdate() {
-    $name = $this->tokenServices->replace($this->configuration['field_name']);
+    $name = $this->tokenService->replace($this->configuration['field_name']);
 
     // Process the field values.
     $values = $this->configuration['field_value'];
     $use_token_replace = TRUE;
     // Check whether the input wants to directly use defined data.
-    if ((mb_substr($values, 0, 1) === '[') && (mb_substr($values, -1, 1) === ']') && (mb_strlen($values) <= 255) && ($data = $this->tokenServices->getTokenData($values))) {
+    if ((mb_substr($values, 0, 1) === '[') && (mb_substr($values, -1, 1) === ']') && (mb_strlen($values) <= 255) && ($data = $this->tokenService->getTokenData($values))) {
       if (!($data instanceof TypedDataInterface) || !empty($data->getValue())) {
         $use_token_replace = FALSE;
         $values = $data;
       }
     }
     if ($use_token_replace) {
-      $values = $this->tokenServices->replaceClear($values);
+      $values = $this->tokenService->replaceClear($values);
     }
 
     return [$name => $values];
@@ -54,22 +55,23 @@ class SetFieldValue extends FieldUpdateActionBase implements EcaFieldUpdateActio
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['field_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Field name'),
-      '#description' => $this->t('The machine name of the field, that should be changed. This property supports tokens. Example: <em>body.value</em>'),
+      '#description' => $this->t('The machine name of the field, that should be changed. Example: <em>body.value</em>'),
       '#default_value' => $this->configuration['field_name'],
       '#weight' => -20,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['field_value'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Field value'),
-      '#description' => $this->t('The new field value. This property supports tokens.'),
+      '#description' => $this->t('The new field value.'),
       '#default_value' => $this->configuration['field_value'],
       '#weight' => -10,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

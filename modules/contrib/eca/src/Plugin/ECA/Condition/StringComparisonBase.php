@@ -3,11 +3,14 @@
 namespace Drupal\eca\Plugin\ECA\Condition;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Base class for ECA condition plugins to compare strings.
  */
 abstract class StringComparisonBase extends ConditionBase {
+
+  use PluginFormTrait;
 
   public const COMPARE_EQUALS = 'equal';
   public const COMPARE_BEGINS_WITH = 'beginswith';
@@ -54,7 +57,11 @@ abstract class StringComparisonBase extends ConditionBase {
    *   The comparison operator.
    */
   protected function getOperator(): string {
-    return $this->configuration['operator'] ?? static::COMPARE_EQUALS;
+    $operator = $this->configuration['operator'] ?? static::COMPARE_EQUALS;
+    if ($operator === '_eca_token') {
+      $operator = $this->getTokenValue('operator', static::COMPARE_EQUALS);
+    }
+    return $operator;
   }
 
   /**
@@ -64,7 +71,11 @@ abstract class StringComparisonBase extends ConditionBase {
    *   The comparison type.
    */
   protected function getType(): string {
-    return $this->configuration['type'] ?? static::COMPARE_TYPE_VALUE;
+    $type = $this->configuration['type'] ?? static::COMPARE_TYPE_VALUE;
+    if ($type === '_eca_token') {
+      $type = $this->getTokenValue('type', static::COMPARE_TYPE_VALUE);
+    }
+    return $type;
   }
 
   /**
@@ -82,8 +93,8 @@ abstract class StringComparisonBase extends ConditionBase {
    */
   final public function evaluate(): bool {
     if (static::$replaceTokens) {
-      $leftValue = $this->tokenServices->replace($this->getLeftValue());
-      $rightValue = $this->tokenServices->replace($this->getRightValue());
+      $leftValue = $this->tokenService->replace($this->getLeftValue());
+      $rightValue = $this->tokenService->replace($this->getRightValue());
     }
     else {
       $leftValue = $this->getLeftValue();
@@ -110,8 +121,8 @@ abstract class StringComparisonBase extends ConditionBase {
         break;
 
       case static::COMPARE_TYPE_NATURAL:
-        $leftValue = 0;
-        $rightValue = strnatcmp($leftValue, $rightValue);
+        $leftValue = strnatcmp((string) $leftValue, $rightValue);
+        $rightValue = 0;
         break;
 
       case static::COMPARE_TYPE_COUNT:
@@ -174,7 +185,6 @@ abstract class StringComparisonBase extends ConditionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['operator'] = [
       '#type' => 'select',
       '#title' => $this->t('Comparison operator'),
@@ -182,6 +192,7 @@ abstract class StringComparisonBase extends ConditionBase {
       '#default_value' => $this->getOperator(),
       '#options' => $this->getOptions('operator'),
       '#weight' => -80,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['type'] = [
       '#type' => 'select',
@@ -190,17 +201,16 @@ abstract class StringComparisonBase extends ConditionBase {
       '#default_value' => $this->getType(),
       '#options' => $this->getOptions('type'),
       '#weight' => -60,
-      '#description' => $this->t('The type of the comparison.'),
+      '#eca_token_select_option' => TRUE,
     ];
     $form['case'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Case sensitive comparison'),
       '#description' => $this->t('Compare the values based on case sensitivity.'),
       '#default_value' => $this->caseSensitive(),
-      '#description' => $this->t('Compares the values based on case sensitivity.'),
       '#weight' => -50,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

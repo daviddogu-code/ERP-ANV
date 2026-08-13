@@ -13,4 +13,11 @@ class CoreToken extends Token implements TokenInterface {
 
   use TokenDecoratorTrait;
 
+  /**
+   * The decorated token service.
+   *
+   * @var \Drupal\Core\Utility\Token
+   */
+  protected Token $token;
+
 }

@@ -4,22 +4,29 @@ namespace Drupal\eca_flag\Plugin\ECA\Condition;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\eca\Attribute\EcaCondition;
 use Drupal\eca\Plugin\ECA\Condition\ConditionBase;
 use Drupal\flag\FlagService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the ECA condition if content entity is flagged.
- *
- * @EcaCondition(
- *   id = "eca_flag_entity_is_flagged",
- *   label = @Translation("Flag: entity flagged"),
- *   description = @Translation("Performs a lookup whether an entity is flagged."),
- *   context_definitions = {
- *     "entity" = @ContextDefinition("entity", label = @Translation("Entity"))
- *   }
- * )
  */
+#[EcaCondition(
+  id: 'eca_flag_entity_is_flagged',
+  label: new TranslatableMarkup('Flag: entity flagged'),
+  context_definitions: [
+    'entity' => new ContextDefinition(
+      data_type: 'entity',
+      label: new TranslatableMarkup('Entity'),
+    ),
+
+  ],
+  description: new TranslatableMarkup('Performs a lookup whether an entity is flagged.'),
+  version_introduced: '1.0.0',
+)]
 class IsFlagged extends ConditionBase {
 
   /**
@@ -32,10 +39,7 @@ class IsFlagged extends ConditionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): IsFlagged {
-    /**
-     * @var \Drupal\eca_flag\Plugin\ECA\Condition\IsFlagged $instance
-     */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->flagService = $container->get('flag');
     return $instance;
@@ -49,7 +53,7 @@ class IsFlagged extends ConditionBase {
     if ($entity instanceof EntityInterface) {
       $flagName = $this->configuration['flag_name'];
       if (!empty($flagName)) {
-        $flagName = $this->tokenServices->replaceClear($flagName);
+        $flagName = $this->tokenService->replaceClear($flagName);
       }
       if (!empty($flagName) && $flag = $this->flagService->getFlagById($flagName)) {
         return $this->negationCheck($flag->isFlagged($entity));

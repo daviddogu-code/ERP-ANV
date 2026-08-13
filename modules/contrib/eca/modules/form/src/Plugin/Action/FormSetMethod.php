@@ -3,6 +3,7 @@
 namespace Drupal\eca_form\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Set the HTTP method to use when submitting the form.
@@ -11,10 +12,13 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "eca_form_set_method",
  *   label = @Translation("Form: set method"),
  *   description = @Translation("Set the HTTP method to use when submitting the form."),
+ *   eca_version_introduced = "1.1.0",
  *   type = "form"
  * )
  */
 class FormSetMethod extends FormActionBase {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -23,7 +27,11 @@ class FormSetMethod extends FormActionBase {
     if (!($form = &$this->getCurrentForm())) {
       return;
     }
-    $form['#method'] = $this->configuration['method'];
+    $method = $this->configuration['method'];
+    if ($method === '_eca_token') {
+      $method = $this->getTokenValue('method', 'post');
+    }
+    $form['#method'] = $method;
   }
 
   /**
@@ -39,20 +47,20 @@ class FormSetMethod extends FormActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['method'] = [
       '#type' => 'select',
       '#title' => $this->t('Method'),
       '#description' => $this->t('The method of a form action <em>GET</em> or <em>POST</em>.'),
       '#options' => [
-        'get' => 'GET',
-        'post' => 'POST',
+        'get' => $this->t('GET'),
+        'post' => $this->t('POST'),
       ],
       '#weight' => -10,
       '#default_value' => $this->configuration['method'],
       '#required' => TRUE,
+      '#eca_token_select_option' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

@@ -8,8 +8,8 @@
     "source": "https://drupal.org/project/eca_flag"
   },
   "require": {
-    "php": ">=7.4",
-    "drupal/eca": "^1.0",
-    "drupal/flag": "^4.0"
+    "php": ">=8.1",
+    "drupal/eca": "^2.0 || ^3.0",
+    "drupal/flag": "^4.0 || ^5.0"
   }
 }

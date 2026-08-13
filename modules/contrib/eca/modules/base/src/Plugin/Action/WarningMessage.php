@@ -10,6 +10,7 @@ use Drupal\Core\Action\Plugin\Action\MessageAction;
  * @Action(
  *   id = "eca_warning_message",
  *   label = @Translation("Display a warning message to the user"),
+ *   eca_version_introduced = "1.1.0",
  *   type = "system"
  * )
  */
@@ -21,7 +22,7 @@ class WarningMessage extends MessageAction {
    * Mainly copied from parent execute method, except for a different messenger
    * instruction.
    */
-  public function execute($entity = NULL) {
+  public function execute(mixed $entity = NULL): void {
     if (empty($this->configuration['node'])) {
       $this->configuration['node'] = $entity;
     }
@@ -31,7 +32,7 @@ class WarningMessage extends MessageAction {
     ];
 
     // @todo Fix in https://www.drupal.org/node/2577827
-    $this->messenger->addWarning($this->renderer->renderPlain($build));
+    $this->messenger->addWarning($this->renderer->renderInIsolation($build));
   }
 
 }

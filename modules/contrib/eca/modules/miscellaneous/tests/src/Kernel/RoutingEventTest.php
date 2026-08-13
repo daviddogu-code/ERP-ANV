@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\eca_misc\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_test_array\Plugin\Action\ArrayIncrement;
-use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Routing event tests provided by "eca_misc".

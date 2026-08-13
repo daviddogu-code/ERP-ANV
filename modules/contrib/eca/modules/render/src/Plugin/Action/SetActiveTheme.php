@@ -9,7 +9,8 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @Action(
  *   id = "eca_set_active_theme",
- *   label = @Translation("Set active theme")
+ *   label = @Translation("Set active theme"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class SetActiveTheme extends ActiveThemeActionBase {
@@ -27,16 +28,16 @@ class SetActiveTheme extends ActiveThemeActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['theme_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Theme name'),
-      '#description' => $this->t('Specify the machine name of the theme to set. This field supports tokens.'),
+      '#description' => $this->t('Specify the machine name of the theme to set.'),
       '#default_value' => $this->configuration['theme_name'],
       '#weight' => -25,
       '#required' => TRUE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -51,7 +52,7 @@ class SetActiveTheme extends ActiveThemeActionBase {
    * {@inheritdoc}
    */
   public function execute(): void {
-    $theme_name = trim((string) $this->tokenServices->replaceClear($this->configuration['theme_name']));
+    $theme_name = trim((string) $this->tokenService->replaceClear($this->configuration['theme_name']));
     if ($theme_name !== '') {
       $active_theme = $this->themeInitialization->getActiveThemeByName($theme_name);
       $this->themeManager->setActiveTheme($active_theme);

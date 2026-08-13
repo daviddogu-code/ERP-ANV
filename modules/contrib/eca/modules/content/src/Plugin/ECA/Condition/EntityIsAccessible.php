@@ -5,6 +5,7 @@ namespace Drupal\eca_content\Plugin\ECA\Condition;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\eca\Plugin\ECA\Condition\ConditionBase;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Plugin implementation of the ECA condition for entity is accessible.
@@ -13,12 +14,15 @@ use Drupal\eca\Plugin\ECA\Condition\ConditionBase;
  *   id = "eca_entity_is_accessible",
  *   label = @Translation("Entity: is accessible"),
  *   description = @Translation("Evaluates whether the current user has operational access on an entity."),
+ *   eca_version_introduced = "1.0.0",
  *   context_definitions = {
  *     "entity" = @ContextDefinition("entity", label = @Translation("Entity"))
  *   }
  * )
  */
 class EntityIsAccessible extends ConditionBase {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -29,6 +33,9 @@ class EntityIsAccessible extends ConditionBase {
       return FALSE;
     }
     $operation = $this->configuration['operation'];
+    if ($operation === '_eca_token') {
+      $operation = $this->getTokenValue('operation', 'view');
+    }
     if (!$entity->isNew() && ($operation === 'create')) {
       return FALSE;
     }
@@ -59,6 +66,7 @@ class EntityIsAccessible extends ConditionBase {
       '#default_value' => $this->configuration['operation'] ?? 'view',
       '#required' => TRUE,
       '#weight' => -10,
+      '#eca_token_select_option' => TRUE,
     ];
     return parent::buildConfigurationForm($form, $form_state);
   }

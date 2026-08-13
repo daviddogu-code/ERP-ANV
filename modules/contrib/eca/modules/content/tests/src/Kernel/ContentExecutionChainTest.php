@@ -5,15 +5,15 @@ namespace Drupal\Tests\eca_content\Kernel;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Form\FormState;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_form\Event\FormEvents;
 use Drupal\eca_form\Event\FormProcess;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,6 +31,8 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * @group eca_content
  */
 class ContentExecutionChainTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * The modules.
@@ -62,13 +64,11 @@ class ContentExecutionChainTest extends KernelTestBase {
     User::create(['uid' => 1, 'name' => 'admin'])->save();
     User::create(['uid' => 2, 'name' => 'authenticated'])->save();
     // Create the Article content type with revisioning and translation enabled.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create([
+    $this->createContentType([
       'type' => 'article',
       'name' => 'Article',
       'new_revision' => TRUE,
     ]);
-    $node_type->save();
     user_role_grant_permissions('authenticated', [
       'access content',
       'edit own article content',
@@ -108,14 +108,14 @@ class ContentExecutionChainTest extends KernelTestBase {
     $eca_config_values = [
       'langcode' => 'en',
       'status' => TRUE,
-      'id' => 'presaving_node_process',
-      'label' => 'ECA presaving node',
+      'id' => 'pre_saving_node_process',
+      'label' => 'ECA pre_saving node',
       'modeller' => 'fallback',
       'version' => '1.0.0',
       'events' => [
         'event_presave' => [
           'plugin' => 'content_entity:presave',
-          'label' => 'Presaving content',
+          'label' => 'Pre-saving content',
           'configuration' => [
             'type' => 'node article',
           ],
@@ -232,7 +232,7 @@ class ContentExecutionChainTest extends KernelTestBase {
     $ecaConfig = Eca::create($eca_config_values);
     $ecaConfig->trustData()->save();
 
-    // Switch to priviledged account.
+    // Switch to privileged account.
     $account_switcher->switchTo(User::load(1));
 
     // Create another node and save it. That should trigger the created ECA
@@ -251,10 +251,10 @@ class ContentExecutionChainTest extends KernelTestBase {
     $this->assertEquals('Finally changed the published TITLE!', $published_node->label(), 'Title of published node must have been changed by ECA configuration.');
     $this->assertEquals('Changed TITLE of unpublished!', $unpublished_node->label(), 'Title of unpublished node must have been changed by ECA configuration.');
 
-    // End of tests with priviledged user.
+    // End of tests with privileged user.
     $account_switcher->switchBack();
 
-    // The next test will execute the same configuration on a non-priviledged
+    // The next test will execute the same configuration on a non-privileged
     // user. That user only has update access to the published node, therefore
     // the unpublished one must not be changed by ECA.
     // Disable the ECA config first to do some value resets without executing.
@@ -269,7 +269,7 @@ class ContentExecutionChainTest extends KernelTestBase {
     $this->assertEquals('Unpublished node', $unpublished_node->label(), 'Unpublished node title must remain unchanged.');
     $ecaConfig->enable()->trustData()->save();
 
-    // Now switch to a non-priviledged account.
+    // Now switch to a non-privileged account.
     $account_switcher->switchTo(User::load(2));
 
     // Create another node and save it. That should trigger the created ECA
@@ -288,7 +288,7 @@ class ContentExecutionChainTest extends KernelTestBase {
     $this->assertEquals('Changed published TITLE for the first time!', $published_node->label(), 'Title of published node must have been changed by ECA configuration only for the first time, because the process chained stopped as the unpublished entity is not accessible.');
     $this->assertEquals('Unpublished node', $unpublished_node->label(), 'Unpublished node title must remain unchanged, as it is not accessible.');
 
-    // Reset the values once more and do another test with unpriviledged user.
+    // Reset the values once more and do another test with unprivileged user.
     $ecaConfig->disable()->trustData()->save();
     $published_node->title->value = 'Published node';
     $published_node->save();
@@ -454,7 +454,7 @@ class ContentExecutionChainTest extends KernelTestBase {
     $query->sort('vid');
     $query->allRevisions();
     $vids = $query->execute();
-    $this->assertSame(2, count($vids), "Node must have exactly two revisions.");
+    $this->assertCount(2, $vids, "Node must have exactly two revisions.");
     $revision = \Drupal::entityTypeManager()->getStorage('node')->loadRevision(key($vids));
     $this->assertEquals("Changed title of node!", $revision->label());
 
@@ -500,7 +500,7 @@ class ContentExecutionChainTest extends KernelTestBase {
     $this->assertFalse($save_action->access($node), 'User without permissions must not have access.');
     $this->assertFalse($delete_action->access($node), 'User without permissions must not have access.');
 
-    // Now switching to priviledged user.
+    // Now switching to privileged user.
     $account_switcher->switchTo(User::load(1));
     $this->assertTrue($new_action->access(NULL), 'User with permission must have access.');
     $this->assertTrue($save_action->access($node), 'User with permission must have access.');
@@ -596,17 +596,25 @@ class ContentExecutionChainTest extends KernelTestBase {
     $event_dispatcher = \Drupal::service('event_dispatcher');
     $response = NULL;
     $event_dispatcher->addListener(KernelEvents::RESPONSE, static function ($event) use (&$response) {
-      /** @var \Symfony\Component\HttpKernel\Event\ResponseEvent $event */
+      /**
+       * @var \Symfony\Component\HttpKernel\Event\ResponseEvent $event
+       */
       $response = $event->getResponse();
     }, -1000);
 
-    // Fake a response event that executes the added listener.
+    // Ensure that there is a session on every request.
     $request = Request::createFromGlobals();
-    $request->setSession(new Session(new MockArraySessionStorage()));
-    $response_event = new ResponseEvent(\Drupal::service('http_kernel'), $request, HttpKernelInterface::MASTER_REQUEST, new Response());
+    if (!$request->hasSession()) {
+      $session = new Session(new MockArraySessionStorage());
+      $session->start();
+      $request->setSession($session);
+    }
+
+    // Fake a response event that executes the added listener.
+    $response_event = new ResponseEvent(\Drupal::service('http_kernel'), $request, HttpKernelInterface::MAIN_REQUEST, new Response());
     $event_dispatcher->dispatch($response_event, KernelEvents::RESPONSE);
 
-    $this->assertTrue($response instanceof RedirectResponse);
+    $this->assertInstanceOf(RedirectResponse::class, $response);
     /** @var \Symfony\Component\HttpFoundation\RedirectResponse $response */
     $this->assertEquals("/eca-redirect/{$article->id()}", mb_substr($response->getTargetUrl(), -15));
   }

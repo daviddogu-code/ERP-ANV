@@ -5,6 +5,7 @@ namespace Drupal\eca_access;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Event\BaseHookHandler;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * The handler for hook implementations within the eca_access.module file.
@@ -25,10 +26,10 @@ class HookHandler extends BaseHookHandler {
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The account that asks for access.
    *
-   * @return \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event|null
+   * @return \Symfony\Contracts\EventDispatcher\Event|null
    *   The dispatched event, nor NULL if no event was dispatched.
    */
-  public function entityAccess(EntityInterface $entity, string $operation, AccountInterface $account): ?object {
+  public function entityAccess(EntityInterface $entity, string $operation, AccountInterface $account): ?Event {
     return $this->triggerEvent->dispatchFromPlugin('access:entity', $entity, $operation, $account);
   }
 
@@ -44,10 +45,10 @@ class HookHandler extends BaseHookHandler {
    * @param string $field_name
    *   The field name.
    *
-   * @return \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event|null
+   * @return \Symfony\Contracts\EventDispatcher\Event|null
    *   The dispatched event, nor NULL if no event was dispatched.
    */
-  public function fieldAccess(EntityInterface $entity, string $operation, AccountInterface $account, string $field_name): ?object {
+  public function fieldAccess(EntityInterface $entity, string $operation, AccountInterface $account, string $field_name): ?Event {
     return $this->triggerEvent->dispatchFromPlugin('access:field', $entity, $operation, $account, $field_name);
   }
 
@@ -64,10 +65,10 @@ class HookHandler extends BaseHookHandler {
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The account that asks for access.
    *
-   * @return \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event|null
+   * @return \Symfony\Contracts\EventDispatcher\Event|null
    *   The dispatched event, nor NULL if no event was dispatched.
    */
-  public function createAccess(array $context, string $entity_bundle, AccountInterface $account): ?object {
+  public function createAccess(array $context, string $entity_bundle, AccountInterface $account): ?Event {
     return $this->triggerEvent->dispatchFromPlugin('access:create', $context, $entity_bundle, $account);
   }
 

@@ -2,7 +2,9 @@
 
 namespace Drupal\eca_base\Plugin\Action;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 
 /**
@@ -11,7 +13,8 @@ use Drupal\eca\Plugin\Action\ConfigurableActionBase;
  * @Action(
  *   id = "eca_state_read",
  *   label = @Translation("Persistent state: read"),
- *   description = @Translation("Reads a value from the Drupal state by the given key. The result is stored in a token.")
+ *   description = @Translation("Reads a value from the Drupal state by the given key. The result is stored in a token."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class EcaStateRead extends ConfigurableActionBase {
@@ -19,9 +22,22 @@ class EcaStateRead extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $key = $this->tokenService->replace($this->configuration['key']);
+    $result = AccessResult::allowedIf(is_string($key) && $key !== '');
+    if (!$result->isAllowed()) {
+      $result->setReason('The given key is invalid.');
+    }
+    return $return_as_object ? $result : $result->isAllowed();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function execute(): void {
-    $value = $this->state->get($this->configuration['key'], '');
-    $this->tokenServices->addTokenData($this->configuration['token_name'], $value);
+    $key = $this->tokenService->replace($this->configuration['key']);
+    $value = $this->state->get($key, '');
+    $this->tokenService->addTokenData($this->configuration['token_name'], $value);
   }
 
   /**
@@ -38,13 +54,13 @@ class EcaStateRead extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('State key'),
       '#default_value' => $this->configuration['key'],
       '#weight' => -20,
       '#description' => $this->t('The key of the Drupal state.'),
+      '#eca_token_replacement' => TRUE,
     ];
     $form['token_name'] = [
       '#type' => 'textfield',
@@ -54,7 +70,7 @@ class EcaStateRead extends ConfigurableActionBase {
       '#description' => $this->t('The name of the token, the value is stored into.'),
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

@@ -7,7 +7,8 @@ namespace Drupal\eca_endpoint\Plugin\Action;
  *
  * @Action(
  *   id = "eca_endpoint_get_request_content_type",
- *   label = @Translation("Request: Get content type")
+ *   label = @Translation("Request: Get content type"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class GetRequestContentType extends RequestActionBase {
@@ -15,10 +16,9 @@ class GetRequestContentType extends RequestActionBase {
   /**
    * {@inheritdoc}
    */
-  protected function getRequestValue() {
+  protected function getRequestValue(): ?string {
     if ($request = $this->getRequest()) {
-      // @phpstan-ignore-next-line
-      return method_exists($request, 'getContentTypeFormat') ? $request->getContentTypeFormat() : $request->getContentType();
+      return $request->getContentTypeFormat();
     }
     return '';
   }

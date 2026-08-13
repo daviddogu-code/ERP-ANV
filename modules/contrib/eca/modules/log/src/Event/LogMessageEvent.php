@@ -2,8 +2,7 @@
 
 namespace Drupal\eca_log\Event;
 
-use Drupal\Component\EventDispatcher\Event;
-use Drupal\eca\Event\ConditionalApplianceInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Provides an event when a log message is being submitted.
@@ -14,7 +13,7 @@ use Drupal\eca\Event\ConditionalApplianceInterface;
  *
  * @package Drupal\eca_log\Event
  */
-class LogMessageEvent extends Event implements ConditionalApplianceInterface {
+class LogMessageEvent extends Event {
 
   /**
    * Log message severity.
@@ -51,20 +50,6 @@ class LogMessageEvent extends Event implements ConditionalApplianceInterface {
     $this->severity = $severity;
     $this->message = $message;
     $this->context = $context;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    return (($arguments['channel'] === '') || ($arguments['channel'] === $this->context['channel'])) && $this->severity <= $arguments['min_severity'];
   }
 
   /**

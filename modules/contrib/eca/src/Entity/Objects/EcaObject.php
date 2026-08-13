@@ -2,7 +2,6 @@
 
 namespace Drupal\eca\Entity\Objects;
 
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Action\ActionInterface as CoreActionInterface;
@@ -19,6 +18,7 @@ use Drupal\eca\Event\FormEventInterface;
 use Drupal\eca\Plugin\Action\ActionInterface;
 use Drupal\eca\Plugin\ECA\Condition\ConditionInterface;
 use Drupal\eca\Plugin\ObjectWithPluginInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Base class for ECA items used to internally process them.
@@ -103,6 +103,16 @@ abstract class EcaObject {
   }
 
   /**
+   * Provides the ECA config entity.
+   *
+   * @return \Drupal\eca\Entity\Eca
+   *   The ECA config entity.
+   */
+  public function getEca(): Eca {
+    return $this->eca;
+  }
+
+  /**
    * Provides ECA event object which started the process towards this item.
    *
    * @return \Drupal\eca\Entity\Objects\EcaEvent
@@ -132,7 +142,7 @@ abstract class EcaObject {
    *
    * @return $this
    */
-  public function setConfiguration(string $key, $value): EcaObject {
+  public function setConfiguration(string $key, mixed $value): EcaObject {
     $this->configuration[$key] = $value;
     return $this;
   }
@@ -177,7 +187,7 @@ abstract class EcaObject {
    *   The item label.
    */
   public function getLabel(): string {
-    return $this->label ?? 'noname';
+    return $this->label;
   }
 
   /**
@@ -185,9 +195,9 @@ abstract class EcaObject {
    *
    * This should be overwritten by items with more specific instructions.
    *
-   * @param \Drupal\eca\Entity\Objects\EcaObject $predecessor
-   *   The item preceeding this one.
-   * @param \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event $event
+   * @param \Drupal\eca\Entity\Objects\EcaObject|null $predecessor
+   *   The item proceeding this one. May be null when this object the root item.
+   * @param \Symfony\Contracts\EventDispatcher\Event $event
    *   The event that was originally triggered.
    * @param array $context
    *   List of key value pairs, used to generate meaningful log messages.
@@ -195,7 +205,7 @@ abstract class EcaObject {
    * @return bool
    *   TRUE, if the item was executed, FALSE otherwise.
    */
-  public function execute(EcaObject $predecessor, object $event, array $context): bool {
+  public function execute(?EcaObject $predecessor, Event $event, array $context): bool {
     $this->predecessor = $predecessor;
     return TRUE;
   }
@@ -210,9 +220,10 @@ abstract class EcaObject {
    * @param \Drupal\Component\Plugin\PluginInspectionInterface $plugin
    *   The action or condition plugin for which the data object is required.
    *
-   * @return \Drupal\Component\EventDispatcher\Event[]|\Drupal\Core\Entity\EntityInterface[]
+   * @return array
    *   The appropriate data objects for the given plugin in the current context.
-   *   The returned array may contain NULL values.
+   *   The returned array may contain \Symfony\Contracts\EventDispatcher\Event,
+   *   \Drupal\Core\Entity\EntityInterface or NULL values.
    */
   public function getObjects(PluginInspectionInterface $plugin): array {
     $actionType = $plugin->getPluginDefinition()['type'] ?? '';
@@ -276,7 +287,7 @@ abstract class EcaObject {
     elseif (isset($plugin->configuration)) {
       $config = $plugin->configuration;
     }
-    elseif (isset($this->configuration)) {
+    else {
       $config = $this->configuration;
     }
 
@@ -313,17 +324,18 @@ abstract class EcaObject {
 
       // Ask predecessor(s) for having previously declared entities.
       $predecessor = $this->predecessor ?? NULL;
-      if ($predecessor instanceof ObjectWithPluginInterface && $predecessor instanceof EcaObject && $objects = $this->filterEntities($predecessor->getObjects($predecessor->getPlugin()))) {
+      if ($predecessor instanceof ObjectWithPluginInterface && $predecessor instanceof self && $objects = $this->filterEntities($predecessor->getObjects($predecessor->getPlugin()))) {
         return $objects;
       }
 
       if (method_exists($plugin, 'getEvent')) {
         // As a last resort, ask the triggering event for an entity.
         $event = $plugin->getEvent();
-        if ($event instanceof EntityEventInterface && ($entity = $event->getEntity())) {
-          return [$entity];
+        if ($event instanceof EntityEventInterface) {
+          return [$event->getEntity()];
         }
-        if ($event instanceof FormEventInterface && ($form_object = $event->getFormState()->getFormObject())) {
+        if ($event instanceof FormEventInterface) {
+          $form_object = $event->getFormState()->getFormObject();
           if ($form_object instanceof EntityFormInterface) {
             return [$form_object->getEntity()];
           }
@@ -343,10 +355,10 @@ abstract class EcaObject {
    * @param \Drupal\Component\Plugin\PluginInspectionInterface $plugin
    *   The action or condition plugin for which the data object is required.
    *
-   * @return \Drupal\Component\EventDispatcher\Event|null
+   * @return \Drupal\eca\Event\FormEventInterface|null
    *   The required form event if available or NULL otherwise.
    */
-  private function getFormEvent(PluginInspectionInterface $plugin): ?Event {
+  private function getFormEvent(PluginInspectionInterface $plugin): ?FormEventInterface {
     if ($plugin instanceof ActionInterface || $plugin instanceof ConditionInterface) {
       $event = $plugin->getEvent();
       if ($event instanceof FormEventInterface) {
@@ -365,7 +377,7 @@ abstract class EcaObject {
    * @return \Drupal\Core\Entity\EntityInterface[]
    *   The array containing only entities (maybe empty).
    */
-  private function filterEntities($data): array {
+  private function filterEntities(mixed $data): array {
     if ($data instanceof EntityInterface) {
       return [$data];
     }
@@ -373,7 +385,9 @@ abstract class EcaObject {
       return array_values($data->referencedEntities());
     }
     if ($data instanceof EntityReferenceItem) {
-      /** @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $parent */
+      /**
+       * @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $parent
+       */
       $parent = $data->getParent();
       $entities = $parent->referencedEntities();
       foreach ($parent as $delta => $item) {

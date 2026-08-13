@@ -11,7 +11,8 @@ use Drupal\eca\Plugin\FormPluginTrait;
  * @EcaCondition(
  *   id = "eca_form_submitted",
  *   label = @Translation("Form: is submitted"),
- *   description = @Translation("Checks whether the current form is submitted.")
+ *   description = @Translation("Checks whether the current form is submitted."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class FormSubmitted extends ConditionBase {

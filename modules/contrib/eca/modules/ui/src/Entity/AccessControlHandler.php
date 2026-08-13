@@ -20,7 +20,7 @@ class AccessControlHandler extends EntityAccessControlHandler {
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
     /** @var \Drupal\eca\Entity\Eca $entity */
 
-    // Deny acccess for ECA configurations that cannot be edited.
+    // Deny access for ECA configurations that cannot be edited.
     if ($operation === 'update' && !$entity->isEditable()) {
       return AccessResult::forbidden();
     }

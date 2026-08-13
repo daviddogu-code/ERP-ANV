@@ -14,6 +14,7 @@ use Drupal\eca\Plugin\Action\ListRemoveBase;
  *   id = "eca_list_remove_entity",
  *   label = @Translation("List: remove entity"),
  *   description = @Translation("Remove an entity from a list and optionally store the removed entity as a token."),
+ *   eca_version_introduced = "1.1.0",
  *   type = "entity"
  * )
  */
@@ -29,7 +30,7 @@ class ListRemoveEntity extends ListRemoveBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL) {
+  public function execute(mixed $entity = NULL): void {
     $this->entity = $entity;
     $token_name = trim((string) $this->configuration['token_name']);
     $item = $this->removeItem();
@@ -40,14 +41,14 @@ class ListRemoveEntity extends ListRemoveBase {
       $item = NULL;
     }
     if ($token_name !== '') {
-      $this->tokenServices->addTokenData($token_name, $item);
+      $this->tokenService->addTokenData($token_name, $item);
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getValueToRemove() {
+  protected function getValueToRemove(): ?EntityInterface {
     return $this->entity;
   }
 
@@ -65,7 +66,6 @@ class ListRemoveEntity extends ListRemoveBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -74,6 +74,7 @@ class ListRemoveEntity extends ListRemoveBase {
       '#weight' => 30,
       '#eca_token_reference' => TRUE,
     ];
+    $form = parent::buildConfigurationForm($form, $form_state);
     $form['method']['#options']['value'] = $this->t('Drop specified entity');
     return $form;
   }

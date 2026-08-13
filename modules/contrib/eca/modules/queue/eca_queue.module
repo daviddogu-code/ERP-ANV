@@ -10,20 +10,20 @@ use Drupal\Core\Entity\EntityInterface;
 /**
  * Implements hook_ENTITY_TYPE_insert() for eca entities.
  */
-function eca_queue_eca_insert(EntityInterface $entity) {
+function eca_queue_eca_insert(EntityInterface $entity): void {
   \Drupal::service('plugin.manager.queue_worker')->clearCachedDefinitions();
 }
 
 /**
  * Implements hook_ENTITY_TYPE_update() for eca entities.
  */
-function eca_queue_eca_update(EntityInterface $entity) {
+function eca_queue_eca_update(EntityInterface $entity): void {
   \Drupal::service('plugin.manager.queue_worker')->clearCachedDefinitions();
 }
 
 /**
  * Implements hook_ENTITY_TYPE_delete() for eca entities.
  */
-function eca_queue_eca_delete(EntityInterface $entity) {
+function eca_queue_eca_delete(EntityInterface $entity): void {
   \Drupal::service('plugin.manager.queue_worker')->clearCachedDefinitions();
 }

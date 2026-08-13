@@ -3,10 +3,10 @@
 namespace Drupal\Tests\eca_log\Kernel;
 
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_log\Event\LogMessageEvent;
 use Drupal\eca_log\LogEvents;
-use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Kernel tests for events provided by "eca_log".

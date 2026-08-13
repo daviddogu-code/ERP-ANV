@@ -2,13 +2,15 @@
 
 namespace Drupal\eca_render\Plugin\Action;
 
-use Drupal\views\Entity\View;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Markup as RenderMarkup;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
+use Drupal\views\Entity\View;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -18,10 +20,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "eca_render_views",
  *   label = @Translation("Render: Views"),
  *   description = @Translation("Render the contents of a configured view."),
+ *   eca_version_introduced = "1.1.0",
  *   deriver = "Drupal\eca_render\Plugin\Action\ViewsDeriver"
  * )
  */
 class Views extends RenderElementActionBase {
+
+  use PluginFormTrait;
 
   /**
    * The renderer.
@@ -33,8 +38,7 @@ class Views extends RenderElementActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_render\Plugin\Action\Views $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->renderer = $container->get('renderer');
     return $instance;
@@ -55,7 +59,6 @@ class Views extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $views = [];
     foreach (View::loadMultiple() as $view) {
       if ($view->status()) {
@@ -69,6 +72,7 @@ class Views extends RenderElementActionBase {
       '#weight' => -50,
       '#options' => $views,
       '#required' => TRUE,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['display_id'] = [
       '#type' => 'textfield',
@@ -84,7 +88,7 @@ class Views extends RenderElementActionBase {
       '#weight' => -30,
       '#required' => FALSE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -95,6 +99,35 @@ class Views extends RenderElementActionBase {
     $this->configuration['view_id'] = $form_state->getValue('view_id');
     $this->configuration['display_id'] = $form_state->getValue('display_id');
     $this->configuration['arguments'] = $form_state->getValue('arguments');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $result = AccessResult::forbidden();
+    $view_id = $this->getViewId();
+    if ($view_id !== '') {
+      $view = View::load($view_id);
+      if ($view && $view->status()) {
+        $viewExecutable = $view->getExecutable();
+        $display_id = $this->getDisplayId();
+        $display = NULL;
+        if ($display_id !== '') {
+          if ($viewExecutable->setDisplay($display_id)) {
+            $display = $viewExecutable->getDisplay();
+          }
+        }
+        else {
+          $viewExecutable->initDisplay();
+          $display = $viewExecutable->getDisplay();
+        }
+        if ($display !== NULL) {
+          $result = AccessResult::allowedIf($display->access($account));
+        }
+      }
+    }
+    return $return_as_object ? $result : $result->isAllowed();
   }
 
   /**
@@ -137,7 +170,11 @@ class Views extends RenderElementActionBase {
    *   The view ID.
    */
   protected function getViewId(): string {
-    return trim((string) $this->tokenServices->replaceClear($this->configuration['view_id']));
+    $view_id = $this->configuration['view_id'];
+    if ($view_id === '_eca_token') {
+      $view_id = $this->getTokenValue('view_id', '');
+    }
+    return trim((string) $view_id);
   }
 
   /**
@@ -147,17 +184,17 @@ class Views extends RenderElementActionBase {
    *   The display ID.
    */
   protected function getDisplayId(): string {
-    return trim((string) $this->tokenServices->replaceClear($this->configuration['display_id']));
+    return trim((string) $this->tokenService->replaceClear($this->configuration['display_id']));
   }
 
   /**
    * Get the configured Views arguments.
    *
    * @return string
-   *   The arguments, multiple arguments are seraparated by "/".
+   *   The arguments, multiple arguments are separated by "/".
    */
   protected function getArguments(): string {
-    return trim((string) $this->tokenServices->replaceClear($this->configuration['arguments']));
+    return trim((string) $this->tokenService->replaceClear($this->configuration['arguments']));
   }
 
 }

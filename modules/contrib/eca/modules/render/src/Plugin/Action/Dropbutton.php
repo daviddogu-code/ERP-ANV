@@ -2,12 +2,15 @@
 
 namespace Drupal\eca_render\Plugin\Action;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\Core\Url;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\eca\Plugin\FormFieldMachineName;
+use Drupal\eca\Plugin\FormFieldYamlTrait;
 use Drupal\eca\Service\YamlParser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -18,10 +21,13 @@ use Symfony\Component\Yaml\Exception\ParseException;
  * @Action(
  *   id = "eca_render_dropbutton",
  *   label = @Translation("Render: dropbutton"),
- *   description = @Translation("Build a HTML dropbutton element.")
+ *   description = @Translation("Build a HTML dropbutton element."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class Dropbutton extends RenderElementActionBase {
+
+  use FormFieldYamlTrait;
 
   /**
    * The YAML parser.
@@ -33,11 +39,26 @@ class Dropbutton extends RenderElementActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_render\Plugin\Action\Dropbutton $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setYamlParser($container->get('eca.service.yaml_parser'));
     return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $result = parent::access($object, $account, TRUE);
+    if ($result->isAllowed() && $this->configuration['use_yaml'] && $this->configuration['validate_yaml']) {
+      try {
+        $this->yamlParser->parse($this->configuration['value']);
+      }
+      catch (ParseException) {
+        $result = AccessResult::forbidden('YAML data is not valid.');
+      }
+    }
+    return $return_as_object ? $result : $result->isAllowed();
   }
 
   /**
@@ -51,12 +72,12 @@ class Dropbutton extends RenderElementActionBase {
         $links = $this->yamlParser->parse($links);
       }
       catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing a state value item in action "eca_render_dropbutton" as YAML format, but parsing failed.');
+        $this->logger->error('Tried parsing a state value item in action "eca_render_dropbutton" as YAML format, but parsing failed.');
         return;
       }
     }
     else {
-      $links = $this->tokenServices->getOrReplace($links);
+      $links = $this->tokenService->getOrReplace($links);
     }
 
     if ($links instanceof DataTransferObject) {
@@ -68,38 +89,36 @@ class Dropbutton extends RenderElementActionBase {
     if (!is_array($links)) {
       $links = [$links];
     }
-    if (is_array($links)) {
-      if (!isset($links[0])) {
-        $links = [$links];
-      }
-      foreach ($links as $i => &$link) {
-        if ($link instanceof EntityInterface) {
-          $link = [
-            'title' => $link->label(),
-            'url' => $link->hasLinkTemplate('canonical') ? $link->toUrl('canonical') : NULL,
-          ];
-        }
-        if (isset($link['#type'], $link['#title'], $link['#url'])) {
-          $link = [
-            'title' => $link['#title'],
-            'url' => $link['#url'],
-          ];
-        }
-        if (isset($link['url']) && is_string($link['url'])) {
-          try {
-            $link['url'] = Url::fromUserInput($link['url']);
-          }
-          catch (\Exception $e) {
-            $link['url'] = Url::fromUri($link['url']);
-          }
-        }
-
-        if (!isset($link['url']) || !($link['url'] instanceof Url)) {
-          unset($links[$i]);
-        }
-      }
-      unset($link);
+    if (!isset($links[0])) {
+      $links = [$links];
     }
+    foreach ($links as $i => &$link) {
+      if ($link instanceof EntityInterface) {
+        $link = [
+          'title' => $link->label(),
+          'url' => $link->hasLinkTemplate('canonical') ? $link->toUrl('canonical') : NULL,
+        ];
+      }
+      if (isset($link['#type'], $link['#title'], $link['#url'])) {
+        $link = [
+          'title' => $link['#title'],
+          'url' => $link['#url'],
+        ];
+      }
+      if (isset($link['url']) && is_string($link['url'])) {
+        try {
+          $link['url'] = Url::fromUserInput($link['url']);
+        }
+        catch (\Exception $e) {
+          $link['url'] = Url::fromUri($link['url']);
+        }
+      }
+
+      if (!isset($link['url']) || !($link['url'] instanceof Url)) {
+        unset($links[$i]);
+      }
+    }
+    unset($link);
 
     $build = [
       '#type' => 'dropbutton',
@@ -119,6 +138,7 @@ class Dropbutton extends RenderElementActionBase {
       'dropbutton_type' => 'small',
       'links' => '',
       'use_yaml' => FALSE,
+      'validate_yaml' => FALSE,
     ] + parent::defaultConfiguration();
   }
 
@@ -126,12 +146,10 @@ class Dropbutton extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['dropbutton_type'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('Dropbutton type'),
       '#description' => $this->t('A string defining a type of dropbutton variant for styling proposes. Renders as class "dropbutton--[type]".'),
       '#weight' => -30,
@@ -141,20 +159,19 @@ class Dropbutton extends RenderElementActionBase {
     $form['links'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Links'),
-      '#description' => $this->t('This field supports tokens, and optionally YAML if selected below.'),
+      '#description' => $this->t('This field optionally supports YAML if selected below.'),
       '#weight' => -20,
       '#default_value' => $this->configuration['links'],
       '#required' => FALSE,
+      '#eca_token_replacement' => TRUE,
     ];
-    $form['use_yaml'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Interpret above specified links as YAML format'),
-      '#description' => $this->t('Links can be specified as a list with YAML syntax. Example:<em><br/>-<br/>&nbsp;&nbsp;title: Edit<br/>&nbsp;&nbsp;url: "/node/[node:nid]/edit/"<br/>-<br>&nbsp;&nbsp;title: Delete<br/>&nbsp;&nbsp;url: "/node/[node:nid]/delete"</em><br/><br/>When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
-      '#default_value' => $this->configuration['use_yaml'],
-      '#weight' => -10,
-      '#required' => FALSE,
-    ];
-    return $form;
+    $this->buildYamlFormFields(
+      $form,
+      $this->t('Interpret above specified links as YAML format'),
+      $this->t('Links can be specified as a list with YAML syntax. Example:<em><br />-<br />&nbsp;&nbsp;title: Edit<br />&nbsp;&nbsp;url: "/node/[node:nid]/edit/"<br />-<br />&nbsp;&nbsp;title: Delete<br />&nbsp;&nbsp;url: "/node/[node:nid]/delete"</em><br /><br />When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
+      -10,
+    );
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -165,6 +182,7 @@ class Dropbutton extends RenderElementActionBase {
     $this->configuration['dropbutton_type'] = $form_state->getValue('dropbutton_type');
     $this->configuration['links'] = $form_state->getValue('links');
     $this->configuration['use_yaml'] = !empty($form_state->getValue('use_yaml'));
+    $this->configuration['validate_yaml'] = !empty($form_state->getValue('validate_yaml'));
   }
 
   /**

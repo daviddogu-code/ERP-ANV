@@ -2,8 +2,7 @@
 
 namespace Drupal\eca_test_array\Event;
 
-use Drupal\Component\EventDispatcher\Event;
-use Drupal\eca\Event\ConditionalApplianceInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Provides an array write event.
@@ -14,7 +13,7 @@ use Drupal\eca\Event\ConditionalApplianceInterface;
  *
  * @package eca_test_array
  */
-class ArrayWriteEvent extends Event implements ConditionalApplianceInterface {
+class ArrayWriteEvent extends Event {
 
   /**
    * The key that was written to the array.
@@ -41,27 +40,6 @@ class ArrayWriteEvent extends Event implements ConditionalApplianceInterface {
   public function __construct(string $key, string $value) {
     $this->key = $key;
     $this->value = $value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    [$key, $value] = explode('::', $wildcard, 2);
-    return ($this->key === '*' || $this->key === $key) && ($this->value === '*' || $this->value === $value);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    if ($arguments['key'] !== '' && $arguments['key'] !== '*' && $arguments['key'] !== $this->key) {
-      return FALSE;
-    }
-    if ($arguments['value'] !== '' && $arguments['value'] !== '*' && $arguments['key'] !== $this->key) {
-      return FALSE;
-    }
-    return TRUE;
   }
 
 }

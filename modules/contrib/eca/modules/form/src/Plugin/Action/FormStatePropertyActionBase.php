@@ -25,7 +25,6 @@ abstract class FormStatePropertyActionBase extends FormActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['property_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of property'),
@@ -33,7 +32,7 @@ abstract class FormStatePropertyActionBase extends FormActionBase {
       '#default_value' => $this->configuration['property_name'],
       '#weight' => -50,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

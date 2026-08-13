@@ -3,6 +3,7 @@
 namespace Drupal\Tests\eca_form\Kernel;
 
 use Drupal\Core\Form\FormState;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Plugin\ECA\Condition\StringComparisonBase;
 use Drupal\eca\PluginManager\Condition;
 use Drupal\eca_form\Event\FormBuild;
@@ -12,9 +13,8 @@ use Drupal\eca_form\Event\FormSubmit;
 use Drupal\eca_form\Event\FormValidate;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -26,6 +26,8 @@ use Symfony\Component\HttpFoundation\Session\Session;
  * @group eca_form
  */
 class FormConditionsTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -61,10 +63,7 @@ class FormConditionsTest extends KernelTestBase {
     User::create(['uid' => 1, 'name' => 'admin'])->save();
 
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create(['type' => 'article', 'name' => 'Article']);
-    $node_type->save();
-    node_add_body_field($node_type);
+    $this->createContentType(['type' => 'article', 'name' => 'Article']);
     // Create a multi-value text field.
     FieldStorageConfig::create([
       'field_name' => 'field_string_multi',
@@ -161,6 +160,106 @@ class FormConditionsTest extends KernelTestBase {
     $this->assertFalse($validate_false_result);
     $this->assertTrue($submit_true_result);
     $this->assertFalse($submit_false_result);
+  }
+
+  /**
+   * Tests that getTargetElement() does not permanently mutate configuration.
+   *
+   * When a field name uses "." or ":" separators, getTargetElement() replaces
+   * them with "][" for recursive lookup. This test verifies that the original
+   * field_name configuration is preserved after the call, so subsequent calls
+   * still see the original separators.
+   *
+   * @see \Drupal\eca\Plugin\FormFieldPluginTrait::getTargetElement()
+   */
+  public function testGetTargetElementDoesNotMutateConfiguration(): void {
+    /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher */
+    $event_dispatcher = \Drupal::service('event_dispatcher');
+    $form_builder = \Drupal::formBuilder();
+
+    // Use a field name with "." separator that exercises the fallback logic
+    // in getTargetElement(). "actions.submit" will be converted to
+    // "actions][submit" internally.
+    /** @var \Drupal\eca_form\Plugin\ECA\Condition\FormFieldExists $condition */
+    $condition = $this->conditionManager->createInstance('eca_form_field_exists', [
+      'field_name' => 'actions.submit',
+      'negate' => FALSE,
+    ]);
+
+    $first_call_config = NULL;
+    $second_call_config = NULL;
+    $first_call_result = NULL;
+    $second_call_result = NULL;
+    $event_dispatcher->addListener(FormEvents::PROCESS, static function (FormProcess $event) use (&$first_call_config, &$second_call_config, &$first_call_result, &$second_call_result, $condition) {
+      $condition->setEvent($event);
+
+      // First call: should find the element and work correctly.
+      $first_call_result = $condition->evaluate();
+      $first_call_config = $condition->getConfiguration()['field_name'];
+
+      // Second call: should still see the original "." separator, not "][".
+      $second_call_result = $condition->evaluate();
+      $second_call_config = $condition->getConfiguration()['field_name'];
+    });
+
+    $form_object = \Drupal::entityTypeManager()->getFormObject('node', 'default');
+    $form_object->setEntity(Node::create([
+      'type' => 'article',
+      'title' => $this->randomMachineName(),
+    ]));
+    $form_state = new FormState();
+    $form_builder->buildForm($form_object, $form_state);
+
+    // Both calls should find the element.
+    $this->assertTrue($first_call_result, 'First call to getTargetElement() should find "actions.submit".');
+    $this->assertTrue($second_call_result, 'Second call to getTargetElement() should also find "actions.submit".');
+    // The configuration must not be mutated after either call.
+    $this->assertSame('actions.submit', $first_call_config, 'Configuration must not be mutated after first getTargetElement() call.');
+    $this->assertSame('actions.submit', $second_call_config, 'Configuration must not be mutated after second getTargetElement() call.');
+  }
+
+  /**
+   * Tests that getSubmittedValue() does not permanently mutate configuration.
+   *
+   * When a field name uses "." or ":" separators, getSubmittedValue() replaces
+   * them with "][" for recursive lookup. This test verifies that the original
+   * field_name configuration is preserved after the call.
+   *
+   * Note: Some consumers of getSubmittedValue() (e.g. FormFieldValue,
+   * FormFieldGetValue) have their own workaround restoring field_name after
+   * the call. This test uses FormFieldExists (which does not call
+   * getSubmittedValue) combined with a direct reflection-based call to the
+   * trait method to verify the trait itself preserves the configuration.
+   *
+   * @see \Drupal\eca\Plugin\FormFieldPluginTrait::getSubmittedValue()
+   */
+  public function testGetSubmittedValueDoesNotMutateConfiguration(): void {
+    /** @var \Drupal\eca_form\Plugin\ECA\Condition\FormFieldExists $condition */
+    $condition = $this->conditionManager->createInstance('eca_form_field_exists', [
+      'field_name' => 'test.nested_field',
+      'negate' => FALSE,
+    ]);
+    $form_state = new FormState();
+    $form_state->setValue(['test', 'nested_field'], 'expected_value');
+    $form = [];
+    $event = new FormBuild($form, $form_state, 'test_id');
+    $condition->setEvent($event);
+
+    // Call getSubmittedValue() directly via reflection, since FormFieldExists
+    // does not call it and consumers that do have their own restore logic.
+    $method = new \ReflectionMethod($condition, 'getSubmittedValue');
+
+    // First call.
+    $method->invoke($condition);
+    $first_config = $condition->getConfiguration()['field_name'];
+
+    // Second call.
+    $method->invoke($condition);
+    $second_config = $condition->getConfiguration()['field_name'];
+
+    // The configuration must not be mutated after either call.
+    $this->assertSame('test.nested_field', $first_config, 'Configuration must not be mutated after first getSubmittedValue() call.');
+    $this->assertSame('test.nested_field', $second_config, 'Configuration must not be mutated after second getSubmittedValue() call.');
   }
 
   /**

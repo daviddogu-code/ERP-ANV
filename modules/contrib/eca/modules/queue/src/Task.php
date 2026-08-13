@@ -2,12 +2,23 @@
 
 namespace Drupal\eca_queue;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\eca\Token\DataProviderInterface;
 
 /**
- * Task that will be proccessed in a queue.
+ * Task that will be processed in a queue.
  */
 class Task implements DataProviderInterface {
+
+  use DependencySerializationTrait;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected TimeInterface $time;
 
   /**
    * The name of the task.
@@ -40,6 +51,8 @@ class Task implements DataProviderInterface {
   /**
    * The Task constructor.
    *
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    * @param string $task_name
    *   The name of the task.
    * @param string|null $task_value
@@ -49,7 +62,8 @@ class Task implements DataProviderInterface {
    * @param int $notBefore
    *   (optional) The timestamp when this task should be processed the earliest.
    */
-  public function __construct(string $task_name, ?string $task_value = NULL, array $data = [], int $notBefore = 0) {
+  public function __construct(TimeInterface $time, string $task_name, ?string $task_value = NULL, array $data = [], int $notBefore = 0) {
+    $this->time = $time;
     $this->taskName = $task_name;
     $this->taskValue = $task_value;
     $this->data = $data;
@@ -83,7 +97,7 @@ class Task implements DataProviderInterface {
    *   TRUE, if this task is due for processing, FALSE otherwise.
    */
   public function isDueForProcessing(): bool {
-    return \Drupal::time()->getCurrentTime() >= $this->notBefore;
+    return $this->time->getCurrentTime() >= $this->notBefore;
   }
 
   /**
@@ -93,13 +107,13 @@ class Task implements DataProviderInterface {
    *   The delay in seconds.
    */
   public function getDelay(): int {
-    return $this->notBefore - \Drupal::time()->getCurrentTime();
+    return $this->notBefore - $this->time->getCurrentTime();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getData(string $key) {
+  public function getData(string $key): mixed {
     return $this->data[$key] ?? NULL;
   }
 

@@ -2,8 +2,8 @@
 
 namespace Drupal\eca\Plugin\Action;
 
-use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
@@ -53,7 +53,9 @@ abstract class ListDataOperationBase extends ListOperationBase {
               break;
             }
             elseif (static::$operation === 'save' || static::$operation === 'create') {
-              /** @var \Drupal\Core\Entity\EntityAccessControlHandlerInterface $access_handler */
+              /**
+               * @var \Drupal\Core\Entity\EntityAccessControlHandlerInterface $access_handler
+               */
               $access_handler = $this->entityTypeManager->getHandler($v->getEntityTypeId(), 'access');
               if (!$access_handler->createAccess($v->bundle(), $account, [], FALSE)) {
                 $access_allowed = FALSE;
@@ -80,7 +82,7 @@ abstract class ListDataOperationBase extends ListOperationBase {
   /**
    * {@inheritdoc}
    */
-  public function execute() {
+  public function execute(): void {
     if (!($list = $this->getItemList())) {
       return;
     }

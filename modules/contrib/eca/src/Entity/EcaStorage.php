@@ -2,31 +2,22 @@
 
 namespace Drupal\eca\Entity;
 
-use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
-use Drupal\eca\Event\ConditionalApplianceInterface;
+use Drupal\Core\State\StateInterface;
+use Drupal\ai\Service\FunctionCalling\FunctionCallPluginManager;
+use Drupal\field_widget_actions\PluginManager\FieldWidgetActionManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Storage handler for ECA configurations.
  */
 class EcaStorage extends ConfigEntityStorage {
-
-  /**
-   * Mapped configurations by event class usage.
-   *
-   * @var array|null
-   */
-  protected ?array $configByEvents;
-
-  /**
-   * The cache backend for storing prebuilt information.
-   *
-   * @var \Drupal\Core\Cache\CacheBackendInterface
-   */
-  protected CacheBackendInterface $cacheBackend;
 
   /**
    * The logger.
@@ -36,111 +27,162 @@ class EcaStorage extends ConfigEntityStorage {
   protected LoggerChannelInterface $logger;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected EventDispatcherInterface $eventDispatcher;
+
+  /**
+   * The dynamic event subscriber.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventSubscriberInterface
+   */
+  protected EventSubscriberInterface $eventSubscriber;
+
+  /**
+   * The Drupal state.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected StateInterface $state;
+
+  /**
+   * The lock backend.
+   *
+   * @var \Drupal\Core\Lock\LockBackendInterface
+   */
+  protected LockBackendInterface $lock;
+
+  /**
+   * The field widget action plugin manager.
+   *
+   * @var \Drupal\field_widget_actions\PluginManager\FieldWidgetActionManager|null
+   */
+  protected FieldWidgetActionManager|null $fieldWidgetActionPluginManager;
+
+  /**
+   * The AI Function Call plugin manager.
+   *
+   * @var \Drupal\ai\Service\FunctionCalling\FunctionCallPluginManager|null
+   */
+  protected FunctionCallPluginManager|null $aiFunctionCallPluginManager;
+
+  /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): EcaStorage {
     /** @var static $instance */
     $instance = parent::createInstance($container, $entity_type);
-    $instance->setCacheBackend($container->get('cache.default'));
-    $instance->setLogger($container->get('logger.channel.eca'));
+    /** @var \Drupal\Core\Logger\LoggerChannelInterface $loggerChannel */
+    $loggerChannel = $container->get('logger.channel.eca');
+    $instance->setLogger($loggerChannel);
+    $instance->eventDispatcher = $container->get('event_dispatcher');
+    $instance->eventSubscriber = $container->get('eca.dynamic_subscriber');
+    $instance->lock = $container->get('lock');
+    $instance->state = $container->get('state');
+    $instance->fieldWidgetActionPluginManager = $container->get('plugin.manager.field_widget_actions', ContainerInterface::NULL_ON_INVALID_REFERENCE);
+    $instance->aiFunctionCallPluginManager = $container->get('plugin.manager.ai.function_calls', ContainerInterface::NULL_ON_INVALID_REFERENCE);
     return $instance;
   }
 
   /**
-   * Loads all ECA configurations that make use of the given event.
-   *
-   * @param \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event $event
-   *   The event object.
-   * @param string $event_name
-   *   The name of the event.
-   *
-   * @return \Drupal\eca\Entity\Eca[]
-   *   The configurations, keyed by entity ID.
+   * The maximum number of lock acquisition retries.
    */
-  public function loadByEvent(object $event, string $event_name): array {
-    if (!isset($this->configByEvents)) {
-      $cid = 'eca:storage:events';
-      if ($cached = $this->cacheBackend->get($cid)) {
-        $this->configByEvents = $cached->data;
+  protected const MAX_LOCK_RETRIES = 10;
+
+  /**
+   * Rebuilds the state of subscribed events.
+   */
+  public function rebuildSubscribedEvents(): void {
+    $lock_name = 'eca_rebuild_subscribed_events';
+    $retries = 0;
+    while (!$this->lock->acquire($lock_name)) {
+      if (++$retries > static::MAX_LOCK_RETRIES) {
+        $this->logger->warning('Could not acquire lock for rebuilding ECA subscribed events after @retries attempts.', ['@retries' => static::MAX_LOCK_RETRIES]);
+        return;
       }
-      else {
-        $this->configByEvents = [];
-        $entities = $this->loadMultiple();
-        // Sort the configurations by weight and label.
-        uasort($entities, [$this->entityType->getClass(), 'sort']);
-        /** @var \Drupal\eca\Entity\Eca $eca */
-        foreach ($entities as $eca) {
-          if (!$eca->status()) {
-            continue;
-          }
-          foreach ($eca->getUsedEvents() as $ecaEvent) {
-            $eca_id = $eca->id();
-            $plugin = $ecaEvent->getPlugin();
-            $plugin_event_name = $plugin->eventName();
-            $wildcard = $plugin->lazyLoadingWildcard($eca_id, $ecaEvent);
-            if (!isset($this->configByEvents[$plugin_event_name])) {
-              $this->configByEvents[$plugin_event_name] = [$eca_id => [$wildcard]];
-            }
-            elseif (!isset($this->configByEvents[$plugin_event_name][$eca_id])) {
-              $this->configByEvents[$plugin_event_name][$eca_id] = [$wildcard];
-            }
-            elseif (!in_array($wildcard, $this->configByEvents[$plugin_event_name][$eca_id], TRUE)) {
-              $this->configByEvents[$plugin_event_name][$eca_id][] = $wildcard;
-            }
-          }
-        }
-        $this->cacheBackend->set($cid, $this->configByEvents, CacheBackendInterface::CACHE_PERMANENT, ['config:eca_list']);
-        $this->logger->debug('Rebuilt cache array for EcaStorage::loadByEvent().');
+      try {
+        $sleep = random_int(1000, 50000);
       }
-    }
-    if (empty($this->configByEvents[$event_name])) {
-      return [];
-    }
-    $context = ['%event' => $event_name];
-    if ($event instanceof ConditionalApplianceInterface) {
-      $eca_ids = [];
-      foreach ($this->configByEvents[$event_name] as $eca_id => $wildcards) {
-        $wildcard_passed = FALSE;
-        $context['%ecaid'] = $eca_id;
-        foreach ($wildcards as $wildcard) {
-          if ($wildcard_passed = $event->appliesForLazyLoadingWildcard($wildcard)) {
-            $eca_ids[] = $eca_id;
-            $this->logger->debug('Lazy appliance check for event %event regarding ECA ID %ecaid resulted to apply.', $context);
-            break;
-          }
-        }
-        if (!$wildcard_passed) {
-          $this->logger->debug('Lazy appliance check for event %event regarding ECA ID %ecaid resulted to not apply.', $context);
-        }
+      catch (\Exception) {
+        $sleep = 2500;
       }
+      usleep($sleep);
     }
-    else {
-      $eca_ids = array_keys($this->configByEvents[$event_name]);
+
+    $subscribedEvents = $this->doRebuildSubscribedEvents();
+
+    if ($this->state->get('eca.subscribed') !== $subscribedEvents) {
+      $this->state->set('eca.subscribed', $subscribedEvents);
+      $this->eventDispatcher->removeSubscriber($this->eventSubscriber);
+      $this->eventDispatcher->addSubscriber($this->eventSubscriber);
     }
-    if ($eca_ids) {
-      $context['%eca_ids'] = implode(', ', $eca_ids);
-      $this->logger->debug('Loading ECA configurations for event %event: %eca_ids.', $context);
-      return $this->loadMultiple($eca_ids);
+    if (isset($subscribedEvents['eca_base.field_widget']) && $this->fieldWidgetActionPluginManager !== NULL) {
+      $this->fieldWidgetActionPluginManager->clearCachedDefinitions();
     }
-    return [];
+    if (isset($subscribedEvents['eca_base.tool']) && $this->aiFunctionCallPluginManager !== NULL) {
+      $this->aiFunctionCallPluginManager->clearCachedDefinitions();
+    }
+
+    $this->lock->release($lock_name);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function resetCache(array $ids = NULL): void {
-    $this->configByEvents = NULL;
-    parent::resetCache($ids);
+  protected function doPostSave(EntityInterface $entity, $update): void {
+    parent::doPostSave($entity, $update);
+    $this->rebuildSubscribedEvents();
   }
 
   /**
-   * Set the cache backend for storing prebuilt information.
+   * {@inheritdoc}
    *
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
-   *   The cache backend.
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function setCacheBackend(CacheBackendInterface $cache_backend): void {
-    $this->cacheBackend = $cache_backend;
+  public function delete(array $entities): void {
+    parent::delete($entities);
+    $this->rebuildSubscribedEvents();
+  }
+
+  /**
+   * Rebuilds the list of subscribed events based on the current configuration.
+   *
+   * @return array
+   *   The list of ECA configuration IDs, grouped by their subscribed events.
+   */
+  protected function doRebuildSubscribedEvents(): array {
+    $subscribed = [];
+    $entities = $this->loadMultiple();
+    // Sort the configurations by weight and label.
+    uasort($entities, [$this->entityType->getClass(), 'sort']);
+    /**
+     * @var \Drupal\eca\Entity\Eca $eca
+     */
+    foreach ($entities as $eca) {
+      if (!$eca->status()) {
+        continue;
+      }
+      foreach ($eca->getUsedEvents() as $eca_event_id => $ecaEvent) {
+        $eca_id = $eca->id();
+        $plugin = $ecaEvent->getPlugin();
+        $name = $plugin->eventName();
+        $priority = $plugin->subscriberPriority();
+        $wildcard = $plugin->generateWildcard($eca_id, $ecaEvent);
+        $subscribed[$name][$priority][$eca_id][$eca_event_id] = $wildcard;
+      }
+    }
+
+    // Make sure that priorities are always distinct.
+    foreach ($subscribed as $prioritized) {
+      if (count($prioritized) > 1) {
+        throw new \LogicException("Priority for event subscription must be distinct.");
+      }
+    }
+
+    $this->logger->debug('Rebuilt subscribed events of ECA configuration.');
+    return $subscribed;
   }
 
   /**

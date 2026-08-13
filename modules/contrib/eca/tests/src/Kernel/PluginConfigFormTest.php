@@ -5,8 +5,8 @@ namespace Drupal\Tests\eca\Kernel;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Plugin\PluginFormInterface;
-use Drupal\eca\Plugin\Action\ActionInterface;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\Plugin\Action\ActionInterface;
 use Symfony\Component\ErrorHandler\BufferingLogger;
 
 /**
@@ -114,7 +114,7 @@ class PluginConfigFormTest extends KernelTestBase {
    * @param mixed $plugin
    *   The plugin.
    */
-  private function doExecute(string $type, string $id, $plugin): void {
+  private function doExecute(string $type, string $id, mixed $plugin): void {
     if ($plugin instanceof PluginFormInterface) {
       $form_state = new FormState();
 

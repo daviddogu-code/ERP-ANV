@@ -3,19 +3,19 @@
 namespace Drupal\eca_tamper\Plugin\ECA\Condition;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\eca\Plugin\ECA\Condition\ConditionBase;
+use Drupal\eca\Attribute\EcaCondition;
 use Drupal\eca\Plugin\ECA\Condition\StringComparisonBase;
 use Drupal\eca_tamper\Plugin\TamperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provide all tamper plugins as ECA conditions.
- *
- * @EcaCondition(
- *   id = "eca_tamper_condition",
- *   deriver = "Drupal\eca_tamper\Plugin\ECA\Condition\TamperDeriver"
- * )
  */
+#[EcaCondition(
+  id: 'eca_tamper_condition',
+  deriver: 'Drupal\eca_tamper\Plugin\ECA\Condition\TamperDeriver',
+  version_introduced: '1.0.0',
+)]
 class Tamper extends StringComparisonBase {
 
   use TamperTrait;
@@ -23,7 +23,7 @@ class Tamper extends StringComparisonBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ConditionBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->tamperManager = $container->get('plugin.manager.tamper');
     $instance->setConfiguration($configuration);
@@ -33,7 +33,8 @@ class Tamper extends StringComparisonBase {
   /**
    * {@inheritdoc}
    *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException | \Drupal\Core\TypedData\Exception\MissingDataException
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
   protected function getLeftValue(): string {
     $value = $this->doTamper('left', 'right');
@@ -72,18 +73,18 @@ class Tamper extends StringComparisonBase {
     $form['left'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Data to be tampered'),
-      '#description' => $this->t('This field supports tokens.'),
       '#default_value' => $this->configuration['left'] ?? '',
       '#required' => TRUE,
       '#weight' => -100,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['right'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Data to compare with'),
-      '#description' => $this->t('This field supports tokens.'),
       '#default_value' => $this->getRightValue(),
       '#required' => TRUE,
       '#weight' => -45,
+      '#eca_token_replacement' => TRUE,
     ];
     return $form;
   }

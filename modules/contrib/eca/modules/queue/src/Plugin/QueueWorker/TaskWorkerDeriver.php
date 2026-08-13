@@ -10,14 +10,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides task worker plugins for each distributed task queue.
  */
-class TaskWorkerDeriver implements ContainerDeriverInterface {
+final class TaskWorkerDeriver implements ContainerDeriverInterface {
 
   /**
    * List of derivative definitions.
    *
    * @var array
    */
-  protected $derivatives = [];
+  protected array $derivatives = [];
 
   /**
    * The entity type manager.
@@ -29,8 +29,8 @@ class TaskWorkerDeriver implements ContainerDeriverInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, $base_plugin_id) {
-    return new static($container->get('entity_type.manager'));
+  public static function create(ContainerInterface $container, $base_plugin_id): TaskWorkerDeriver {
+    return new TaskWorkerDeriver($container->get('entity_type.manager'));
   }
 
   /**
@@ -51,15 +51,13 @@ class TaskWorkerDeriver implements ContainerDeriverInterface {
       return $this->derivatives[$derivative_id];
     }
     $this->getDerivativeDefinitions($base_plugin_definition);
-    if (isset($this->derivatives[$derivative_id])) {
-      return $this->derivatives[$derivative_id];
-    }
+    return $this->derivatives[$derivative_id] ?? NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getDerivativeDefinitions($base_plugin_definition) {
+  public function getDerivativeDefinitions($base_plugin_definition): array {
     // Also keep "eca_task" as is for non-distributed tasks.
     $this->derivatives[''] = $base_plugin_definition;
 

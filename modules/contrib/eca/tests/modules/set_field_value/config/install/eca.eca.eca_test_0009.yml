@@ -12,7 +12,7 @@ dependencies:
 id: eca_test_0009
 modeller: bpmn_io
 label: 'Set field values'
-version: 1.0.0
+version: v1
 weight: null
 events:
   Event_056l2f4:

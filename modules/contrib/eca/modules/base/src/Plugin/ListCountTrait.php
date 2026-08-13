@@ -15,13 +15,13 @@ trait ListCountTrait {
    *   be counted.
    *
    * @return int
-   *   Numnber of items if given token exists and is either countable or
+   *   Number of items if given token exists and is either countable or
    *   traversable, 0 otherwise.
    */
   protected function countValue(string $name): int {
     $result = 0;
-    if ($this->tokenServices->hasTokenData($name)) {
-      $data = $this->tokenServices->getTokenData($name);
+    if ($this->tokenService->hasTokenData($name)) {
+      $data = $this->tokenService->getTokenData($name);
       if (is_countable($data)) {
         $result = count($data);
       }

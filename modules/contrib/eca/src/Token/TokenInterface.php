@@ -10,6 +10,14 @@ use Drupal\Core\Render\BubbleableMetadata;
 interface TokenInterface {
 
   /**
+   * Gets the list of data providers.
+   *
+   * @return \Drupal\eca\Token\DataProviderInterface[]
+   *   The list of data providers.
+   */
+  public function getDataProviders(): array;
+
+  /**
    * Add token data on runtime for subsequent text replacements.
    *
    * @param string $key
@@ -212,7 +220,7 @@ interface TokenInterface {
    *
    * @see \Drupal\Core\Utility\Token
    */
-  public function replace($text, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL);
+  public function replace($text, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL);
 
   /**
    * Same as ::replace() but automatically enables the clear option.
@@ -234,7 +242,7 @@ interface TokenInterface {
    *
    * @see ::replace()
    */
-  public function replaceClear($text, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL);
+  public function replaceClear($text, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL);
 
   /**
    * Replaces all tokens in a given plain text string with appropriate values.
@@ -251,7 +259,7 @@ interface TokenInterface {
    * @return string
    *   The entered plain text with tokens replaced.
    */
-  public function replacePlain(string $plain, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL): string;
+  public function replacePlain(string $plain, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL): string;
 
   /**
    * Returns data when text matches with a data key or runs string replacement.
@@ -280,7 +288,7 @@ interface TokenInterface {
    * @see ::getTokenData()
    * @see ::replace()
    */
-  public function getOrReplace($text, array $data = [], ?array $options = NULL, BubbleableMetadata $bubbleable_metadata = NULL);
+  public function getOrReplace($text, array $data = [], ?array $options = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL);
 
   /**
    * Builds a list of all token-like patterns that appear in the text.
@@ -298,7 +306,7 @@ interface TokenInterface {
   /**
    * Scans the text for root-level tokens (Tokens without further keys).
    *
-   * Tokens ususally consist of two parts: the type and a name. We allow
+   * Tokens usually consist of two parts: the type and a name. We allow
    * users to set Tokens without specifying any of these, for example [list].
    * Therefore extra work is needed to support this scheme.
    *
@@ -320,13 +328,13 @@ interface TokenInterface {
    * Used to extract a group of 'chained' tokens (such as [node:author:name])
    * from the full list of tokens found in text. For example:
    * @code
-   *   $data = array(
+   *   $data = [
    *     'author:name' => '[node:author:name]',
    *     'title'       => '[node:title]',
    *     'created'     => '[node:created]',
-   *   );
+   *   ];
    *   $results = Token::findWithPrefix($data, 'author');
-   *   $results == array('name' => '[node:author:name]');
+   *   $results == ['name' => '[node:author:name]'];
    * @endcode
    *
    * @param array $tokens

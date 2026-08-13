@@ -26,6 +26,13 @@ class EcaEvent extends Plugin {
   public string $event_name;
 
   /**
+   * Priority when subscribing to the covered event.
+   *
+   * @var int
+   */
+  public int $subscriber_priority;
+
+  /**
    * Event class to which this ECA event subscribes.
    *
    * @var string

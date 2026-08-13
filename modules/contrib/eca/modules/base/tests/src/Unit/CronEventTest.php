@@ -3,10 +3,11 @@
 namespace Drupal\Tests\eca_base\Unit;
 
 use Drupal\Core\Datetime\DateFormatter;
+use Drupal\Tests\UnitTestCase;
 use Drupal\eca\ConfigurableLoggerChannel;
 use Drupal\eca\EcaState;
 use Drupal\eca_base\Event\CronEvent;
-use Drupal\Tests\UnitTestCase;
+use Drupal\eca_base\Plugin\ECA\Event\BaseEvent;
 
 /**
  * Tests calculation of cron job due dates.
@@ -57,7 +58,7 @@ class CronEventTest extends UnitTestCase {
    * @return \string[][]
    *   The data records for testing.
    */
-  public function cronTestDueDatesAndTimesData(): array {
+  public static function cronTestDueDatesAndTimesData(): array {
     return [
       [
         '2022-06-17 15:30',
@@ -104,7 +105,7 @@ class CronEventTest extends UnitTestCase {
     $logger_mock = $this->createMock(ConfigurableLoggerChannel::class);
 
     $event = new CronEvent($state_mock, $date_formatter_mock, $logger_mock);
-    $this->assertSame($return_today, $event->applies($this->randomMachineName(), ['frequency' => $frequency]), 'Today - ' . $message);
+    $this->assertSame($return_today, BaseEvent::appliesForWildcard($event, '', $this->randomMachineName() . '::' . $frequency), 'Today - ' . $message);
 
     // Last run set to today 23:59.
     $last_run = $today_0100am + 86400 - 3660;
@@ -112,7 +113,7 @@ class CronEventTest extends UnitTestCase {
     $state_mock = $this->getStateMock($last_run, $tomorrow_0200am);
 
     $event = new CronEvent($state_mock, $date_formatter_mock, $logger_mock);
-    $this->assertSame($return_tomorrow, $event->applies($this->randomMachineName(), ['frequency' => $frequency]), 'Tomorrow - ' . $message);
+    $this->assertSame($return_tomorrow, BaseEvent::appliesForWildcard($event, '', $this->randomMachineName() . '::' . $frequency), 'Tomorrow - ' . $message);
 
     // Last run set to tomorrow 23:59.
     $last_run = $today_0100am + (2 * 86400) - 3660;
@@ -120,7 +121,7 @@ class CronEventTest extends UnitTestCase {
     $state_mock = $this->getStateMock($last_run, $tomorrow_0200am);
 
     $event = new CronEvent($state_mock, $date_formatter_mock, $logger_mock);
-    $this->assertSame($return_after_tomorrow, $event->applies($this->randomMachineName(), ['frequency' => $frequency]), 'After tomorrow - ' . $message);
+    $this->assertSame($return_after_tomorrow, BaseEvent::appliesForWildcard($event, '', $this->randomMachineName() . '::' . $frequency), 'After tomorrow - ' . $message);
   }
 
   /**
@@ -128,7 +129,7 @@ class CronEventTest extends UnitTestCase {
    *
    * The method ::getStateMock simulates the case that an ECA configuration got
    * created for the first time today at 01:00:01 AM, and that a cron got first
-   * executed at 02:00:01 AM. The cron then gets executed at the same clocktime
+   * executed at 02:00:01 AM. The cron then gets executed at the same clock time
    * on the next day, and again on the followed day (after tomorrow).
    *
    * Each record provides 3 data points:
@@ -143,7 +144,7 @@ class CronEventTest extends UnitTestCase {
    * @return \string[][]
    *   The data records for testing.
    */
-  public function appliesData(): array {
+  public static function appliesData(): array {
     $weekday_today = (int) (new \DateTime('now', new \DateTimeZone('UTC')))->format('w');
     $weekday_tomorrow = ($weekday_today + 1) % 7;
     $weekday_after_tomorrow = ($weekday_today + 2) % 7;

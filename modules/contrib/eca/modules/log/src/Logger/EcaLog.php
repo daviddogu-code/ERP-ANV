@@ -3,9 +3,11 @@
 namespace Drupal\eca_log\Logger;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Logger\RfcLoggerTrait;
 use Drupal\eca_log\Event\LogMessageEvent;
 use Drupal\eca_log\LogEvents;
+use Psr\Log\LogLevel;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -16,6 +18,22 @@ class EcaLog implements LoggerInterface {
 
   use RfcLoggerTrait;
   use DependencySerializationTrait;
+
+  /**
+   * Map of PSR3 log constants to RFC 5424 log constants.
+   *
+   * @var array
+   */
+  protected array $levelTranslation = [
+    LogLevel::EMERGENCY => RfcLogLevel::EMERGENCY,
+    LogLevel::ALERT => RfcLogLevel::ALERT,
+    LogLevel::CRITICAL => RfcLogLevel::CRITICAL,
+    LogLevel::ERROR => RfcLogLevel::ERROR,
+    LogLevel::WARNING => RfcLogLevel::WARNING,
+    LogLevel::NOTICE => RfcLogLevel::NOTICE,
+    LogLevel::INFO => RfcLogLevel::INFO,
+    LogLevel::DEBUG => RfcLogLevel::DEBUG,
+  ];
 
   /**
    * Event dispatcher.

@@ -4,9 +4,9 @@ namespace Drupal\eca_render\Plugin\Action;
 
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
+use Drupal\eca\Plugin\FormFieldMachineName;
 use Drupal\eca_render\Form\EcaCustomForm;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Build a custom form.
@@ -14,7 +14,8 @@ use Drupal\eca_render\Form\EcaCustomForm;
  * @Action(
  *   id = "eca_render_custom_form",
  *   label = @Translation("Render: custom form"),
- *   description = @Translation("Build a custom form using ""ECA Form"" events.")
+ *   description = @Translation("Build a custom form using ""ECA Form"" events."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class CustomForm extends RenderElementActionBase {
@@ -29,7 +30,7 @@ class CustomForm extends RenderElementActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->formBuilder = $container->get('form_builder');
     return $instance;
@@ -48,19 +49,17 @@ class CustomForm extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['custom_form_id'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('Custom form ID'),
       '#description' => $this->t('This custom form ID is being used to identify the form on <em>ECA Form</em> events. <em>It is always prefixed with "eca_custom_"</em>. Example: When specified the custom form ID <em>my_custom_form</em>, then it can be identified e.g. on the event <em>Build form</em> using the form ID <em>eca_custom_my_custom_form</em>.'),
       '#default_value' => $this->configuration['custom_form_id'],
       '#required' => TRUE,
       '#weight' => 100,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -98,7 +97,8 @@ class CustomForm extends RenderElementActionBase {
       $form_id = 'eca_custom_' . $form_id;
     }
     $configs = [];
-    foreach ($this->entityTypeManager->getStorage('eca') as $eca) {
+    /** @var \Drupal\eca\Entity\Eca $eca */
+    foreach ($this->entityTypeManager->getStorage('eca')->loadMultiple() as $eca) {
       foreach (($eca->get('events') ?? []) as $event) {
         if (mb_strpos($event['plugin'], 'form:') !== 0) {
           continue;

@@ -42,8 +42,9 @@ class Model extends ConfigEntityBase {
   public function calculateDependencies() {
     parent::calculateDependencies();
 
-    /** @var \Drupal\eca\Entity\Eca $eca */
-    if ($eca = $this->entityTypeManager()->getStorage('eca')->load($this->id())) {
+    /** @var \Drupal\eca\Entity\Eca|null $eca */
+    $eca = $this->entityTypeManager()->getStorage('eca')->load($this->id());
+    if ($eca) {
       $this->addDependency('config', $eca->getConfigDependencyName());
     }
 
@@ -74,7 +75,7 @@ class Model extends ConfigEntityBase {
    *
    * @return $this
    */
-  public function setLabel($label): Model {
+  public function setLabel(string $label): Model {
     $this->set('label', $label);
     return $this;
   }
@@ -84,7 +85,7 @@ class Model extends ConfigEntityBase {
    *
    * @return $this
    */
-  public function setTags($tags): Model {
+  public function setTags(array $tags): Model {
     $this->set('tags', empty($tags) ? ['untagged'] : $tags);
     return $this;
   }
@@ -96,7 +97,7 @@ class Model extends ConfigEntityBase {
    *   The tags of this model.
    */
   public function getTags(): array {
-    return $this->get('tags');
+    return $this->get('tags') ?? [];
   }
 
   /**
@@ -104,7 +105,7 @@ class Model extends ConfigEntityBase {
    *
    * @return $this
    */
-  public function setDocumentation($documentation): Model {
+  public function setDocumentation(string $documentation): Model {
     $this->set('documentation', $documentation);
     return $this;
   }
@@ -124,7 +125,7 @@ class Model extends ConfigEntityBase {
    *
    * @return $this
    */
-  public function setFilename($filename): Model {
+  public function setFilename(string $filename): Model {
     $this->set('filename', $filename);
     return $this;
   }
@@ -144,7 +145,7 @@ class Model extends ConfigEntityBase {
    *
    * @return $this
    */
-  public function setModeldata($modeldata): Model {
+  public function setModeldata(string $modeldata): Model {
     $this->set('modeldata', $modeldata);
     return $this;
   }

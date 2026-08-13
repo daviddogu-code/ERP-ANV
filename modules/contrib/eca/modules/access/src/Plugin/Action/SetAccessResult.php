@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Event\AccessEventInterface;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Action to set an access result.
@@ -14,10 +15,13 @@ use Drupal\eca\Plugin\Action\ConfigurableActionBase;
  * @Action(
  *   id = "eca_access_set_result",
  *   label = @Translation("Set access result"),
- *   description = @Translation("Only works when reacting upon <em>ECA Access</em> events.")
+ *   description = @Translation("Only works when reacting upon <em>ECA Access</em> events."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class SetAccessResult extends ConfigurableActionBase {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -34,8 +38,12 @@ class SetAccessResult extends ConfigurableActionBase {
     if (!($this->event instanceof AccessEventInterface)) {
       return;
     }
+    $accessResult = $this->configuration['access_result'];
+    if ($accessResult === '_eca_token') {
+      $accessResult = $this->getTokenValue('access_result', 'forbidden');
+    }
 
-    switch ($this->configuration['access_result']) {
+    switch ($accessResult) {
 
       case 'allowed':
         // Allowed by configured ECA.
@@ -67,7 +75,6 @@ class SetAccessResult extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['access_result'] = [
       '#type' => 'select',
       '#title' => $this->t('Access result'),
@@ -79,8 +86,9 @@ class SetAccessResult extends ConfigurableActionBase {
         'allowed' => $this->t('Allowed'),
       ],
       '#weight' => 10,
+      '#eca_token_select_option' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

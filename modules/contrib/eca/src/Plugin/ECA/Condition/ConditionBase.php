@@ -7,14 +7,16 @@ use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\ContextAwarePluginTrait;
 use Drupal\Core\Plugin\PluginBase;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\eca\EcaState;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 use Drupal\eca\Token\TokenInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Base class for ECA provided conditions.
@@ -22,13 +24,14 @@ use Symfony\Component\HttpFoundation\RequestStack;
 abstract class ConditionBase extends PluginBase implements ConditionInterface, ContainerFactoryPluginInterface {
 
   use ContextAwarePluginTrait;
+  use PluginFormTrait;
 
   /**
    * The triggered event.
    *
-   * @var \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event
+   * @var \Symfony\Contracts\EventDispatcher\Event
    */
-  protected object $event;
+  protected Event $event;
 
   /**
    * The entity type manager service.
@@ -56,7 +59,7 @@ abstract class ConditionBase extends PluginBase implements ConditionInterface, C
    *
    * @var \Drupal\eca\Token\TokenInterface
    */
-  protected TokenInterface $tokenServices;
+  protected TokenInterface $tokenService;
 
   /**
    * User account.
@@ -82,12 +85,12 @@ abstract class ConditionBase extends PluginBase implements ConditionInterface, C
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, RequestStack $request_stack, TokenInterface $token_services, AccountProxyInterface $current_user, TimeInterface $time, EcaState $state) {
+  final public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, RequestStack $request_stack, TokenInterface $token_service, AccountProxyInterface $current_user, TimeInterface $time, EcaState $state) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->requestStack = $request_stack;
-    $this->tokenServices = $token_services;
+    $this->tokenService = $token_service;
     $this->currentUser = $current_user;
     $this->time = $time;
     $this->state = $state;
@@ -97,7 +100,7 @@ abstract class ConditionBase extends PluginBase implements ConditionInterface, C
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ConditionBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(
       $configuration,
       $plugin_id,
@@ -121,11 +124,11 @@ abstract class ConditionBase extends PluginBase implements ConditionInterface, C
    * @return mixed|null
    *   The named value, if available. NULL otherwise.
    */
-  public function getValueFromContext(string $name) {
+  public function getValueFromContext(string $name): mixed {
     try {
       return $this->getContextValue($name);
     }
-    catch (ContextException $e) {
+    catch (ContextException) {
       return NULL;
     }
   }
@@ -148,7 +151,7 @@ abstract class ConditionBase extends PluginBase implements ConditionInterface, C
   /**
    * {@inheritdoc}
    */
-  public function getEvent(): object {
+  public function getEvent(): Event {
     return $this->event;
   }
 
@@ -181,9 +184,8 @@ abstract class ConditionBase extends PluginBase implements ConditionInterface, C
       '#type' => 'checkbox',
       '#title' => $this->t('Negate the condition'),
       '#default_value' => $this->configuration['negate'],
-      '#description' => $this->t('Negates the condition, e.g. makes TRUE to FALSE and vice versa.'),
-      '#weight' => $i,
       '#description' => $this->t('Negates the condition. Makes TRUE to FALSE and vice versa.'),
+      '#weight' => $i,
     ];
     /** @var \Drupal\Core\Plugin\Context\ContextDefinition $definition */
     foreach ($this->getPluginDefinition()['context_definitions'] ?? [] as $key => $definition) {
@@ -196,9 +198,10 @@ abstract class ConditionBase extends PluginBase implements ConditionInterface, C
           '%key' => $key,
         ]),
         '#weight' => $i,
+        '#eca_token_reference' => TRUE,
       ];
     }
-    return $form;
+    return $this->updateConfigurationForm($form);
   }
 
   /**
@@ -230,9 +233,8 @@ abstract class ConditionBase extends PluginBase implements ConditionInterface, C
   /**
    * {@inheritdoc}
    */
-  public function setConfiguration(array $configuration): ConditionBase {
+  public function setConfiguration(array $configuration): void {
     $this->configuration = $configuration + $this->defaultConfiguration();
-    return $this;
   }
 
   /**

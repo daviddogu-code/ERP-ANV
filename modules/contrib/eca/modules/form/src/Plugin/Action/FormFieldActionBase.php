@@ -15,6 +15,13 @@ abstract class FormFieldActionBase extends FormActionBase {
   use FormFieldPluginTrait;
 
   /**
+   * Whether this action supports multiple form fields to operate with.
+   *
+   * @var bool
+   */
+  protected bool $supportsMultiple = TRUE;
+
+  /**
    * {@inheritdoc}
    */
   public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
@@ -52,7 +59,12 @@ abstract class FormFieldActionBase extends FormActionBase {
   public function execute(): void {
     $original_field_name = $this->configuration['field_name'];
 
-    foreach ($this->extractFormFieldNames($original_field_name) as $field_name) {
+    $field_names = $this->extractFormFieldNames($original_field_name);
+    if (!$this->supportsMultiple && count($field_names) > 1) {
+      throw new \InvalidArgumentException("This action does not support multiple fields.");
+    }
+
+    foreach ($field_names as $field_name) {
       $this->configuration['field_name'] = $field_name;
       $this->doExecute();
     }
@@ -81,8 +93,8 @@ abstract class FormFieldActionBase extends FormActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
-    return $this->buildFormFieldConfigurationForm($form, $form_state);
+    $form = $this->buildFormFieldConfigurationForm($form, $form_state);
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -91,6 +103,9 @@ abstract class FormFieldActionBase extends FormActionBase {
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->validateFormFieldConfigurationForm($form, $form_state);
     parent::validateConfigurationForm($form, $form_state);
+    if (mb_strpos($form_state->getValue('field_name', ''), ',') !== FALSE) {
+      $form_state->setError($form['field_name'], $this->t('This action does not support multiple fields.'));
+    }
   }
 
   /**
@@ -114,7 +129,7 @@ abstract class FormFieldActionBase extends FormActionBase {
    *   The extracted form field names, ready for evaluation.
    */
   protected function extractFormFieldNames(string $user_input): array {
-    return array_map('trim', explode(',', (string) $this->tokenServices->replace($user_input)));
+    return array_map('trim', explode(',', (string) $this->tokenService->replace($user_input)));
   }
 
 }

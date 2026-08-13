@@ -2,10 +2,9 @@
 
 namespace Drupal\eca_base\Event;
 
-use Drupal\Component\EventDispatcher\Event;
-use Drupal\eca\Event\ConditionalApplianceInterface;
 use Drupal\eca\Event\TokenReceiverInterface;
 use Drupal\eca\Event\TokenReceiverTrait;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Provides a custom event.
@@ -16,7 +15,7 @@ use Drupal\eca\Event\TokenReceiverTrait;
  *
  * @package Drupal\eca_base\Event
  */
-class CustomEvent extends Event implements ConditionalApplianceInterface, TokenReceiverInterface {
+class CustomEvent extends Event implements TokenReceiverInterface {
 
   use TokenReceiverTrait;
 
@@ -49,18 +48,13 @@ class CustomEvent extends Event implements ConditionalApplianceInterface, TokenR
   }
 
   /**
-   * {@inheritdoc}
+   * Returns the event ID.
+   *
+   * @return string
+   *   The event ID.
    */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    return ($this->eventId === $wildcard) || ($wildcard === '');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    $argument_event_id = isset($arguments['event_id']) ? trim($arguments['event_id']) : '';
-    return ($argument_event_id === '') || ($this->eventId === $argument_event_id);
+  public function getEventId(): string {
+    return $this->eventId;
   }
 
 }

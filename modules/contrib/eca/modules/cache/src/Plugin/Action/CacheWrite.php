@@ -2,22 +2,20 @@
 
 namespace Drupal\eca_cache\Plugin\Action;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\eca\Plugin\FormFieldYamlTrait;
 use Drupal\eca\Service\YamlParser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
 
 /**
- * Action to write into cache.
- *
- * @Action(
- *   id = "eca_cache_write",
- *   label = @Translation("Cache: write"),
- *   description = @Translation("Write a value item into cache.")
- * )
+ * Abstract action to write into cache.
  */
-class CacheWrite extends CacheActionBase {
+abstract class CacheWrite extends CacheActionBase {
+
+  use FormFieldYamlTrait;
 
   /**
    * The YAML parser.
@@ -29,11 +27,26 @@ class CacheWrite extends CacheActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_config\Plugin\Action\ConfigWrite $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setYamlParser($container->get('eca.service.yaml_parser'));
     return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $result = parent::access($object, $account, TRUE);
+    if ($result->isAllowed() && $this->configuration['use_yaml'] && $this->configuration['validate_yaml']) {
+      try {
+        $this->yamlParser->parse($this->configuration['value']);
+      }
+      catch (ParseException) {
+        $result = AccessResult::forbidden('YAML data is not valid.');
+      }
+    }
+    return $return_as_object ? $result : $result->isAllowed();
   }
 
   /**
@@ -50,12 +63,12 @@ class CacheWrite extends CacheActionBase {
         $value = $this->yamlParser->parse($value);
       }
       catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing a cache value item in action "eca_cache_write" as YAML format, but parsing failed.');
+        $this->logger->error('Tried parsing a cache value item in action "eca_cache_write" as YAML format, but parsing failed.');
         return;
       }
     }
     else {
-      $value = $this->tokenServices->getOrReplace($value);
+      $value = $this->tokenService->getOrReplace($value);
     }
 
     $expire = (int) ($this->configuration['expire'] ?? -1);
@@ -73,6 +86,7 @@ class CacheWrite extends CacheActionBase {
       'expire' => '-1',
       'tags' => '',
       'use_yaml' => FALSE,
+      'validate_yaml' => FALSE,
     ] + parent::defaultConfiguration();
   }
 
@@ -80,25 +94,24 @@ class CacheWrite extends CacheActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['value'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Cache item value'),
-      '#description' => $this->t('The value to cache. Supports tokens.'),
+      '#description' => $this->t('The value to cache.'),
       '#default_value' => $this->configuration['value'],
       '#weight' => -40,
+      '#eca_token_replacement' => TRUE,
     ];
-    $form['use_yaml'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Interpret above config value as YAML format'),
-      '#description' => $this->t('Nested data can be set using YAML format, for example <em>mykey: myvalue</em>. When using this format, this option needs to be enabled. When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
-      '#default_value' => $this->configuration['use_yaml'],
-      '#weight' => -30,
-    ];
+    $this->buildYamlFormFields(
+      $form,
+      $this->t('Interpret above config value as YAML format'),
+      $this->t('Nested data can be set using YAML format, for example <em>mykey: myvalue</em>. When using this format, this option needs to be enabled. When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
+      -30,
+    );
     $form['expire'] = [
       '#type' => 'number',
       '#title' => $this->t('Lifetime until expiry'),
-      '#description' => $this->t('The lifetime in seconds until the cached value is considered invalid. Set to -1 for unlimited lifetime.'),
+      '#description' => $this->t('The timestamp in seconds when the cached item expires. Set to -1 for unlimited lifetime.'),
       '#default_value' => $this->configuration['expire'],
       '#required' => TRUE,
       '#weight' => -20,
@@ -106,13 +119,13 @@ class CacheWrite extends CacheActionBase {
     $form['tags'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Cache tags'),
-      '#description' => $this->t('Optionally add cache tags for fine-granular cache invalidation. Separate multiple tags with comma. More information about cache tags can be found in the <a href=":url" target="_blank" rel="nofollow noreferrer">documentation</a>.', [
+      '#description' => $this->t('Optionally add cache tags for fine-granular cache invalidation. Separate multiple tags with commas. More information about cache tags can be found in the <a href=":url" target="_blank" rel="nofollow noreferrer">documentation</a>.', [
         ':url' => 'https://www.drupal.org/docs/drupal-apis/cache-api/cache-tags',
       ]),
       '#default_value' => $this->configuration['tags'],
       '#weight' => -10,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -121,6 +134,7 @@ class CacheWrite extends CacheActionBase {
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->configuration['value'] = $form_state->getValue('value');
     $this->configuration['use_yaml'] = !empty($form_state->getValue('use_yaml'));
+    $this->configuration['validate_yaml'] = !empty($form_state->getValue('validate_yaml'));
     $this->configuration['expire'] = $form_state->getValue('expire');
     $this->configuration['tags'] = $form_state->getValue('tags');
     parent::submitConfigurationForm($form, $form_state);

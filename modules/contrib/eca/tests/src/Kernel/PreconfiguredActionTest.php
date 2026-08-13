@@ -3,8 +3,8 @@
 namespace Drupal\Tests\eca\Kernel;
 
 use Drupal\Core\Form\FormState;
-use Drupal\eca\Entity\Eca;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\Entity\Eca;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 

@@ -14,7 +14,7 @@ use Drupal\eca\Service\ContentEntityTypes;
  *
  * @package Drupal\eca_content\Event
  */
-class ContentEntityPrepareView extends ContentEntityBaseEntity {
+class ContentEntityPrepareView extends ContentEntityBaseContentEntity {
 
   /**
    * The displays.

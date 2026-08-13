@@ -44,13 +44,14 @@ class EcaStateReadTest extends KernelTestBase {
     $action_manager = \Drupal::service('plugin.manager.action');
     /** @var \Drupal\eca\Token\TokenInterface $token_services */
     $token_services = \Drupal::service('eca.token_services');
+    $token_services->addTokenData('mykey', 'test_key');
     /** @var \Drupal\eca\EcaState $eca_state */
     $eca_state = \Drupal::service('eca.state');
-    $eca_state->set('myKey', 'my_token');
+    $eca_state->set('test_key', 'my_token');
 
     /** @var \Drupal\eca_base\Plugin\Action\EcaStateRead $action */
     $action = $action_manager->createInstance('eca_state_read', [
-      'key' => 'myKey',
+      'key' => '[myKey]',
       'token_name' => 'my_custom_token:value1',
     ]);
     $this->assertTrue($action->access(NULL));

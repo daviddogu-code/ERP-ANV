@@ -2,21 +2,26 @@
 
 namespace Drupal\eca_access\Plugin\ECA\Event;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Attribute\Token;
 use Drupal\eca\Entity\Objects\EcaEvent;
+use Drupal\eca\Event\AccessEventInterface;
 use Drupal\eca\Event\Tag;
 use Drupal\eca\Plugin\ECA\Event\EventBase;
 use Drupal\eca_access\AccessEvents;
 use Drupal\eca_access\Event\CreateAccess;
 use Drupal\eca_access\Event\EntityAccess;
 use Drupal\eca_access\Event\FieldAccess;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Plugin implementation of ECA access events.
  *
  * @EcaEvent(
  *   id = "access",
- *   deriver = "Drupal\eca_access\Plugin\ECA\Event\AccessEventDeriver"
+ *   deriver = "Drupal\eca_access\Plugin\ECA\Event\AccessEventDeriver",
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class AccessEvent extends EventBase {
@@ -43,6 +48,7 @@ class AccessEvent extends EventBase {
       'event_name' => AccessEvents::CREATE,
       'event_class' => CreateAccess::class,
       'tags' => Tag::RUNTIME | Tag::EPHEMERAL,
+      'eca_version_introduced' => '1.1.0',
     ];
     return $definitions;
   }
@@ -53,11 +59,11 @@ class AccessEvent extends EventBase {
   public function defaultConfiguration(): array {
     $is_field_event = $this->eventClass() === FieldAccess::class;
     $values = ($is_field_event ? ['field_name' => ''] : []) +
-    [
-      'entity_type_id' => '',
-      'bundle' => '',
-      'operation' => '',
-    ] + parent::defaultConfiguration();
+      [
+        'entity_type_id' => '',
+        'bundle' => '',
+        'operation' => '',
+      ] + parent::defaultConfiguration();
     if ($this->eventClass() === CreateAccess::class) {
       unset($values['operation']);
       $values['langcode'] = '';
@@ -69,7 +75,6 @@ class AccessEvent extends EventBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $is_field_event = $this->eventClass() === FieldAccess::class;
     $is_create_event = $this->eventClass() === CreateAccess::class;
     $form['account_token_info'] = [
@@ -133,7 +138,7 @@ class AccessEvent extends EventBase {
       ];
     }
 
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -159,7 +164,7 @@ class AccessEvent extends EventBase {
   /**
    * {@inheritdoc}
    */
-  public function lazyLoadingWildcard(string $eca_config_id, EcaEvent $ecaEvent): string {
+  public function generateWildcard(string $eca_config_id, EcaEvent $ecaEvent): string {
     $configuration = $ecaEvent->getConfiguration();
     $is_create_event = $this->eventClass() === CreateAccess::class;
 
@@ -256,6 +261,138 @@ class AccessEvent extends EventBase {
     }
 
     return $wildcard;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function appliesForWildcard(Event $event, string $event_name, string $wildcard): bool {
+    $parts = explode(':', $wildcard);
+
+    switch ($event_name) {
+
+      case AccessEvents::ENTITY:
+      case AccessEvents::FIELD:
+        [$w_entity_type_ids, $w_bundles, $w_operations] = $parts;
+        /** @var \Drupal\eca_access\Event\EntityAccess $event */
+        if (($w_entity_type_ids !== '*') && !in_array($event->getEntity()->getEntityTypeId(), explode(',', $w_entity_type_ids), TRUE)) {
+          return FALSE;
+        }
+        if (($w_bundles !== '*') && !in_array($event->getEntity()->bundle(), explode(',', $w_bundles), TRUE)) {
+          return FALSE;
+        }
+        if (($w_operations !== '*') && !in_array($event->getOperation(), explode(',', $w_operations), TRUE)) {
+          return FALSE;
+        }
+        if ($event_name === AccessEvents::FIELD) {
+          $w_field_names = end($parts);
+          /** @var \Drupal\eca_access\Event\FieldAccess $event */
+          if (($w_field_names !== '*') && !in_array($event->getFieldName(), explode(',', $w_field_names), TRUE)) {
+            return FALSE;
+          }
+        }
+        break;
+
+      case AccessEvents::CREATE:
+        [$w_entity_type_ids, $w_bundles, $w_langcodes] = $parts;
+        /** @var \Drupal\eca_access\Event\CreateAccess $event */
+        $event_context = $event->getContext();
+        if (($w_entity_type_ids !== '*') && !in_array($event_context['entity_type_id'], explode(',', $w_entity_type_ids), TRUE)) {
+          return FALSE;
+        }
+        if (($w_bundles !== '*') && !in_array($event->getEntityBundle(), explode(',', $w_bundles), TRUE)) {
+          return FALSE;
+        }
+        if (($w_langcodes !== '*') && !in_array($event_context['langcode'], explode(',', $w_langcodes), TRUE)) {
+          return FALSE;
+        }
+        break;
+
+      default:
+        throw new \InvalidArgumentException(sprintf("Given event %s is not supported.", $event_name));
+
+    }
+
+    // Initialize with a neutral result.
+    $event->setAccessResult(AccessResult::neutral());
+
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[Token(
+    name: 'event',
+    description: 'The event.',
+    properties: [
+      new Token(name: 'context', description: 'Contains a list of properties depending on the context of the event.', classes: [
+        CreateAccess::class,
+      ]),
+      new Token(name: 'entity_bundle', description: 'The bundle of the entity.', classes: [
+        CreateAccess::class,
+        EntityAccess::class,
+      ]),
+      new Token(name: 'entity_id', description: 'The entity ID, only available if the entity is not new.', classes: [
+        EntityAccess::class,
+      ]),
+      new Token(name: 'entity_type', description: 'The entity type.', classes: [
+        EntityAccess::class,
+      ]),
+      new Token(name: 'field', description: 'The name of the field.', classes: [
+        FieldAccess::class,
+      ]),
+      new Token(name: 'operation', description: 'The operation with which the entity should be accessed, e.g. "view", "update", etc.', classes: [
+        EntityAccess::class,
+      ]),
+      new Token(name: 'uid', description: 'The ID of the user account of the event.', classes: [
+        AccessEventInterface::class,
+      ]),
+    ],
+  )]
+  protected function buildEventData(): array {
+    $event = $this->event;
+    $data = [];
+
+    if ($event instanceof AccessEventInterface) {
+      $data += [
+        'uid' => $event->getAccount()->id(),
+      ];
+    }
+    if ($event instanceof EntityAccess) {
+      $entity = $event->getEntity();
+      $data += [
+        'operation' => $event->getOperation(),
+        'entity_type' => $entity->getEntityTypeId(),
+        'entity_bundle' => $entity->bundle(),
+      ];
+      if (!$entity->isNew()) {
+        $data['entity_id'] = $entity->id();
+      }
+    }
+    if ($event instanceof FieldAccess) {
+      $data += [
+        'field' => $event->getFieldName(),
+      ];
+    }
+    if ($event instanceof CreateAccess) {
+      $data += [
+        'context' => [],
+        'entity_bundle' => $event->getEntityBundle(),
+      ];
+      $context = $event->getContext();
+      foreach ($context as $k => $v) {
+        if (is_scalar($v)) {
+          $data['context'][$k] = $v;
+        }
+      }
+      if (isset($context['entity_type_id'])) {
+        $data['entity_type'] = $context['entity_type_id'];
+      }
+    }
+
+    $data += parent::buildEventData();
+    return $data;
   }
 
 }

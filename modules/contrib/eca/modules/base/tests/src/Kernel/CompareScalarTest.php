@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\eca_base\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Plugin\ECA\Condition\StringComparisonBase;
 use Drupal\eca\PluginManager\Condition;
-use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Kernel tests for the "eca_scalar" condition plugin.
@@ -49,6 +49,9 @@ class CompareScalarTest extends KernelTestBase {
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
+  #[DataProvider('stringDataProvider')]
+  #[DataProvider('numericDataProvider')]
+  #[DataProvider('naturalDataProvider')]
   public function testScalarValues($left, $right, $operator, $type, $case, $negate, $message, $assertTrue = TRUE): void {
     // Configure default settings for condition.
     $config = [
@@ -75,7 +78,7 @@ class CompareScalarTest extends KernelTestBase {
    * @return array
    *   The string test cases.
    */
-  public function stringDataProvider(): array {
+  public static function stringDataProvider(): array {
     return [
       [
         'my test string',
@@ -93,7 +96,7 @@ class CompareScalarTest extends KernelTestBase {
         StringComparisonBase::COMPARE_TYPE_VALUE,
         TRUE,
         FALSE,
-        'Left equals (case sensitiv) right value.',
+        'Left equals (case sensitive) right value.',
       ],
       [
         'my test string',
@@ -102,7 +105,7 @@ class CompareScalarTest extends KernelTestBase {
         StringComparisonBase::COMPARE_TYPE_VALUE,
         TRUE,
         TRUE,
-        'Left does not equal (case sensitiv) right value.',
+        'Left does not equal (case sensitive) right value.',
       ],
       [
         'my test string',
@@ -194,7 +197,7 @@ class CompareScalarTest extends KernelTestBase {
    * @return array
    *   The numeric test cases.
    */
-  public function numericDataProvider(): array {
+  public static function numericDataProvider(): array {
     return [
       [
         '5',
@@ -287,6 +290,81 @@ class CompareScalarTest extends KernelTestBase {
         FALSE,
         FALSE,
         'img15 is greater than img5 for natural comparison.',
+      ],
+    ];
+  }
+
+  /**
+   * Provides natural order comparison test cases for testScalarValues.
+   *
+   * @return array
+   *   The natural order test cases.
+   */
+  public static function naturalDataProvider(): array {
+    return [
+      'natural: file2 equals file2' => [
+        'file2',
+        'file2',
+        StringComparisonBase::COMPARE_EQUALS,
+        StringComparisonBase::COMPARE_TYPE_NATURAL,
+        FALSE,
+        FALSE,
+        'file2 equals file2 in natural order.',
+      ],
+      'natural: file2 less than file10' => [
+        'file2',
+        'file10',
+        StringComparisonBase::COMPARE_LESSTHAN,
+        StringComparisonBase::COMPARE_TYPE_NATURAL,
+        FALSE,
+        FALSE,
+        'file2 is less than file10 in natural order.',
+      ],
+      'natural: file10 greater than file2' => [
+        'file10',
+        'file2',
+        StringComparisonBase::COMPARE_GREATERTHAN,
+        StringComparisonBase::COMPARE_TYPE_NATURAL,
+        FALSE,
+        FALSE,
+        'file10 is greater than file2 in natural order.',
+      ],
+      'natural: file10 not less than file2' => [
+        'file10',
+        'file2',
+        StringComparisonBase::COMPARE_LESSTHAN,
+        StringComparisonBase::COMPARE_TYPE_NATURAL,
+        FALSE,
+        FALSE,
+        'file10 is not less than file2 in natural order.',
+        FALSE,
+      ],
+      'natural: abc at most abc' => [
+        'abc',
+        'abc',
+        StringComparisonBase::COMPARE_ATMOST,
+        StringComparisonBase::COMPARE_TYPE_NATURAL,
+        FALSE,
+        FALSE,
+        'abc is at most abc in natural order (equal values).',
+      ],
+      'natural: file2 at most file10' => [
+        'file2',
+        'file10',
+        StringComparisonBase::COMPARE_ATMOST,
+        StringComparisonBase::COMPARE_TYPE_NATURAL,
+        FALSE,
+        FALSE,
+        'file2 is at most file10 in natural order.',
+      ],
+      'natural: file10 at least file2' => [
+        'file10',
+        'file2',
+        StringComparisonBase::COMPARE_ATLEAST,
+        StringComparisonBase::COMPARE_TYPE_NATURAL,
+        FALSE,
+        FALSE,
+        'file10 is at least file2 in natural order.',
       ],
     ];
   }

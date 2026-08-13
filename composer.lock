@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a5cec0d4efb815a8012de1dff32874e3",
+    "content-hash": "906f31a638f95e9ed4d4206cf70a32eb",
     "packages": [
         {
             "name": "andileco/eval-math",
@@ -2070,29 +2070,29 @@
         },
         {
             "name": "drupal/bpmn_io",
-            "version": "1.1.4",
+            "version": "2.0.12",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/bpmn_io.git",
-                "reference": "1.1.4"
+                "reference": "2.0.12"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/bpmn_io-1.1.4.zip",
-                "reference": "1.1.4",
-                "shasum": "c69acc7ffc624a1dbc2c9ae1aa8a108bfc7381be"
+                "url": "https://ftp.drupal.org/files/projects/bpmn_io-2.0.12.zip",
+                "reference": "2.0.12",
+                "shasum": "cb3c87ee26e96729283be29d6ede2d52ccbaf7b1"
             },
             "require": {
-                "drupal/core": "^9 || ^10",
-                "drupal/eca": "^1.0",
-                "drupal/eca_modeller_bpmn": "*",
-                "php": ">=7.4"
+                "drupal/core": "^10.3 || ^11",
+                "drupal/eca": "^2.0",
+                "drupal/eca_modeller_bpmn": "^2",
+                "php": ">=8.1"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.1.4",
-                    "datestamp": "1716032392",
+                    "version": "2.0.12",
+                    "datestamp": "1783080568",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -2101,7 +2101,7 @@
             },
             "notification-url": "https://packages.drupal.org/8/downloads",
             "license": [
-                "GPL-2.0+"
+                "GPL-2.0-or-later"
             ],
             "authors": [
                 {
@@ -3359,51 +3359,45 @@
         },
         {
             "name": "drupal/eca",
-            "version": "1.1.13",
+            "version": "2.1.22",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/eca.git",
-                "reference": "1.1.13"
+                "reference": "2.1.22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/eca-1.1.13.zip",
-                "reference": "1.1.13",
-                "shasum": "b7243501ab454dd81085c82e9efe01def7c66ed4"
+                "url": "https://ftp.drupal.org/files/projects/eca-2.1.22.zip",
+                "reference": "2.1.22",
+                "shasum": "a90c7c58d85f15647eedf5b1f49d91a417072735"
             },
             "require": {
                 "dragonmantank/cron-expression": "^3.1",
-                "drupal/core": "^9.5 || ^10",
+                "drupal/core": "^10.3||^11",
                 "ext-dom": "*",
                 "ext-json": "*",
                 "mtownsend/xml-to-array": "^2.0",
-                "php": ">=7.4"
+                "php": ">=8.1"
             },
             "require-dev": {
+                "drupal/ai": "^1.2",
+                "drupal/ai_agents": "^1.2",
                 "drupal/eca_ui": "*",
-                "drupal/token": "^1.10"
-            },
-            "suggest": {
-                "drupal/context_stack": "Integrates ECA with Context Stacks for more fine-grained control",
-                "drupal/eca_state_machine": "Integrates ECA with State Machine functionality",
-                "drupal/eca_tamper": "Integrates ECA with the Tamper API",
-                "drupal/entity_share": "Integrates ECA with Entity Share functionality",
-                "drupal/group_action": "Integrates ECA with Group Actions if you're using groups",
-                "drupal/token": "Provides the token browser in the UI and offers more token values"
+                "drupal/entity_reference_revisions": "^1.12",
+                "drupal/inline_entity_form": "^3.0",
+                "drupal/paragraphs": "^1.18",
+                "drupal/project_browser": "^2.0",
+                "drupal/token": "^1.15",
+                "drupal/webform": "^6.3"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.1.13",
-                    "datestamp": "1748859330",
+                    "version": "2.1.22",
+                    "datestamp": "1786433574",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
-                    }
-                },
-                "drush": {
-                    "services": {
-                        "drush.services.yml": "^9 || ^10 || ^11"
                     }
                 }
             },
@@ -3434,29 +3428,29 @@
         },
         {
             "name": "drupal/eca_flag",
-            "version": "1.0.0",
+            "version": "2.0.5",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/eca_flag.git",
-                "reference": "1.0.0"
+                "reference": "2.0.5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/eca_flag-1.0.0.zip",
-                "reference": "1.0.0",
-                "shasum": "871bd22e366f687c5208870466e98a410b23a92e"
+                "url": "https://ftp.drupal.org/files/projects/eca_flag-2.0.5.zip",
+                "reference": "2.0.5",
+                "shasum": "37589c6880c2da570ebde0ee3a1bda370846b34a"
             },
             "require": {
-                "drupal/core": "^9 || ^10",
-                "drupal/eca": "^1.0",
-                "drupal/flag": "^4.0",
-                "php": ">=7.4"
+                "drupal/core": "^10.4 || ^11",
+                "drupal/eca": "^2.0 || ^3.0",
+                "drupal/flag": "^4.0 || ^5.0",
+                "php": ">=8.1"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.0",
-                    "datestamp": "1689231124",
+                    "version": "2.0.5",
+                    "datestamp": "1757067923",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -3486,17 +3480,17 @@
         },
         {
             "name": "drupal/eca_modeller_bpmn",
-            "version": "1.1.13",
+            "version": "2.1.22",
             "require": {
-                "drupal/core": "^9 || ^10",
-                "drupal/eca": "^1",
+                "drupal/core": "^10.3 || ^11",
+                "drupal/eca": "^2",
                 "drupal/eca_ui": "*"
             },
             "type": "metapackage",
             "extra": {
                 "drupal": {
-                    "version": "1.1.13",
-                    "datestamp": "1748859330",
+                    "version": "2.1.22",
+                    "datestamp": "1786433574",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -3529,29 +3523,29 @@
         },
         {
             "name": "drupal/eca_tamper",
-            "version": "1.0.6",
+            "version": "2.0.10",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/eca_tamper.git",
-                "reference": "1.0.6"
+                "reference": "2.0.10"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/eca_tamper-1.0.6.zip",
-                "reference": "1.0.6",
-                "shasum": "31fd91d3ede08ace506ad70b113b0447aebe2cad"
+                "url": "https://ftp.drupal.org/files/projects/eca_tamper-2.0.10.zip",
+                "reference": "2.0.10",
+                "shasum": "ebc825bf80472bc85685e40e8971776709afb062"
             },
             "require": {
-                "drupal/core": "^9 || ^10",
-                "drupal/eca": "^1.0",
+                "drupal/core": "^10.4 || ^11",
+                "drupal/eca": "^2.1||^3.0",
                 "drupal/tamper": "^1.0",
-                "php": ">=7.4"
+                "php": ">=8.1"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.6",
-                    "datestamp": "1708939055",
+                    "version": "2.0.10",
+                    "datestamp": "1775052233",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -4763,7 +4757,7 @@
             ],
             "authors": [
                 {
-                    "name": "Berdir",
+                    "name": "berdir",
                     "homepage": "https://www.drupal.org/user/214652"
                 },
                 {
@@ -4775,16 +4769,16 @@
                     "homepage": "https://www.drupal.org/user/761344"
                 },
                 {
+                    "name": "ivnish",
+                    "homepage": "https://www.drupal.org/user/3547706"
+                },
+                {
                     "name": "joachim",
                     "homepage": "https://www.drupal.org/user/107701"
                 },
                 {
-                    "name": "merlinofchaos",
-                    "homepage": "https://www.drupal.org/user/26979"
-                },
-                {
-                    "name": "mooffie",
-                    "homepage": "https://www.drupal.org/user/78454"
+                    "name": "mandclu",
+                    "homepage": "https://www.drupal.org/user/52136"
                 },
                 {
                     "name": "quicksketch",
@@ -7201,7 +7195,11 @@
                     "homepage": "https://www.drupal.org/user/762570"
                 },
                 {
-                    "name": "MegaChriz",
+                    "name": "mandclu",
+                    "homepage": "https://www.drupal.org/user/52136"
+                },
+                {
+                    "name": "megachriz",
                     "homepage": "https://www.drupal.org/user/654114"
                 },
                 {

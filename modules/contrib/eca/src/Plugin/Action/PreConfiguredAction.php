@@ -19,11 +19,12 @@ class PreConfiguredAction extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $access = AccessResult::forbidden();
     $id = $this->getPluginDefinition()['action_entity_id'];
-    /** @var \Drupal\system\Entity\Action $action */
-    if ($action = $this->entityTypeManager->getStorage('action')->load($id)) {
+    /** @var \Drupal\system\Entity\Action|null $action */
+    $action = $this->entityTypeManager->getStorage('action')->load($id);
+    if ($action) {
       $access = $action->getPlugin()->access($object, $account, TRUE);
     }
     return $return_as_object ? $access : $access->isAllowed();
@@ -32,10 +33,11 @@ class PreConfiguredAction extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($object = NULL): void {
+  public function execute(mixed $object = NULL): void {
     $id = $this->getPluginDefinition()['action_entity_id'];
-    /** @var \Drupal\system\Entity\Action $action */
-    if ($action = $this->entityTypeManager->getStorage('action')->load($id)) {
+    /** @var \Drupal\system\Entity\Action|null $action */
+    $action = $this->entityTypeManager->getStorage('action')->load($id);
+    if ($action) {
       $action->execute([$object]);
     }
   }
@@ -46,8 +48,9 @@ class PreConfiguredAction extends ConfigurableActionBase {
   public function calculateDependencies(): array {
     $dependencies = parent::calculateDependencies();
     $id = $this->getPluginDefinition()['action_entity_id'];
-    /** @var \Drupal\system\Entity\Action $action */
-    if ($action = $this->entityTypeManager->getStorage('action')->load($id)) {
+    /** @var \Drupal\system\Entity\Action|null $action */
+    $action = $this->entityTypeManager->getStorage('action')->load($id);
+    if ($action) {
       $dependencies[$action->getConfigDependencyKey()][] = $action->getConfigDependencyName();
     }
     return $dependencies;

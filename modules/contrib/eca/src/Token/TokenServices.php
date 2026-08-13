@@ -58,6 +58,13 @@ class TokenServices implements TokenInterface {
   /**
    * {@inheritdoc}
    */
+  public function getDataProviders(): array {
+    return $this->decorator->getDataProviders();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function addTokenData(string $key, $data): TokenInterface {
     $this->decorator->addTokenData($key, $data);
     return $this;
@@ -131,14 +138,14 @@ class TokenServices implements TokenInterface {
   /**
    * {@inheritdoc}
    */
-  public function replace($text, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function replace($text, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL) {
     return $this->token->replace($text, $data, $options, $bubbleable_metadata);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function replaceClear($text, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function replaceClear($text, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL) {
     $options['clear'] = TRUE;
     return $this->replace($text, $data, $options, $bubbleable_metadata);
   }
@@ -153,7 +160,7 @@ class TokenServices implements TokenInterface {
   /**
    * {@inheritdoc}
    */
-  public function getOrReplace($text, array $data = [], ?array $options = NULL, BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function getOrReplace($text, array $data = [], ?array $options = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
     return $this->decorator->getOrReplace($text, $data, $options, $bubbleable_metadata);
   }
 

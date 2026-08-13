@@ -3,12 +3,8 @@
 namespace Drupal\eca_render\Event;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\eca\Event\ConditionalApplianceInterface;
 use Drupal\eca\Event\EntityEventInterface;
-use Drupal\eca\Plugin\DataType\DataTransferObject;
-use Drupal\eca\Token\DataProviderInterface;
 use Drupal\eca_render\Plugin\views\field\EcaRender;
-use Drupal\eca_render\RenderEvents;
 
 /**
  * Dispatched when an ECA Views field is being rendered.
@@ -19,7 +15,7 @@ use Drupal\eca_render\RenderEvents;
  *
  * @package Drupal\eca_render\Event
  */
-class EcaRenderViewsFieldEvent extends EcaRenderEventBase implements ConditionalApplianceInterface, DataProviderInterface, EntityEventInterface {
+class EcaRenderViewsFieldEvent extends EcaRenderEventBase implements EntityEventInterface {
 
   /**
    * The render array build.
@@ -48,13 +44,6 @@ class EcaRenderViewsFieldEvent extends EcaRenderEventBase implements Conditional
    * @var \Drupal\Core\Entity\EntityInterface[]
    */
   protected array $relationshipEntities;
-
-  /**
-   * An instance holding event data accessible as Token.
-   *
-   * @var \Drupal\eca\Plugin\DataType\DataTransferObject|null
-   */
-  protected ?DataTransferObject $eventData = NULL;
 
   /**
    * Constructs a new EcaRenderViewsFieldEvent object.
@@ -95,44 +84,6 @@ class EcaRenderViewsFieldEvent extends EcaRenderEventBase implements Conditional
   /**
    * {@inheritdoc}
    */
-  public function getData(string $key) {
-    if ($key === 'event') {
-      if (!isset($this->eventData)) {
-        $this->eventData = DataTransferObject::create([
-          'machine-name' => RenderEvents::VIEWS_FIELD,
-          'entity' => $this->entity,
-          'relationships' => $this->relationshipEntities,
-          'view-id' => $this->fieldPlugin->view->id(),
-          'view-display' => $this->fieldPlugin->view->current_display ?? NULL,
-        ]);
-      }
-
-      return $this->eventData;
-    }
-
-    if ($key === 'entity' || $key === $this->entity->getEntityTypeId()) {
-      return $this->entity;
-    }
-
-    foreach ($this->relationshipEntities as $i => $entity) {
-      if ($key === $i || $key === $entity->getEntityTypeId()) {
-        return $entity;
-      }
-    }
-
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasData(string $key): bool {
-    return $this->getData($key) !== NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getEntity(): EntityInterface {
     return $this->entity;
   }
@@ -145,20 +96,6 @@ class EcaRenderViewsFieldEvent extends EcaRenderEventBase implements Conditional
    */
   public function getRelationshipEntities(): array {
     return $this->relationshipEntities;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    return (($wildcard === '*') || (($this->fieldPlugin->options['name'] ?? '*') === $wildcard));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    return (($this->fieldPlugin->options['name'] ?? '*') === ($arguments['name'] ?? '*'));
   }
 
 }

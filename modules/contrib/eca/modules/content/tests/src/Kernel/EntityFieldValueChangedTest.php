@@ -4,14 +4,14 @@ namespace Drupal\Tests\eca_content\Kernel;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\PluginManager\Condition;
 use Drupal\eca_content\Plugin\ECA\Condition\EntityFieldValueChanged;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 
 /**
@@ -21,6 +21,8 @@ use Drupal\user\Entity\User;
  * @group eca_content
  */
 class EntityFieldValueChangedTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * The modules.
@@ -85,20 +87,15 @@ class EntityFieldValueChangedTest extends KernelTestBase {
     $this->conditionManager = \Drupal::service('plugin.manager.eca.condition');
 
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create(['type' => 'article', 'name' => 'Article']);
-    $node_type->save();
-    node_add_body_field($node_type);
+    $this->createContentType(['type' => 'article', 'name' => 'Article']);
 
     // Create a boolean field.
-    $this->fieldStorage = FieldStorageConfig::create([
+    FieldStorageConfig::create([
       'field_name' => 'field_boolean_test',
       'entity_type' => 'node',
       'type' => 'boolean',
-    ]);
-
-    $this->fieldStorage->save();
-    $this->field = FieldConfig::create([
+    ])->save();
+    FieldConfig::create([
       'field_name' => 'field_boolean_test',
       'entity_type' => 'node',
       'bundle' => 'article',
@@ -108,14 +105,17 @@ class EntityFieldValueChangedTest extends KernelTestBase {
         'on_label' => 'on',
         'off_label' => 'off',
       ],
-    ]);
-    $this->field->save();
+    ])->save();
+
+    // Create a base_field_override.
+    \Drupal::service('entity_field.manager')->getBaseFieldDefinitions('node')['status']->getConfig('article')->save();
 
     $this->node = Node::create([
       'type' => 'article',
       'uid' => 1,
       'title' => 'First article',
       'field_boolean_test' => 0,
+      'status' => 0,
     ]);
     $this->node->save();
 
@@ -155,9 +155,7 @@ class EntityFieldValueChangedTest extends KernelTestBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function testBooleanValueChangedNoStrictDataTypes(): void {
-    /**
-     * @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldValueChanged $condition
-     */
+    /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldValueChanged $condition */
     $this->condition = $this->conditionManager->createInstance('eca_entity_field_value_changed', [
       'field_name' => 'field_boolean_test',
     ]);
@@ -166,14 +164,21 @@ class EntityFieldValueChangedTest extends KernelTestBase {
     $this->condition->setContextValue('entity', $this->node);
     $this->assertTrue($this->condition->evaluate());
 
-    /**
-     * @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldValueChanged $condition
-     */
+    /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldValueChanged $condition */
     $this->condition = $this->conditionManager->createInstance('eca_entity_field_value_changed', [
       'field_name' => 'field_boolean_test.value',
     ]);
     $this->condition->setContextValue('entity', $this->node);
     $this->assertTrue($this->condition->evaluate());
+
+    /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldValueChanged $condition */
+    $this->condition = $this->conditionManager->createInstance('eca_entity_field_value_changed', [
+      'field_name' => 'status',
+    ]);
+
+    $this->node->setUnpublished();
+    $this->condition->setContextValue('entity', $this->node);
+    $this->assertFalse($this->condition->evaluate());
   }
 
   /**
@@ -215,9 +220,7 @@ class EntityFieldValueChangedTest extends KernelTestBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function testBooleanValueChangedNoStrictDataTypesWithNegation(): void {
-    /**
-     * @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldValueChanged $condition
-     */
+    /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldValueChanged $condition */
     $this->condition = $this->conditionManager->createInstance('eca_entity_field_value_changed', [
       'field_name' => 'field_boolean_test',
       'negate' => 'yes',
@@ -227,7 +230,6 @@ class EntityFieldValueChangedTest extends KernelTestBase {
     $this->condition->setContextValue('entity', $this->node);
     $this->assertFalse($this->condition->evaluate());
   }
-
 
   /**
    * Tests an entity, where the title has not changed.
@@ -340,7 +342,7 @@ class EntityFieldValueChangedTest extends KernelTestBase {
       'field_name' => 'uid',
     ]);
 
-    $this->node->uid->target_id = 2;
+    $this->node->set('uid', 2);
     $this->condition->setContextValue('entity', $this->node);
     $this->assertTrue($this->condition->evaluate());
   }

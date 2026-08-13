@@ -4,6 +4,8 @@ namespace Drupal\Tests\eca_base\Kernel;
 
 use Drupal\Component\Serialization\Yaml;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\user\Entity\User;
 
 /**
  * Kernel tests for the "eca_token_set_value" action plugin.
@@ -87,6 +89,20 @@ YAML;
     $action->execute(NULL);
     $this->assertEquals('Hello', $token_services->replaceClear('[object_token:0]'));
     $this->assertEquals($random_string, $token_services->replaceClear('[object_token:1]'));
+
+    $user = User::create([
+      'mail' => 'test@eca.local',
+      'name' => 'Test user',
+    ]);
+    $token_services->addTokenData('new_user', $user);
+    /** @var \Drupal\eca_base\Plugin\Action\TokenSetValue $action */
+    $action = $action_manager->createInstance('eca_token_set_value', [
+      'token_name' => 'user_name',
+      'token_value' => '[new_user:name]',
+      'use_yaml' => FALSE,
+    ]);
+    $action->execute(NULL);
+    $this->assertInstanceOf(DataTransferObject::class, $token_services->getTokenData('user_name'), "Value must be wrapped by a DTO, and not a field item list.");
   }
 
 }

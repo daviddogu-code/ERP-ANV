@@ -4,11 +4,11 @@ namespace Drupal\Tests\eca_misc\Kernel;
 
 use Drupal\Core\Action\ActionManager;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Plugin\ECA\Condition\StringComparisonBase;
 use Drupal\eca\PluginManager\Condition;
 use Drupal\eca\Token\TokenInterface;
 use Drupal\eca_misc\Plugin\RouteInterface;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
@@ -66,7 +66,7 @@ class RouteTest extends KernelTestBase {
    *
    * @var \Drupal\eca\Token\TokenInterface|null
    */
-  protected ?TokenInterface $tokenServices;
+  protected ?TokenInterface $tokenService;
 
   /**
    * {@inheritdoc}
@@ -90,7 +90,7 @@ class RouteTest extends KernelTestBase {
     $this->node->save();
     $this->actionManager = \Drupal::service('plugin.manager.action');
     $this->conditionManager = \Drupal::service('plugin.manager.eca.condition');
-    $this->tokenServices = \Drupal::service('eca.token_services');
+    $this->tokenService = \Drupal::service('eca.token_services');
   }
 
   /**
@@ -141,7 +141,7 @@ class RouteTest extends KernelTestBase {
     /** @var \Drupal\eca_misc\Plugin\Action\TokenLoadRouteParameter $action */
     $action = $this->actionManager->createInstance('eca_token_load_route_param', $config);
     $action->execute();
-    $this->assertSame($this->node, $this->tokenServices->getTokenData('mynode'), 'The node entity has been added to the token system.');
+    $this->assertSame($this->node, $this->tokenService->getTokenData('mynode'), 'The node entity has been added to the token system.');
 
     // Test access control for this action and its parameter.
     $user0 = User::load(0);

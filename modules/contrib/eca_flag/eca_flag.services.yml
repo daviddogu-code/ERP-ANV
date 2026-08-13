@@ -1,6 +1,8 @@
+parameters:
+  eca_flag.skip_procedural_hook_scan: true
+
 services:
-  eca_flag.subscriber:
-    class: Drupal\eca_flag\EventSubscriber\EcaFlag
-    parent: eca.default_event_subscriber
-    tags:
-      - { name: event_subscriber }
+  Drupal\eca\Event\TriggerEvent: '@eca.trigger_event'
+  Drupal\eca_flag\Hook\FlagHooks:
+    class: Drupal\eca_flag\Hook\FlagHooks
+    autowire: true

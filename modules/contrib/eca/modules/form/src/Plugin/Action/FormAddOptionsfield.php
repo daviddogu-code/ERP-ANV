@@ -2,8 +2,9 @@
 
 namespace Drupal\eca_form\Plugin\Action;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Add a field with options to a form.
@@ -12,16 +13,26 @@ use Drupal\eca\Plugin\DataType\DataTransferObject;
  *   id = "eca_form_add_optionsfield",
  *   label = @Translation("Form: add options field"),
  *   description = @Translation("Add a field with options as radios, checkboxes or select dropdown to the current form in scope."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
-class FormAddOptionsfield extends FormAddFieldActionBase {
+class FormAddOptionsField extends FormAddFieldActionBase {
 
   use FormFieldSetOptionsTrait {
-    defaultConfiguration as setOptionsDefaultconfiguration;
+    defaultConfiguration as setOptionsDefaultConfiguration;
     buildConfigurationForm as setOptionsBuildConfigurationForm;
     submitConfigurationForm as setOptionsSubmitConfigurationForm;
     execute as setOptionsExecute;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->setYamlParser($container->get('eca.service.yaml_parser'));
+    return $instance;
   }
 
   /**
@@ -49,7 +60,7 @@ class FormAddOptionsfield extends FormAddFieldActionBase {
     return [
       'type' => 'select',
       'multiple' => TRUE,
-    ] + $this->setOptionsDefaultconfiguration() + parent::defaultConfiguration();
+    ] + $this->setOptionsDefaultConfiguration() + parent::defaultConfiguration();
   }
 
   /**
@@ -70,7 +81,6 @@ class FormAddOptionsfield extends FormAddFieldActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = $this->setOptionsBuildConfigurationForm($form, $form_state);
     $form['multiple'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Allow multiple values'),
@@ -78,7 +88,7 @@ class FormAddOptionsfield extends FormAddFieldActionBase {
       '#default_value' => $this->configuration['multiple'],
       '#weight' => -45,
     ];
-    return $form;
+    return $this->setOptionsBuildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -111,10 +121,10 @@ class FormAddOptionsfield extends FormAddFieldActionBase {
   /**
    * {@inheritdoc}
    */
-  protected function buildDefaultValue() {
+  protected function buildDefaultValue(): array|string|MarkupInterface {
     if ($default_options = $this->buildOptionsArray($this->configuration['default_value'])) {
       $is_multiple = (bool) $this->configuration['multiple'];
-      return $is_multiple ? array_keys($default_options) : key($default_options);
+      return $is_multiple ? array_values($default_options) : key($default_options);
     }
     return parent::buildDefaultValue();
   }

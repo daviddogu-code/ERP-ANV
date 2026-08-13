@@ -17,6 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "eca_save_entity",
  *   label = @Translation("Entity: save"),
  *   description = @Translation("Saves a new or updates an existing content entity."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "entity"
  * )
  */
@@ -34,7 +35,7 @@ class SaveEntity extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): SaveEntity {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $plugin->entityTypeManager = $container->get('entity_type.manager');
     return $plugin;
@@ -43,13 +44,15 @@ class SaveEntity extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $account = $account ?? $this->currentUser;
     if (!($object instanceof ContentEntityInterface)) {
       $access_result = AccessResult::forbidden();
     }
     elseif ($object->isNew()) {
-      /** @var \Drupal\Core\Entity\EntityAccessControlHandlerInterface $access_handler */
+      /**
+       * @var \Drupal\Core\Entity\EntityAccessControlHandlerInterface $access_handler
+       */
       $access_handler = $this->entityTypeManager->getHandler($object->getEntityTypeId(), 'access');
       $access_result = $access_handler->createAccess($object->bundle(), $account, [], TRUE);
     }
@@ -64,7 +67,7 @@ class SaveEntity extends ConfigurableActionBase {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function execute($entity = NULL): void {
+  public function execute(mixed $entity = NULL): void {
     if (!($entity instanceof ContentEntityInterface)) {
       return;
     }

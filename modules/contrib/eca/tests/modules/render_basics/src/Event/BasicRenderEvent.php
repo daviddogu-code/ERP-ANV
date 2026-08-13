@@ -2,8 +2,8 @@
 
 namespace Drupal\eca_test_render_basics\Event;
 
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\eca\Event\RenderEventInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Basic render event.

@@ -6,7 +6,6 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\MessageCommand;
 use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -21,7 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * @package Drupal\eca\Controller
  */
-class EcaController extends ControllerBase {
+final class EcaController extends ControllerBase {
 
   /**
    * Symfony request.
@@ -38,13 +37,6 @@ class EcaController extends ControllerBase {
   protected Modellers $modellerServices;
 
   /**
-   * Entity storage manager.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected EntityStorageInterface $storage;
-
-  /**
    * ECA controller constructor.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
@@ -53,21 +45,18 @@ class EcaController extends ControllerBase {
    *   The ECA modeller service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(Request $request, Modellers $modeller_services, EntityTypeManagerInterface $entity_type_manager) {
     $this->request = $request;
     $this->modellerServices = $modeller_services;
-    $this->storage = $entity_type_manager->getStorage('eca');
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): EcaController {
-    return new static(
+    return new EcaController(
       $container->get('request_stack')->getCurrentRequest(),
       $container->get('eca.service.modeller'),
       $container->get('entity_type.manager')
@@ -130,8 +119,9 @@ class EcaController extends ControllerBase {
    *   Redirect response to go to the ECA collection page.
    */
   public function enable(string $eca): RedirectResponse {
-    /** @var \Drupal\eca\Entity\Eca $config */
-    if (($config = $this->storage->load($eca)) && !$config->status() && $modeller = $config->getModeller()) {
+    /** @var \Drupal\eca\Entity\Eca|null $config */
+    $config = $this->entityTypeManager->getStorage('eca')->load($eca);
+    if ($config && !$config->status() && $modeller = $config->getModeller()) {
       $modeller->enable();
     }
     return new RedirectResponse(Url::fromRoute('entity.eca.collection')->toString());
@@ -147,8 +137,9 @@ class EcaController extends ControllerBase {
    *   Redirect response to go to the ECA collection page.
    */
   public function disable(string $eca): RedirectResponse {
-    /** @var \Drupal\eca\Entity\Eca $config */
-    if (($config = $this->storage->load($eca)) && $config->status() && $modeller = $config->getModeller()) {
+    /** @var \Drupal\eca\Entity\Eca|null $config */
+    $config = $this->entityTypeManager->getStorage('eca')->load($eca);
+    if ($config && $config->status() && $modeller = $config->getModeller()) {
       $modeller->disable();
     }
     return new RedirectResponse(Url::fromRoute('entity.eca.collection')->toString());
@@ -164,8 +155,9 @@ class EcaController extends ControllerBase {
    *   Redirect response to go to the ECA collection page.
    */
   public function clone(string $eca): RedirectResponse {
-    /** @var \Drupal\eca\Entity\Eca $config */
-    if (($config = $this->storage->load($eca)) && $config->isEditable() && $modeller = $config->getModeller()) {
+    /** @var \Drupal\eca\Entity\Eca|null $config */
+    $config = $this->entityTypeManager->getStorage('eca')->load($eca);
+    if ($config && $config->isEditable() && $modeller = $config->getModeller()) {
       $modeller->clone();
     }
     return new RedirectResponse(Url::fromRoute('entity.eca.collection')->toString());
@@ -181,8 +173,9 @@ class EcaController extends ControllerBase {
    *   Redirect response to go to the ECA collection page.
    */
   public function export(string $eca): Response {
-    /** @var \Drupal\eca\Entity\Eca $config */
-    if (($config = $this->storage->load($eca)) && $modeller = $config->getModeller()) {
+    /** @var \Drupal\eca\Entity\Eca|null $config */
+    $config = $this->entityTypeManager->getStorage('eca')->load($eca);
+    if ($config && $modeller = $config->getModeller()) {
       $response = $modeller->export();
       if ($response) {
         return $response;
@@ -201,8 +194,9 @@ class EcaController extends ControllerBase {
    *   The render array for editing the ECA entity.
    */
   public function edit(string $eca): array {
-    /** @var \Drupal\eca\Entity\Eca $config */
-    if (($config = $this->storage->load($eca)) && $config->isEditable() && $modeller = $config->getModeller()) {
+    /** @var \Drupal\eca\Entity\Eca|null $config */
+    $config = $this->entityTypeManager->getStorage('eca')->load($eca);
+    if ($config && $config->isEditable() && $modeller = $config->getModeller(FALSE)) {
       $build = $modeller->edit();
       $build['#title'] = $this->t('%label ECA Model', ['%label' => $config->label()]);
       return $build;

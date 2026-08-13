@@ -93,7 +93,7 @@ class CrossRefTest extends Base {
       "Node $title2 got updated",
     ]);
 
-    // Remove the reference from node 1 to node 2 and verfiy, that the reverse
+    // Remove the reference from node 1 to node 2 and verify, that the reverse
     // reference also gets removed.
     $node1
       ->set('field_other_node', [])
@@ -138,7 +138,7 @@ class CrossRefTest extends Base {
     $this->assertEquals($node1->id(), $node2->get('field_other_node')->getValue()[0]['target_id'], 'Field "Other Node" should matches the first created node.');
 
     $this->assertNotEmpty($node1->get('field_other_node')->getValue(), 'Field "Other Node" of first created node should not be empty.');
-    $this->assertEquals($node2->id(), $node1->get('field_other_node')->getValue()[0]['target_id'], 'Cross referenmce should have been updated.');
+    $this->assertEquals($node2->id(), $node1->get('field_other_node')->getValue()[0]['target_id'], 'Cross reference should have been updated.');
 
     $this->assertEquals($node1->label(), $title1, 'Title of first created node is incorrect.');
     $this->assertEquals($node2->label(), $title2, 'Title of first created node is incorrect.');

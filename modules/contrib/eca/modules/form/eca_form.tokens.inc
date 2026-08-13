@@ -22,7 +22,7 @@ function eca_form_token_info(): array {
       'name' => t('Form ID'),
       'description' => t('The form ID as machine name.'),
     ],
-    'base-id' => [
+    'base_id' => [
       'name' => t('Base form ID'),
       'description' => t('The base form ID as machine name. Please note that some notes do not have a base form ID.'),
     ],
@@ -36,10 +36,10 @@ function eca_form_token_info(): array {
     ],
     'values' => [
       'name' => t('Submitted values'),
-      'description' => t('The form input values submitted by the user. For example, when the form has a "username" input, then its submission value may be accessed with [current_form:values:username]. If you need to compare agains raw values, use the condition "Form field: compare submitted value" instead.'),
+      'description' => t('The form input values submitted by the user. For example, when the form has a "username" input, then its submission value may be accessed with [current_form:values:username]. If you need to compare against raw values, use the condition "Form field: compare submitted value" instead.'),
       'dynamic' => TRUE,
     ],
-    'num-errors' => [
+    'num_errors' => [
       'name' => t('Number of form errors'),
       'description' => t('The number of form validation errors. This is only available after form validation.'),
     ],
@@ -54,7 +54,7 @@ function eca_form_token_info(): array {
 /**
  * Implements hook_tokens().
  */
-function eca_form_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata): array {
+function eca_form_tokens(string $type, array $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata): array {
   if ($type === 'current_form' && !empty($data['current_form'])) {
     // The current form info is just a DTO, declare it as such and pass through.
     $data['dto'] = $data['current_form'];

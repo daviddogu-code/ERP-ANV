@@ -11,7 +11,8 @@ use Drupal\eca\Plugin\Action\ConfigurableActionBase;
  * @Action(
  *   id = "eca_token_load_user_current",
  *   label = @Translation("Current user: load"),
- *   description = @Translation("Load the current user and store it as a token.")
+ *   description = @Translation("Load the current user and store it as a token."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class LoadCurrentUser extends ConfigurableActionBase {
@@ -27,7 +28,6 @@ class LoadCurrentUser extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -35,7 +35,7 @@ class LoadCurrentUser extends ConfigurableActionBase {
       '#default_value' => $this->configuration['token_name'],
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -55,7 +55,7 @@ class LoadCurrentUser extends ConfigurableActionBase {
       if ($token_name === '') {
         $token_name = 'user';
       }
-      $this->tokenServices->addTokenData($token_name, $user);
+      $this->tokenService->addTokenData($token_name, $user);
     }
   }
 

@@ -14,6 +14,7 @@ use Drupal\eca\Plugin\Action\ConfigurableActionBase;
  *   id = "eca_delete_entity",
  *   label = @Translation("Entity: delete"),
  *   description = @Translation("Deletes an existing content entity."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "entity"
  * )
  */
@@ -22,7 +23,7 @@ class DeleteEntity extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $account = $account ?? $this->currentUser;
     if (!($object instanceof ContentEntityInterface) || $object->isNew()) {
       $access_result = AccessResult::forbidden();
@@ -36,7 +37,7 @@ class DeleteEntity extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL): void {
+  public function execute(mixed $entity = NULL): void {
     if (!($entity instanceof ContentEntityInterface) || $entity->isNew()) {
       return;
     }

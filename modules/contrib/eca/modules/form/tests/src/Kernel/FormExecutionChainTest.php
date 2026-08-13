@@ -3,8 +3,8 @@
 namespace Drupal\Tests\eca_content\Kernel;
 
 use Drupal\Core\Form\FormState;
-use Drupal\eca\Entity\Eca;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\Entity\Eca;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -266,7 +266,7 @@ class FormExecutionChainTest extends KernelTestBase {
 
     $admin_user = User::load(1);
 
-    // Switch to priviledged account.
+    // Switch to privileged account.
     $account_switcher->switchTo($admin_user);
 
     $form_object = \Drupal::entityTypeManager()->getFormObject('user', 'default');

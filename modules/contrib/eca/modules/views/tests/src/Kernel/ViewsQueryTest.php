@@ -4,12 +4,12 @@ namespace Drupal\Tests\eca_views\Kernel;
 
 use Drupal\Core\Action\ActionManager;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\eca\Token\TokenInterface;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\Token\TokenInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 use Drupal\views\Entity\View;
 
@@ -20,6 +20,8 @@ use Drupal\views\Entity\View;
  * @group eca_views
  */
 class ViewsQueryTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -51,7 +53,7 @@ class ViewsQueryTest extends KernelTestBase {
    *
    * @var \Drupal\eca\Token\TokenInterface|null
    */
-  protected ?TokenInterface $tokenServices;
+  protected ?TokenInterface $tokenService;
 
   /**
    * The user.
@@ -94,16 +96,14 @@ class ViewsQueryTest extends KernelTestBase {
     $this->view->save();
 
     $this->actionManager = \Drupal::service('plugin.manager.action');
-    $this->tokenServices = \Drupal::service('eca.token_services');
+    $this->tokenService = \Drupal::service('eca.token_services');
 
     /** @var \Drupal\content_translation\ContentTranslationManagerInterface $translationManager */
     $translationManager = \Drupal::service('content_translation.manager');
     ConfigurableLanguage::createFromLangcode('de')->save();
 
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create(['type' => 'article', 'name' => 'Article']);
-    $node_type->save();
+    $this->createContentType(['type' => 'article', 'name' => 'Article']);
 
     $this->node = Node::create([
       'uid' => 1,
@@ -139,7 +139,7 @@ class ViewsQueryTest extends KernelTestBase {
 
     $viewsQuery->execute();
     /** @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto */
-    $dto = $this->tokenServices->getTokenData('my_custom_token');
+    $dto = $this->tokenService->getTokenData('my_custom_token');
     /** @var \Drupal\node\NodeInterface $expectedNode */
     $expectedNode = $dto->getValue()['values']['value1'][0];
     $this->assertEquals($this->node->id(), $expectedNode->id());
@@ -160,7 +160,7 @@ class ViewsQueryTest extends KernelTestBase {
 
     $viewsQuery->execute();
     /** @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto */
-    $dto = $this->tokenServices->getTokenData('eca');
+    $dto = $this->tokenService->getTokenData('eca');
     /** @var \Drupal\node\NodeInterface $expectedNode */
     $expectedNode = $dto->getValue()['values']['view']['values']['test_view']['values']['default'][0];
     $this->assertEquals($this->node->id(), $expectedNode->id());
@@ -179,7 +179,7 @@ class ViewsQueryTest extends KernelTestBase {
       'token_name' => 'test',
     ]);
     $viewsQuery->execute();
-    $this->assertNull($this->tokenServices->getTokenData('test'));
+    $this->assertNull($this->tokenService->getTokenData('test'));
   }
 
   /**
@@ -193,7 +193,7 @@ class ViewsQueryTest extends KernelTestBase {
       'token_name' => 'test',
     ]);
     $viewsQuery->execute();
-    $this->assertNull($this->tokenServices->getTokenData('test'));
+    $this->assertNull($this->tokenService->getTokenData('test'));
   }
 
   /**

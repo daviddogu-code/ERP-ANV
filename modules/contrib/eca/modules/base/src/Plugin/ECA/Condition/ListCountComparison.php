@@ -11,7 +11,8 @@ use Drupal\eca_base\Plugin\ListCountTrait;
  * @EcaCondition(
  *   id = "eca_count",
  *   label = @Translation("Compare number of list items"),
- *   description = @Translation("Condition to compare the number of list items.")
+ *   description = @Translation("Condition to compare the number of list items."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class ListCountComparison extends ScalarComparison {
@@ -22,7 +23,16 @@ class ListCountComparison extends ScalarComparison {
    * {@inheritdoc}
    */
   protected function getLeftValue(): string {
-    return $this->countValue($this->configuration['left']);
+    return (string) $this->countValue($this->configuration['left']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration(): array {
+    $config = parent::defaultConfiguration();
+    $config['type'] = static::COMPARE_TYPE_NUMERIC;
+    return $config;
   }
 
   /**
@@ -31,11 +41,9 @@ class ListCountComparison extends ScalarComparison {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form = parent::buildConfigurationForm($form, $form_state);
     $form['left']['#type'] = 'textfield';
-    $form['left']['#title'] = $this->t('Token containing the list');
+    $form['left']['#title'] = $this->t('Name of token containing the list');
     $form['left']['#description'] = $this->t('Provide the name of the token that contains a list from which the number of items should be counted.');
     $form['right']['#type'] = 'textfield';
-    $form['operator']['#default_value'] = static::COMPARE_EQUALS;
-    $form['type']['#default_value'] = static::COMPARE_TYPE_NUMERIC;
     return $form;
   }
 

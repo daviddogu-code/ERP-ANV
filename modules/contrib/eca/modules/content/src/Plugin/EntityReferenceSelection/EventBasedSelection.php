@@ -3,12 +3,13 @@
 namespace Drupal\eca_content\Plugin\EntityReferenceSelection;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginBase;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\eca_content\Event\ReferenceSelection;
 use Drupal\eca_content\Event\ContentEntityEvents;
+use Drupal\eca_content\Event\ReferenceSelection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -22,7 +23,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  *   weight = 10
  * )
  */
-class EventBasedSelection extends SelectionPluginBase implements ContainerFactoryPluginInterface {
+final class EventBasedSelection extends SelectionPluginBase implements ContainerFactoryPluginInterface {
 
   /**
    * The event dispatcher.
@@ -39,17 +40,17 @@ class EventBasedSelection extends SelectionPluginBase implements ContainerFactor
   protected EntityRepositoryInterface $entityRepository;
 
   /**
-   * Holds the initialized list of referencable entities.
+   * Holds the initialized list of referenceable entities.
    *
    * @var \Drupal\Core\Entity\EntityInterface[]|null
    */
-  public ?iterable $referencableEntities;
+  public ?array $referenceableEntities;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EventBasedSelection {
+    return new EventBasedSelection(
       $configuration,
       $plugin_id,
       $plugin_definition,
@@ -81,36 +82,36 @@ class EventBasedSelection extends SelectionPluginBase implements ContainerFactor
   /**
    * {@inheritdoc}
    */
-  public function getReferenceableEntities($match = NULL, $match_operator = 'CONTAINS', $limit = 0) {
-    $this->initializeReferencableEntities();
+  public function getReferenceableEntities($match = NULL, $match_operator = 'CONTAINS', $limit = 0): array {
+    $this->initializeReferenceableEntities();
     $target_type = $this->configuration['target_type'];
-    $referencable = [];
+    $referenceable = [];
     /** @var \Drupal\Core\Entity\EntityInterface $entity */
-    foreach ($this->referencableEntities as $entity) {
+    foreach ($this->referenceableEntities as $entity) {
       if ($entity->getEntityTypeId() === $target_type) {
-        $referencable[$entity->bundle()][$entity->id()] = Html::escape($this->entityRepository->getTranslationFromContext($entity)->label() ?? '');
+        $referenceable[$entity->bundle()][$entity->id()] = Html::escape($this->entityRepository->getTranslationFromContext($entity)->label() ?? '');
       }
     }
-    return $referencable;
+    return $referenceable;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function countReferenceableEntities($match = NULL, $match_operator = 'CONTAINS') {
-    $this->initializeReferencableEntities();
-    return count($this->referencableEntities);
+  public function countReferenceableEntities($match = NULL, $match_operator = 'CONTAINS'): ?int {
+    $this->initializeReferenceableEntities();
+    return count($this->referenceableEntities);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function validateReferenceableEntities(array $ids) {
-    $this->initializeReferencableEntities();
+  public function validateReferenceableEntities(array $ids): array {
+    $this->initializeReferenceableEntities();
     $target_type = $this->configuration['target_type'];
     return array_filter($ids, function ($id) use ($target_type) {
-      foreach ($this->referencableEntities as $entity) {
-        if (($entity->id() == $id) && ($target_type === $entity->getEntityTypeId())) {
+      foreach ($this->referenceableEntities as $entity) {
+        if (($entity->id() === $id) && ($target_type === $entity->getEntityTypeId())) {
           return TRUE;
         }
       }
@@ -121,43 +122,44 @@ class EventBasedSelection extends SelectionPluginBase implements ContainerFactor
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     return parent::defaultConfiguration() + ['field_name' => NULL];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\Core\Entity\EntityFormInterface $form_object */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form_object = $form_state->getFormObject();
-    /** @var \Drupal\Core\Field\FieldDefinitionInterface $entity */
-    $entity = $form_object->getEntity();
-    // We need to know the field name later on, therefore pass it along.
-    $form['field_name'] = [
-      '#type' => 'hidden',
-      '#value' => $entity->getName(),
-      '#weight' => -20,
-    ];
-    $form['help'] = [
-      '#markup' => $this->t('You can react upon this within ECA using the event <em>"Entity reference field selection"</em> and define which entities may be referenced from there.'),
-      '#weight' => -10,
-    ];
-    return $form;
+    if ($form_object instanceof EntityFormInterface) {
+      /** @var \Drupal\Core\Field\FieldDefinitionInterface $entity */
+      $entity = $form_object->getEntity();
+      // We need to know the field name later on, therefore pass it along.
+      $form['field_name'] = [
+        '#type' => 'hidden',
+        '#value' => $entity->getName(),
+        '#weight' => -20,
+      ];
+      $form['help'] = [
+        '#markup' => $this->t('You can react upon this within ECA using the event <em>"Entity reference field selection"</em> and define which entities may be referenced from there.'),
+        '#weight' => -10,
+      ];
+    }
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
-   * Initializes the referencable entities.
+   * Initializes the referenceable entities.
    */
-  protected function initializeReferencableEntities(): void {
-    if (isset($this->referencableEntities)) {
+  protected function initializeReferenceableEntities(): void {
+    if (isset($this->referenceableEntities)) {
       // Already initialized.
       return;
     }
     $this->eventDispatcher->dispatch(new ReferenceSelection($this), ContentEntityEvents::REFERENCE_SELECTION);
-    if (!isset($this->referencableEntities)) {
+    if (!isset($this->referenceableEntities)) {
       // Fallback to an empty list.
-      $this->referencableEntities = [];
+      $this->referenceableEntities = [];
     }
   }
 

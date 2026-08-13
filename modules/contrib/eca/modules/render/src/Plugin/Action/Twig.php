@@ -9,16 +9,16 @@ use Drupal\Core\Render\Markup as RenderMarkup;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Template\TwigEnvironment;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Symfony\Component\Yaml\Exception\ParseException;
 
 /**
- * Render an inline template using the Twig engine..
+ * Render an inline template using the Twig engine.
  *
  * @Action(
  *   id = "eca_render_twig",
  *   label = @Translation("Render: Twig"),
- *   description = @Translation("Render an inline template using the Twig engine.")
+ *   description = @Translation("Render an inline template using the Twig engine."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class Twig extends Markup {
@@ -33,7 +33,7 @@ class Twig extends Markup {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->twig = $container->get('twig');
     return $instance;
@@ -52,15 +52,15 @@ class Twig extends Markup {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['template'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Template'),
-      '#description' => $this->t('Must be valid Twig syntax. This field supports tokens.'),
+      '#description' => $this->t('Must be valid Twig syntax. Token data is available as Twig variables (for example <code>{{ node.title.value }}</code>); raw <code>[token]</code> replacement of the template source is no longer performed.'),
       '#weight' => -200,
       '#default_value' => $this->configuration['template'],
       '#required' => TRUE,
     ];
+    $form = parent::buildConfigurationForm($form, $form_state);
     $form['value']['#title'] = $this->t('Context values');
     $form['value']['#description'] = $this->t('Optionally specify context values to pass to the template. Can be an array using YAML syntax (needs to be enabled below) or a token holding the context data. Available token data will be automatically forwarded.');
     $form['value']['#required'] = FALSE;
@@ -92,7 +92,7 @@ class Twig extends Markup {
    * {@inheritdoc}
    */
   protected function doBuild(array &$build): void {
-    $template = trim((string) $this->tokenServices->replaceClear($this->configuration['template']));
+    $template = trim((string) $this->configuration['template']);
     if ($template === '') {
       throw new \InvalidArgumentException("No template given for rendering an inline Twig template.");
     }
@@ -103,23 +103,23 @@ class Twig extends Markup {
         $value = $this->yamlParser->parse($value);
       }
       catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing a state value item in action "eca_render_twig" as YAML format, but parsing failed.');
+        $this->logger->error('Tried parsing a state value item in action "eca_render_twig" as YAML format, but parsing failed.');
         return;
       }
     }
     else {
-      $value = $this->tokenServices->getOrReplace($value);
+      $value = $this->tokenService->getOrReplace($value);
     }
 
     if ($value instanceof EntityInterface) {
-      $type = $this->tokenServices->getTokenTypeForEntityType($value->getEntityTypeId()) ?? $value->getEntityTypeId();
+      $type = $this->tokenService->getTokenTypeForEntityType($value->getEntityTypeId()) ?? $value->getEntityTypeId();
       $value = [$type => $value];
     }
     elseif (!is_iterable($value)) {
       $value = ['value' => $value];
     }
 
-    $context = $this->tokenServices->getTokenData();
+    $context = $this->tokenService->getTokenData();
     foreach ($value as $k => $v) {
       $context[$k] = $v;
     }

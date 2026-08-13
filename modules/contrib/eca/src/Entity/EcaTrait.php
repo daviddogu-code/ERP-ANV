@@ -3,17 +3,16 @@
 namespace Drupal\eca\Entity;
 
 use Drupal\Core\Action\ActionManager;
-use Drupal\Core\Cache\MemoryCache\MemoryCache;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Logger\LoggerChannel;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\eca\PluginManager\Action;
-use Drupal\eca\Service\Actions;
-use Drupal\eca\Service\Conditions;
 use Drupal\eca\PluginManager\Condition;
 use Drupal\eca\PluginManager\Event;
 use Drupal\eca\PluginManager\Modeller;
+use Drupal\eca\Service\Actions;
+use Drupal\eca\Service\Conditions;
 use Drupal\eca\Service\DependencyCalculation;
 use Drupal\eca\Token\TokenInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -71,13 +70,6 @@ trait EcaTrait {
    * @var \Drupal\eca\Service\DependencyCalculation|null
    */
   protected ?DependencyCalculation $dependencyCalculation;
-
-  /**
-   * Memory cache service.
-   *
-   * @var \Drupal\Core\Cache\MemoryCache\MemoryCache|null
-   */
-  protected ?MemoryCache $memoryCache;
 
   /**
    * Logger channel service.
@@ -213,19 +205,6 @@ trait EcaTrait {
   }
 
   /**
-   * Initializes the memory cache service.
-   *
-   * @return \Drupal\Core\Cache\MemoryCache\MemoryCache
-   *   The memory cache service.
-   */
-  protected function memoryCache(): MemoryCache {
-    if (!isset($this->memoryCache)) {
-      $this->memoryCache = \Drupal::service('eca.memory_cache');
-    }
-    return $this->memoryCache;
-  }
-
-  /**
    * Returns the ECA logger channel as a service.
    *
    * @return \Drupal\Core\Logger\LoggerChannel
@@ -294,6 +273,7 @@ trait EcaTrait {
    * Initialize the request.
    *
    * @return \Symfony\Component\HttpFoundation\Request
+   *   The initialized request.
    */
   protected function request(): Request {
     if (!isset($this->request)) {
@@ -309,6 +289,7 @@ trait EcaTrait {
     // Need to manually load the action plugin manager, since it is an instance
     // provided by the decorator of that service, not by the service container.
     // @see https://www.drupal.org/project/eca/issues/3507815
+    // @phpstan-ignore-next-line
     if (property_exists($this, '_serviceIds') && isset($this->_serviceIds['actionPluginManager'])) {
       unset($this->_serviceIds['actionPluginManager']);
       $this->actionPluginManager();

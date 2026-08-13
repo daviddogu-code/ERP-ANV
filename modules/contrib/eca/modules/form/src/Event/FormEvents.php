@@ -52,4 +52,13 @@ final class FormEvents {
    */
   public const SUBMIT = 'eca.form.submit';
 
+  /**
+   * Dispatches when an inline entity form is being build.
+   *
+   * @Event
+   *
+   * @var string
+   */
+  public const IEF_BUILD = 'eca.form.ief_build';
+
 }

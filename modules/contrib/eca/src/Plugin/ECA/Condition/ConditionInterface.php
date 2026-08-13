@@ -8,6 +8,7 @@ use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Interface for ECA provided conditions.
@@ -41,19 +42,19 @@ interface ConditionInterface extends PluginFormInterface, ConfigurableInterface,
   /**
    * Sets the event that triggered the process in which this condition occurs.
    *
-   * @param \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event $event
+   * @param \Symfony\Contracts\EventDispatcher\Event $event
    *   The triggering event.
    *
    * @return $this
    */
-  public function setEvent(object $event): ConditionInterface;
+  public function setEvent(Event $event): ConditionInterface;
 
   /**
    * Gets the event that triggered the process in which this condition occurs.
    *
-   * @return \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event
+   * @return \Symfony\Contracts\EventDispatcher\Event
    *   The triggering event.
    */
-  public function getEvent(): object;
+  public function getEvent(): Event;
 
 }

@@ -2,8 +2,8 @@
 
 namespace Drupal\eca\TypedData;
 
-use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
@@ -94,7 +94,7 @@ trait PropertyPathTrait {
         // Allow for auto-appending an item, in case the given argument
         // indicates that it either does not care (i.e. the current property
         // is not a digit) or points to the next free delta in the list.
-        if (!ctype_digit(strval($property))) {
+        if (!ctype_digit($property)) {
           // Some input may skip the delta, e.g. body.value is treated as an
           // equivalent to body.0.value.
           if ((NULL === $data->first()) && $options['auto_append']) {
@@ -141,10 +141,11 @@ trait PropertyPathTrait {
       }
 
       $value = $data->getValue();
+      $entity = NULL;
       if (!($value instanceof EntityInterface) && method_exists($data, 'getEntity') && ($entity = $data->getEntity())) {
         $value = $entity;
       }
-      if ($value instanceof EntityInterface && !in_array($entity, $metadata['entities'])) {
+      if ($value instanceof EntityInterface && !in_array($entity, $metadata['entities'], TRUE)) {
         $metadata['entities'][] = $value;
       }
 
@@ -219,6 +220,8 @@ trait PropertyPathTrait {
    */
   protected function getDataProperties(ComplexDataInterface $data, $property_name): array {
     $properties = $data->getProperties(TRUE);
+    $tdm = NULL;
+    $definitions = [];
     if (!$properties || !isset($properties[$property_name])) {
       // When the targeted property name is missing, we lookup whether it is
       // allowed to add it on our own. Therefore we need the typed data manager
@@ -226,7 +229,7 @@ trait PropertyPathTrait {
       $tdm = \Drupal::typedDataManager();
       $definitions = $data->getDataDefinition()->getPropertyDefinitions();
     }
-    if (!$properties) {
+    if (!$properties && $tdm !== NULL) {
       $values = $data->getValue();
       if (is_iterable($values)) {
         foreach ($values as $k => $v) {
@@ -241,7 +244,7 @@ trait PropertyPathTrait {
       }
     }
     if (!isset($properties[$property_name])) {
-      if (isset($definitions[$property_name])) {
+      if ($tdm !== NULL && isset($definitions[$property_name])) {
         $properties[$property_name] = $tdm->create($definitions[$property_name], NULL, $property_name, $data);
       }
       elseif (empty($definitions)) {

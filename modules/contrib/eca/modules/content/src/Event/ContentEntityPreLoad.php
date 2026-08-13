@@ -3,7 +3,6 @@
 namespace Drupal\eca_content\Event;
 
 use Drupal\eca\Plugin\DataType\DataTransferObject;
-use Drupal\eca\Token\DataProviderInterface;
 
 /**
  * Provides an event before a content entity is being loaded.
@@ -14,7 +13,7 @@ use Drupal\eca\Token\DataProviderInterface;
  *
  * @package Drupal\eca_content\Event
  */
-class ContentEntityPreLoad extends ContentEntityBase implements DataProviderInterface {
+class ContentEntityPreLoad extends ContentEntityBase {
 
   /**
    * The ids.
@@ -68,39 +67,6 @@ class ContentEntityPreLoad extends ContentEntityBase implements DataProviderInte
    */
   public function getEntityTypeId(): string {
     return $this->entityTypeId;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    return in_array($wildcard, ['*', $this->entityTypeId]);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getData(string $key) {
-    if ($key === 'event') {
-      if (!isset($this->eventData)) {
-        $this->eventData = DataTransferObject::create([
-          'machine-name' => ContentEntityEvents::PRELOAD,
-          'entity_type_id' => $this->getEntityTypeId(),
-          'ids' => $this->getIds(),
-        ]);
-      }
-
-      return $this->eventData;
-    }
-
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasData(string $key): bool {
-    return $this->getData($key) !== NULL;
   }
 
 }

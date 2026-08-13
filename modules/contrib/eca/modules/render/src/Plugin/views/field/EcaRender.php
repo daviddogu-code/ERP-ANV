@@ -29,8 +29,7 @@ class EcaRender extends FieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\eca_render\Plugin\views\field\EcaRender $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->renderer = $container->get('renderer');
     $instance->triggerEvent = $container->get('eca.trigger_event');
@@ -73,7 +72,7 @@ class EcaRender extends FieldPluginBase {
    * {@inheritdoc}
    */
   public function render(ResultRow $values) {
-    $relationship_entities = $values->_relationship_entities ?? [];
+    $relationship_entities = $values->_relationship_entities;
     $entity = $values->_entity;
     $build = [];
     $event = $this->triggerEvent->dispatchFromPlugin('eca_render:views_field', $this, $build, $entity, $relationship_entities);

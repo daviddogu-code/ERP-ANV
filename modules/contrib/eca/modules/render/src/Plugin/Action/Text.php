@@ -3,6 +3,7 @@
 namespace Drupal\eca_render\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Build formatted text.
@@ -11,10 +12,13 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "eca_render_text",
  *   label = @Translation("Render: text"),
  *   description = @Translation("Build a renderable text element."),
+ *   eca_version_introduced = "1.1.0",
  *   deriver = "Drupal\eca_render\Plugin\Action\TextDeriver"
  * )
  */
 class Text extends RenderElementActionBase {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -30,14 +34,13 @@ class Text extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['text'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Text'),
-      '#description' => $this->t('This field supports tokens.'),
       '#default_value' => $this->configuration['text'],
       '#required' => TRUE,
       '#weight' => 100,
+      '#eca_token_replacement' => TRUE,
     ];
     $format_storage = $this->entityTypeManager->getStorage('filter_format');
     $format_options = [];
@@ -51,8 +54,9 @@ class Text extends RenderElementActionBase {
       '#default_value' => $this->configuration['format'],
       '#required' => TRUE,
       '#weight' => 110,
+      '#eca_token_select_option' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -68,8 +72,11 @@ class Text extends RenderElementActionBase {
    * {@inheritdoc}
    */
   protected function doBuild(array &$build): void {
-    $text = $this->tokenServices->replaceClear($this->configuration['text']);
+    $text = $this->tokenService->replaceClear($this->configuration['text']);
     $format = $this->configuration['format'] ?? '';
+    if ($format === '_eca_token') {
+      $format = $this->getTokenValue('format', 'plain_text');
+    }
     if ($format === '') {
       $build = ['#markup' => $text];
     }

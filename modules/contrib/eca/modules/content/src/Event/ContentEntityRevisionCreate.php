@@ -14,7 +14,7 @@ use Drupal\eca\Service\ContentEntityTypes;
  *
  * @package Drupal\eca_content\Event
  */
-class ContentEntityRevisionCreate extends ContentEntityBaseEntity {
+class ContentEntityRevisionCreate extends ContentEntityBaseContentEntity {
 
   /**
    * The original entity.

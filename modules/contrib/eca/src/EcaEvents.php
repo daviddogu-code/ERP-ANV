@@ -22,7 +22,7 @@ final class EcaEvents {
    *
    * @var string
    */
-  const BEFORE_INITIAL_EXECUTION = 'eca.execution.initial.before';
+  public const BEFORE_INITIAL_EXECUTION = 'eca.execution.initial.before';
 
   /**
    * Dispatched after initial successor execution of an ECA configuration.
@@ -31,7 +31,7 @@ final class EcaEvents {
    *
    * @var string
    */
-  const AFTER_INITIAL_EXECUTION = 'eca.execution.initial.after';
+  public const AFTER_INITIAL_EXECUTION = 'eca.execution.initial.after';
 
   /**
    * Dispatched before a single action is being executed.
@@ -42,7 +42,7 @@ final class EcaEvents {
    *
    * @var string
    */
-  const BEFORE_ACTION_EXECUTION = 'eca.execution.action.before';
+  public const BEFORE_ACTION_EXECUTION = 'eca.execution.action.before';
 
   /**
    * Dispatched after a single action got executed.
@@ -56,6 +56,15 @@ final class EcaEvents {
    * break out the regular execution logic. Whether or not an exception was
    * thrown, this event will be fired.
    */
-  const AFTER_ACTION_EXECUTION = 'eca.execution.action.after';
+  public const AFTER_ACTION_EXECUTION = 'eca.execution.action.after';
+
+  /**
+   * Dispatched when a token is about to be generated.
+   *
+   * @Event
+   *
+   * @var string
+   */
+  public const TOKEN = 'eca_base.token';
 
 }

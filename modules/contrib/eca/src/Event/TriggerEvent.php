@@ -4,6 +4,7 @@ namespace Drupal\eca\Event;
 
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Plugin\PluginManagerInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -26,16 +27,6 @@ class TriggerEvent {
   protected EventDispatcherInterface $eventDispatcher;
 
   /**
-   * Get the service instance for triggering ECA-related events.
-   *
-   * @return static
-   *   The service instance.
-   */
-  public static function get(): TriggerEvent {
-    return \Drupal::service('eca.trigger_event');
-  }
-
-  /**
    * The TriggerEvent constructor.
    *
    * @param \Drupal\Component\Plugin\PluginManagerInterface $event_plugin_manager
@@ -56,15 +47,17 @@ class TriggerEvent {
    * @param mixed &$args
    *   Arguments that shall be passed to the constructor of the event object.
    *
-   * @return \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event|null
+   * @return \Symfony\Contracts\EventDispatcher\Event|null
    *   The dispatched event, or NULL if no event was dispatched.
    */
-  public function dispatchFromPlugin(string $plugin_id, &...$args): ?object {
+  public function dispatchFromPlugin(string $plugin_id, &...$args): Event|null {
     try {
-      /** @var \Drupal\eca\Plugin\ECA\Event\EventInterface $event_plugin */
+      /**
+       * @var \Drupal\eca\Plugin\ECA\Event\EventInterface $event_plugin
+       */
       $event_plugin = $this->eventPluginManager->createInstance($plugin_id);
     }
-    catch (PluginException $e) {
+    catch (PluginException) {
       // @todo Log this exception.
       return NULL;
     }

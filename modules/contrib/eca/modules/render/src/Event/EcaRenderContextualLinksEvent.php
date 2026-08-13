@@ -4,11 +4,7 @@ namespace Drupal\eca_render\Event;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\eca\Event\ConditionalApplianceInterface;
 use Drupal\eca\Event\EntityApplianceTrait;
-use Drupal\eca\Plugin\DataType\DataTransferObject;
-use Drupal\eca\Token\DataProviderInterface;
-use Drupal\eca_render\RenderEvents;
 
 /**
  * Dispatched when contextual links are being rendered.
@@ -19,7 +15,7 @@ use Drupal\eca_render\RenderEvents;
  *
  * @package Drupal\eca_render\Event
  */
-class EcaRenderContextualLinksEvent extends EcaRenderEventBase implements ConditionalApplianceInterface, DataProviderInterface {
+class EcaRenderContextualLinksEvent extends EcaRenderEventBase {
 
   use EntityApplianceTrait;
 
@@ -118,95 +114,6 @@ class EcaRenderContextualLinksEvent extends EcaRenderEventBase implements Condit
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    [$w_group, $w_entity_type_ids, $w_bundles] = explode(':', $wildcard, 3);
-
-    if (($w_group !== '*') && !in_array($this->group, explode(',', $w_group), TRUE)) {
-      return FALSE;
-    }
-
-    if ($w_entity_type_ids !== '*') {
-      if (!($entity = $this->getEntity())) {
-        return FALSE;
-      }
-      if (!in_array($entity->getEntityTypeId(), explode(',', $w_entity_type_ids), TRUE)) {
-        return FALSE;
-      }
-    }
-
-    if ($w_bundles !== '*') {
-      if (!($entity = $this->getEntity())) {
-        return FALSE;
-      }
-      if (!in_array($entity->bundle(), explode(',', $w_bundles), TRUE)) {
-        return FALSE;
-      }
-    }
-
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    if (!empty($arguments['group']) && $arguments['group'] !== '*') {
-      $contains_group = FALSE;
-      foreach (explode(',', $arguments['group']) as $c_group) {
-        $c_group = mb_strtolower(trim($c_group));
-        if ($contains_group = ($c_group === mb_strtolower($this->group))) {
-          break;
-        }
-      }
-      if (!$contains_group) {
-        return FALSE;
-      }
-    }
-
-    if (!($entity = $this->getEntity())) {
-      return empty($arguments['entity_type_id']) && empty($arguments['bundle']);
-    }
-
-    return $this->appliesForEntityTypeOrBundle($entity, $arguments);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasData(string $key): bool {
-    return $this->getData($key) !== NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getData(string $key) {
-    if ($key === 'event') {
-      if (!isset($this->eventData)) {
-        $this->eventData = DataTransferObject::create([
-          'machine-name' => RenderEvents::CONTEXTUAL_LINKS,
-          'group' => $this->group,
-          'route-parameters' => $this->routeParameters,
-        ]);
-      }
-
-      return $this->eventData;
-    }
-
-    if (isset($this->routeParameters[$key])) {
-      $v = $this->routeParameters[$key];
-      if (is_string($key) && $this->entityTypeManager->hasDefinition($key) && is_scalar($v) && ($entity = $this->entityTypeManager->getStorage($key)->load($v))) {
-        return $entity;
-      }
-      return DataTransferObject::create($v);
-    }
-
-    return NULL;
-  }
-
-  /**
    * Get the entity, if available.
    *
    * @return \Drupal\Core\Entity\EntityInterface|null
@@ -214,7 +121,7 @@ class EcaRenderContextualLinksEvent extends EcaRenderEventBase implements Condit
    */
   public function getEntity(): ?EntityInterface {
     foreach ($this->routeParameters as $k => $v) {
-      if (is_string($k) && $this->entityTypeManager->hasDefinition($k) && is_scalar($v) && ($entity = $this->entityTypeManager->getStorage($k)->load($v))) {
+      if (is_string($k) && is_scalar($v) && $this->entityTypeManager->hasDefinition($k) && ($entity = $this->entityTypeManager->getStorage($k)->load($v))) {
         return $entity;
       }
     }

@@ -3,7 +3,7 @@
 namespace Drupal\eca_user\Event;
 
 /**
- * Contains all events triggered by Calunda module regarding users.
+ * Contains all events triggered by the user module regarding users.
  */
 final class UserEvents {
 

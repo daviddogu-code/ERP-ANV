@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\eca_base\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Plugin\ECA\Condition\StringComparisonBase;
 use Drupal\eca\PluginManager\Condition;
 use Drupal\eca\Token\TokenInterface;
-use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Kernel tests for the "eca_count" condition plugin.
@@ -38,7 +38,7 @@ class CompareListCountTest extends KernelTestBase {
    *
    * @var \Drupal\eca\Token\TokenInterface|null
    */
-  protected ?TokenInterface $tokenServices;
+  protected ?TokenInterface $tokenService;
 
   /**
    * {@inheritdoc}
@@ -48,7 +48,7 @@ class CompareListCountTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installConfig(static::$modules);
     $this->conditionManager = \Drupal::service('plugin.manager.eca.condition');
-    $this->tokenServices = \Drupal::service('eca.token_services');
+    $this->tokenService = \Drupal::service('eca.token_services');
   }
 
   /**
@@ -59,7 +59,7 @@ class CompareListCountTest extends KernelTestBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function testListItemCountValues($list, $right, $operator, $negate, $message, $assertTrue = TRUE): void {
-    $this->tokenServices->addTokenData('list', $list);
+    $this->tokenService->addTokenData('list', $list);
     // Configure default settings for condition.
     $config = [
       'left' => 'list',
@@ -84,7 +84,7 @@ class CompareListCountTest extends KernelTestBase {
    * @return array
    *   The list item count test cases.
    */
-  public function listDataProvider(): array {
+  public static function listDataProvider(): array {
     return [
       [
         ['a', 'b', 'c'],

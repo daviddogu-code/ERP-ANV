@@ -21,6 +21,7 @@ use Drupal\Core\TypedData\TraversableTypedDataInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\Core\Url;
 use Drupal\eca\TypedData\DataTransferObjectDefinition;
+use Symfony\Component\Routing\Exception\ExceptionInterface as RoutingException;
 
 /**
  * Defines the "dto" data type.
@@ -37,6 +38,15 @@ use Drupal\eca\TypedData\DataTransferObjectDefinition;
  * )
  */
 class DataTransferObject extends Map {
+
+  /**
+   * Maximum nesting level when preparing array values for Yaml encoding.
+   *
+   * A property may hold an arbitrary array, including one that contains
+   * itself. Traversing that without a limit would exhaust memory, both when
+   * converting the contained values and in Yaml::encode() afterwards.
+   */
+  protected const MAX_ENCODING_DEPTH = 32;
 
   /**
    * A manually set string representation of this object.
@@ -66,17 +76,15 @@ class DataTransferObject extends Map {
    * @param bool $notify
    *   (optional) Whether to notify the parent object of the change.
    *
-   * @return static
+   * @return \Drupal\eca\Plugin\DataType\DataTransferObject
    *   The DTO instance.
-   *
-   * @throws \InvalidArgumentException
-   *   When the passed values don't meet the requirements as documented for
-   *   the $values paramenter in ::setValue().
    */
-  public static function create($value = NULL, ?TypedDataInterface $parent = NULL, ?string $name = NULL, bool $notify = TRUE): DataTransferObject {
+  public static function create(mixed $value = NULL, ?TypedDataInterface $parent = NULL, ?string $name = NULL, bool $notify = TRUE): DataTransferObject {
     $manager = \Drupal::typedDataManager();
-    /** @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto */
     if ($parent && $name) {
+      /**
+       * @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto
+       */
       $dto = $manager->createInstance('dto', [
         'data_definition' => DataTransferObjectDefinition::create('dto'),
         'name' => $name,
@@ -84,9 +92,11 @@ class DataTransferObject extends Map {
       ]);
     }
     else {
+      /**
+       * @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto
+       */
       $dto = $manager->create(DataTransferObjectDefinition::create('dto'));
     }
-    /** @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto */
     if (isset($value)) {
       if ($value instanceof EntityInterface) {
         $dto->setStringRepresentation($value->id());
@@ -108,7 +118,7 @@ class DataTransferObject extends Map {
    * Creates a DTO from user input.
    *
    * User input may be a Yaml-formatted hash of values, or an unformatted
-   * sequence of values, separated with comma and optionally with a colon for
+   * sequence of values, separated with commas and optionally with a colon for
    * keyed values. Plain values without separator (comma or new line) will use
    * the string representation instead of an array of properties.
    *
@@ -128,7 +138,7 @@ class DataTransferObject extends Map {
           $values = [];
         }
       }
-      catch (InvalidDataTypeException $e) {
+      catch (InvalidDataTypeException) {
         $values = [];
       }
     }
@@ -138,7 +148,7 @@ class DataTransferObject extends Map {
     if (empty($values) && ($user_input !== '')) {
       $option = strtok($user_input, "," . PHP_EOL);
       while ($option !== FALSE) {
-        $option = trim((string) $option);
+        $option = trim($option);
         [$key, $value] = array_merge(explode(':', $option, 2), [$option]);
         $key = trim($key);
         $value = trim($value);
@@ -146,7 +156,7 @@ class DataTransferObject extends Map {
           // Prevent tokens from being split off.
           $key = $value = $option;
         }
-        if (mb_strlen($key) && mb_strlen($value)) {
+        if ($key !== '' && $value !== '') {
           $values[$key] = $value;
         }
         $option = strtok("," . PHP_EOL);
@@ -179,7 +189,7 @@ class DataTransferObject extends Map {
   /**
    * {@inheritdoc}
    */
-  public function __construct(DataDefinitionInterface $definition, $name = NULL, TypedDataInterface $parent = NULL) {
+  public function __construct(DataDefinitionInterface $definition, $name = NULL, ?TypedDataInterface $parent = NULL) {
     parent::__construct($definition, $name, $parent);
     // Make sure that the data definition reflects dynamically added properties.
     $this->definition = DataTransferObjectDefinition::create($definition->getDataType(), $this);
@@ -188,7 +198,7 @@ class DataTransferObject extends Map {
   /**
    * {@inheritdoc}
    */
-  public function toArray() {
+  public function toArray(): array {
     $values = [];
     foreach ($this->getProperties() as $name => $property) {
       $values[$name] = $property instanceof ComplexDataInterface ? $property->toArray() : $property->getValue();
@@ -235,7 +245,7 @@ class DataTransferObject extends Map {
    * Otherwise, an additional types key should be provided (see description of
    * the $values argument).
    *
-   * @param \Drupal\Core\TypedData\TypedDataInterface[]|null $values
+   * @param mixed|null $values
    *   An array of property values as typed data objects, scalars or entities.
    *   Alternatively, if typed data objects are not available at this point, the
    *   values may be an associative array keyed by 'types' and 'values'. Both
@@ -245,12 +255,8 @@ class DataTransferObject extends Map {
    *   (optional) Whether to notify the parent object of the change. Defaults to
    *   TRUE. If a property is updated from a parent object, set it to FALSE to
    *   avoid being notified again.
-   *
-   * @throws \InvalidArgumentException
-   *   When the passed values don't meet the requirements as documented for
-   *   the $values paramenter.
    */
-  public function setValue($values, $notify = TRUE) {
+  public function setValue($values, $notify = TRUE): void {
     if ($values instanceof TypedDataInterface) {
       if (($values instanceof TraversableTypedDataInterface) && ($elements = static::traverseElements($values))) {
         $values = $elements;
@@ -263,7 +269,9 @@ class DataTransferObject extends Map {
       $values = $values->getTypedData()->getProperties();
     }
     elseif ($values instanceof Config) {
-      /** @var \Drupal\Core\TypedData\TraversableTypedDataInterface $typed_config */
+      /**
+       * @var \Drupal\Core\TypedData\TraversableTypedDataInterface $typed_config
+       */
       $typed_config = \Drupal::service('config.typed')->createFromNameAndData($values->getName(), $values->getRawData());
       $values = static::traverseElements($typed_config);
     }
@@ -360,14 +368,14 @@ class DataTransferObject extends Map {
    * @param mixed $value
    *   A scalar value.
    */
-  public function setStringRepresentation($value): void {
+  public function setStringRepresentation(mixed $value): void {
     $this->stringRepresentation = is_null($value) ? NULL : (string) $value;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getString() {
+  public function getString(): ?string {
     if (isset($this->stringRepresentation)) {
       return $this->stringRepresentation;
     }
@@ -392,17 +400,20 @@ class DataTransferObject extends Map {
         // Objects are not supported for being encoded to Yaml.
         $value = $property->getString();
       }
-      if (($value === NULL) || ($value === '') || (is_iterable($value) && !count($value))) {
+      // Any object got replaced by its string representation above, so an
+      // iterable value can only be an array at this point.
+      if (is_array($value)) {
+        if (!$value) {
+          // Skip empty items.
+          continue;
+        }
+        // Convert contained entities and other objects at any nesting level,
+        // so that the value can safely be encoded to Yaml below.
+        $value = $this->prepareValueForEncoding($value);
+      }
+      elseif (($value === NULL) || ($value === '')) {
         // Skip empty items.
         continue;
-      }
-      if (is_array($value)) {
-        // Convert entities to arrays for Yaml encoding below.
-        foreach ($value as $k => $v) {
-          if ($v instanceof EntityInterface) {
-            $value[$k] = $v->toArray();
-          }
-        }
       }
       if (is_int($name) || ctype_digit($name)) {
         $values[] = $value;
@@ -421,6 +432,74 @@ class DataTransferObject extends Map {
   }
 
   /**
+   * Prepares an array value for being encoded to Yaml.
+   *
+   * Yaml::encode() refuses to dump objects, so every object contained in the
+   * given array is replaced, at any nesting level:
+   * - Entities are expanded to their array representation.
+   * - URLs are rendered, just like ::writePropertyValue() wraps them into the
+   *   'eca_url' data type, whose ::getString() renders them the same way. A
+   *   nested URL printing a marker while a top level one renders properly
+   *   would be the same accept-but-cannot-render inconsistency that the
+   *   handling here is about. Generating a URL can fail, for example for a
+   *   route that no longer exists, in which case the marker below is used.
+   * - Stringable objects are cast to their string form. This is consistent
+   *   with ::writePropertyValue(), which already accepts such objects as
+   *   property values. \Drupal\Component\Render\MarkupInterface extends
+   *   \Stringable, so render markup is covered by the same branch, which is
+   *   why the URL branch precedes it as it does in ::writePropertyValue().
+   * - Any other object has no representation to fall back to and is replaced
+   *   by a marker naming its class. Such a value is neither dropped silently
+   *   nor allowed to make ::getString() throw.
+   *
+   * @param array $value
+   *   The array to prepare.
+   * @param int $depth
+   *   The current nesting level. Traversal stops at ::MAX_ENCODING_DEPTH, so
+   *   that an array containing itself cannot be traversed endlessly.
+   *
+   * @return array
+   *   The prepared array, which is free of objects and finite in depth.
+   */
+  protected function prepareValueForEncoding(array $value, int $depth = 1): array {
+    // Build up a new array rather than modifying the given one. An array
+    // element may be a reference, in which case assigning to it would write
+    // through to the value held by this object, and to the caller's data.
+    $prepared = [];
+    foreach ($value as $k => $v) {
+      if ($v instanceof EntityInterface) {
+        $v = $v->toArray();
+      }
+      if (is_array($v)) {
+        $prepared[$k] = $depth < static::MAX_ENCODING_DEPTH
+          ? $this->prepareValueForEncoding($v, $depth + 1)
+          : '[maximum nesting level of ' . static::MAX_ENCODING_DEPTH . ' reached]';
+      }
+      elseif ($v instanceof Url) {
+        try {
+          $prepared[$k] = $v->toString();
+        }
+        catch (RoutingException | \InvalidArgumentException) {
+          // Every routing exception extends \InvalidArgumentException, which
+          // the unrouted URL assembler throws as well. Catching the routing
+          // interface too keeps this working if that hierarchy ever changes.
+          $prepared[$k] = '[object ' . get_debug_type($v) . ']';
+        }
+      }
+      elseif ($v instanceof \Stringable) {
+        $prepared[$k] = (string) $v;
+      }
+      elseif (is_object($v)) {
+        $prepared[$k] = '[object ' . get_debug_type($v) . ']';
+      }
+      else {
+        $prepared[$k] = $v;
+      }
+    }
+    return $prepared;
+  }
+
+  /**
    * Implements magic __toString() method.
    */
   public function __toString(): string {
@@ -430,7 +509,7 @@ class DataTransferObject extends Map {
   /**
    * {@inheritdoc}
    */
-  public function getProperties($include_computed = FALSE) {
+  public function getProperties($include_computed = FALSE): array {
     $properties = [];
     foreach ($this->properties as $name => $property) {
       $definition = $property->getDataDefinition();
@@ -444,16 +523,16 @@ class DataTransferObject extends Map {
   /**
    * {@inheritdoc}
    */
-  protected function writePropertyValue($property_name, $value) {
+  protected function writePropertyValue($property_name, mixed $value): void {
     if ($property_name === '-') {
       if ($value === NULL) {
         array_pop($this->properties);
       }
       else {
         foreach ($this->properties as $name => $property) {
-          if ($property->getValue() === $value || $property === $value) {
+          if ($property === $value || $property->getValue() === $value) {
             unset($this->properties[$name]);
-            if (is_int($name) || ctype_digit(strval($name))) {
+            if (is_int($name) || ctype_digit($name)) {
               $this->rekey($name);
             }
           }
@@ -469,8 +548,10 @@ class DataTransferObject extends Map {
       }
       else {
         $this->properties[$property_name] = $value;
-        if (is_int($property_name) || ctype_digit(strval($property_name))) {
-          $this->rekey($property_name);
+        // @todo $property name can never be integer, can it?
+        // @phpstan-ignore-next-line
+        if (is_int($property_name) || ctype_digit((string) $property_name)) {
+          $this->rekey((int) $property_name);
         }
       }
     }
@@ -478,8 +559,10 @@ class DataTransferObject extends Map {
       // When receiving NULL as unwrapped $value, then handle this just like
       // removing the property from the list.
       unset($this->properties[$property_name]);
-      if (is_int($property_name) || ctype_digit(strval($property_name))) {
-        $this->rekey($property_name);
+      // @todo $property name can never be integer, can it?
+      // @phpstan-ignore-next-line
+      if (is_int($property_name) || ctype_digit((string) $property_name)) {
+        $this->rekey((int) $property_name);
       }
     }
     elseif ($value instanceof EntityInterface) {
@@ -511,7 +594,7 @@ class DataTransferObject extends Map {
   /**
    * Magic method: Gets a property value.
    *
-   * @param string|int $name
+   * @param int|string $name
    *   The name of the property to get; e.g., 'title' or 'name'.
    *
    * @return mixed
@@ -520,7 +603,7 @@ class DataTransferObject extends Map {
    * @throws \InvalidArgumentException
    *   If a non-existent property is accessed.
    */
-  public function __get($name) {
+  public function __get(int|string $name) {
     // There is either a property object or a plain value - possibly for a
     // not-defined property. If we have a plain value, directly return it.
     if (isset($this->properties[$name])) {
@@ -531,7 +614,7 @@ class DataTransferObject extends Map {
   /**
    * Magic method: Sets a property value.
    *
-   * @param string|int $name
+   * @param int|string $name
    *   The name of the property to set; e.g., 'title' or 'name'.
    * @param mixed $value
    *   The value as typed data object to set, or NULL to unset the property.
@@ -539,20 +622,20 @@ class DataTransferObject extends Map {
    * @throws \InvalidArgumentException
    *   If the given argument is not typed data or not NULL.
    */
-  public function __set($name, $value) {
+  public function __set(int|string $name, mixed $value) {
     $this->set($name, $value);
   }
 
   /**
    * Magic method: Determines whether a property is set.
    *
-   * @param string|int $name
+   * @param int|string $name
    *   The name of the property to get; e.g., 'title' or 'name'.
    *
    * @return bool
    *   Returns TRUE if the property exists and is set, FALSE otherwise.
    */
-  public function __isset($name) {
+  public function __isset(int|string $name) {
     if (isset($this->properties[$name])) {
       return $this->properties[$name]->getValue() !== NULL;
     }
@@ -562,10 +645,10 @@ class DataTransferObject extends Map {
   /**
    * Magic method: Unsets a property.
    *
-   * @param string|int $name
+   * @param int|string $name
    *   The name of the property to get; e.g., 'title' or 'name'.
    */
-  public function __unset($name) {
+  public function __unset(int|string $name) {
     if ($this->definition->getPropertyDefinition($name)) {
       $this->set($name, NULL);
     }
@@ -630,14 +713,14 @@ class DataTransferObject extends Map {
     $saveables = [];
     foreach ($this->properties as $property) {
       $value = $property->getValue();
-      if ((($value instanceof EntityInterface) || ($value instanceof Config) && !($value instanceof ImmutableConfig)) && !in_array($value, $saveables, TRUE)) {
+      if ((($value instanceof EntityInterface) || (($value instanceof Config) && !($value instanceof ImmutableConfig))) && !in_array($value, $saveables, TRUE)) {
         $saveables[] = $value;
         continue;
       }
       $parent = NULL;
       while (($property->getParent() !== $parent) && ($parent = $property->getParent())) {
         $parent_value = $parent->getValue();
-        if ((($parent_value instanceof EntityInterface) || ($parent_value instanceof Config) && !($parent_value instanceof ImmutableConfig)) && !in_array($parent_value, $saveables, TRUE)) {
+        if ((($parent_value instanceof EntityInterface) || (($parent_value instanceof Config) && !($parent_value instanceof ImmutableConfig))) && !in_array($parent_value, $saveables, TRUE)) {
           $saveables[] = $parent_value;
           break;
         }
@@ -657,7 +740,7 @@ class DataTransferObject extends Map {
     reset($properties);
     $key = key($properties);
     $item = array_shift($this->properties);
-    if (is_int($key) || ctype_digit(strval($key))) {
+    if (is_int($key) || ctype_digit((string) $key)) {
       $this->rekey($key);
     }
     return $item;
@@ -682,7 +765,7 @@ class DataTransferObject extends Map {
    * @return \Drupal\Core\TypedData\TypedDataInterface|null
    *   The removed item, or NULL if the DTO does not contain the given value.
    */
-  public function remove($value): ?TypedDataInterface {
+  public function remove(mixed $value): ?TypedDataInterface {
     $item = NULL;
     foreach ($this->properties as $name => $property) {
       $property_value = $property->getValue();
@@ -693,13 +776,14 @@ class DataTransferObject extends Map {
         $identifier = $identifier ?? ($value->uuid() ?? $value->id());
         $value_matches = isset($identifier) && ($identifier === ($property_value->uuid() ?? $property_value->id()))
           && ($value->language()->getId() === $property_value->language()->getId())
+          // @phpstan-ignore-next-line
           && (!($value instanceof RevisionableInterface) || ($value->getRevisionId() === $property_value->getRevisionId()))
           && ($value->getEntityTypeId() === $property_value->getEntityTypeId());
       }
       if ($value_matches) {
         $item = $this->properties[$name];
         unset($this->properties[$name]);
-        if (is_int($name) || ctype_digit(strval($name))) {
+        if (is_int($name) || ctype_digit($name)) {
           $this->rekey($name);
         }
       }
@@ -717,12 +801,12 @@ class DataTransferObject extends Map {
    *   The removed item, or NULL if the DTO does not contain an item by the
    *   given property name.
    */
-  public function removeByName($name): ?TypedDataInterface {
+  public function removeByName(int|string $name): ?TypedDataInterface {
     $item = NULL;
     if (isset($this->properties[$name])) {
       $item = $this->properties[$name];
       unset($this->properties[$name]);
-      if (is_int($name) || ctype_digit(strval($name))) {
+      if (is_int($name) || ctype_digit($name)) {
         $this->rekey($name);
       }
     }
@@ -738,7 +822,7 @@ class DataTransferObject extends Map {
    * @return int
    *   The index of the added value.
    */
-  public function unshift($value): int {
+  public function unshift(mixed $value): int {
     $index = $this->push($value);
     $property = $this->properties[$index];
     unset($this->properties[$index]);
@@ -759,9 +843,9 @@ class DataTransferObject extends Map {
    * @return int
    *   The index of the added value.
    */
-  public function push($value): int {
+  public function push(mixed $value): int {
     $properties = $this->properties;
-    array_push($properties, $value);
+    $properties[] = $value;
     end($properties);
     $index = key($properties);
     $this->writePropertyValue($index, $value);
@@ -784,14 +868,14 @@ class DataTransferObject extends Map {
    *
    * Also considers the string representation for being empty.
    */
-  public function isEmpty() {
+  public function isEmpty(): bool {
     return (is_null($this->stringRepresentation) || $this->stringRepresentation === '') && parent::isEmpty();
   }
 
   /**
    * Wraps the scalar value by a Typed Data object.
    *
-   * @param string|int $name
+   * @param int|string $name
    *   The property name.
    * @param mixed $value
    *   The scalar value.
@@ -799,11 +883,11 @@ class DataTransferObject extends Map {
    * @return \Drupal\Core\TypedData\TypedDataInterface
    *   The Typed Data object.
    */
-  protected function wrapScalarValue($name, $value): TypedDataInterface {
+  protected function wrapScalarValue(int|string $name, mixed $value): TypedDataInterface {
     $manager = $this->getTypedDataManager();
     $scalar_type = 'string';
     if (is_numeric($value)) {
-      $scalar_type = is_int($value) || ctype_digit(strval($value)) ? 'integer' : 'float';
+      $scalar_type = is_int($value) || ctype_digit((string) $value) ? 'integer' : 'float';
     }
     elseif (is_bool($value)) {
       $scalar_type = 'boolean';
@@ -820,7 +904,7 @@ class DataTransferObject extends Map {
   /**
    * Wraps the entity by a Typed Data object.
    *
-   * @param string|int $name
+   * @param int|string $name
    *   The property name.
    * @param \Drupal\Core\Entity\EntityInterface $value
    *   The entity.
@@ -828,7 +912,7 @@ class DataTransferObject extends Map {
    * @return \Drupal\Core\TypedData\TypedDataInterface
    *   The Typed Data object.
    */
-  protected function wrapEntityValue($name, EntityInterface $value): TypedDataInterface {
+  protected function wrapEntityValue(int|string $name, EntityInterface $value): TypedDataInterface {
     $manager = $this->getTypedDataManager();
     $instance = $manager->createInstance('entity', [
       'data_definition' => EntityDataDefinition::create($value->getEntityTypeId(), $value->bundle()),
@@ -842,7 +926,7 @@ class DataTransferObject extends Map {
   /**
    * Wraps the config by a Typed Data object.
    *
-   * @param string|int $name
+   * @param int|string $name
    *   The property name.
    * @param \Drupal\Core\Config\Config $value
    *   The config.
@@ -850,8 +934,8 @@ class DataTransferObject extends Map {
    * @return \Drupal\Core\TypedData\TypedDataInterface
    *   The Typed Data object.
    */
-  protected function wrapConfigValue($name, Config $value) : TypedDataInterface {
-    /** @var \Drupal\Core\config\TypedConfigManager $manager */
+  protected function wrapConfigValue(int|string $name, Config $value) : TypedDataInterface {
+    /** @var \Drupal\Core\Config\TypedConfigManager $manager */
     $manager = \Drupal::service('config.typed');
     /** @var \Drupal\Core\TypedData\TraversableTypedDataInterface $typed_config */
     $typed_config = $manager->createFromNameAndData($value->getName(), $value->getRawData());
@@ -861,7 +945,7 @@ class DataTransferObject extends Map {
   /**
    * Wraps an iterable value by a Typed Data object.
    *
-   * @param string|int $name
+   * @param int|string $name
    *   The property name.
    * @param mixed $value
    *   The iterable value.
@@ -869,7 +953,7 @@ class DataTransferObject extends Map {
    * @return \Drupal\Core\TypedData\TypedDataInterface
    *   The Typed Data object.
    */
-  protected function wrapIterableValue($name, $value): TypedDataInterface {
+  protected function wrapIterableValue(int|string $name, mixed $value): TypedDataInterface {
     $instance = static::create(NULL, $this, $name, FALSE);
     foreach ($value as $k => $v) {
       $instance->set($k, $v, FALSE);
@@ -936,7 +1020,7 @@ class DataTransferObject extends Map {
     $assoc = [];
     $sequence = [];
     foreach ($this->properties as $p_name => $p_val) {
-      if (is_int($p_name) || ctype_digit(strval($p_name))) {
+      if (is_int($p_name) || ctype_digit($p_name)) {
         $sequence[] = $p_val;
       }
       else {
@@ -946,8 +1030,9 @@ class DataTransferObject extends Map {
     $this->properties = array_merge($assoc, $sequence);
     // Each item holds its own index as a "name", it needs to be updated
     // according to the new list indexes.
-    for ($i = $from_index; $i < count($sequence); $i++) {
-      $this->properties[$i]->setContext($i, $this);
+    $countSequence = count($sequence);
+    for ($i = $from_index; $i < $countSequence; $i++) {
+      $this->properties[$i]->setContext((string) $i, $this);
     }
   }
 

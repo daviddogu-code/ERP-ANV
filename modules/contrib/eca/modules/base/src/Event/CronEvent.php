@@ -3,11 +3,10 @@
 namespace Drupal\eca_base\Event;
 
 use Cron\CronExpression;
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\eca\EcaState;
-use Drupal\eca\Event\ConditionalApplianceInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Provides a cron event.
@@ -18,7 +17,7 @@ use Drupal\eca\Event\ConditionalApplianceInterface;
  *
  * @package Drupal\eca_base\Event
  */
-class CronEvent extends Event implements ConditionalApplianceInterface {
+class CronEvent extends Event {
 
   /**
    * ECA state service.
@@ -65,34 +64,6 @@ class CronEvent extends Event implements ConditionalApplianceInterface {
   }
 
   /**
-   * {@inheritdoc}
-   *
-   * Verifies if this event is due for the next execution.
-   *
-   * This event stores the last execution time for each modeller event
-   * identified by $id and determines with the given frequency, if and when
-   * this same event triggered cron should be executed.
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    [$id, $frequency] = explode('::', $wildcard, 2);
-    return $this->isDue($id, $frequency);
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * When this event is due for next execution, this also stores the current
-   * time as the new "last executed" timestamp in the ECA state.
-   */
-  public function applies(string $id, array $arguments): bool {
-    if ($this->isDue($id, $arguments['frequency'])) {
-      $this->storeTimestamp($id);
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  /**
    * Determines, if the cron with $id is due for next execution.
    *
    * It receives the last execution time of this event cron and calculates
@@ -107,7 +78,7 @@ class CronEvent extends Event implements ConditionalApplianceInterface {
    * @return bool
    *   TRUE, if the event $id is due for next execution, FALSE otherwise.
    */
-  protected function isDue(string $id, string $frequency): bool {
+  public function isDue(string $id, string $frequency): bool {
     $currentTime = $this->state->getCurrentTimestamp();
     $key = 'cron-' . $id;
     if (!isset(self::$lastRun[$key])) {
@@ -171,7 +142,7 @@ class CronEvent extends Event implements ConditionalApplianceInterface {
    *   (optional) The timestamp value to store. When not given, the current time
    *   will be used.
    */
-  protected function storeTimestamp(string $id, ?int $timestamp = NULL): void {
+  public function storeTimestamp(string $id, ?int $timestamp = NULL): void {
     $this->state->setTimestamp('cron-' . $id, $timestamp);
   }
 

@@ -2,7 +2,6 @@
 
 namespace Drupal\eca_ui\Form;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Serialization\Yaml;
@@ -19,6 +18,7 @@ use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Extension\ModuleInstallerInterface;
+use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormBase;
@@ -29,6 +29,7 @@ use Drupal\eca\Entity\Eca;
 use Drupal\eca\Service\Modellers;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Import a model from a previous export.
@@ -80,9 +81,9 @@ class Import extends FormBase {
   /**
    * Event dispatcher.
    *
-   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
-  protected ContainerAwareEventDispatcher $eventDispatcher;
+  protected EventDispatcherInterface $eventDispatcher;
 
   /**
    * Lock backend.
@@ -120,6 +121,13 @@ class Import extends FormBase {
   protected ModuleExtensionList $moduleExtensionList;
 
   /**
+   * The theme extension list.
+   *
+   * @var \Drupal\Core\Extension\ThemeExtensionList
+   */
+  protected ThemeExtensionList $themeExtensionList;
+
+  /**
    * The file system service.
    *
    * @var \Drupal\Core\File\FileSystemInterface
@@ -143,6 +151,7 @@ class Import extends FormBase {
     $form->moduleInstaller = $container->get('module_installer');
     $form->themeHandler = $container->get('theme_handler');
     $form->moduleExtensionList = $container->get('extension.list.module');
+    $form->themeExtensionList = $container->get('extension.list.theme');
     $form->fileSystem = $container->get('file_system');
     return $form;
   }
@@ -158,16 +167,24 @@ class Import extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
-    $form['model'] = [
-      '#type' => 'file',
-      '#title' => $this->t('File containing the exported XML model or archive containing all dependent config entities.'),
-    ];
-    $form['actions']['#type'] = 'actions';
-    $form['actions']['submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Import'),
-      '#button_type' => 'primary',
-    ];
+    if ($this->moduleHandler->moduleExists('config')) {
+      $form['model'] = [
+        '#type' => 'file',
+        '#title' => $this->t('File containing the exported XML model or archive containing all dependent config entities.'),
+      ];
+      $form['actions']['#type'] = 'actions';
+      $form['actions']['submit'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Import'),
+        '#button_type' => 'primary',
+      ];
+    }
+    else {
+      $form['info'] = [
+        '#type' => 'markup',
+        '#markup' => $this->t('Import requires the config module to be enabled.'),
+      ];
+    }
     return $form;
   }
 
@@ -181,9 +198,9 @@ class Import extends FormBase {
       $form_state->setErrorByName('model', 'No file provided.');
       return;
     }
-    /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
+    /** @var \Symfony\Component\HttpFoundation\File\UploadedFile|bool $file */
     $file = reset($all_files);
-    if ($file === NULL) {
+    if (!$file) {
       $form_state->setErrorByName('model', 'No file provided.');
       return;
     }
@@ -354,8 +371,9 @@ class Import extends FormBase {
           $this->moduleHandler,
           $this->moduleInstaller,
           $this->themeHandler,
-          $this->stringTranslation,
-          $this->moduleExtensionList
+          $this->getStringTranslation(),
+          $this->moduleExtensionList,
+          $this->themeExtensionList
         );
         if ($config_importer->alreadyImporting()) {
           $this->messenger()->addWarning('Another request may be synchronizing configuration already.');
@@ -374,9 +392,9 @@ class Import extends FormBase {
                 ]));
               }
               else {
-                $this->messenger()->addStatus('The configuration %name was imported successfully.', [
+                $this->messenger()->addStatus($this->t('The configuration %name was imported successfully.', [
                   '%name' => $eca->label(),
-                ]);
+                ]));
               }
             }
             else {

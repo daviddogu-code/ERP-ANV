@@ -3,14 +3,14 @@
 namespace Drupal\Tests\eca_content\Kernel;
 
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 
@@ -21,6 +21,8 @@ use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
  * @group eca_content
  */
 class LoadEntityRefTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * The modules.
@@ -35,6 +37,7 @@ class LoadEntityRefTest extends KernelTestBase {
     'filter',
     'text',
     'node',
+    'token',
     'eca',
     'eca_content',
     'language',
@@ -76,13 +79,11 @@ class LoadEntityRefTest extends KernelTestBase {
    */
   public function testLoadEntityRef() {
     // Create the Article content type with revisioning and translation enabled.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create([
+    $this->createContentType([
       'type' => 'article',
       'name' => 'Article',
       'new_revision' => TRUE,
     ]);
-    $node_type->save();
     ContentLanguageSettings::create([
       'id' => 'node.article',
       'target_entity_type_id' => 'node',
@@ -109,6 +110,37 @@ class LoadEntityRefTest extends KernelTestBase {
     ]);
     $field->save();
 
+    // Create a plaintext field to be used as token.
+    FieldStorageConfig::create([
+      'field_name' => 'field_node_ref_mn',
+      'type' => 'string',
+      'entity_type' => 'node',
+      'cardinality' => FieldStorageConfig::CARDINALITY_UNLIMITED,
+    ])->save();
+    FieldConfig::create([
+      'field_name' => 'field_node_ref_mn',
+      'label' => 'The reference field machine name.',
+      'entity_type' => 'node',
+      'bundle' => 'article',
+    ])->save();
+
+    // Create a reference field target for token.
+    FieldStorageConfig::create([
+      'field_name' => 'field_node_ref_target_token',
+      'type' => 'entity_reference',
+      'entity_type' => 'node',
+      'settings' => [
+        'target_type' => 'node',
+      ],
+      'cardinality' => FieldStorageConfig::CARDINALITY_UNLIMITED,
+    ])->save();
+    FieldConfig::create([
+      'field_name' => 'field_node_ref_target_token',
+      'label' => 'A node reference target token.',
+      'entity_type' => 'node',
+      'bundle' => 'article',
+    ])->save();
+
     /** @var \Drupal\Core\Action\ActionManager $action_manager */
     $action_manager = \Drupal::service('plugin.manager.action');
     /** @var \Drupal\eca\Token\TokenInterface $token_services */
@@ -124,6 +156,16 @@ class LoadEntityRefTest extends KernelTestBase {
       'status' => 0,
     ]);
     $referenced->save();
+
+    $referenced_by_token = Node::create([
+      'type' => 'article',
+      'title' => 'I am a referenced node using tokens.',
+      'langcode' => 'en',
+      'uid' => 1,
+      'status' => 0,
+    ]);
+    $referenced_by_token->save();
+
     $node = Node::create([
       'type' => 'article',
       'title' => '123',
@@ -135,6 +177,8 @@ class LoadEntityRefTest extends KernelTestBase {
     $first_vid = $node->getRevisionId();
     $node->title = '456';
     $node->field_node_ref->target_id = $referenced->id();
+    $node->field_node_ref_target_token->target_id = $referenced_by_token->id();
+    $node->field_node_ref_mn->value = 'field_node_ref_target_token';
     $node->setNewRevision(TRUE);
     $node->save();
 
@@ -156,7 +200,7 @@ class LoadEntityRefTest extends KernelTestBase {
     $action = $action_manager->createInstance('eca_token_load_entity_ref', [] + $defaults);
     $this->assertFalse($action->access($node), 'User without permissions must not have access.');
 
-    // Now switch to priviledged user.
+    // Now switch to privileged user.
     $account_switcher->switchTo(User::load(1));
 
     /** @var \Drupal\eca_content\Plugin\Action\LoadEntity $action */
@@ -166,6 +210,15 @@ class LoadEntityRefTest extends KernelTestBase {
     $action->execute($node);
     $this->assertTrue($token_services->hasTokenData('mynode'), 'Token must be defined.');
     $this->assertSame($referenced->id(), $token_services->getTokenData('mynode')->id());
+
+    $token_services->addTokenData('node', $node);
+    /** @var \Drupal\eca_content\Plugin\Action\LoadEntity $action */
+    $action = $action_manager->createInstance('eca_token_load_entity_ref', [
+      'field_name_entity_ref' => '[node:field_node_ref_mn]',
+    ] + $defaults);
+    $action->execute($node);
+    $this->assertTrue($token_services->hasTokenData('mynode'), 'Token must be defined.');
+    $this->assertSame($referenced_by_token->id(), $token_services->getTokenData('mynode')->id());
 
     /** @var \Drupal\eca_content\Plugin\Action\LoadEntity $action */
     $action = $action_manager->createInstance('eca_token_load_entity_ref', [
@@ -227,7 +280,7 @@ class LoadEntityRefTest extends KernelTestBase {
       'unchanged' => TRUE,
     ] + $defaults);
     $action->execute($node);
-    $this->assertEquals('Changed on runtime', $token_services->replace('[english:title]'), 'Runtime change must stille be the changed one, because the option to load unchanged values belongs to the node that holds the reference, not the reference itself.');
+    $this->assertEquals('Changed on runtime', $token_services->replace('[english:title]'), 'Runtime change must still be the changed once, because the option to load unchanged values belongs to the node that holds the reference, not the reference itself.');
     $action = $action_manager->createInstance('eca_token_load_entity_ref', [
       'token_name' => 'english',
       'langcode' => 'en',

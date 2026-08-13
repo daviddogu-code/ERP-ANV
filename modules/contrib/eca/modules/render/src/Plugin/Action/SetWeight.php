@@ -4,6 +4,7 @@ namespace Drupal\eca_render\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\eca\Event\RenderEventInterface;
+use Drupal\eca\Plugin\FormFieldMachineName;
 
 /**
  * Set the weight of an existing render array element.
@@ -11,7 +12,8 @@ use Drupal\eca\Event\RenderEventInterface;
  * @Action(
  *   id = "eca_render_set_weight",
  *   label = @Translation("Render: set weight"),
- *   description = @Translation("Set the weight of an existing render array element. Only works when reacting upon a rendering event, such as <em>Build form</em> or <em>Build ECA Block</em>.")
+ *   description = @Translation("Set the weight of an existing render array element. Only works when reacting upon a rendering event, such as <em>Build form</em> or <em>Build ECA Block</em>."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class SetWeight extends RenderActionBase {
@@ -30,27 +32,27 @@ class SetWeight extends RenderActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['name'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('Machine name'),
       '#description' => $this->t('Specify the machine name / key of the render element.'),
       '#default_value' => $this->configuration['name'],
       '#weight' => -30,
       '#required' => TRUE,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['weight'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Element weight'),
-      '#description' => $this->t('The weight as integer number. This field supports tokens.'),
+      '#description' => $this->t('The weight as integer number.'),
       '#default_value' => $this->configuration['weight'],
       '#weight' => -25,
       '#required' => TRUE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -71,8 +73,8 @@ class SetWeight extends RenderActionBase {
       return;
     }
 
-    $name = trim((string) $this->tokenServices->replaceClear($this->configuration['name']));
-    $weight = trim((string) $this->tokenServices->replaceClear($this->configuration['weight']));
+    $name = trim((string) $this->tokenService->replaceClear($this->configuration['name']));
+    $weight = trim((string) $this->tokenService->replaceClear($this->configuration['weight']));
     $build = &$event->getRenderArray();
     $element = &$this->getTargetElement($name, $build);
 

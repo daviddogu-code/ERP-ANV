@@ -3,10 +3,12 @@
 namespace Drupal\eca_form\Plugin\Action;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca\Plugin\FormFieldPluginTrait;
+use Drupal\eca\Plugin\FormFieldYamlTrait;
 use Drupal\eca\Service\YamlParser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -16,14 +18,16 @@ use Symfony\Component\Yaml\Exception\ParseException;
  *
  * @Action(
  *   id = "eca_form_field_set_value",
- *   label = @Translation("Form field: set submitted value"),
- *   description = @Translation("Set or overwrite the submitted input value of a form field."),
+ *   label = @Translation("Form field: set value"),
+ *   description = @Translation("Set or overwrite the submitted input value of a form field. This also works to set form field value when a form gets rebuilt, e.g. during an ajax request."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
 class FormFieldSetValue extends ConfigurableActionBase {
 
   use FormFieldPluginTrait;
+  use FormFieldYamlTrait;
 
   /**
    * The YAML parser.
@@ -35,11 +39,26 @@ class FormFieldSetValue extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_form\Plugin\Action\FormFieldSetValue $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setYamlParser($container->get('eca.service.yaml_parser'));
     return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $result = parent::access($object, $account, TRUE);
+    if ($result->isAllowed() && $this->configuration['use_yaml'] && $this->configuration['validate_yaml']) {
+      try {
+        $this->yamlParser->parse($this->configuration['value']);
+      }
+      catch (ParseException) {
+        $result = AccessResult::forbidden('YAML data is not valid.');
+      }
+    }
+    return $return_as_object ? $result : $result->isAllowed();
   }
 
   /**
@@ -49,6 +68,7 @@ class FormFieldSetValue extends ConfigurableActionBase {
     return [
       'field_value' => '',
       'use_yaml' => FALSE,
+      'validate_yaml' => FALSE,
     ] + $this->defaultFormFieldConfiguration() + parent::defaultConfiguration();
   }
 
@@ -56,22 +76,21 @@ class FormFieldSetValue extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['field_value'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Field value'),
       '#default_value' => $this->configuration['field_value'],
-      '#description' => $this->t('This field supports tokens.'),
       '#weight' => -45,
+      '#eca_token_replacement' => TRUE,
     ];
-    $form['use_yaml'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Interpret above value as YAML format'),
-      '#description' => $this->t('Nested data can be set using YAML format, for example <em>mykey: "My value"</em>. When using this format, this options needs to be enabled.'),
-      '#default_value' => $this->configuration['use_yaml'],
-      '#weight' => -43,
-    ];
-    return $this->buildFormFieldConfigurationForm($form, $form_state);
+    $this->buildYamlFormFields(
+      $form,
+      $this->t('Interpret above value as YAML format'),
+      $this->t('Nested data can be set using YAML format, for example <em>mykey: "My value"</em>. When using this format, this options needs to be enabled.'),
+      -43,
+    );
+    $form = $this->buildFormFieldConfigurationForm($form, $form_state);
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -88,6 +107,7 @@ class FormFieldSetValue extends ConfigurableActionBase {
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->configuration['field_value'] = $form_state->getValue('field_value');
     $this->configuration['use_yaml'] = !empty($form_state->getValue('use_yaml'));
+    $this->configuration['validate_yaml'] = !empty($form_state->getValue('validate_yaml'));
     $this->submitFormFieldConfigurationForm($form, $form_state);
     parent::submitConfigurationForm($form, $form_state);
   }
@@ -106,17 +126,21 @@ class FormFieldSetValue extends ConfigurableActionBase {
         $value = $this->yamlParser->parse($value);
       }
       catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing field value in action "eca_form_field_set_value" as YAML format, but parsing failed.');
+        $this->logger->error('Tried parsing field value in action "eca_form_field_set_value" as YAML format, but parsing failed.');
         return;
       }
     }
     else {
-      $value = (string) $this->tokenServices->replaceClear($value);
+      $value = (string) $this->tokenService->replaceClear($value);
     }
     $this->filterFormFieldValue($value);
 
     $original_field_name = $this->configuration['field_name'];
-    $this->configuration['field_name'] = (string) $this->tokenServices->replace($original_field_name);
+    $this->configuration['field_name'] = (string) $this->tokenService->replace($original_field_name);
+
+    if ($element = &$this->getTargetElement()) {
+      $element['#value'] = $value;
+    }
 
     $found = FALSE;
     $existing_value = &$this->getSubmittedValue($found);
@@ -125,10 +149,9 @@ class FormFieldSetValue extends ConfigurableActionBase {
     }
     else {
       $values = &$form_state->getValues();
-      $values_is_array = is_array($values);
       if (!$values) {
         $values = &$form_state->getUserInput();
-        if (!$values && $values_is_array) {
+        if (!$values) {
           // Back to form state's values.
           $values = &$form_state->getValues();
         }

@@ -5,6 +5,7 @@ namespace Drupal\eca_content\Plugin\ECA\Condition;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\eca\Plugin\ECA\Condition\ConditionBase;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Plugin implementation of the ECA condition for entity field is accessible.
@@ -13,12 +14,15 @@ use Drupal\eca\Plugin\ECA\Condition\ConditionBase;
  *   id = "eca_entity_field_is_accessible",
  *   label = @Translation("Entity: field is accessible"),
  *   description = @Translation("Evaluates whether the current user has operational access on an entity field."),
+ *   eca_version_introduced = "1.0.0",
  *   context_definitions = {
  *     "entity" = @ContextDefinition("entity", label = @Translation("Entity"))
  *   }
  * )
  */
 class EntityFieldIsAccessible extends ConditionBase {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -28,11 +32,14 @@ class EntityFieldIsAccessible extends ConditionBase {
     if (!($entity instanceof FieldableEntityInterface)) {
       return FALSE;
     }
-    $field_name = trim((string) $this->tokenServices->replaceClear($this->configuration['field_name'] ?? ''));
+    $field_name = trim((string) $this->tokenService->replaceClear($this->configuration['field_name'] ?? ''));
     if (($field_name === '') || !($entity->hasField($field_name))) {
       return FALSE;
     }
     $field_op = $this->configuration['operation'];
+    if ($field_op === '_eca_token') {
+      $field_op = $this->getTokenValue('operation', 'view');
+    }
     $entity_op = $field_op === 'edit' ? 'update' : $field_op;
     return $this->negationCheck($entity->access($entity_op) && $entity->$field_name->access($field_op));
   }
@@ -71,6 +78,7 @@ class EntityFieldIsAccessible extends ConditionBase {
       '#default_value' => $this->configuration['operation'] ?? 'view',
       '#required' => TRUE,
       '#weight' => -10,
+      '#eca_token_select_option' => TRUE,
     ];
     return parent::buildConfigurationForm($form, $form_state);
   }

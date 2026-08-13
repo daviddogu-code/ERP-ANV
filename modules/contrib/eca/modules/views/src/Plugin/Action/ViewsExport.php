@@ -5,8 +5,10 @@ namespace Drupal\eca_views\Plugin\Action;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Run views query and export result.
@@ -14,22 +16,47 @@ use Drupal\views\Plugin\views\display\DisplayPluginBase;
  * @Action(
  *   id = "eca_views_export",
  *   label = @Translation("Views: Export query into file"),
- *   description = @Translation("Use a view to execute a query and save the results to a file. You can also save the results in a token.")
+ *   description = @Translation("Use a view to execute a query and save the results to a file. You can also save the results in a token."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class ViewsExport extends ViewsQuery {
+
+  /**
+   * The renderer.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected RendererInterface $renderer;
+
+  /**
+   * The file system.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected FileSystemInterface $fileSystem;
 
   /**
    * The filename being prepared by ::access() and used by ::execute().
    *
    * @var string
    */
-  private string $filename;
+  protected string $filename;
 
   /**
    * {@inheritdoc}
    */
-  public function execute($object = NULL): void {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->renderer = $container->get('renderer');
+    $instance->fileSystem = $container->get('file_system');
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function execute(mixed $object = NULL): void {
     if (!$this->getDisplay() || !isset($this->view)) {
       return;
     }
@@ -41,21 +68,19 @@ class ViewsExport extends ViewsQuery {
       $this->view->execute();
     }
     $build = $this->view->display_handler->buildRenderable($this->view->args, FALSE);
-    /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
-    $output = (string) $renderer->renderRoot($build);
+    $output = (string) $this->renderer->renderRoot($build);
     file_put_contents($this->filename, $output);
     $token_name = trim($this->configuration['token_for_filename']);
     if ($token_name === '') {
       $token_name = 'eca-view-output-filename';
     }
-    $this->tokenServices->addTokenData($token_name, $this->filename);
+    $this->tokenService->addTokenData($token_name, $this->filename);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $result = parent::access($object, $account, TRUE);
     if ($result->isAllowed() && $display = $this->getDisplay()) {
       if (empty($display->getPluginDefinition()['returns_response'])) {
@@ -63,10 +88,8 @@ class ViewsExport extends ViewsQuery {
       }
       else {
         $this->filename = $this->getFilename($display);
-        /** @var \Drupal\Core\File\FileSystem $fs */
-        $fs = \Drupal::service('file_system');
-        $dirname = $fs->dirname($this->filename);
-        if (!$fs->prepareDirectory($dirname, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS)) {
+        $dirname = $this->fileSystem->dirname($this->filename);
+        if (!$this->fileSystem->prepareDirectory($dirname, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS)) {
           $result = AccessResult::forbidden('The given filename is not writable.');
         }
       }
@@ -89,7 +112,6 @@ class ViewsExport extends ViewsQuery {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['load_results_into_token'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Store results also in a token?'),
@@ -103,15 +125,17 @@ class ViewsExport extends ViewsQuery {
       '#description' => $this->t('Provide a token name where ECA will store the effectively used filename of the output.'),
       '#default_value' => $this->configuration['token_for_filename'],
       '#weight' => -20,
+      '#eca_token_reference' => TRUE,
     ];
     $form['filename'] = [
       '#type' => 'textfield',
       '#title' => $this->t('File name'),
-      '#description' => $this->t('Sets the name of the file where the data will be exported.'),
+      '#description' => $this->t('Sets the name of the file where the data will be exported. If left empty, the file name configured in the view will be used, or a random name otherwise.'),
       '#default_value' => $this->configuration['filename'],
       '#weight' => -10,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -138,11 +162,11 @@ class ViewsExport extends ViewsQuery {
    *   The filename.
    */
   protected function getFilename(DisplayPluginBase $display): string {
-    if (!empty($this->configuration['filename'])) {
-      return $this->configuration['filename'];
+    if ($filename = $this->tokenService->replaceClear($this->configuration['filename'])) {
+      return $filename;
     }
     if ($filename = $display->getOption('filename')) {
-      return $this->tokenServices->replaceClear($filename, ['view' => $this->view]);
+      return $this->tokenService->replaceClear($filename, ['view' => $this->view]);
     }
     return 'temporary://' . uniqid('eca.view.output', TRUE);
   }

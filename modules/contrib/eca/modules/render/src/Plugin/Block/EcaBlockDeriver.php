@@ -12,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Deriver for ECA Block plugins.
  */
-class EcaBlockDeriver extends DeriverBase implements ContainerDeriverInterface {
+final class EcaBlockDeriver extends DeriverBase implements ContainerDeriverInterface {
 
   /**
    * The entity type manager.
@@ -24,8 +24,8 @@ class EcaBlockDeriver extends DeriverBase implements ContainerDeriverInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, $base_plugin_id) {
-    return new static($container->get('entity_type.manager'));
+  public static function create(ContainerInterface $container, $base_plugin_id): EcaBlockDeriver {
+    return new EcaBlockDeriver($container->get('entity_type.manager'));
   }
 
   /**
@@ -43,7 +43,9 @@ class EcaBlockDeriver extends DeriverBase implements ContainerDeriverInterface {
    */
   public function getDerivativeDefinitions($base_plugin_definition): array {
     if (empty($this->derivatives)) {
-      /** @var \Drupal\eca\Entity\Eca $eca */
+      /**
+       * @var \Drupal\eca\Entity\Eca $eca
+       */
       foreach ($this->entityTypeManager->getStorage('eca')->loadMultiple() as $eca) {
         if (!$eca->status()) {
           continue;

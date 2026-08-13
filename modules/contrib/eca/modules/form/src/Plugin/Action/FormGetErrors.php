@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "eca_form_get_errors",
  *   label = @Translation("Form: get errors"),
  *   description = @Translation("Makes form errors available as token."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
@@ -30,7 +31,7 @@ class FormGetErrors extends FormActionBase {
       }
     });
 
-    $this->tokenServices->addTokenData($this->configuration['token_name'], $errors);
+    $this->tokenService->addTokenData($this->configuration['token_name'], $errors);
   }
 
   /**
@@ -46,7 +47,6 @@ class FormGetErrors extends FormActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -56,7 +56,7 @@ class FormGetErrors extends FormActionBase {
       '#weight' => -49,
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

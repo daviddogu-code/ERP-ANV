@@ -2,11 +2,6 @@
 
 namespace Drupal\eca_render\Event;
 
-use Drupal\eca\Event\ConditionalApplianceInterface;
-use Drupal\eca\Plugin\DataType\DataTransferObject;
-use Drupal\eca\Token\DataProviderInterface;
-use Drupal\eca_render\RenderEvents;
-
 /**
  * Dispatched when a lazy ECA element is being rendered.
  *
@@ -16,7 +11,7 @@ use Drupal\eca_render\RenderEvents;
  *
  * @package Drupal\eca_render\Event
  */
-class EcaRenderLazyEvent extends EcaRenderEventBase implements ConditionalApplianceInterface, DataProviderInterface {
+class EcaRenderLazyEvent extends EcaRenderEventBase {
 
   /**
    * The name that identifies the lazy element for the event.
@@ -40,15 +35,12 @@ class EcaRenderLazyEvent extends EcaRenderEventBase implements ConditionalApplia
   public array $build;
 
   /**
-   * An instance holding event data accessible as Token.
-   *
-   * @var \Drupal\eca\Plugin\DataType\DataTransferObject|null
-   */
-  protected ?DataTransferObject $eventData = NULL;
-
-  /**
    * Constructs a new EcaRenderLazyEvent object.
    *
+   * @param string $name
+   *   The name that identifies the lazy element for the event.
+   * @param string $argument
+   *   An optional argument for rendering the element.
    * @param array &$build
    *   The render array build.
    */
@@ -63,55 +55,6 @@ class EcaRenderLazyEvent extends EcaRenderEventBase implements ConditionalApplia
    */
   public function &getRenderArray(): array {
     return $this->build;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    return ($this->name === $wildcard) || ($wildcard === '*');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    $arg_name = $arguments['name'] ?? '*';
-    return ($this->name === $arg_name) || ($arg_name === '*');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasData(string $key): bool {
-    return $this->getData($key) !== NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getData(string $key) {
-    if ($key === 'event') {
-      if (!isset($this->eventData)) {
-        $this->eventData = DataTransferObject::create([
-          'machine-name' => RenderEvents::LAZY_ELEMENT,
-          'name' => $this->name,
-          'argument' => $this->argument,
-        ]);
-      }
-
-      return $this->eventData;
-    }
-
-    if ($key === 'argument') {
-      return $this->argument;
-    }
-
-    if ($key === 'name') {
-      return $this->name;
-    }
-
-    return NULL;
   }
 
 }

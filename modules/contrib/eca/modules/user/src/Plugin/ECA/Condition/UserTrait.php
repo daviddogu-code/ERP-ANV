@@ -17,7 +17,7 @@ use Drupal\user\UserInterface;
 trait UserTrait {
 
   /**
-   * Loads the user specified in the "account" field of the configuraiton.
+   * Loads the user specified in the "account" field of the configuration.
    *
    * The configuration value could either be a user ID or a token. This method
    * loads the user entity from the token environment and if it either receives
@@ -28,14 +28,14 @@ trait UserTrait {
    *   The configured user entity if found, NULL otherwise.
    */
   protected function loadUserAccount(): ?UserInterface {
-    $account = $this->tokenServices->getOrReplace($this->configuration['account']);
+    $account = $this->tokenService->getOrReplace($this->configuration['account']);
     if ($account instanceof AccountInterface) {
       if (!($account instanceof UserInterface)) {
         $account = $account->id();
       }
     }
     elseif (!is_numeric($account)) {
-      $account = $this->tokenServices->replaceClear($this->configuration['account']);
+      $account = $this->tokenService->replaceClear($this->configuration['account']);
 
       // @see user_tokens().
       if ((string) $account === 'not yet assigned') {
@@ -43,7 +43,6 @@ trait UserTrait {
       }
     }
     if (is_numeric($account)) {
-      /** @var \Drupal\user\UserInterface $account */
       try {
         $account = $this->entityTypeManager->getStorage('user')->load($account);
       }
@@ -67,7 +66,6 @@ trait UserTrait {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['account'] = [
       '#type' => 'textfield',
       '#title' => $this->t('User account'),
@@ -75,7 +73,7 @@ trait UserTrait {
       '#default_value' => $this->configuration['account'],
       '#weight' => -20,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

@@ -11,6 +11,6 @@ namespace Drupal\eca_content\Event;
  *
  * @package Drupal\eca_content\Event
  */
-class ContentEntityPreSave extends ContentEntityBaseEntity {
+class ContentEntityPreSave extends ContentEntityBaseContentEntity {
 
 }

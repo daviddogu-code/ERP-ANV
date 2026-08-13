@@ -19,7 +19,7 @@ class ContextDataProvider implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getData(string $key) {
+  public function getData(string $key): mixed {
     foreach (self::$stack as $set) {
       if (isset($set[$key])) {
         return $set[$key];
@@ -38,7 +38,7 @@ class ContextDataProvider implements DataProviderInterface {
   /**
    * Push a new set of context data.
    *
-   * @var array &$data
+   * @param array &$data
    *   The context data.
    */
   public function push(array &$data): void {

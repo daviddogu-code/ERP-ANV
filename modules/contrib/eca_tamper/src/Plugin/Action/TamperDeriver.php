@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Derive any Tamper plugin into an ECA action.
  */
-class TamperDeriver extends DeriverBase implements ContainerDeriverInterface {
+final class TamperDeriver extends DeriverBase implements ContainerDeriverInterface {
 
   use StringTranslationTrait;
 
@@ -37,12 +37,16 @@ class TamperDeriver extends DeriverBase implements ContainerDeriverInterface {
   public function getDerivativeDefinitions($base_plugin_definition): array {
     $this->derivatives = [];
     foreach ($this->tamperManager->getDefinitions() as $definition) {
+      if (isset($definition['itemUsage']) && $definition['itemUsage'] === 'required') {
+        // Ignore this plugin.
+        continue;
+      }
       $this->derivatives[$definition['id']] = [
         'id' => 'eca_tamper:' . $definition['id'],
         'label' => $this->t('Tamper: @label', ['@label' => $definition['label']->render()]),
         'description' => $definition['description'],
         'category' => $definition['category'],
-        'tamper_plugin' => $definition['id'],
+        'original_id' => $definition['id'],
       ] + $base_plugin_definition;
     }
     return $this->derivatives;

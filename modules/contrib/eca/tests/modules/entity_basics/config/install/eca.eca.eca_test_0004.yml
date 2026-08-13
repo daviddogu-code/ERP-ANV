@@ -8,7 +8,7 @@ dependencies:
 id: eca_test_0004
 modeller: bpmn_io
 label: 'Basic entity tests'
-version: 1.0.0
+version: v1
 weight: null
 events:
   Event_0033g46:

@@ -96,14 +96,10 @@ YAML;
 
     $this->assertEquals('ECA Article', \Drupal::configFactory()->get('node.type.article')->get('name'));
 
-    /**
-     * @var \Drupal\eca\Token\TokenInterface $token_services
-     */
+    /** @var \Drupal\eca\Token\TokenInterface $token_services */
     $token_services = \Drupal::service('eca.token_services');
     $token_services->addTokenData('[myconfigvalue]', 'Set via token');
-    /**
-     * @var \Drupal\eca_config\Plugin\Action\ConfigRead $action
-     */
+    /** @var \Drupal\eca_config\Plugin\Action\ConfigRead $action */
     $action = $action_manager->createInstance('eca_config_write', [
       'config_name' => 'node.type.article',
       'config_key' => 'name',

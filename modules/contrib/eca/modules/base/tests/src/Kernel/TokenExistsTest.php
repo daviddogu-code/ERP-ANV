@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\eca_base\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
 use Drupal\eca\PluginManager\Condition;
 use Drupal\eca\Token\TokenInterface;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 
 /**
@@ -41,7 +41,7 @@ class TokenExistsTest extends KernelTestBase {
    *
    * @var \Drupal\eca\Token\TokenInterface|null
    */
-  protected ?TokenInterface $tokenServices;
+  protected ?TokenInterface $tokenService;
 
   /**
    * {@inheritdoc}
@@ -54,7 +54,7 @@ class TokenExistsTest extends KernelTestBase {
     User::create(['uid' => 2, 'name' => 'authenticated'])->save();
     $this->installConfig(static::$modules);
     $this->conditionManager = \Drupal::service('plugin.manager.eca.condition');
-    $this->tokenServices = \Drupal::service('eca.token_services');
+    $this->tokenService = \Drupal::service('eca.token_services');
   }
 
   /**
@@ -77,7 +77,7 @@ class TokenExistsTest extends KernelTestBase {
     $this->assertTrue($condition->evaluate(), "Must produce the same result as when using without brackets.");
 
     $empty_dto = DataTransferObject::create();
-    $this->tokenServices->addTokenData('users', $empty_dto);
+    $this->tokenService->addTokenData('users', $empty_dto);
     $condition = $this->conditionManager->createInstance('eca_token_exists', [
       'token_name' => 'users',
     ]);
@@ -92,7 +92,7 @@ class TokenExistsTest extends KernelTestBase {
       User::load(1),
       User::load(2),
     ]);
-    $this->tokenServices->addTokenData('users', $not_empty_dto);
+    $this->tokenService->addTokenData('users', $not_empty_dto);
     $condition = $this->conditionManager->createInstance('eca_token_exists', [
       'token_name' => 'users',
     ]);
@@ -102,7 +102,7 @@ class TokenExistsTest extends KernelTestBase {
     ]);
     $this->assertTrue($condition->evaluate(), "Must produce the same result as when using without brackets.");
 
-    $this->tokenServices->addTokenData('users', $not_empty_dto);
+    $this->tokenService->addTokenData('users', $not_empty_dto);
     $condition = $this->conditionManager->createInstance('eca_token_exists', [
       'token_name' => 'site:name',
     ]);
@@ -113,7 +113,7 @@ class TokenExistsTest extends KernelTestBase {
     $this->assertFalse($condition->evaluate(), "Must produce the same result as when using without brackets.");
 
     \Drupal::configFactory()->getEditable('system.site')->set('name', 'My site')->save();
-    $this->tokenServices->addTokenData('users', $not_empty_dto);
+    $this->tokenService->addTokenData('users', $not_empty_dto);
     $condition = $this->conditionManager->createInstance('eca_token_exists', [
       'token_name' => 'site:name',
     ]);
@@ -126,8 +126,8 @@ class TokenExistsTest extends KernelTestBase {
     // Test that the token name can be provided as a token itself.
     $string1 = 'abc';
     $string2 = 'def';
-    $this->tokenServices->addTokenData('mytoken1', $string1);
-    $this->tokenServices->addTokenData('mytoken2', $string2);
+    $this->tokenService->addTokenData('mytoken1', $string1);
+    $this->tokenService->addTokenData('mytoken2', $string2);
     $condition = $this->conditionManager->createInstance('eca_token_exists', [
       'token_name' => 'mytoken1',
     ]);
@@ -140,13 +140,14 @@ class TokenExistsTest extends KernelTestBase {
       'token_name' => '[placeholder]',
     ]);
     $this->assertFalse($condition->evaluate(), "Placeholder should not exist");
-    $this->tokenServices->addTokenData('placeholder', 'mytoken1');
+    $this->tokenService->addTokenData('placeholder', 'mytoken1');
     $this->assertTrue($condition->evaluate(), "Placeholder now should exist");
     // @todo Disabled until we addressed token support for token_name.
     // @see https://www.drupal.org/project/eca/issues/3302569
     // $this->tokenServices->addTokenData('placeholder', 'mytoken3');
+    // @codingStandardsIgnoreLine
     // $this->assertFalse($condition->evaluate(), "Placeholder should not exist");
-    $this->tokenServices->addTokenData('placeholder', 'mytoken2');
+    $this->tokenService->addTokenData('placeholder', 'mytoken2');
     $this->assertTrue($condition->evaluate(), "Placeholder now should exist again");
   }
 

@@ -3,9 +3,11 @@
 namespace Drupal\Tests\eca\Unit;
 
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\State\StateInterface;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca\Entity\Objects\EcaEvent;
 use Drupal\eca\Plugin\ECA\Event\EventInterface;
+use Drupal\eca\PluginManager\Event as EventPluginManager;
 use Drupal\eca\Processor;
 use Drupal\eca\Token\TokenInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -30,7 +32,7 @@ class ProcessorTest extends EcaUnitTestBase {
    *
    * @var \Drupal\eca\Token\TokenInterface
    */
-  protected TokenInterface $tokenServices;
+  protected TokenInterface $tokenService;
 
   /**
    * The event dispatcher.
@@ -40,6 +42,20 @@ class ProcessorTest extends EcaUnitTestBase {
   protected EventDispatcherInterface $eventDispatcher;
 
   /**
+   * The ECA event plugin manager.
+   *
+   * @var \Drupal\eca\PluginManager\Event
+   */
+  protected EventPluginManager $eventPluginManager;
+
+  /**
+   * The state.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected StateInterface $state;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -47,6 +63,8 @@ class ProcessorTest extends EcaUnitTestBase {
     $this->logger = $this->createMock(LoggerChannelInterface::class);
     $this->tokenService = $this->createMock(TokenInterface::class);
     $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+    $this->eventPluginManager = $this->createMock(EventPluginManager::class);
+    $this->state = $this->createMock(StateInterface::class);
   }
 
   /**
@@ -55,9 +73,13 @@ class ProcessorTest extends EcaUnitTestBase {
    * @throws \ReflectionException
    */
   public function testRecursionThresholdWithoutHistory(): void {
-    $processor = new Processor($this->entityTypeManager, $this->logger, $this->eventDispatcher, 3);
+    $processor = new Processor($this->entityTypeManager, $this->logger, $this->eventDispatcher, $this->eventPluginManager, $this->state, 3);
     $method = $this->getPrivateMethod(Processor::class, 'recursionThresholdSurpassed');
-    $result = $method->invokeArgs($processor, [$this->getEcaEvent('1')]);
+    $eca = $this->getEca('1');
+    $result = $method->invokeArgs($processor, [
+      $eca,
+      $this->getEcaEvent($eca, '1'),
+    ]);
     $this->assertFalse($result);
   }
 
@@ -67,7 +89,7 @@ class ProcessorTest extends EcaUnitTestBase {
    * @throws \ReflectionException
    */
   public function testRecursionThresholdSurpassed(): void {
-    $processor = new Processor($this->entityTypeManager, $this->logger, $this->eventDispatcher, 2);
+    $processor = new Processor($this->entityTypeManager, $this->logger, $this->eventDispatcher, $this->eventPluginManager, $this->state, 2);
     $this->assertTrue($this->isThresholdComplied($processor));
   }
 
@@ -77,7 +99,7 @@ class ProcessorTest extends EcaUnitTestBase {
    * @throws \ReflectionException
    */
   public function testRecursionThresholdNotSurpassed(): void {
-    $processor = new Processor($this->entityTypeManager, $this->logger, $this->eventDispatcher, 3);
+    $processor = new Processor($this->entityTypeManager, $this->logger, $this->eventDispatcher, $this->eventPluginManager, $this->state, 3);
     $this->assertFalse($this->isThresholdComplied($processor));
   }
 
@@ -88,36 +110,54 @@ class ProcessorTest extends EcaUnitTestBase {
    *   The ECA processor service.
    *
    * @return bool
-   *   Retruns TRUE, if the recursion threshold got exceeded, FALSE otherwise.
+   *   Returns TRUE, if the recursion threshold got exceeded, FALSE otherwise.
    *
    * @throws \ReflectionException
    */
   private function isThresholdComplied(Processor $processor): bool {
     $method = $this->getPrivateMethod(Processor::class, 'recursionThresholdSurpassed');
     $executionHistory = $this->getPrivateProperty(Processor::class, 'executionHistory');
-    $ecaEvent = $this->getEcaEvent('1');
+    $eca = $this->getEca('1');
+    $ecaEvent = $this->getEcaEvent($eca, '1');
     $ecaEventHistory = [];
-    $ecaEventHistory[] = $ecaEvent;
-    $ecaEventHistory[] = $this->getEcaEvent('2');
-    $ecaEventHistory[] = $this->getEcaEvent('3');
-    $ecaEventHistory[] = $ecaEvent;
-    $ecaEventHistory[] = $ecaEvent;
-    $ecaEventHistory[] = $ecaEvent;
+    $ecaEventHistory[] = $eca->id() . ':' . $ecaEvent->getId();
+    $ecaEventHistory[] = $eca->id() . ':' . $this->getEcaEvent($eca, '2')->getId();
+    $ecaEventHistory[] = $eca->id() . ':' . $this->getEcaEvent($eca, '3')->getId();
+    $ecaEventHistory[] = $eca->id() . ':' . $ecaEvent->getId();
+    $ecaEventHistory[] = $eca->id() . ':' . $ecaEvent->getId();
+    $ecaEventHistory[] = $eca->id() . ':' . $ecaEvent->getId();
     $executionHistory->setValue($processor, $ecaEventHistory);
-    return $method->invokeArgs($processor, [$ecaEvent]);
+    return $method->invokeArgs($processor, [$eca, $ecaEvent]);
+  }
+
+  /**
+   * Gets an ECA config entity initialized with mocks.
+   *
+   * @param string $id
+   *   The ID of the ECA config entity.
+   *
+   * @return \Drupal\eca\Entity\Eca
+   *   The mocked ECA config entity.
+   */
+  private function getEca(string $id): Eca {
+    $eca = $this->createMock(Eca::class);
+    $eca->set('id', $id);
+    $eca->method('id')->willReturn($id);
+    return $eca;
   }
 
   /**
    * Gets a EcaEvent initialized with mocks.
    *
+   * @param \Drupal\eca\Entity\Eca $eca
+   *   An ECA config entity.
    * @param string $id
    *   The ID of the event.
    *
    * @return \Drupal\eca\Entity\Objects\EcaEvent
    *   The mocked event.
    */
-  private function getEcaEvent(string $id): EcaEvent {
-    $eca = $this->createMock(Eca::class);
+  private function getEcaEvent(Eca $eca, string $id): EcaEvent {
     $event = $this->createMock(EventInterface::class);
     return new EcaEvent($eca, $id, 'label', $event);
   }

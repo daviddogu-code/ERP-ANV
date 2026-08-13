@@ -48,7 +48,7 @@ class ViewsExportTest extends ViewsQueryTest {
     $this->assertTrue($viewsExport->access($this->node));
     $viewsExport->execute();
     /** @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto */
-    $dto = $this->tokenServices->getTokenData('file_token');
+    $dto = $this->tokenService->getTokenData('file_token');
     $this->assertEquals('temporary://abc.pdf', $dto->getValue());
   }
 
@@ -86,7 +86,7 @@ class ViewsExportTest extends ViewsQueryTest {
     $this->assertTrue($viewsExport->access($this->node));
     $viewsExport->execute();
     /** @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto */
-    $dto = $this->tokenServices->getTokenData('eca-view-output-filename');
+    $dto = $this->tokenService->getTokenData('eca-view-output-filename');
     $this->assertEquals('temporary://abc.pdf', $dto->getValue());
   }
 
@@ -104,7 +104,7 @@ class ViewsExportTest extends ViewsQueryTest {
     ]);
 
     $this->assertFalse($viewsExport->access($this->node));
-    $this->assertNull($this->tokenServices->getTokenData('test'));
+    $this->assertNull($this->tokenService->getTokenData('test'));
   }
 
   /**
@@ -126,7 +126,7 @@ class ViewsExportTest extends ViewsQueryTest {
     $viewsExport->execute();
 
     /** @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto */
-    $dto = $this->tokenServices->getTokenData('file_token');
+    $dto = $this->tokenService->getTokenData('file_token');
     $this->assertEquals('temporary://abc.pdf', $dto->getValue());
   }
 
@@ -149,7 +149,7 @@ class ViewsExportTest extends ViewsQueryTest {
     $viewsExport->execute();
 
     /** @var \Drupal\eca\Plugin\DataType\DataTransferObject $dto */
-    $dto = $this->tokenServices->getTokenData('file_token');
+    $dto = $this->tokenService->getTokenData('file_token');
     $this->assertTrue(strpos($dto->getValue(), 'temporary://') !== FALSE);
   }
 

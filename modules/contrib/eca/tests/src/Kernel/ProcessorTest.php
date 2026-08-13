@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\eca\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\EcaEvents;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca\Event\AfterActionExecutionEvent;
@@ -10,7 +11,6 @@ use Drupal\eca\Event\BeforeActionExecutionEvent;
 use Drupal\eca\Event\BeforeInitialExecutionEvent;
 use Drupal\eca_test_array\Event\ArrayWriteEvent;
 use Drupal\eca_test_array\Plugin\Action\ArrayWrite;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 
 /**
@@ -184,7 +184,7 @@ class ProcessorTest extends KernelTestBase {
 
     /** @var \Drupal\Core\Session\AccountSwitcherInterface $account_switcher */
     $account_switcher = \Drupal::service('account_switcher');
-    // Now switch to priviledged user.
+    // Now switch to privileged user.
     $account_switcher->switchTo(User::load(1));
 
     $action_manager->createInstance('eca_test_array_write', [

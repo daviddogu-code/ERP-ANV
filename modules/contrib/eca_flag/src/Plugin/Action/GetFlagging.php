@@ -3,24 +3,33 @@
 namespace Drupal\eca_flag\Plugin\Action;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\eca\Attribute\EcaAction;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
+use Drupal\flag\FlagInterface;
 use Drupal\flag\FlagService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Gets a flagging entity for a content entity and stores it as a token.
- *
- * @Action(
- *   id = "eca_flag_get_flagging",
- *   label = @Translation("Flag: get flagging for entity"),
- *   description = @Translation("Get a flagging for a content entity."),
- *   type = "entity"
- * )
  */
+#[Action(
+  id: 'eca_flag_get_flagging',
+  label: new TranslatableMarkup('Flag: get flagging for entity'),
+  type: 'entity',
+)]
+#[EcaAction(
+  description: new TranslatableMarkup('Get a flagging for a content entity.'),
+  version_introduced: '1.0.0',
+)]
 class GetFlagging extends ConfigurableActionBase {
+
+  use PluginFormTrait;
 
   /**
    * The flag service.
@@ -32,13 +41,39 @@ class GetFlagging extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): GetFlagging {
-    /**
-     * @var \Drupal\eca_flag\Plugin\Action\GetFlagging $plugin
-     */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $plugin->flagService = $container->get('flag');
     return $plugin;
+  }
+
+  /**
+   * Get the configured flag config entity.
+   *
+   * @return \Drupal\flag\FlagInterface|null
+   *   The configured flag config entity.
+   */
+  private function getFlag(): ?FlagInterface {
+    $flag_name = $this->configuration['flag_name'];
+    if ($flag_name === '_eca_token') {
+      $flag_name = $this->getTokenValue('flag_name', '');
+    }
+    if (($flag_name !== '') && $flag = $this->flagService->getFlagById($flag_name)) {
+      return $flag;
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies(): array {
+    $dependencies = parent::calculateDependencies();
+    $flag = $this->getFlag();
+    if ($flag !== NULL) {
+      $dependencies[$flag->getConfigDependencyKey()][] = $flag->getConfigDependencyName();
+    }
+    return $dependencies;
   }
 
   /**
@@ -50,31 +85,23 @@ class GetFlagging extends ConfigurableActionBase {
    * @return \Drupal\flag\FlaggingInterface[]
    *   The list of flagging.
    */
-  protected function getFlagging(ContentEntityInterface $entity): array {
-    $flagName = $this->configuration['flag_name'];
-    if (!empty($flagName)) {
-      $flagName = $this->tokenServices->replaceClear($flagName);
+  protected function getEntityFlaggings(ContentEntityInterface $entity): array {
+    $flag = $this->getFlag();
+    if ($flag !== NULL) {
+      return $this->flagService->getEntityFlaggings($flag, $entity);
     }
-    if (!empty($flagName)) {
-      if ($flag = $this->flagService->getFlagById($flagName)) {
-        return $this->flagService->getEntityFlaggings($flag, $entity);
-      }
-    }
-    else {
-      return $this->flagService->getAllEntityFlaggings($entity);
-    }
-    return [];
+    return $this->flagService->getAllEntityFlaggings($entity);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $account = $account ?? $this->currentUser;
     $access_result = AccessResult::forbidden();
     if ($object instanceof ContentEntityInterface &&
       $object->access('view', $account) &&
-      $this->getFlagging($object)
+      $this->getEntityFlaggings($object)
     ) {
       $access_result = AccessResult::allowed();
     }
@@ -84,16 +111,16 @@ class GetFlagging extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL): void {
+  public function execute(?ContentEntityInterface $entity = NULL): void {
     if (!($entity instanceof ContentEntityInterface)) {
       return;
     }
-    $tokenName = $this->tokenServices->replaceClear($this->configuration['token_name']);
-    if ($flagging = $this->getFlagging($entity)) {
+    $tokenName = $this->tokenService->replaceClear($this->configuration['token_name']);
+    if ($flagging = $this->getEntityFlaggings($entity)) {
       if (count($flagging) === 1) {
         $flagging = reset($flagging);
       }
-      $this->tokenServices->addTokenData($tokenName, $flagging);
+      $this->tokenService->addTokenData($tokenName, $flagging);
     }
   }
 
@@ -125,6 +152,7 @@ class GetFlagging extends ConfigurableActionBase {
       '#default_value' => $this->configuration['flag_name'],
       '#options' => $flags,
       '#weight' => -80,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['token_name'] = [
       '#type' => 'textfield',

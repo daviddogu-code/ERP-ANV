@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\eca_endpoint\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_endpoint\Controller\EndpointController;
-use Drupal\KernelTests\KernelTestBase;
-use Drupal\node\Entity\NodeType;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -18,6 +18,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * @group eca_endpoint
  */
 class EndpointControllerTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -49,17 +51,14 @@ class EndpointControllerTest extends KernelTestBase {
     User::create(['uid' => 2, 'name' => 'auth'])->save();
 
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create(['type' => 'article', 'name' => 'Article']);
-    $node_type->save();
-    node_add_body_field($node_type);
+    $this->createContentType(['type' => 'article', 'name' => 'Article']);
   }
 
   /**
    * Tests the custom access callback of the endpoint controller.
    */
   public function testControllerAccess(): void {
-    $controller = EndpointController::create($this->container);
+    $controller = $this->container->get(EndpointController::class);
     $result = $controller->access(User::load(0), 'first', 'second');
     $this->assertFalse($result->isAllowed());
     $this->assertTrue($result->isForbidden());
@@ -128,7 +127,7 @@ class EndpointControllerTest extends KernelTestBase {
    * Tests the handle callback of the endpoint controller.
    */
   public function testControllerHandle(): void {
-    $controller = EndpointController::create($this->container);
+    $controller = $this->container->get(EndpointController::class);
     $request = Request::create('/eca/first/second');
     $request->setSession(new Session());
 

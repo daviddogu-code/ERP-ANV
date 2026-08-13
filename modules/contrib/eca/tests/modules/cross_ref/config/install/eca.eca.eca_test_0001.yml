@@ -11,7 +11,7 @@ dependencies:
 id: eca_test_0001
 modeller: bpmn_io
 label: 'Cross references'
-version: 1.0.0
+version: v1
 weight: null
 events:
   Event_011cx7s:

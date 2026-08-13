@@ -4,16 +4,18 @@ namespace Drupal\eca\EventSubscriber;
 
 use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Session\AccountSwitcherInterface;
+use Drupal\eca\Attribute\Token;
 use Drupal\eca\EcaEvents;
 use Drupal\eca\Event\AfterInitialExecutionEvent;
 use Drupal\eca\Event\BeforeInitialExecutionEvent;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Session\AccountSwitcherInterface;
 
 /**
  * Switches to a different user account, if specified.
  */
-class EcaExecutionSwitchAccountSubscriber extends EcaBase {
+class EcaExecutionSwitchAccountSubscriber extends EcaExecutionSubscriberBase {
 
   /**
    * The account switcher service.
@@ -21,6 +23,13 @@ class EcaExecutionSwitchAccountSubscriber extends EcaBase {
    * @var \Drupal\Core\Session\AccountSwitcherInterface
    */
   protected AccountSwitcherInterface $accountSwitcher;
+
+  /**
+   * The logger channel.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected LoggerChannelInterface $logger;
 
   /**
    * Flag indicating whether the user objects have been initialized.
@@ -64,6 +73,16 @@ class EcaExecutionSwitchAccountSubscriber extends EcaBase {
   }
 
   /**
+   * Set the logger channel.
+   *
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   The logger channel.
+   */
+  public function setLoggerChannel(LoggerChannelInterface $logger): void {
+    $this->logger = $logger;
+  }
+
+  /**
    * Initializes the model user to switch to.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -87,18 +106,19 @@ class EcaExecutionSwitchAccountSubscriber extends EcaBase {
     $uid = trim((string) $this->tokenService->replaceClear($uid));
     $user = NULL;
     $storage = $this->entityTypeManager->getStorage('user');
-    if (ctype_digit(strval(($uid)))) {
+    if (ctype_digit(($uid))) {
       $user = $storage->load($uid);
     }
     elseif (Uuid::isValid($uid)) {
-      $user = reset($storage->loadByProperties(['uuid' => $uid]));
+      $users = $storage->loadByProperties(['uuid' => $uid]);
+      $user = reset($users);
     }
     if ($user) {
       self::$modelUser = $user;
       self::$sessionUser = $storage->load($current_user->id());
     }
     else {
-      \Drupal::logger('eca')->error("A different user is specified in the global settings to be switched to when executing ECA models, but the user does not exist. Falling back to default behavior, which is execution using the current user. You need to make sure that the specified user exists.");
+      $this->logger->error("A different user is specified in the global settings to be switched to when executing ECA models, but the user does not exist. Falling back to default behavior, which is execution using the current user. You need to make sure that the specified user exists.");
     }
   }
 
@@ -110,6 +130,10 @@ class EcaExecutionSwitchAccountSubscriber extends EcaBase {
    * @param \Drupal\eca\Event\BeforeInitialExecutionEvent $before_event
    *   The according event.
    */
+  #[Token(
+    name: 'session_user',
+    description: 'The user account that dispatched the event, regardless if ECA is processing models under a different account. This is only available if ECA is configured to always run under a specific account.',
+  )]
   public function onBeforeInitialExecution(BeforeInitialExecutionEvent $before_event): void {
     if (self::$modelUser) {
       $this->accountSwitcher->switchTo(self::$modelUser);

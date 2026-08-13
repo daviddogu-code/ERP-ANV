@@ -4,23 +4,26 @@ namespace Drupal\eca_render\Plugin\Action;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
 
 /**
- * Serializes data.
+ * Serializes arbitrary data.
  *
  * @Action(
  *   id = "eca_render_serialize",
  *   label = @Translation("Render: serialize"),
  *   description = @Translation("Serializes data."),
+ *   eca_version_introduced = "1.1.0",
  *   deriver = "Drupal\eca_render\Plugin\Action\SerializeDeriver"
  * )
  */
 class Serialize extends Build {
+
+  use PluginFormTrait;
 
   /**
    * The serializer.
@@ -32,8 +35,7 @@ class Serialize extends Build {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_render\Plugin\Action\Serialize $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->serializer = $container->get('serializer');
     return $instance;
@@ -50,12 +52,12 @@ class Serialize extends Build {
         $value = $this->yamlParser->parse($value);
       }
       catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing a state value item in action "eca_render_serialize" as YAML format, but parsing failed.');
+        $this->logger->error('Tried parsing a state value item in action "eca_render_serialize" as YAML format, but parsing failed.');
         return;
       }
     }
     else {
-      $value = $this->tokenServices->getOrReplace($value);
+      $value = $this->tokenService->getOrReplace($value);
     }
 
     if ($value instanceof DataTransferObject || $value instanceof EntityAdapter) {
@@ -63,6 +65,9 @@ class Serialize extends Build {
     }
 
     $format = $this->configuration['format'];
+    if ($format === '_eca_token') {
+      $format = $this->getTokenValue('format', 'json');
+    }
     $serialized = $this->serializer->serialize($value, $format);
     $build = [
       '#theme' => 'eca_serialized',
@@ -86,18 +91,19 @@ class Serialize extends Build {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $format_options = [];
     // Need to fetch available formats from the protected properties of
     // the serialization service. This is an ugly approach, but the only one
     // that is available. It is a valid approach since it's declared as
     // a "public" API.
     // @see \Drupal\serialization\RegisterSerializationClassesCompilerPass::process()
-    $encoders = \Closure::fromCallable(function () {
-      return \Closure::fromCallable(function () {
+    $encoders = (function () {
+      return (function () {
+        // @phpstan-ignore-next-line
         return $this->encoders;
-      })->call($this->encoder);
-    })->call($this->serializer);
+        // @phpstan-ignore-next-line
+      })(...)->call($this->encoder);
+    })(...)->call($this->serializer);
     foreach ($encoders as $encoder) {
       $constant_name = get_class($encoder) . '::FORMAT';
       if (defined($constant_name)) {
@@ -111,8 +117,11 @@ class Serialize extends Build {
       '#default_value' => $this->configuration['format'],
       '#weight' => -100,
       '#required' => TRUE,
+      '#eca_token_select_option' => TRUE,
     ];
-    $form['value']['#description'] = $this->t('The value to serialize. This field supports tokens.');
+    $form = parent::buildConfigurationForm($form, $form_state);
+    $form['value']['#description'] = $this->t('The value to serialize.');
+    $form['value']['#eca_token_replacement'] = TRUE;
     return $form;
   }
 

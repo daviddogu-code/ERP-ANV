@@ -7,6 +7,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca_endpoint\Event\EndpointResponseEvent;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 /**
  * Base class for response actions.
@@ -22,6 +23,9 @@ abstract class ResponseActionBase extends ConfigurableActionBase {
   public function getResponse(): ?Response {
     if ($this->event instanceof EndpointResponseEvent) {
       return $this->event->response;
+    }
+    if ($this->event instanceof ResponseEvent) {
+      return $this->event->getResponse();
     }
     return NULL;
   }

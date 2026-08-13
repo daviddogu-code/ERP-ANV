@@ -23,6 +23,15 @@ final class RenderEvents {
    *
    * @var string
    */
+  public const ENTITY = 'eca_render.entity';
+
+  /**
+   * Dispatches when operation links of an entity are being declared.
+   *
+   * @Event
+   *
+   * @var string
+   */
   public const ENTITY_OPERATIONS = 'eca_render.entity_operations';
 
   /**
@@ -33,6 +42,15 @@ final class RenderEvents {
    * @var string
    */
   public const CONTEXTUAL_LINKS = 'eca_render.contextual_links';
+
+  /**
+   * Dispatches when local tasks are being rendered.
+   *
+   * @Event
+   *
+   * @var string
+   */
+  public const LOCAL_TASKS = 'eca_render.local_tasks';
 
   /**
    * Dispatches when an ECA Views field is being rendered.

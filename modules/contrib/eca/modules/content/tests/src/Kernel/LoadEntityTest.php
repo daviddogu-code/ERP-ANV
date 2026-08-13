@@ -8,7 +8,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 
@@ -19,6 +19,8 @@ use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
  * @group eca_content
  */
 class LoadEntityTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * The modules.
@@ -74,13 +76,11 @@ class LoadEntityTest extends KernelTestBase {
    */
   public function testLoadEntity(): void {
     // Create the Article content type with revisioning and translation enabled.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create([
+    $this->createContentType([
       'type' => 'article',
       'name' => 'Article',
       'new_revision' => TRUE,
     ]);
-    $node_type->save();
     ContentLanguageSettings::create([
       'id' => 'node.article',
       'target_entity_type_id' => 'node',
@@ -127,7 +127,7 @@ class LoadEntityTest extends KernelTestBase {
     $action = $action_manager->createInstance('eca_token_load_entity', [] + $defaults);
     $this->assertFalse($action->access($node), 'User without permissions must not have access.');
 
-    // Now switch to priviledged user.
+    // Now switch to privileged user.
     $account_switcher->switchTo(User::load(1));
 
     /** @var \Drupal\eca_content\Plugin\Action\LoadEntity $action */
@@ -192,7 +192,7 @@ class LoadEntityTest extends KernelTestBase {
     $action->execute(NULL);
     $this->assertTrue($token_services->hasTokenData('english'), 'Token must now be defined.');
     $this->assertEquals('en', $token_services->getTokenData('english')->language()->getId(), 'Langcode of node must be english.');
-    $this->assertEquals($second_vid, $token_services->getTokenData('english')->getRevisionId(), 'Latest reivision of english node must be the second one.');
+    $this->assertEquals($second_vid, $token_services->getTokenData('english')->getRevisionId(), 'Latest revision of english node must be the second one.');
     $this->assertEquals('456', (string) $token_services->replace('[english:title]'), 'Title must match with the title of the second english revision.');
 
     $node = $token_services->getTokenData('english');

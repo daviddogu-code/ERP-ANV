@@ -2,8 +2,7 @@
 
 namespace Drupal\eca_content\Event;
 
-use Drupal\Component\EventDispatcher\Event;
-use Drupal\eca\Event\ConditionalApplianceInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Base class for entity related events.
@@ -12,20 +11,6 @@ use Drupal\eca\Event\ConditionalApplianceInterface;
  *   This class is not meant to be used as a public API. It is subject for name
  *   change or may be removed completely, also on minor version updates.
  */
-abstract class ContentEntityBase extends Event implements ConditionalApplianceInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    return TRUE;
-  }
+abstract class ContentEntityBase extends Event {
 
 }

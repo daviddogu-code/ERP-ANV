@@ -5,6 +5,7 @@ namespace Drupal\eca_render\Plugin\Action;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\eca\Event\RenderEventInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Add cacheability metadata to a render array.
@@ -12,10 +13,13 @@ use Drupal\eca\Event\RenderEventInterface;
  * @Action(
  *   id = "eca_render_cacheability",
  *   label = @Translation("Render: cacheability"),
- *   description = @Translation("Add cacheability metadata to a render array. Only works when reacting upon a rendering event, such as ""Build form"" or ""Build ECA Block"".")
+ *   description = @Translation("Add cacheability metadata to a render array. Only works when reacting upon a rendering event, such as ""Build form"" or ""Build ECA Block""."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class Cacheability extends RenderActionBase {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -31,7 +35,6 @@ class Cacheability extends RenderActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['cache_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Type'),
@@ -46,16 +49,18 @@ class Cacheability extends RenderActionBase {
       '#default_value' => $this->configuration['cache_type'],
       '#required' => TRUE,
       '#weight' => 10,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['cache_value'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Value'),
-      '#description' => $this->t('This field supports tokens. Separate multiple values with comma. When using <em>Max age</em>, the value must be a valid number (integer).'),
+      '#description' => $this->t('Separate multiple values with commas. When using <em>Max age</em>, the value must be a valid number (integer).'),
       '#default_value' => $this->configuration['cache_value'],
       '#required' => FALSE,
       '#weight' => 20,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -78,11 +83,14 @@ class Cacheability extends RenderActionBase {
 
     $build = &$event->getRenderArray();
     $key = $this->configuration['cache_type'];
+    if ($key === '_eca_token') {
+      $key = $this->getTokenValue('cache_type', 'tags');
+    }
 
     if (!isset($build['#cache'][$key])) {
       $build['#cache'][$key] = [];
     }
-    $value = trim((string) $this->tokenServices->replaceClear($this->configuration['cache_value']));
+    $value = trim((string) $this->tokenService->replaceClear($this->configuration['cache_value']));
     if ($value !== '') {
       if ($key === 'max-age') {
         $max_age = is_numeric($value) ? (int) $value : 0;

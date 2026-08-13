@@ -12,7 +12,8 @@ use Drupal\eca_base\Plugin\ListCountTrait;
  * @Action(
  *   id = "eca_count",
  *   label = @Translation("List: count items"),
- *   description = @Translation("Counts the items in a list based on several properties.")
+ *   description = @Translation("Counts the items in a list based on several properties."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class ListCount extends ListOperationBase {
@@ -24,7 +25,7 @@ class ListCount extends ListOperationBase {
    */
   public function execute(): void {
     $result = $this->countValue($this->configuration['list_token']);
-    $this->tokenServices->addTokenData($this->configuration['token_name'], $result);
+    $this->tokenService->addTokenData($this->configuration['token_name'], $result);
   }
 
   /**
@@ -40,8 +41,6 @@ class ListCount extends ListOperationBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
-    $form['list_token']['#description'] = $this->t('Provide the name of the token that contains a list from which the number of items should be counted.');
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -50,6 +49,8 @@ class ListCount extends ListOperationBase {
       '#weight' => -10,
       '#eca_token_reference' => TRUE,
     ];
+    $form = parent::buildConfigurationForm($form, $form_state);
+    $form['list_token']['#description'] = $this->t('Provide the name of the token that contains a list from which the number of items should be counted.');
     return $form;
   }
 

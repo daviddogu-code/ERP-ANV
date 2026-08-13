@@ -3,7 +3,6 @@
 namespace Drupal\eca_render\Event;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\eca\Event\ConditionalApplianceInterface;
 use Drupal\eca\Event\EntityApplianceTrait;
 use Drupal\eca\Event\EntityEventInterface;
 
@@ -16,7 +15,7 @@ use Drupal\eca\Event\EntityEventInterface;
  *
  * @package Drupal\eca_render\Event
  */
-class EcaRenderEntityOperationsEvent extends EcaRenderEventBase implements EntityEventInterface, ConditionalApplianceInterface {
+class EcaRenderEntityOperationsEvent extends EcaRenderEventBase implements EntityEventInterface {
 
   use EntityApplianceTrait;
 
@@ -59,30 +58,6 @@ class EcaRenderEntityOperationsEvent extends EcaRenderEventBase implements Entit
    */
   public function &getRenderArray(): array {
     return $this->build;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    [$w_entity_type_ids, $w_bundles] = explode(':', $wildcard);
-
-    if (($w_entity_type_ids !== '*') && !in_array($this->getEntity()->getEntityTypeId(), explode(',', $w_entity_type_ids), TRUE)) {
-      return FALSE;
-    }
-
-    if (($w_bundles !== '*') && !in_array($this->getEntity()->bundle(), explode(',', $w_bundles), TRUE)) {
-      return FALSE;
-    }
-
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    return $this->appliesForEntityTypeOrBundle($this->getEntity(), $arguments);
   }
 
 }

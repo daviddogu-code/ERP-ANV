@@ -1,13 +1,13 @@
 name: 'ECA Flag'
 type: module
 description: 'Integrate ECA with the Flag module and its plugins.'
-core_version_requirement: ^9 || ^10
+core_version_requirement: ^10.4 || ^11
 package: ECA
 dependencies:
-  - eca:eca
+  - eca:eca (^2 || ^3)
   - flag:flag
 
-# Information added by Drupal.org packaging script on 2023-07-13
-version: '1.0.0'
+# Information added by Drupal.org packaging script on 2025-09-05
+version: '2.0.5'
 project: 'eca_flag'
-datestamp: 1689231126
+datestamp: 1757067925

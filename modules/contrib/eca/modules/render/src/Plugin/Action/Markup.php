@@ -7,7 +7,6 @@ use Drupal\Core\Render\Markup as RenderMarkup;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Symfony\Component\Yaml\Exception\ParseException;
 
 /**
@@ -16,7 +15,8 @@ use Symfony\Component\Yaml\Exception\ParseException;
  * @Action(
  *   id = "eca_render_markup",
  *   label = @Translation("Render: markup"),
- *   description = @Translation("Renders markup using a specified render array.")
+ *   description = @Translation("Renders markup using a specified render array."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class Markup extends Build {
@@ -31,8 +31,7 @@ class Markup extends Build {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_render\Plugin\Action\Markup $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->renderer = $container->get('renderer');
     return $instance;
@@ -49,12 +48,12 @@ class Markup extends Build {
         $value = $this->yamlParser->parse($value);
       }
       catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing a state value item in action "eca_render_markup" as YAML format, but parsing failed.');
+        $this->logger->error('Tried parsing a state value item in action "eca_render_markup" as YAML format, but parsing failed.');
         return;
       }
     }
     else {
-      $value = $this->tokenServices->getOrReplace($value);
+      $value = $this->tokenService->getOrReplace($value);
     }
 
     $this->doBuildRecursive($build, $value);

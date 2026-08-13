@@ -62,7 +62,7 @@ class DependencyCalculation {
    *
    * @var string[]|null
    */
-  static protected ?array $enabledCalculations = NULL;
+  protected static ?array $enabledCalculations = NULL;
 
   /**
    * Constructs the dependency calculation service.
@@ -179,7 +179,7 @@ class DependencyCalculation {
         continue;
       }
 
-      if (mb_strpos('type', $name) !== FALSE) {
+      if (mb_strpos($name, 'type') !== FALSE) {
         [$field, $bundle] = array_merge(explode(' ', $field, 2), [ContentEntityTypes::ALL]);
       }
       else {
@@ -248,7 +248,9 @@ class DependencyCalculation {
                 $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
                 if (isset($field_definitions[$field_name])) {
                   $field_config_id = $entity_type_id . '.' . $bundle . '.' . $field_name;
-                  /** @var \Drupal\field\FieldConfigInterface $field_config */
+                  /**
+                   * @var \Drupal\field\FieldConfigInterface $field_config
+                   */
                   if ($field_config = $field_config_storage->load($field_config_id)) {
                     $this->addDependency($field_config->getConfigDependencyKey(), 'field.field.' . $field_config->id(), $dependencies);
                   }

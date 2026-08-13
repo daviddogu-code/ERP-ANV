@@ -2,20 +2,20 @@
 
 namespace Drupal\eca\TypedData;
 
-use Drupal\eca\Plugin\DataType\DataTransferObject;
 use Drupal\Core\TypedData\ComplexDataDefinitionBase;
+use Drupal\eca\Plugin\DataType\DataTransferObject;
 
 /**
  * A typed data definition class for describing Data Transfer Objects (DTOs).
  */
-class DataTransferObjectDefinition extends ComplexDataDefinitionBase {
+final class DataTransferObjectDefinition extends ComplexDataDefinitionBase {
 
   /**
    * The DTO instance, if any given.
    *
    * @var \Drupal\eca\Plugin\DataType\DataTransferObject|null
    */
-  protected $dto;
+  protected ?DataTransferObject $dto;
 
   /**
    * Creates the data definition for Data Transfer Objects.
@@ -31,8 +31,8 @@ class DataTransferObjectDefinition extends ComplexDataDefinitionBase {
    * @return static
    *   The data definition for the given dto.
    */
-  public static function create($type, DataTransferObject $dto = NULL) {
-    $instance = new static(['type' => $type]);
+  public static function create($type, ?DataTransferObject $dto = NULL): DataTransferObjectDefinition {
+    $instance = new self(['type' => $type]);
     $instance->dto = $dto;
     return $instance;
   }

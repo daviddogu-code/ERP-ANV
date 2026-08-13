@@ -8,10 +8,10 @@ use Drupal\Core\Config\ConfigImporterEvent;
 use Drupal\Core\Config\ConfigRenameEvent;
 use Drupal\Core\Config\Importer\MissingContentEvent;
 use Drupal\Core\Config\StorageComparer;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_test_array\Plugin\Action\ArrayIncrement;
 use Drupal\eca_test_array\Plugin\Action\ArrayWrite;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 
 /**
@@ -65,7 +65,11 @@ class ConfigEventsTest extends KernelTestBase {
         'config_save' => [
           'plugin' => 'config:save',
           'label' => 'Configuration save',
-          'configuration' => [],
+          'configuration' => [
+            'config_name' => '',
+            'sync_mode' => '',
+            'write_mode' => '',
+          ],
           'successors' => [
             ['id' => 'array_write_config_name', 'condition' => ''],
             ['id' => 'array_write_site_name', 'condition' => ''],
@@ -152,9 +156,9 @@ class ConfigEventsTest extends KernelTestBase {
     $config_manager = \Drupal::service('config.manager');
     // Set the collection info to NULL so that the event is being triggered
     // again by ::getConfigCollectionInfo().
-    $closure = \Closure::fromCallable(function () {
+    $closure = (function () {
       $this->configCollectionInfo = NULL;
-    });
+    })(...);
     $closure->call($config_manager);
     $config_manager->getConfigCollectionInfo();
 
@@ -267,7 +271,8 @@ class ConfigEventsTest extends KernelTestBase {
       $this->container->get('module_installer'),
       $this->container->get('theme_handler'),
       $this->container->get('string_translation'),
-      $this->container->get('extension.list.module')
+      $this->container->get('extension.list.module'),
+      $this->container->get('extension.list.theme')
     );
 
     /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher */

@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\eca_content\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 
 /**
@@ -16,6 +16,8 @@ use Drupal\user\Entity\User;
  * @group eca_content
  */
 class GetFieldValueTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * The modules.
@@ -47,10 +49,7 @@ class GetFieldValueTest extends KernelTestBase {
     User::create(['uid' => 1, 'name' => 'admin'])->save();
 
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create(['type' => 'article', 'name' => 'Article']);
-    $node_type->save();
-    node_add_body_field($node_type);
+    $this->createContentType(['type' => 'article', 'name' => 'Article']);
     // Create a multi-value text field.
     FieldStorageConfig::create([
       'field_name' => 'field_string_multi',
@@ -135,7 +134,7 @@ class GetFieldValueTest extends KernelTestBase {
     ]);
     $this->assertFalse($action->access($node), 'User without permissions must not have access.');
 
-    // Now switching to priviledged user.
+    // Now switching to privileged user.
     $account_switcher->switchTo(User::load(1));
     /** @var \Drupal\eca_content\Plugin\Action\GetFieldValue $action */
     $action = $action_manager->createInstance('eca_get_field_value', [

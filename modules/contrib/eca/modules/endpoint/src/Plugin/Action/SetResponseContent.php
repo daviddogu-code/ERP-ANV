@@ -9,7 +9,8 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @Action(
  *   id = "eca_endpoint_set_response_content",
- *   label = @Translation("Response: set content")
+ *   label = @Translation("Response: set content"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class SetResponseContent extends ResponseActionBase {
@@ -18,7 +19,7 @@ class SetResponseContent extends ResponseActionBase {
    * {@inheritdoc}
    */
   protected function doExecute(): void {
-    $content = (string) $this->tokenServices->replaceClear($this->configuration['content']);
+    $content = (string) $this->tokenService->replaceClear($this->configuration['content']);
     $this->getResponse()->setContent($content);
   }
 
@@ -35,16 +36,16 @@ class SetResponseContent extends ResponseActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
-      '#description' => $this->t('The response content to set. This field supports tokens.'),
+      '#description' => $this->t('The response content to set.'),
       '#default_value' => $this->configuration['content'],
       '#weight' => -20,
       '#required' => FALSE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

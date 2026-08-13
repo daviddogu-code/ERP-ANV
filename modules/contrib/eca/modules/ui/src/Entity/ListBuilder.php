@@ -2,14 +2,13 @@
 
 namespace Drupal\eca_ui\Entity;
 
-use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\DraggableListBuilder;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Url;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a class to build a listing of ECA config entities.
@@ -38,29 +37,12 @@ class ListBuilder extends DraggableListBuilder {
   protected ?bool $showModeller;
 
   /**
-   * Constructs a new ListBuilder.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type definition.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
-   *   The entity storage class.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, MessengerInterface $messenger) {
-    parent::__construct($entity_type, $storage);
-    $this->messenger = $messenger;
-  }
-
-  /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('messenger')
-    );
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): static {
+    $instance = parent::createInstance($container, $entity_type);
+    $instance->messenger = $container->get('messenger');
+    return $instance;
   }
 
   /**
@@ -98,6 +80,9 @@ class ListBuilder extends DraggableListBuilder {
     $row['events'] = [
       '#theme' => 'item_list',
       '#items' => $eca->getEventInfos(),
+      '#attributes' => [
+        'class' => ['eca-event-list'],
+      ],
     ];
     $row['version'] = ['#markup' => $eca->get('version') ?: $this->t('undefined')];
     $row['status'] = [
@@ -133,8 +118,8 @@ class ListBuilder extends DraggableListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity): array {
-    $operations = parent::getDefaultOperations($entity);
+  public function getDefaultOperations(EntityInterface $entity, ?CacheableMetadata $cacheability = NULL): array {
+    $operations = parent::getDefaultOperations($entity, $cacheability);
 
     if ($entity->access('update')) {
       $operations['edit'] = [
@@ -198,7 +183,9 @@ class ListBuilder extends DraggableListBuilder {
   protected function showModeller(): bool {
     if (!isset($this->showModeller)) {
       $modellers = [];
-      /** @var \Drupal\eca\Entity\Eca $eca */
+      /**
+       * @var \Drupal\eca\Entity\Eca $eca
+       */
       foreach ($this->storage->loadMultiple() as $eca) {
         if ($eca->get('modeller')) {
           $modellers[$eca->get('modeller')] = TRUE;

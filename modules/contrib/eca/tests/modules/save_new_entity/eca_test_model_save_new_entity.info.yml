@@ -13,7 +13,7 @@ config_devel:
   - eca.eca.eca_test_0008
   - eca.model.eca_test_0008
 
-# Information added by Drupal.org packaging script on 2025-06-02
-version: '1.1.13'
+# Information added by Drupal.org packaging script on 2026-08-11
+version: '2.1.22'
 project: 'eca'
-datestamp: 1748859341
+datestamp: 1786433576

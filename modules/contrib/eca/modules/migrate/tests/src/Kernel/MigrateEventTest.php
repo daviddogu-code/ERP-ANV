@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\eca_migrate\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_test_array\Plugin\Action\ArrayIncrement;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\user\Entity\User;
 

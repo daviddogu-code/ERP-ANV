@@ -10,7 +10,8 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @Action(
  *   id = "eca_endpoint_set_response_max_age",
- *   label = @Translation("Response: set max age")
+ *   label = @Translation("Response: set max age"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class SetResponseMaxAge extends ResponseActionBase {
@@ -19,8 +20,8 @@ class SetResponseMaxAge extends ResponseActionBase {
    * {@inheritdoc}
    */
   protected function doExecute(): void {
-    $max_age = (int) trim((string) $this->tokenServices->replaceClear($this->configuration['max_age']));
-    $s_max_age = (int) trim((string) $this->tokenServices->replaceClear($this->configuration['s_max_age']));
+    $max_age = (int) trim((string) $this->tokenService->replaceClear($this->configuration['max_age']));
+    $s_max_age = (int) trim((string) $this->tokenService->replaceClear($this->configuration['s_max_age']));
     $response = $this->getResponse();
     $response->setMaxAge($max_age);
     $response->setSharedMaxAge($s_max_age);
@@ -52,22 +53,23 @@ class SetResponseMaxAge extends ResponseActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['max_age'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Client value (max-age)'),
-      '#description' => $this->t('The number of seconds for the client-side max age. This field supports tokens.'),
+      '#description' => $this->t('The number of seconds for the client-side max age.'),
       '#default_value' => $this->configuration['max_age'],
       '#weight' => -50,
       '#required' => TRUE,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['s_max_age'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Shared value (s-max-age)'),
-      '#description' => $this->t('The number of seconds for the shared max age. This field supports tokens.'),
+      '#description' => $this->t('The number of seconds for the shared max age.'),
       '#default_value' => $this->configuration['s_max_age'],
       '#weight' => -40,
       '#required' => TRUE,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['set_public'] = [
       '#type' => 'checkbox',
@@ -85,7 +87,7 @@ class SetResponseMaxAge extends ResponseActionBase {
       '#weight' => -20,
       '#required' => FALSE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

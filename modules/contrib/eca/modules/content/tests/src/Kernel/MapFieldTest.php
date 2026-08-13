@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\eca_content\Kernel;
 
-use Drupal\entity_test\Entity\EntityTestMapField;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\entity_test\Entity\EntityTestMapField;
 use Drupal\user\Entity\User;
 
 /**
@@ -52,7 +52,7 @@ class MapFieldTest extends KernelTestBase {
     /** @var \Drupal\Core\Session\AccountSwitcherInterface $account_switcher */
     $account_switcher = \Drupal::service('account_switcher');
 
-    // Now switching to priviledged user.
+    // Now switching to privileged user.
     $account_switcher->switchTo(User::load(1));
 
     // Create an entity having some values in its map field and then try to
@@ -104,12 +104,10 @@ class MapFieldTest extends KernelTestBase {
   public function testSetFieldValueMapEntity(): void {
     /** @var \Drupal\Core\Action\ActionManager $action_manager */
     $action_manager = \Drupal::service('plugin.manager.action');
-    /** @var \Drupal\eca\Token\TokenInterface $token_services */
-    $token_services = \Drupal::service('eca.token_services');
     /** @var \Drupal\Core\Session\AccountSwitcherInterface $account_switcher */
     $account_switcher = \Drupal::service('account_switcher');
 
-    // Now switching to priviledged user.
+    // Now switching to privileged user.
     $account_switcher->switchTo(User::load(1));
 
     // Create an entity having some values in its map field and then try to

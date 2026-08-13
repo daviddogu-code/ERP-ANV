@@ -9,7 +9,8 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @Action(
  *   id = "eca_endpoint_set_response_content_type",
- *   label = @Translation("Response: set content type")
+ *   label = @Translation("Response: set content type"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class SetResponseContentType extends ResponseActionBase {
@@ -18,7 +19,7 @@ class SetResponseContentType extends ResponseActionBase {
    * {@inheritdoc}
    */
   protected function doExecute(): void {
-    $content_type = (string) $this->tokenServices->replaceClear($this->configuration['content_type']);
+    $content_type = (string) $this->tokenService->replaceClear($this->configuration['content_type']);
     $this->getResponse()->headers->set('Content-Type', $content_type);
   }
 
@@ -35,16 +36,15 @@ class SetResponseContentType extends ResponseActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['content_type'] = [
       '#type' => 'textfield',
       '#title' => $this->t('content_type'),
-      '#description' => $this->t('This field supports tokens.'),
       '#default_value' => $this->configuration['content_type'],
       '#weight' => -20,
       '#required' => TRUE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

@@ -13,6 +13,7 @@ use Drupal\eca\Plugin\FormFieldPluginTrait;
  *   id = "eca_form_field_get_value",
  *   label = @Translation("Form field: get submitted value"),
  *   description = @Translation("Get the submitted input of a form field and store it as a token."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
@@ -33,7 +34,6 @@ class FormFieldGetValue extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -43,7 +43,8 @@ class FormFieldGetValue extends ConfigurableActionBase {
       '#weight' => -45,
       '#eca_token_reference' => TRUE,
     ];
-    return $this->buildFormFieldConfigurationForm($form, $form_state);
+    $form = $this->buildFormFieldConfigurationForm($form, $form_state);
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -72,11 +73,11 @@ class FormFieldGetValue extends ConfigurableActionBase {
     }
 
     $original_field_name = $this->configuration['field_name'];
-    $this->configuration['field_name'] = (string) $this->tokenServices->replace($original_field_name);
+    $this->configuration['field_name'] = (string) $this->tokenService->replace($original_field_name);
 
     $value = $this->getSubmittedValue();
     $this->filterFormFieldValue($value);
-    $this->tokenServices->addTokenData($this->configuration['token_name'], $value);
+    $this->tokenService->addTokenData($this->configuration['token_name'], $value);
 
     // Restoring the original config entry.
     $this->configuration['field_name'] = $original_field_name;

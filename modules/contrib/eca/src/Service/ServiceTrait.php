@@ -22,7 +22,7 @@ trait ServiceTrait {
     foreach ($plugins as $plugin) {
       $provider = $plugin->getPluginDefinition()['provider'] ?? 'eca';
       if (!isset(EcaPluginBase::$modules[$provider])) {
-        EcaPluginBase::$modules[$provider] = \Drupal::moduleHandler()->getName($provider);
+        EcaPluginBase::$modules[$provider] = \Drupal::service('extension.list.module')->getName($provider);
       }
     }
     usort($plugins, static function ($p1, $p2) {

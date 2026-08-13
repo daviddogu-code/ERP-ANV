@@ -6,32 +6,51 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca_base\BaseEvents;
 use Drupal\eca_base\Event\CustomEvent;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Trigger a custom event.
  *
  * @Action(
  *   id = "eca_trigger_custom_event",
- *   label = @Translation("Trigger a custom event")
+ *   label = @Translation("Trigger a custom event"),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class TriggerCustomEvent extends ConfigurableActionBase {
 
   /**
-   * Overrides \Drupal\eca\Plugin\ActionActionInterface::EXTERNALLY_AVAILABLE.
+   * The event dispatcher.
    *
-   * @var bool
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
    */
-  public const EXTERNALLY_AVAILABLE = TRUE;
+  protected EventDispatcherInterface $eventDispatcher;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->eventDispatcher = $container->get('event_dispatcher');
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function externallyAvailable(): bool {
+    return TRUE;
+  }
 
   /**
    * {@inheritdoc}
    */
   public function execute(): void {
-    $event_id = $this->tokenServices->replaceClear($this->configuration['event_id']);
+    $event_id = $this->tokenService->replaceClear($this->configuration['event_id']);
     $event = new CustomEvent($event_id, ['event' => $this->event]);
     $event->addTokenNamesFromString($this->configuration['tokens']);
-    \Drupal::service('event_dispatcher')->dispatch($event, BaseEvents::CUSTOM);
+    $this->eventDispatcher->dispatch($event, BaseEvents::CUSTOM);
   }
 
   /**
@@ -48,7 +67,6 @@ class TriggerCustomEvent extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['event_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Event ID'),
@@ -63,7 +81,7 @@ class TriggerCustomEvent extends ConfigurableActionBase {
       '#description' => $this->t('Comma separated list of token names from the current context, that will be forwarded to the triggered event. These tokens are then also available for subsequent conditions and actions within the current process.'),
       '#weight' => -10,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

@@ -88,7 +88,7 @@ class CurrentUserRoleTest extends KernelTestBase {
     $condition = $condition_manager->createInstance('eca_current_user_role', ['role' => 'anonymous']);
     $this->assertFalse($condition->evaluate(), 'Anonymous role must evaluate to false.');
 
-    // End of tests with priviledged user.
+    // End of tests with privileged user.
     $account_switcher->switchBack();
   }
 

@@ -8,16 +8,17 @@ label: 'Entity Events Part 1'
 tags:
   - 'test models'
   - 'custom event'
-documentation: 'Triggers custom events in the same model and in anoher model, see also "Entity Events Part 2"'
+documentation: 'Triggers custom events in the same model and in another model, see also "Entity Events Part 2"'
 filename: ''
 modeldata: |
   <?xml version="1.0" encoding="UTF-8"?>
   <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:qa="http://some-company/schema/bpmn/qa" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
-    <bpmn2:process id="eca_test_0002" name="Entity Events Part 1" isExecutable="true" camunda:versionTag="1.0.0">
-      <bpmn2:documentation>Triggers custom events in the same model and in anoher model, see also "Entity Events Part 2"</bpmn2:documentation>
+    <bpmn2:process id="eca_test_0002" name="Entity Events Part 1" isExecutable="true" camunda:versionTag="v1">
+      <bpmn2:documentation>Triggers custom events in the same model and in another model, see also "Entity Events Part 2"</bpmn2:documentation>
       <bpmn2:extensionElements>
         <camunda:properties>
           <camunda:property name="Tags" value="test models,custom event" />
+          <camunda:property name="Changelog v1" value="Initial version" />
         </camunda:properties>
       </bpmn2:extensionElements>
       <bpmn2:startEvent id="Event_0wm7ta0" name="Pre-save" camunda:modelerTemplate="org.drupal.event.content_entity:presave">

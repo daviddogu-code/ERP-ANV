@@ -18,6 +18,7 @@ use Drupal\eca\Plugin\DataType\DataTransferObject;
  *   id = "eca_form_field_default_value",
  *   label = @Translation("Form field: set default value"),
  *   description = @Translation("Prepopulates a default value in the form."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
@@ -26,7 +27,7 @@ class FormFieldDefaultValue extends FormFieldActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute(): void {
+  protected function doExecute(): void {
     if ($element = &$this->getTargetElement()) {
       $element = &$this->jumpToFirstFieldChild($element);
       $value = $this->configuration['value'];
@@ -37,7 +38,7 @@ class FormFieldDefaultValue extends FormFieldActionBase {
         case 'date':
         case 'datelist':
         case 'datetime':
-          $value = (string) $this->tokenServices->replaceClear($value);
+          $value = (string) $this->tokenService->replaceClear($value);
           $this->filterFormFieldValue($value);
           if (mb_substr($value, 0, 1) === '@') {
             $value = mb_substr($value, 1);
@@ -46,7 +47,7 @@ class FormFieldDefaultValue extends FormFieldActionBase {
           break;
 
         case 'entity_autocomplete':
-          $value = $this->tokenServices->getOrReplace($value);
+          $value = $this->tokenService->getOrReplace($value);
           if ($value instanceof EntityReferenceFieldItemListInterface) {
             $value = $value->referencedEntities();
           }
@@ -70,7 +71,9 @@ class FormFieldDefaultValue extends FormFieldActionBase {
             }
           }
           $value = array_filter($entities, function ($entity) {
-            /** @var \Drupal\Core\Entity\EntityInterface $entity */
+            /**
+             * @var \Drupal\Core\Entity\EntityInterface $entity
+             */
             return $entity->access('view', $this->currentUser);
           });
           if (empty($value)) {
@@ -82,7 +85,7 @@ class FormFieldDefaultValue extends FormFieldActionBase {
           break;
 
         case 'checkboxes':
-          $value = $this->tokenServices->getOrReplace($value);
+          $value = $this->tokenService->getOrReplace($value);
           if (is_scalar($value) || $value instanceof MarkupInterface) {
             $value = DataTransferObject::buildArrayFromUserInput($value);
           }
@@ -100,7 +103,7 @@ class FormFieldDefaultValue extends FormFieldActionBase {
           $default_value_key = '#value';
 
         default:
-          $value = (string) $this->tokenServices->replaceClear($value);
+          $value = (string) $this->tokenService->replaceClear($value);
           $this->filterFormFieldValue($value);
 
       }
@@ -122,15 +125,15 @@ class FormFieldDefaultValue extends FormFieldActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['value'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Value'),
-      '#description' => $this->t('The default value to prepopulate. Supports tokens.'),
+      '#description' => $this->t('The default value to prepopulate.'),
       '#default_value' => $this->configuration['value'],
       '#weight' => -49,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

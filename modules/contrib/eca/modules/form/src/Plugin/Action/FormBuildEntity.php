@@ -19,6 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "eca_form_build_entity",
  *   label = @Translation("Entity form: build entity"),
  *   description = @Translation("Build an entity from submitted form input and store the result as a token."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
@@ -36,8 +37,7 @@ class FormBuildEntity extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): FormBuildEntity {
-    /** @var \Drupal\eca_form\Plugin\Action\FormBuildEntity $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->formBuilder = $container->get('form_builder');
     return $instance;
@@ -56,7 +56,6 @@ class FormBuildEntity extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -66,7 +65,7 @@ class FormBuildEntity extends ConfigurableActionBase {
       '#weight' => -45,
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -170,12 +169,14 @@ class FormBuildEntity extends ConfigurableActionBase {
         $form_state->cleanValues();
       }
       finally {
-         // Make sure that the real form state will have its errors restored.
-        \Closure::fromCallable(function () use ($any_errors, $current_errors) {
+        // Make sure that the real form state will have its errors restored.
+        (function () use ($any_errors, $current_errors) {
           /** @var \Drupal\Core\Form\FormState $this */
+          // @phpstan-ignore-next-line
           $this::setAnyErrors($any_errors);
+          // @phpstan-ignore-next-line
           $this->errors = $current_errors;
-        })->call($this->getCurrentFormState());
+        })(...)->call($this->getCurrentFormState());
 
         // Now re-add the previously fetched messages.
         $messenger->deleteAll();
@@ -193,7 +194,7 @@ class FormBuildEntity extends ConfigurableActionBase {
     $can_build = ($form_state->getValues() && ($form_state->isSubmitted() || ($form_state->isRebuilding() && $form_state->isValidationComplete()) || $needs_manual_build));
     $entity = $can_build ? $form_object->buildEntity($form, $form_state) : clone $form_object->getEntity();
 
-    $this->tokenServices->addTokenData($this->configuration['token_name'], $entity);
+    $this->tokenService->addTokenData($this->configuration['token_name'], $entity);
   }
 
 }

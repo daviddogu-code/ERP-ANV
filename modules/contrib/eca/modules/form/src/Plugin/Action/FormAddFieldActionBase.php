@@ -2,10 +2,11 @@
 
 namespace Drupal\eca_form\Plugin\Action;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 use Drupal\eca\Plugin\FormFieldPluginTrait;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -14,6 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class FormAddFieldActionBase extends FormActionBase {
 
   use FormFieldPluginTrait;
+  use PluginFormTrait;
 
   /**
    * The module handler.
@@ -25,7 +27,7 @@ abstract class FormAddFieldActionBase extends FormActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->moduleHandler = $container->get('module_handler');
     return $instance;
@@ -38,7 +40,7 @@ abstract class FormAddFieldActionBase extends FormActionBase {
     if (!($form = &$this->getCurrentForm())) {
       return;
     }
-    $name = trim((string) $this->tokenServices->replace($this->configuration['name']));
+    $name = trim((string) $this->tokenService->replace($this->configuration['name']));
     if ($name === '') {
       throw new \InvalidArgumentException('Cannot use an empty string as field name.');
     }
@@ -58,14 +60,18 @@ abstract class FormAddFieldActionBase extends FormActionBase {
    *   The built field element.
    */
   protected function buildFieldElement(): array {
+    $type = $this->configuration['type'];
+    if ($type === '_eca_token') {
+      $type = $this->getTokenValue('type', '');
+    }
     $field_element = [
-      '#type' => $this->configuration['type'],
-      '#title' => $this->tokenServices->replaceClear($this->configuration['title']),
+      '#type' => $type,
+      '#title' => $this->tokenService->replaceClear($this->configuration['title']),
       '#required' => $this->configuration['required'],
       '#weight' => (int) $this->configuration['weight'],
     ];
     if ($this->configuration['description'] !== '') {
-      $field_element['#description'] = $this->tokenServices->replaceClear($this->configuration['description']);
+      $field_element['#description'] = $this->tokenService->replaceClear($this->configuration['description']);
     }
     if (trim((string) $this->configuration['default_value']) !== '') {
       $field_element['#default_value'] = $this->buildDefaultValue();
@@ -100,7 +106,6 @@ abstract class FormAddFieldActionBase extends FormActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $type_options = $this->getTypeOptions();
     if (count($type_options) > 1) {
       $form['type'] = [
@@ -111,6 +116,7 @@ abstract class FormAddFieldActionBase extends FormActionBase {
         '#options' => $type_options,
         '#default_value' => $this->configuration['type'],
         '#required' => TRUE,
+        '#eca_token_select_option' => TRUE,
       ];
     }
     $form['name'] = [
@@ -158,7 +164,7 @@ abstract class FormAddFieldActionBase extends FormActionBase {
       '#weight' => -20,
       '#required' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -179,11 +185,11 @@ abstract class FormAddFieldActionBase extends FormActionBase {
   /**
    * Builds up the default value for the form element.
    *
-   * @return mixed
+   * @return array|string|\Drupal\Component\Render\MarkupInterface
    *   The default value.
    */
-  protected function buildDefaultValue() {
-    return $this->tokenServices->replaceClear($this->configuration['default_value']);
+  protected function buildDefaultValue(): array|string|MarkupInterface {
+    return $this->tokenService->replaceClear($this->configuration['default_value']);
   }
 
 }

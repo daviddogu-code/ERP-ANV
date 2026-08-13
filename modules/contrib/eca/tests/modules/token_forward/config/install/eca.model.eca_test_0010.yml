@@ -14,11 +14,12 @@ filename: ''
 modeldata: |
   <?xml version="1.0" encoding="UTF-8"?>
   <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:qa="http://some-company/schema/bpmn/qa" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
-    <bpmn2:process id="eca_test_0010" name="Forward tokens to custom event" isExecutable="true" camunda:versionTag="1.0.0">
+    <bpmn2:process id="eca_test_0010" name="Forward tokens to custom event" isExecutable="true" camunda:versionTag="v1">
       <bpmn2:documentation>Demonstrates how okens can be forwarded to triggered custom events.</bpmn2:documentation>
       <bpmn2:extensionElements>
         <camunda:properties>
           <camunda:property name="Tags" value="test models,custom event,token" />
+          <camunda:property name="Changelog v1" value="Initial version" />
         </camunda:properties>
       </bpmn2:extensionElements>
       <bpmn2:startEvent id="Event_06wii13" name="Pre-save node" camunda:modelerTemplate="org.drupal.event.content_entity:presave">

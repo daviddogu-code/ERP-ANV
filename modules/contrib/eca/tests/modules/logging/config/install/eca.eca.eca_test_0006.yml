@@ -7,7 +7,7 @@ dependencies:
 id: eca_test_0006
 modeller: bpmn_io
 label: 'Write Log Message'
-version: 1.0.0
+version: v1
 weight: null
 events:
   Event_1eshshx:

@@ -1,9 +1,7 @@
 parameters:
   # The base path of all ECA endpoints. Must not start with a slash.
   eca_endpoint.base_path: eca
+
 services:
-  eca_endpoint.subscriber:
-    class: Drupal\eca_endpoint\EventSubscriber\EcaEndpoint
-    parent: eca.default_event_subscriber
-    tags:
-      - { name: event_subscriber }
+  Drupal\eca_endpoint\Controller\EndpointController:
+    autowire: true

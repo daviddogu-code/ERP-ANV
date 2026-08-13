@@ -3,16 +3,20 @@
 namespace Drupal\eca_cache\Plugin\Action;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Base class for config-related actions.
  */
 abstract class CacheActionBase extends ConfigurableActionBase {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -36,24 +40,25 @@ abstract class CacheActionBase extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['backend'] = [
       '#type' => 'select',
       '#title' => $this->t('Cache backend'),
       '#options' => $this->getBackendOptions(),
-      '#default_value' => $this->configuration['backend'],
+      '#default_value' => $this->configuration['backend'] ?? '',
       '#required' => TRUE,
       '#weight' => -60,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Cache key'),
       '#description' => $this->t('The cache key is a unique machine name and identifies the cache item.'),
-      '#default_value' => $this->configuration['key'],
+      '#default_value' => $this->configuration['key'] ?? '',
       '#required' => TRUE,
       '#weight' => -50,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -71,10 +76,16 @@ abstract class CacheActionBase extends ConfigurableActionBase {
    * @return \Drupal\Core\Cache\CacheBackendInterface|null
    *   The cache backend, or NULL if not configured or does not exist.
    */
-  public function getCacheBackend(): ?CacheBackendInterface {
-    if (!empty($this->configuration['backend'])) {
+  protected function getCacheBackend(): ?CacheBackendInterface {
+    $backend = $this->configuration['backend'];
+    if ($backend === '_eca_token') {
+      $backend = $this->getTokenValue('backend', 'eca_default');
+    }
+    if (!empty($backend)) {
       $service_name = 'cache.' . $this->configuration['backend'];
+      // @phpstan-ignore-next-line
       if (\Drupal::hasService($service_name)) {
+        // @phpstan-ignore-next-line
         return \Drupal::service($service_name);
       }
     }
@@ -88,11 +99,11 @@ abstract class CacheActionBase extends ConfigurableActionBase {
    *   The backend options.
    */
   protected function getBackendOptions(): array {
-    return [
-      'eca_default' => $this->t('Default shared cache'),
-      'eca_memory' => $this->t('Runtime in-memory cache'),
-      'eca_chained' => $this->t('Chained cache (in-memory plus shared)'),
-    ];
+    $backends = [];
+    foreach (Cache::getBins() as $bin => $service) {
+      $backends[$bin] = $bin;
+    }
+    return $backends;
   }
 
   /**
@@ -102,14 +113,8 @@ abstract class CacheActionBase extends ConfigurableActionBase {
    *   The cache key, or NULL if not defined.
    */
   protected function getCacheKey(): ?string {
-    $key = trim($this->configuration['key'] ?? '');
-    if ($key !== '') {
-      if (substr($key, 0, 10) !== 'eca_cache:') {
-        $key = 'eca_cache:' . $key;
-      }
-      return $key;
-    }
-    return NULL;
+    $key = trim($this->tokenService->replaceClear($this->configuration['key'] ?? ''));
+    return $key === '' ? NULL : $key;
   }
 
   /**
@@ -122,11 +127,6 @@ abstract class CacheActionBase extends ConfigurableActionBase {
     $tags = [];
     if ($this->configuration['tags'] !== '') {
       $tags = array_values(DataTransferObject::buildArrayFromUserInput($this->configuration['tags']));
-    }
-    foreach ($tags as &$tag) {
-      if (substr($tag, 0, 10) !== 'eca_cache:') {
-        $tag = 'eca_cache:' . $tag;
-      }
     }
     return $tags;
   }

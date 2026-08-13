@@ -4,18 +4,19 @@ namespace Drupal\eca\Entity\Objects;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Core\Access\AccessResultReasonInterface;
-use Drupal\eca\Plugin\Action\ActionInterface;
-use Drupal\eca\Entity\Eca;
 use Drupal\Core\Action\ActionInterface as CoreActionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\EnforcedResponseException;
 use Drupal\Core\Form\FormAjaxException;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\eca\EcaEvents;
+use Drupal\eca\Entity\Eca;
 use Drupal\eca\Event\AfterActionExecutionEvent;
 use Drupal\eca\Event\BeforeActionExecutionEvent;
+use Drupal\eca\Plugin\Action\ActionInterface;
 use Drupal\eca\Plugin\ObjectWithPluginInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Provides an ECA item of type action for internal processing.
@@ -58,7 +59,7 @@ class EcaAction extends EcaObject implements ObjectWithPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function execute(EcaObject $predecessor, object $event, array $context): bool {
+  public function execute(?EcaObject $predecessor, Event $event, array $context): bool {
     if (!parent::execute($predecessor, $event, $context)) {
       return FALSE;
     }
@@ -66,6 +67,7 @@ class EcaAction extends EcaObject implements ObjectWithPluginInterface {
     $access_granted = FALSE;
     $exception_thrown = FALSE;
     if ($this->plugin instanceof ActionInterface) {
+      $this->plugin->setEcaActionIds($this->getEca()->id(), $this->getId());
       $this->plugin->setEvent($event);
     }
     elseif (($this->plugin instanceof ConfigurableInterface) && !empty($this->plugin->getConfiguration()['replace_tokens'])) {
@@ -95,10 +97,13 @@ class EcaAction extends EcaObject implements ObjectWithPluginInterface {
       $this->eventDispatcher()->dispatch($before_event, EcaEvents::BEFORE_ACTION_EXECUTION);
 
       try {
-        /** @var \Drupal\Core\Access\AccessResultReasonInterface $access_result */
+        /**
+         * @var \Drupal\Core\Access\AccessResultReasonInterface|bool $access_result
+         */
         $access_result = $this->plugin->access($object, NULL, TRUE);
         $access_granted = $access_result->isAllowed();
         if ($access_granted) {
+          // @phpstan-ignore-next-line
           $this->plugin->execute($object);
         }
         else {
@@ -116,14 +121,22 @@ class EcaAction extends EcaObject implements ObjectWithPluginInterface {
         if ($ex instanceof FormAjaxException) {
           throw $ex;
         }
-
-        $context['%exmsg'] = $ex->getMessage();
-        $context['%extrace'] = $ex->getTraceAsString();
-        $this->logger()->error('Failed execution of %actionlabel (%actionid) from ECA %ecalabel (%ecaid) for event %event: %exmsg.\n\n%extrace', $context);
+        $context['%exception_msg'] = $ex->getMessage();
+        $context['%exception_trace'] = $ex->getTraceAsString();
+        if (!($this->plugin instanceof ActionInterface) || $this->plugin->logExceptions()) {
+          $this->logger()->error('Failed execution of %actionlabel (%actionid) from ECA %ecalabel (%ecaid) for event %event: %exception_msg.\n\n%exception_trace', $context);
+        }
+        if ($this->plugin instanceof ActionInterface && $this->plugin->handleExceptions()) {
+          throw $ex;
+        }
+        if ($predecessor !== NULL && $predecessor->event->getPlugin()->handleExceptions()) {
+          throw $ex;
+        }
         $exception_thrown = TRUE;
       }
       finally {
-        $this->eventDispatcher()->dispatch(new AfterActionExecutionEvent($this, $object, $event, $predecessor, $before_event->getPrestate(NULL), $access_granted, $exception_thrown), EcaEvents::AFTER_ACTION_EXECUTION);
+        $pre_state = $before_event->getPrestate(NULL);
+        $this->eventDispatcher()->dispatch(new AfterActionExecutionEvent($this, $object, $event, $predecessor, $pre_state, $access_granted, $exception_thrown), EcaEvents::AFTER_ACTION_EXECUTION);
       }
     }
 
@@ -148,6 +161,7 @@ class EcaAction extends EcaObject implements ObjectWithPluginInterface {
    */
   protected function eventDispatcher(): EventDispatcherInterface {
     if (!isset($this->eventDispatcher)) {
+      // @phpstan-ignore-next-line
       $this->eventDispatcher = \Drupal::service('event_dispatcher');
     }
     return $this->eventDispatcher;

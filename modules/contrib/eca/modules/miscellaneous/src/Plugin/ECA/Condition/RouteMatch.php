@@ -13,7 +13,8 @@ use Drupal\eca_misc\Plugin\RouteTrait;
  * @EcaCondition(
  *   id = "eca_route_match",
  *   label = "Route match",
- *   description = @Translation("Gets and compares the name of the route.")
+ *   description = @Translation("Gets and compares the name of the route."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class RouteMatch extends StringComparisonBase {
@@ -48,7 +49,6 @@ class RouteMatch extends StringComparisonBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $this->requestFormField($form);
     $form['route'] = [
       '#type' => 'textfield',
@@ -57,7 +57,7 @@ class RouteMatch extends StringComparisonBase {
       '#default_value' => $this->configuration['route'],
       '#weight' => -70,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

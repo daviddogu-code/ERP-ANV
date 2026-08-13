@@ -9,7 +9,8 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @Action(
  *   id = "eca_endpoint_get_path_argument",
- *   label = @Translation("Request: Get path argument")
+ *   label = @Translation("Request: Get path argument"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class GetPathArgument extends RequestActionBase {
@@ -17,13 +18,17 @@ class GetPathArgument extends RequestActionBase {
   /**
    * {@inheritdoc}
    */
-  protected function getRequestValue() {
-    $path = $this->getRequest()->getPathInfo();
+  protected function getRequestValue(): mixed {
+    $request = $this->getRequest();
+    if ($request === NULL) {
+      return NULL;
+    }
+    $path = $request->getPathInfo();
     $index = trim((string) $this->configuration['index']);
     if ($index === '') {
       return $path;
     }
-    $parts = array_values(array_filter(explode('/', $this->getRequest()->getPathInfo()), static function ($v) {
+    $parts = array_values(array_filter(explode('/', $request->getPathInfo()), static function ($v) {
       return $v !== '';
     }));
     $index = (int) $index;
@@ -43,7 +48,6 @@ class GetPathArgument extends RequestActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['index'] = [
       '#type' => 'number',
       '#min' => 0,
@@ -53,7 +57,7 @@ class GetPathArgument extends RequestActionBase {
       '#weight' => -20,
       '#required' => FALSE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

@@ -13,6 +13,7 @@ use Drupal\eca\Plugin\FormFieldPluginTrait;
  *   id = "eca_form_add_container_element",
  *   label = @Translation("Form: add container element"),
  *   description = @Translation("Adds a div block element to the form for surrounding child elements."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
@@ -27,7 +28,7 @@ class FormAddContainerElement extends FormActionBase {
     if (!($form = &$this->getCurrentForm())) {
       return;
     }
-    $name = trim((string) $this->tokenServices->replace($this->configuration['name']));
+    $name = trim((string) $this->tokenService->replace($this->configuration['name']));
     if ($name === '') {
       throw new \InvalidArgumentException('Cannot use an empty string as element name');
     }
@@ -63,7 +64,6 @@ class FormAddContainerElement extends FormActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Element name'),
@@ -87,7 +87,7 @@ class FormAddContainerElement extends FormActionBase {
       '#weight' => -8,
       '#required' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

@@ -85,7 +85,7 @@ abstract class ModellerBase extends EcaPluginBase implements ModellerInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EcaPluginBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->actionServices = $container->get('eca.service.action');
     $instance->conditionServices = $container->get('eca.service.condition');
@@ -154,6 +154,13 @@ abstract class ModellerBase extends EcaPluginBase implements ModellerInterface {
    */
   public function hasError(): bool {
     return $this->hasError;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getChangelog(): array {
+    return [];
   }
 
 }

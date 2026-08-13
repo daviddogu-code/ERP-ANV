@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Module file of the ECA Flag project.
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\eca_flag\Hook\FlagHooks;
+use Drupal\flag\FlaggingInterface;
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ *
+ * @phpstan-ignore-next-line
+ */
+#[LegacyHook]
+function eca_flag_flagging_insert(FlaggingInterface $entity): void {
+  \Drupal::service(FlagHooks::class)->flaggingInsert($entity);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ *
+ * @phpstan-ignore-next-line
+ */
+#[LegacyHook]
+function eca_flag_flagging_delete(FlaggingInterface $entity): void {
+  \Drupal::service(FlagHooks::class)->flaggingDelete($entity);
+}

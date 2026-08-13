@@ -1,0 +1,4 @@
+Flaggable
+Unflag
+unflag
+UNFLAGGED

@@ -6,8 +6,8 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\eca\Entity\Eca;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\Entity\Eca;
 use Drupal\user\Entity\User;
 use Symfony\Component\ErrorHandler\BufferingLogger;
 

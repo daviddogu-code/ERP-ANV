@@ -8,7 +8,8 @@ namespace Drupal\eca_form\Plugin\ECA\Condition;
  * @EcaCondition(
  *   id = "eca_form_field_exists",
  *   label = @Translation("Form field: exists"),
- *   description = @Translation("Looks up the current form structure whether a specified field exists.")
+ *   description = @Translation("Looks up the current form structure whether a specified field exists."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class FormFieldExists extends FormFieldConditionBase {
@@ -27,7 +28,7 @@ class FormFieldExists extends FormFieldConditionBase {
     if (!$this->getCurrentFormState()) {
       return FALSE;
     }
-    $field_name = trim((string) $this->tokenServices->replace($this->configuration['field_name']));
+    $field_name = trim((string) $this->tokenService->replace($this->configuration['field_name']));
     if ($field_name === '') {
       throw new \InvalidArgumentException('Cannot use an empty string as field name');
     }

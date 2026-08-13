@@ -10,7 +10,8 @@ use Drupal\eca\Plugin\Action\ActionBase;
  * @Action(
  *   id = "eca_void_and_condition",
  *   label = @Translation("Chain action for AND condition"),
- *   description = @Translation("This action chains other actions with an explicit AND condition.")
+ *   description = @Translation("This action chains other actions with an explicit AND condition."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class VoidForAndCondition extends ActionBase {

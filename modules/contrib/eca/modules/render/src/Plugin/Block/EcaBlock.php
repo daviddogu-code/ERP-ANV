@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   deriver = "Drupal\eca_render\Plugin\Block\EcaBlockDeriver"
  * )
  */
-class EcaBlock extends BlockBase implements ContainerFactoryPluginInterface {
+final class EcaBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
    * The build of the render array.
@@ -45,8 +45,14 @@ class EcaBlock extends BlockBase implements ContainerFactoryPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.manager'), $container->get('eca.trigger_event'));
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EcaBlock {
+    return new EcaBlock(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager'),
+      $container->get('eca.trigger_event')
+    );
   }
 
   /**

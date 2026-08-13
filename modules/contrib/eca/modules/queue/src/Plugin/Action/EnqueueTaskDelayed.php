@@ -3,16 +3,20 @@
 namespace Drupal\eca_queue\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Enqueue a Task with a delay.
  *
  * @Action(
  *   id = "eca_enqueue_task_delayed",
- *   label = @Translation("Enqueue a task with a delay")
+ *   label = @Translation("Enqueue a task with a delay"),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class EnqueueTaskDelayed extends EnqueueTask {
+
+  use PluginFormTrait;
 
   public const DELAY_SECONDS = 1;
   public const DELAY_MINUTES = 60;
@@ -25,8 +29,12 @@ class EnqueueTaskDelayed extends EnqueueTask {
    * {@inheritdoc}
    */
   protected function getEarliestProcessingTime(): int {
-    return \Drupal::time()->getCurrentTime() +
-      (int) $this->tokenServices->replaceClear($this->configuration['delay_value']) * (int) $this->configuration['delay_unit'];
+    $delay_unit = $this->configuration['delay_unit'];
+    if ($delay_unit === '_eca_token') {
+      $delay_unit = $this->getTokenValue('delay_unit', '');
+    }
+    return $this->time->getCurrentTime() +
+      (int) $this->tokenService->replaceClear($this->configuration['delay_value']) * (int) $delay_unit;
   }
 
   /**
@@ -43,12 +51,12 @@ class EnqueueTaskDelayed extends EnqueueTask {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['delay_value'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Delay value'),
       '#default_value' => $this->configuration['delay_value'],
       '#weight' => -20,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['delay_unit'] = [
       '#type' => 'select',
@@ -63,8 +71,9 @@ class EnqueueTaskDelayed extends EnqueueTask {
         static::DELAY_MONTHS => $this->t('months'),
       ],
       '#weight' => -10,
+      '#eca_token_select_option' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

@@ -4,13 +4,16 @@ namespace Drupal\eca_tamper\Plugin;
 
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\ListInterface;
 use Drupal\tamper\Exception\SkipTamperDataException;
 use Drupal\tamper\Exception\SkipTamperItemException;
 use Drupal\tamper\Exception\TamperException;
+use Drupal\tamper\Plugin\Tamper\Encode;
 use Drupal\tamper\Plugin\Tamper\FindReplaceRegex;
+use Drupal\tamper\Plugin\Tamper\Trim;
 use Drupal\tamper\SourceDefinition;
 use Drupal\tamper\TamperInterface;
 use Drupal\tamper\TamperManagerInterface;
@@ -45,13 +48,23 @@ trait TamperTrait {
   protected function tamperPlugin(): TamperInterface {
     if (!isset($this->tamperPlugin)) {
       /* @noinspection PhpFieldAssignmentTypeMismatchInspection */
-      $this->tamperPlugin = $this->tamperManager->createInstance($this->pluginDefinition['tamper_plugin'], ['source_definition' => new SourceDefinition([])]);
+      $this->tamperPlugin = $this->tamperManager->createInstance($this->pluginDefinition['original_id'], ['source_definition' => new SourceDefinition([])]);
 
       $configuration = $this->configuration;
       unset($configuration['eca_data'], $configuration['eca_token_name']);
       $this->tamperPlugin->setConfiguration($configuration);
     }
     return $this->tamperPlugin;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration): void {
+    parent::setConfiguration($configuration);
+    if (isset($this->tamperManager)) {
+      $this->tamperPlugin()->setConfiguration($this->configuration);
+    }
   }
 
   /**
@@ -77,7 +90,19 @@ trait TamperTrait {
   public function buildTamperConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form = parent::buildConfigurationForm($form, $form_state);
     try {
-      return $this->tamperPlugin()->buildConfigurationForm($form, $form_state);
+      $form = $this->tamperPlugin()->buildConfigurationForm($form, $form_state);
+      // Enable token replacement for free-text fields provided by tamper
+      // plugins. The runtime code in doTamper() already replaces tokens for
+      // all config values, but the form elements need the annotation so that
+      // the UI (both the standard ECA form and the Workflow Modeler) knows
+      // to allow token input in these fields.
+      $field_types = ['textfield', 'textarea', 'number'];
+      foreach (Element::children($form) as $key) {
+        if (isset($form[$key]['#type']) && in_array($form[$key]['#type'], $field_types, TRUE)) {
+          $form[$key]['#eca_token_replacement'] = TRUE;
+        }
+      }
+      return $form;
     }
     catch (PluginException $e) {
       // @todo Do we need to log this?
@@ -117,7 +142,8 @@ trait TamperTrait {
    * @return mixed
    *   The tampered result.
    *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException | \Drupal\Core\TypedData\Exception\MissingDataException
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
   protected function doTamper(string $dataKey, string $tokenKey) {
     $tamperPlugin = $this->tamperPlugin();
@@ -127,16 +153,40 @@ trait TamperTrait {
       if (in_array($key, [$dataKey, $tokenKey], TRUE)) {
         continue;
       }
-      $config[$key] = $regexPlugin && $key === FindReplaceRegex::SETTING_FIND ?
-        $this->tokenServices->replace($this->configuration[$key]) :
-        $this->tokenServices->replaceClear($this->configuration[$key]);
+      $configValue = $this->configuration[$key];
+      if (is_array($configValue)) {
+        $token = $this->tokenService;
+        array_walk_recursive($configValue, static function (&$value) use ($token) {
+          if (!empty($value) && is_string($value)) {
+            $value = (string) $token->replaceClear($value);
+          }
+        });
+        $config[$key] = $configValue;
+      }
+      elseif ($regexPlugin && $key === FindReplaceRegex::SETTING_FIND) {
+        $config[$key] = $this->tokenService->replace($configValue);
+      }
+      else {
+        $config[$key] = $this->tokenService->replaceClear($configValue);
+      }
+    }
+    if ($tamperPlugin instanceof Trim && !empty($config[Trim::SETTING_CHARACTER])) {
+      $config[Trim::SETTING_CHARACTER] = stripcslashes($config[Trim::SETTING_CHARACTER]);
     }
     $tamperPlugin->setConfiguration($config);
-    if (empty($tamperPlugin->getPluginDefinition()['handle_multiples'])) {
-      $data = $this->tokenServices->replaceClear($this->configuration[$dataKey]);
+    if (empty($tamperPlugin->getPluginDefinition()['handle_multiples']) ||
+      ($tamperPlugin instanceof Encode && in_array($config[Encode::SETTING_MODE], [
+        'base64_encode',
+        'unserialize',
+        'json_decode',
+        'base64_decode',
+        'yaml_decode',
+      ]))
+    ) {
+      $data = $this->tokenService->replaceClear($this->configuration[$dataKey]);
     }
     else {
-      $data = $this->tokenServices->getOrReplace($this->configuration[$dataKey]);
+      $data = $this->tokenService->getOrReplace($this->configuration[$dataKey]);
       if ($data instanceof ComplexDataInterface) {
         $data = $data->toArray();
       }

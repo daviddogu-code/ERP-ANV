@@ -4,6 +4,7 @@ namespace Drupal\eca_form\Plugin\Action;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Session\AccountInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Set available options on a field.
@@ -12,6 +13,7 @@ use Drupal\Core\Session\AccountInterface;
  *   id = "eca_form_field_set_options",
  *   label = @Translation("Form field: set options"),
  *   description = @Translation("Defines available options on an existing multi-value selection, radio or checkbox field."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
@@ -27,6 +29,15 @@ class FormFieldSetOptions extends FormFieldActionBase {
    * @var bool
    */
   protected bool $useFilters = FALSE;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->setYamlParser($container->get('eca.service.yaml_parser'));
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -66,6 +77,7 @@ class FormFieldSetOptions extends FormFieldActionBase {
     return $return_as_object ? $result : $result->isAllowed();
   }
 
+  // @codingStandardsIgnoreStart
   /**
    * {@inheritdoc}
    */
@@ -74,5 +86,6 @@ class FormFieldSetOptions extends FormFieldActionBase {
     // the trait would be used instead.
     parent::execute();
   }
+  // @codingStandardsIgnoreEnd
 
 }

@@ -4,12 +4,8 @@ namespace Drupal\eca_render\Event;
 
 use Drupal\Core\Entity\Display\EntityDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\eca\Event\ConditionalApplianceInterface;
 use Drupal\eca\Event\EntityApplianceTrait;
 use Drupal\eca\Event\EntityEventInterface;
-use Drupal\eca\Plugin\DataType\DataTransferObject;
-use Drupal\eca\Token\DataProviderInterface;
-use Drupal\eca_render\RenderEvents;
 
 /**
  * Dispatched when an extra field is being rendered via ECA.
@@ -20,7 +16,7 @@ use Drupal\eca_render\RenderEvents;
  *
  * @package Drupal\eca_render\Event
  */
-class EcaRenderExtraFieldEvent extends EcaRenderEventBase implements ConditionalApplianceInterface, DataProviderInterface, EntityEventInterface {
+class EcaRenderExtraFieldEvent extends EcaRenderEventBase implements EntityEventInterface {
 
   use EntityApplianceTrait;
 
@@ -74,13 +70,6 @@ class EcaRenderExtraFieldEvent extends EcaRenderEventBase implements Conditional
   protected string $displayType;
 
   /**
-   * An instance holding event data accessible as Token.
-   *
-   * @var \Drupal\eca\Plugin\DataType\DataTransferObject|null
-   */
-  protected ?DataTransferObject $eventData = NULL;
-
-  /**
    * Constructs a new EcaRenderExtraFieldEvent object.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
@@ -118,77 +107,58 @@ class EcaRenderExtraFieldEvent extends EcaRenderEventBase implements Conditional
   /**
    * {@inheritdoc}
    */
-  public function getData(string $key) {
-    if ($key === 'event') {
-      if (!isset($this->eventData)) {
-        $this->eventData = DataTransferObject::create([
-          'machine-name' => RenderEvents::EXTRA_FIELD,
-          'extra-field-name' => $this->extraFieldName,
-          'options' => $this->options,
-          'entity' => $this->entity,
-          'display' => $this->display,
-          'mode' => $this->viewMode,
-        ]);
-      }
-
-      return $this->eventData;
-    }
-
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasData(string $key): bool {
-    return $this->getData($key) !== NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getEntity(): EntityInterface {
     return $this->entity;
   }
 
   /**
-   * {@inheritdoc}
+   * Returns the display type.
+   *
+   * @return string
+   *   The display type.
    */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    [$w_display_type, $w_extra_field_name, $w_entity_type_ids, $w_bundles] = explode(':', $wildcard);
-
-    if ($w_display_type !== $this->displayType) {
-      return FALSE;
-    }
-
-    if ($w_extra_field_name !== $this->extraFieldName) {
-      return FALSE;
-    }
-
-    if (($w_entity_type_ids !== '*') && !in_array($this->getEntity()->getEntityTypeId(), explode(',', $w_entity_type_ids), TRUE)) {
-      return FALSE;
-    }
-
-    if (($w_bundles !== '*') && !in_array($this->getEntity()->bundle(), explode(',', $w_bundles), TRUE)) {
-      return FALSE;
-    }
-
-    return TRUE;
+  public function getDisplayType(): string {
+    return $this->displayType;
   }
 
   /**
-   * {@inheritdoc}
+   * Returns the extra field name.
+   *
+   * @return string
+   *   The extra field name.
    */
-  public function applies(string $id, array $arguments): bool {
-    if (($arguments['display_type'] ?? NULL) !== $this->displayType) {
-      return FALSE;
-    }
+  public function getExtraFieldName(): string {
+    return $this->extraFieldName;
+  }
 
-    if (($arguments['extra_field_name'] ?? NULL) !== $this->extraFieldName) {
-      return FALSE;
-    }
+  /**
+   * Get the options array.
+   *
+   * @return array
+   *   The options.
+   */
+  public function getOptions(): array {
+    return $this->options;
+  }
 
-    return $this->appliesForEntityTypeOrBundle($this->getEntity(), $arguments);
+  /**
+   * Get the entity display.
+   *
+   * @return \Drupal\Core\Entity\Display\EntityDisplayInterface
+   *   The entity display.
+   */
+  public function getDisplay(): EntityDisplayInterface {
+    return $this->display;
+  }
+
+  /**
+   * Get the view mode.
+   *
+   * @return string
+   *   The view mode.
+   */
+  public function getViewMode(): string {
+    return $this->viewMode;
   }
 
 }

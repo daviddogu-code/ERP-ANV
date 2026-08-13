@@ -16,6 +16,7 @@ use Drupal\eca\TypedData\PropertyPathTrait;
  *   id = "eca_entity_field_value_empty",
  *   label = @Translation("Entity: field value is empty"),
  *   description = @Translation("Evaluates if a value field of an entity is empty."),
+ *   eca_version_introduced = "1.0.0",
  *   context_definitions = {
  *     "entity" = @ContextDefinition("entity", label = @Translation("Entity"))
  *   }
@@ -30,7 +31,7 @@ class EntityFieldValueEmpty extends ConditionBase {
    */
   public function evaluate(): bool {
     $entity = $this->getValueFromContext('entity');
-    $field_name = $this->tokenServices->replaceClear($this->configuration['field_name']);
+    $field_name = $this->tokenService->replaceClear($this->configuration['field_name']);
     $property_path = $this->normalizePropertyPath($field_name);
     $options = ['access' => FALSE, 'auto_item' => FALSE];
 
@@ -42,7 +43,8 @@ class EntityFieldValueEmpty extends ConditionBase {
       $is_empty = NULL;
       $property = NULL;
       while ($property_path && !($property = $this->getTypedProperty($entity->getTypedData(), $property_path, $options))) {
-        $is_empty = TRUE; // Property does not exist, which means it's empty.
+        // Property does not exist, which means it's empty.
+        $is_empty = TRUE;
         $property_path = implode('.', array_slice(explode('.', $property_path), 0, -1));
       }
       if (($is_empty === NULL) && $property) {
@@ -61,7 +63,7 @@ class EntityFieldValueEmpty extends ConditionBase {
             $entities = $items->referencedEntities();
             if ($entities) {
               foreach ($items as $delta => $item) {
-                if (($item === $property) || ($item && ($item->getValue() === $property->getValue()))) {
+                if (($item === $property) || ($item->getValue() === $property->getValue())) {
                   $is_empty = !isset($entities[$delta]);
                   break;
                 }

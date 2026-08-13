@@ -2,9 +2,9 @@
 
 namespace Drupal\eca\Event;
 
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca\Entity\Objects\EcaEvent;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Dispatches before initial successor execution of an ECA configuration.
@@ -28,9 +28,9 @@ class BeforeInitialExecutionEvent extends Event {
   /**
    * The applying system event.
    *
-   * @var \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event
+   * @var \Symfony\Contracts\EventDispatcher\Event
    */
-  protected object $event;
+  protected Event $event;
 
   /**
    * The name of the applying system event.
@@ -46,7 +46,7 @@ class BeforeInitialExecutionEvent extends Event {
    *
    * @var array
    */
-  protected $prestate = [];
+  protected array $prestate = [];
 
   /**
    * The BeforeInitialExecutionEvent constructor.
@@ -55,12 +55,12 @@ class BeforeInitialExecutionEvent extends Event {
    *   The ECA configuration.
    * @param \Drupal\eca\Entity\Objects\EcaEvent $ecaEvent
    *   The ECA event object.
-   * @param \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event $event
+   * @param \Symfony\Contracts\EventDispatcher\Event $event
    *   The applying system event.
    * @param string $event_name
    *   The name of the applying system event.
    */
-  public function __construct(Eca $eca, EcaEvent $ecaEvent, object $event, string $event_name) {
+  public function __construct(Eca $eca, EcaEvent $ecaEvent, Event $event, string $event_name) {
     $this->eca = $eca;
     $this->ecaEvent = $ecaEvent;
     $this->event = $event;
@@ -90,10 +90,10 @@ class BeforeInitialExecutionEvent extends Event {
   /**
    * Get the applying system event.
    *
-   * @return \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event
+   * @return \Symfony\Contracts\EventDispatcher\Event
    *   The applying system event.
    */
-  public function getEvent(): object {
+  public function getEvent(): Event {
     return $this->event;
   }
 
@@ -116,7 +116,7 @@ class BeforeInitialExecutionEvent extends Event {
    * @return mixed
    *   The value. Returns NULL if not present.
    */
-  public function &getPrestate(?string $name) {
+  public function &getPrestate(?string $name): mixed {
     if (!isset($name)) {
       return $this->prestate;
     }
@@ -136,7 +136,7 @@ class BeforeInitialExecutionEvent extends Event {
    * @param mixed &$value
    *   The value to set, passed by reference.
    */
-  public function setPrestate(string $name, &$value) {
+  public function setPrestate(string $name, mixed &$value): void {
     $this->prestate[$name] = &$value;
   }
 

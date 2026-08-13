@@ -14,6 +14,7 @@ use Drupal\eca\Plugin\FormPluginTrait;
  *   id = "eca_content_form_display_mode",
  *   label = @Translation("Entity form: compare display mode"),
  *   description = @Translation("Evaluates against the machine name of the entity form display mode."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class EntityFormDisplayMode extends StringComparisonBase {
@@ -52,7 +53,7 @@ class EntityFormDisplayMode extends StringComparisonBase {
    * {@inheritdoc}
    */
   protected function getRightValue(): string {
-    return $this->tokenServices->replaceClear($this->configuration['display_mode']);
+    return $this->tokenService->replaceClear($this->configuration['display_mode']);
   }
 
   /**
@@ -68,7 +69,6 @@ class EntityFormDisplayMode extends StringComparisonBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['display_mode'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Form display mode'),
@@ -76,7 +76,7 @@ class EntityFormDisplayMode extends StringComparisonBase {
       '#default_value' => $this->configuration['display_mode'],
       '#weight' => -70,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

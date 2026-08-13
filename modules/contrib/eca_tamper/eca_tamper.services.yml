@@ -1,0 +1,4 @@
+services:
+
+  # Fix autowiring for Hooks.
+  Drupal\tamper\TamperManagerInterface: '@plugin.manager.tamper'

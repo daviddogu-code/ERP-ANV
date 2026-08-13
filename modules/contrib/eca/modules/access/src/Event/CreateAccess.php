@@ -2,15 +2,11 @@
 
 namespace Drupal\eca_access\Event;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\eca\Event\AccessEventInterface;
-use Drupal\eca\Event\ConditionalApplianceInterface;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
-use Drupal\eca\Token\DataProviderInterface;
-use Drupal\eca_access\AccessEvents;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Dispatched when being asked for access to create an entity.
@@ -19,7 +15,7 @@ use Drupal\eca_access\AccessEvents;
  *   This class is not meant to be used as a public API. It is subject for name
  *   change or may be removed completely, also on minor version updates.
  */
-class CreateAccess extends Event implements AccessEventInterface, ConditionalApplianceInterface, DataProviderInterface {
+class CreateAccess extends Event implements AccessEventInterface {
 
   /**
    * An associative array of additional context values.
@@ -105,76 +101,6 @@ class CreateAccess extends Event implements AccessEventInterface, ConditionalApp
   /**
    * {@inheritdoc}
    */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    [$w_entity_type_ids, $w_bundles, $w_langcodes] = explode(':', $wildcard);
-
-    if (($w_entity_type_ids !== '*') && !in_array($this->context['entity_type_id'], explode(',', $w_entity_type_ids), TRUE)) {
-      return FALSE;
-    }
-
-    if (($w_bundles !== '*') && !in_array($this->entityBundle, explode(',', $w_bundles), TRUE)) {
-      return FALSE;
-    }
-
-    if (($w_langcodes !== '*') && !in_array($this->context['langcode'], explode(',', $w_langcodes), TRUE)) {
-      return FALSE;
-    }
-
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    if (!empty($arguments['entity_type_id']) && $arguments['entity_type_id'] !== '*') {
-      $contains_entity_type_id = FALSE;
-      foreach (explode(',', $arguments['entity_type_id']) as $c_entity_type_id) {
-        $c_entity_type_id = strtolower(trim($c_entity_type_id));
-        if ($contains_entity_type_id = ($c_entity_type_id === $this->context['entity_type_id'])) {
-          break;
-        }
-      }
-      if (!$contains_entity_type_id) {
-        return FALSE;
-      }
-    }
-
-    if (!empty($arguments['bundle']) && $arguments['bundle'] !== '*') {
-      $contains_bundle = FALSE;
-      foreach (explode(',', $arguments['bundle']) as $c_bundle) {
-        $c_bundle = strtolower(trim($c_bundle));
-        if ($contains_bundle = ($c_bundle === $this->entityBundle)) {
-          break;
-        }
-      }
-      if (!$contains_bundle) {
-        return FALSE;
-      }
-    }
-
-    if (!empty($arguments['langcode']) && $arguments['langcode'] !== '*') {
-      $contains_langcode = FALSE;
-      foreach (explode(',', $arguments['langcode']) as $c_langcode) {
-        $c_langcode = trim($c_langcode);
-        if ($contains_langcode = ($c_langcode === $this->context['langcode'])) {
-          break;
-        }
-      }
-      if (!$contains_langcode) {
-        return FALSE;
-      }
-    }
-
-    // Initialize with a neutral result.
-    $this->accessResult = AccessResult::neutral();
-
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getAccessResult(): ?AccessResultInterface {
     return $this->accessResult;
   }
@@ -183,45 +109,13 @@ class CreateAccess extends Event implements AccessEventInterface, ConditionalApp
    * {@inheritdoc}
    */
   public function setAccessResult(AccessResultInterface $result): CreateAccess {
-    $this->accessResult = $result;
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getData(string $key): ?DataTransferObject {
-    if ($key === 'event') {
-      if (!isset($this->eventData)) {
-        $data = [
-          'machine-name' => AccessEvents::CREATE,
-          'uid' => $this->getAccount()->id(),
-          'context' => [],
-        ];
-        $context = $this->getContext();
-        foreach ($context as $k => $v) {
-          if (is_scalar($v)) {
-            $data['context'][$k] = $v;
-          }
-        }
-        if (isset($context['entity_type_id'])) {
-          $data['entity-type'] = $context['entity_type_id'];
-        }
-        $data['entity-bundle'] = $this->getEntityBundle();
-        $this->eventData = DataTransferObject::create($data);
-      }
-
-      return $this->eventData;
+    if ($this->accessResult === NULL) {
+      $this->accessResult = $result;
     }
-
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasData(string $key): bool {
-    return $this->getData($key) !== NULL;
+    else {
+      $this->accessResult = $this->accessResult->orIf($result);
+    }
+    return $this;
   }
 
 }

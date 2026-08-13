@@ -43,7 +43,7 @@ class HookHandler extends BaseHookHandler {
    * @param \Drupal\user\UserInterface $account
    *   The user account which gets canceled.
    * @param string $method
-   *   The method selected for user cancelation.
+   *   The method selected for user cancellation.
    */
   public function cancel(array $edit, UserInterface $account, string $method): void {
     $this->triggerEvent->dispatchFromPlugin('user:cancel', $account);

@@ -1,4 +1,4 @@
-{{ phpprefix|raw }}
+{{ php_prefix|raw }}
 
 namespace Drupal\{{ machine_name }}\Plugin\ECA\Condition;
 
@@ -12,6 +12,7 @@ use Drupal\eca\Plugin\ECA\Condition\ConditionBase;
  *   id = "{{ machine_name }}_{{ id }}",
  *   label = @Translation("{{ purpose }}"),
  *   description = @Translation("{{ description }}"),
+ *   eca_version_introduced = "{{ module_version }}",
 {% if context %}
  *   context_definitions = {
 {% for i,item in context %}

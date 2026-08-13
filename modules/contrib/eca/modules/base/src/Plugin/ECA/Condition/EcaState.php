@@ -10,7 +10,8 @@ use Drupal\eca\Plugin\ECA\Condition\StringComparisonBase;
  *
  * @EcaCondition(
  *   id = "eca_state",
- *   label = @Translation("Persistent state: compare")
+ *   label = @Translation("Persistent state: compare"),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class EcaState extends StringComparisonBase {

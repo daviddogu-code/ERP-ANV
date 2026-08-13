@@ -3,14 +3,16 @@
 namespace Drupal\eca_render\Plugin\Action;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\eca\Plugin\FormFieldYamlTrait;
 use Drupal\eca\Service\YamlParser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -21,10 +23,13 @@ use Symfony\Component\Yaml\Exception\ParseException;
  * @Action(
  *   id = "eca_render_build",
  *   label = @Translation("Render: build"),
- *   description = @Translation("Build a custom defined render array.")
+ *   description = @Translation("Build a custom defined render array."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class Build extends RenderElementActionBase {
+
+  use FormFieldYamlTrait;
 
   /**
    * The YAML parser.
@@ -36,11 +41,26 @@ class Build extends RenderElementActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_render\Plugin\Action\Build $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setYamlParser($container->get('eca.service.yaml_parser'));
     return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $result = parent::access($object, $account, TRUE);
+    if ($result->isAllowed() && !empty($this->configuration['use_yaml']) && !empty($this->configuration['validate_yaml'])) {
+      try {
+        $this->yamlParser->parse($this->configuration['value']);
+      }
+      catch (ParseException) {
+        $result = AccessResult::forbidden('YAML data is not valid.');
+      }
+    }
+    return $return_as_object ? $result : $result->isAllowed();
   }
 
   /**
@@ -50,6 +70,7 @@ class Build extends RenderElementActionBase {
     return [
       'value' => '',
       'use_yaml' => FALSE,
+      'validate_yaml' => FALSE,
     ] + parent::defaultConfiguration();
   }
 
@@ -57,28 +78,26 @@ class Build extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['value'] = [
       '#type' => 'textarea',
       '#required' => FALSE,
       '#title' => $this->t('Value'),
-      '#description' => $this->t('The value of the render build. This can be arbitrary markup text or a valid <a href=":url" target="_blank" rel="nofollow noreferrer">render array</a>. This field supports tokens.', [
+      '#description' => $this->t('The value of the render build. This can be arbitrary markup text or a valid <a href=":url" target="_blank" rel="nofollow noreferrer">render array</a>.', [
         ':url' => 'https://www.drupal.org/docs/drupal-apis/render-api/render-arrays',
       ]),
       '#default_value' => $this->configuration['value'],
       '#weight' => -20,
+      '#eca_token_replacement' => TRUE,
     ];
     if (isset($this->configuration['use_yaml'])) {
-      $form['use_yaml'] = [
-        '#type' => 'checkbox',
-        '#required' => FALSE,
-        '#title' => $this->t('Interpret above value as YAML format'),
-        '#description' => $this->t('Nested data can be set using YAML format, for example <em>mykey: "My value"</em>. When using this format, this option needs to be enabled. When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
-        '#default_value' => $this->configuration['use_yaml'],
-        '#weight' => -10,
-      ];
+      $this->buildYamlFormFields(
+        $form,
+        $this->t('Interpret above value as YAML format'),
+        $this->t('Nested data can be set using YAML format, for example <em>mykey: "My value"</em>. When using this format, this option needs to be enabled. When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
+        -10,
+      );
     }
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -88,6 +107,7 @@ class Build extends RenderElementActionBase {
     $this->configuration['value'] = $form_state->getValue('value');
     if (isset($this->configuration['use_yaml'])) {
       $this->configuration['use_yaml'] = !empty($form_state->getValue('use_yaml'));
+      $this->configuration['validate_yaml'] = !empty($form_state->getValue('validate_yaml'));
     }
     parent::submitConfigurationForm($form, $form_state);
   }
@@ -102,13 +122,13 @@ class Build extends RenderElementActionBase {
       try {
         $value = $this->yamlParser->parse($value);
       }
-      catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing a state value item in action "eca_render_build" as YAML format, but parsing failed.');
+      catch (ParseException) {
+        $this->logger->error('Tried parsing a state value item in action "eca_render_build" as YAML format, but parsing failed.');
         return;
       }
     }
     else {
-      $value = $this->tokenServices->getOrReplace($value);
+      $value = $this->tokenService->getOrReplace($value);
     }
 
     $this->doBuildRecursive($build, $value);
@@ -122,7 +142,7 @@ class Build extends RenderElementActionBase {
    * @param mixed &$value
    *   The value to use for building up the given render array.
    */
-  protected function doBuildRecursive(array &$build, &$value): void {
+  protected function doBuildRecursive(array &$build, mixed &$value): void {
     $weight = count($build);
     $wrap_as_list = $this->wrapAsList($value);
 
@@ -259,7 +279,7 @@ class Build extends RenderElementActionBase {
    * @return bool
    *   Returns TRUE if it should be wrapped, FALSE otherwise.
    */
-  protected function wrapAsList($value): bool {
+  protected function wrapAsList(mixed $value): bool {
     if (is_iterable($value)) {
       foreach ($value as $k => $v) {
         if (!is_int($k)) {

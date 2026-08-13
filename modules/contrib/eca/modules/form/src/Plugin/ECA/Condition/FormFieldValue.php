@@ -13,7 +13,8 @@ use Drupal\eca\Plugin\FormFieldPluginTrait;
  * @EcaCondition(
  *   id = "eca_form_field_value",
  *   label = @Translation("Form field: compare submitted value"),
- *   description = @Translation("Compares a submitted form field value.")
+ *   description = @Translation("Compares a submitted form field value."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class FormFieldValue extends StringComparisonBase {
@@ -30,7 +31,7 @@ class FormFieldValue extends StringComparisonBase {
   /**
    * The current value in the form.
    *
-   * @var mixed
+   * @var string|null
    */
   protected ?string $currentValue = NULL;
 
@@ -73,7 +74,7 @@ class FormFieldValue extends StringComparisonBase {
    */
   protected function getExpectedValue(): string {
     if (!isset($this->expectedValue)) {
-      $this->expectedValue = (string) $this->tokenServices->replaceClear($this->configuration['field_value']);
+      $this->expectedValue = (string) $this->tokenService->replaceClear($this->configuration['field_value']);
     }
     return $this->expectedValue;
   }
@@ -81,10 +82,10 @@ class FormFieldValue extends StringComparisonBase {
   /**
    * Get the current form value.
    *
-   * @return mixed
+   * @return string|null
    *   The current value. May be NULL if no value exists.
    */
-  protected function getCurrentValue(): string {
+  protected function getCurrentValue(): ?string {
     if (!$this->getCurrentFormState()) {
       // Since the StringComparisonBase always compares string values, we want
       // to make sure, that the evaluation will return FALSE when there is no
@@ -93,7 +94,7 @@ class FormFieldValue extends StringComparisonBase {
     }
 
     $original_field_name = $this->configuration['field_name'];
-    $this->configuration['field_name'] = (string) $this->tokenServices->replace($original_field_name);
+    $this->configuration['field_name'] = (string) $this->tokenService->replace($original_field_name);
 
     $value = $this->getSubmittedValue();
     if (is_array($value)) {
@@ -150,15 +151,16 @@ class FormFieldValue extends StringComparisonBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['field_value'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Field value'),
-      '#description' => $this->t('The field value to compare. This field supports tokens.'),
+      '#description' => $this->t('The field value to compare.'),
       '#default_value' => $this->configuration['field_value'],
       '#weight' => -70,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $this->buildFormFieldConfigurationForm($form, $form_state);
+    $form = $this->buildFormFieldConfigurationForm($form, $form_state);
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

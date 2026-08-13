@@ -5,13 +5,15 @@ dependencies: {  }
 id: tec_crm_supplier_tabs
 label: 'TEC CRM: Supplier tabs'
 renderer: quick_tabs
-hide_empty_tabs: false
-default_tab: 9999
 options:
   quick_tabs:
     ajax: false
     class: ''
     style: on-the-gray
+    direct_linking: false
+hide_empty_tabs: false
+remember_last_clicked_tab: true
+default_tab: 9999
 configuration_data:
   -
     title: 'Purchase orders'

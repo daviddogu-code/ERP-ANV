@@ -2,9 +2,10 @@
 
 namespace Drupal\bpmn_io\Plugin\ECA\Modeller;
 
-use Drupal\bpmn_io\Form\Modeller;
+use Drupal\bpmn_io\Services\Converter\Converter;
 use Drupal\Core\Form\FormBuilder;
 use Drupal\Core\Url;
+use Drupal\bpmn_io\Form\Modeller;
 use Drupal\eca_modeller_bpmn\ModellerBpmnBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -27,11 +28,19 @@ class BpmnIo extends ModellerBpmnBase {
   protected FormBuilder $formBuilder;
 
   /**
+   * The converter service.
+   *
+   * @var \Drupal\bpmn_io\Services\Converter\Converter
+   */
+  protected Converter $converterService;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->formBuilder = $container->get('form_builder');
+    $instance->converterService = $container->get('bpmn_io.services.converter');
     return $instance;
   }
 
@@ -53,7 +62,19 @@ class BpmnIo extends ModellerBpmnBase {
    * {@inheritdoc}
    */
   public function edit(): array {
-    $form = $this->formBuilder->getForm(Modeller::class);
+    return $this->eca->getModel()->getModeldata() === '' ?
+      $this->converterService->convert($this->eca) :
+      $this->build();
+  }
+
+  /**
+   * Returns a render array with everything required for model editing.
+   *
+   * @return array
+   *   The render array.
+   */
+  public function build(): array {
+    $form = $this->formBuilder->getForm(Modeller::class, $this->eca->id());
     if (isset($form['gin_sidebar'])) {
       $form['gin_sidebar']['property_panel'] = ['#markup' => '<div class="property-panel"></div>'];
       $form['gin_sidebar']['token_browser'] = $this->tokenBrowserService->getTokenBrowserMarkup();
@@ -69,7 +90,7 @@ class BpmnIo extends ModellerBpmnBase {
         'id' => 'bpmn-io',
       ],
       'canvas' => [
-        '#prefix' => '<div class="canvas"></div>' . $extras,
+        '#prefix' => '<div class="canvas" role="application" aria-label="BPMN Canvas"></div>' . $extras,
       ],
       'form' => $form,
       '#attached' => [
@@ -84,6 +105,7 @@ class BpmnIo extends ModellerBpmnBase {
             'bpmn' => $this->eca->getModel()->getModeldata(),
             'templates' => $this->getTemplates(),
             'save_url' => Url::fromRoute('eca.save', ['modeller_id' => 'bpmn_io'])->toString(),
+            'token_url' => Url::fromRoute('system.csrftoken')->toString(),
             'collection_url' => Url::fromRoute('entity.eca.collection')->toString(),
           ],
         ],

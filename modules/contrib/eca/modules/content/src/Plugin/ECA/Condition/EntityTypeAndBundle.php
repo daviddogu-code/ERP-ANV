@@ -5,6 +5,7 @@ namespace Drupal\eca_content\Plugin\ECA\Condition;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\eca\Plugin\ECA\Condition\ConditionBase;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 use Drupal\eca\Service\ContentEntityTypes;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -15,12 +16,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "eca_entity_type_bundle",
  *   label = "Entity type and bundle",
  *   description = @Translation("Evaluates against the entity type and bundle."),
+ *   eca_version_introduced = "1.0.0",
  *   context_definitions = {
  *     "entity" = @ContextDefinition("entity", label = @Translation("Entity"))
  *   }
  * )
  */
 class EntityTypeAndBundle extends ConditionBase {
+
+  use PluginFormTrait;
 
   /**
    * The entity types service.
@@ -32,7 +36,7 @@ class EntityTypeAndBundle extends ConditionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EntityTypeAndBundle {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $plugin->entityTypes = $container->get('eca.service.content_entity_types');
     return $plugin;
@@ -44,8 +48,14 @@ class EntityTypeAndBundle extends ConditionBase {
   public function evaluate(): bool {
     $entity = $this->getValueFromContext('entity');
     if ($entity instanceof EntityInterface) {
-      $result = $this->entityTypes->bundleFieldApplies($entity, $this->configuration['type']);
-      return $this->negationCheck($result);
+      $type = $this->configuration['type'];
+      if ($type === '_eca_token') {
+        $type = $this->getTokenValue('type', '');
+      }
+      if ($type !== '') {
+        $result = $this->entityTypes->bundleFieldApplies($entity, $type);
+        return $this->negationCheck($result);
+      }
     }
     return FALSE;
   }
@@ -69,6 +79,7 @@ class EntityTypeAndBundle extends ConditionBase {
       '#default_value' => $this->configuration['type'],
       '#options' => $this->entityTypes->getTypesAndBundles(),
       '#weight' => -10,
+      '#eca_token_select_option' => TRUE,
     ];
     return parent::buildConfigurationForm($form, $form_state);
   }

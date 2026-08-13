@@ -2,11 +2,14 @@
 
 namespace Drupal\Tests\eca_access\Kernel;
 
-use Drupal\eca\Entity\Eca;
-use Drupal\eca_access\AccessEvents;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\EcaEvents;
+use Drupal\eca\Entity\Eca;
+use Drupal\eca\Event\BeforeInitialExecutionEvent;
+use Drupal\eca_access\Event\EntityAccess;
+use Drupal\eca_access\Event\FieldAccess;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
+use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 
@@ -17,6 +20,8 @@ use Drupal\user\Entity\User;
  * @group eca_access
  */
 class AccessExecutionChainTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -57,23 +62,17 @@ class AccessExecutionChainTest extends KernelTestBase {
     ]);
 
     // Create an Article content type.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create([
+    $this->createContentType([
       'type' => 'article',
       'name' => 'Article',
       'new_revision' => TRUE,
     ]);
-    $node_type->save();
-    node_add_body_field($node_type);
     // Create a Page content type.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create([
+    $this->createContentType([
       'type' => 'page',
       'name' => 'Basic page',
       'new_revision' => TRUE,
     ]);
-    $node_type->save();
-    node_add_body_field($node_type);
   }
 
   /**
@@ -133,21 +132,15 @@ class AccessExecutionChainTest extends KernelTestBase {
     $ecaConfig->trustData()->save();
     \Drupal::entityTypeManager()->getAccessControlHandler('node')->resetCache();
 
-    /**
-     * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
-     */
+    /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher */
     $event_dispatcher = \Drupal::service('event_dispatcher');
 
     $event_token_data = [];
-    /**
-     * @var \Drupal\eca\Token\TokenInterface $token_services
-     */
-    $token_services = \Drupal::service('eca.token_services');
-    $event_dispatcher->addListener(AccessEvents::ENTITY, static function ($event) use (&$event_token_data, $token_services) {
-      $token_services->addTokenDataProvider($event);
-      $event_token_data['operation'] = \Drupal::token()->replace('[event:operation]');
-      $event_token_data['uid'] = \Drupal::token()->replace('[event:uid]');
-      $token_services->removeTokenDataProvider($event);
+    $event_dispatcher->addListener(EcaEvents::BEFORE_INITIAL_EXECUTION, static function (BeforeInitialExecutionEvent $event) use (&$event_token_data) {
+      if ($event->getEvent() instanceof EntityAccess) {
+        $event_token_data['operation'] = \Drupal::token()->replace('[event:operation]');
+        $event_token_data['uid'] = \Drupal::token()->replace('[event:uid]');
+      }
     }, -1000);
 
     $article = Node::create([
@@ -235,22 +228,16 @@ class AccessExecutionChainTest extends KernelTestBase {
     $ecaConfig->trustData()->save();
     \Drupal::entityTypeManager()->getAccessControlHandler('node')->resetCache();
 
-    /**
-     * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
-     */
+    /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher */
     $event_dispatcher = \Drupal::service('event_dispatcher');
 
     $event_token_data = [];
-    /**
-     * @var \Drupal\eca\Token\TokenInterface $token_services
-     */
-    $token_services = \Drupal::service('eca.token_services');
-    $event_dispatcher->addListener(AccessEvents::FIELD, static function ($event) use (&$event_token_data, $token_services) {
-      $token_services->addTokenDataProvider($event);
-      $event_token_data['operation'] = \Drupal::token()->replace('[event:operation]');
-      $event_token_data['uid'] = \Drupal::token()->replace('[event:uid]');
-      $event_token_data['field'] = \Drupal::token()->replace('[event:field]');
-      $token_services->removeTokenDataProvider($event);
+    $event_dispatcher->addListener(EcaEvents::BEFORE_INITIAL_EXECUTION, static function (BeforeInitialExecutionEvent $event) use (&$event_token_data) {
+      if ($event->getEvent() instanceof FieldAccess) {
+        $event_token_data['operation'] = \Drupal::token()->replace('[event:operation]');
+        $event_token_data['uid'] = \Drupal::token()->replace('[event:uid]');
+        $event_token_data['field'] = \Drupal::token()->replace('[event:field]');
+      }
     }, -1000);
 
     $article = Node::create([
@@ -262,7 +249,7 @@ class AccessExecutionChainTest extends KernelTestBase {
     $article->save();
     $this->assertTrue($article->access('view'));
     $this->assertTrue($article->title->access('edit'));
-    $this->assertEquals('title', $event_token_data['field']);
+    $this->assertFalse(isset($event_token_data['field']), "There is no active field access event configured for the title field.");
     $this->assertFalse($article->body->access('edit'));
     $this->assertEquals('body', $event_token_data['field']);
     $this->assertEquals('edit', $event_token_data['operation']);

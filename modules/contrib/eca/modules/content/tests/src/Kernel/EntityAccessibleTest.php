@@ -4,7 +4,7 @@ namespace Drupal\Tests\eca_content\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 
@@ -19,6 +19,8 @@ use Drupal\user\Entity\User;
  * @group eca_content
  */
 class EntityAccessibleTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * The modules.
@@ -55,13 +57,10 @@ class EntityAccessibleTest extends KernelTestBase {
       'roles' => ['test_role_eca'],
     ])->save();
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create([
+    $this->createContentType([
       'type' => 'article',
       'name' => 'Article',
     ]);
-    $node_type->save();
-    node_add_body_field($node_type);
   }
 
   /**
@@ -139,7 +138,7 @@ class EntityAccessibleTest extends KernelTestBase {
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_is_accessible', ['operation' => 'view']);
     $condition->setContextValue('entity', $node);
-    $this->assertTrue($condition->evaluate(), 'User is authenticated and thus must have acccess to the content.');
+    $this->assertTrue($condition->evaluate(), 'User is authenticated and thus must have access to the content.');
 
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_is_accessible', ['operation' => 'update']);
@@ -157,7 +156,7 @@ class EntityAccessibleTest extends KernelTestBase {
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_is_accessible', ['operation' => 'view']);
     $condition->setContextValue('entity', $node);
-    $this->assertTrue($condition->evaluate(), 'User is authenticated and thus must have acccess to the content.');
+    $this->assertTrue($condition->evaluate(), 'User is authenticated and thus must have access to the content.');
 
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_is_accessible', ['operation' => 'update']);
@@ -172,7 +171,7 @@ class EntityAccessibleTest extends KernelTestBase {
     // End of tests with authenticated user.
     $account_switcher->switchBack();
 
-    // Now switch to priviledged user.
+    // Now switch to Privileged user.
     $account_switcher->switchTo(User::load(1));
 
     $condition = $condition_manager->createInstance('eca_entity_is_accessible', ['operation' => 'create']);
@@ -184,22 +183,22 @@ class EntityAccessibleTest extends KernelTestBase {
 
     $condition = $condition_manager->createInstance('eca_entity_is_accessible', ['operation' => 'create']);
     $condition->setContextValue('entity', Node::create(['type' => 'article']));
-    $this->assertTrue($condition->evaluate(), 'Create access on a new node must be possible for priviledged user.');
+    $this->assertTrue($condition->evaluate(), 'Create access on a new node must be possible for Privileged user.');
 
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_is_accessible', ['operation' => 'view']);
     $condition->setContextValue('entity', $node);
-    $this->assertTrue($condition->evaluate(), 'Priviledged user must have view acccess.');
+    $this->assertTrue($condition->evaluate(), 'Privileged user must have view access.');
 
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_is_accessible', ['operation' => 'update']);
     $condition->setContextValue('entity', $node);
-    $this->assertTrue($condition->evaluate(), 'Priviledged user must have update acccess.');
+    $this->assertTrue($condition->evaluate(), 'Privileged user must have update access.');
 
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_is_accessible', ['operation' => 'delete']);
     $condition->setContextValue('entity', $node);
-    $this->assertTrue($condition->evaluate(), 'Priviledged user must have delete acccess.');
+    $this->assertTrue($condition->evaluate(), 'Privileged user must have delete access.');
 
     $account_switcher->switchBack();
   }
@@ -229,7 +228,7 @@ class EntityAccessibleTest extends KernelTestBase {
     // Create a plugin for evaluating entity field is accessible.
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_field_is_accessible',
-      ['field_name' => 'field_i_dont_exist', 'operation' => 'view']);
+      ['field_name' => 'field_i_do_not_exist', 'operation' => 'view']);
     $condition->setContextValue('entity', $node);
     $this->assertFalse($condition->evaluate(), 'Non-existent field must always evaluate to false.');
 
@@ -260,7 +259,7 @@ class EntityAccessibleTest extends KernelTestBase {
     $condition = $condition_manager->createInstance('eca_entity_field_is_accessible',
       ['field_name' => 'body', 'operation' => 'view']);
     $condition->setContextValue('entity', $node);
-    $this->assertTrue($condition->evaluate(), 'User is authenticated and thus must have acccess to the content.');
+    $this->assertTrue($condition->evaluate(), 'User is authenticated and thus must have access to the content.');
 
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_field_is_accessible',
@@ -281,7 +280,7 @@ class EntityAccessibleTest extends KernelTestBase {
     $condition = $condition_manager->createInstance('eca_entity_field_is_accessible',
       ['field_name' => 'body', 'operation' => 'view']);
     $condition->setContextValue('entity', $node);
-    $this->assertTrue($condition->evaluate(), 'User is authenticated and thus must have acccess to the content.');
+    $this->assertTrue($condition->evaluate(), 'User is authenticated and thus must have access to the content.');
 
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_field_is_accessible',
@@ -298,12 +297,12 @@ class EntityAccessibleTest extends KernelTestBase {
     // End of tests with authenticated user.
     $account_switcher->switchBack();
 
-    // Now switch to priviledged user.
+    // Now switch to Privileged user.
     $account_switcher->switchTo(User::load(1));
 
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_field_is_accessible',
-      ['field_name' => 'field_i_dont_exist', 'operation' => 'view']);
+      ['field_name' => 'field_i_do_not_exist', 'operation' => 'view']);
     $condition->setContextValue('entity', $node);
     $this->assertFalse($condition->evaluate(), 'Non-existent field must always evaluate to false.');
 
@@ -311,19 +310,19 @@ class EntityAccessibleTest extends KernelTestBase {
     $condition = $condition_manager->createInstance('eca_entity_field_is_accessible',
       ['field_name' => 'body', 'operation' => 'view']);
     $condition->setContextValue('entity', $node);
-    $this->assertTrue($condition->evaluate(), 'Priviledged user must have view acccess.');
+    $this->assertTrue($condition->evaluate(), 'Privileged user must have view access.');
 
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_field_is_accessible',
       ['field_name' => 'body', 'operation' => 'edit']);
     $condition->setContextValue('entity', $node);
-    $this->assertTrue($condition->evaluate(), 'Priviledged user must have update acccess.');
+    $this->assertTrue($condition->evaluate(), 'Privileged user must have update access.');
 
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldIsAccessible $condition */
     $condition = $condition_manager->createInstance('eca_entity_field_is_accessible',
       ['field_name' => 'body', 'operation' => 'delete']);
     $condition->setContextValue('entity', $node);
-    $this->assertTrue($condition->evaluate(), 'Priviledged user must have delete acccess.');
+    $this->assertTrue($condition->evaluate(), 'Privileged user must have delete access.');
 
     $account_switcher->switchBack();
   }

@@ -12,6 +12,7 @@ use Drupal\Core\Url;
  *   id = "eca_form_state_set_redirect",
  *   label = @Translation("Form state: set redirect"),
  *   description = @Translation("Set the redirect destination on the form state."),
+ *   eca_version_introduced = "1.1.0",
  *   type = "form"
  * )
  */
@@ -26,7 +27,7 @@ class FormStateSetRedirect extends FormActionBase {
     }
     $destination = $this->configuration['destination'] ?? '';
     if ($destination !== '') {
-      $destination = (string) $this->tokenServices->replaceClear($destination);
+      $destination = (string) $this->tokenService->replaceClear($destination);
     }
     if ($destination === '') {
       $form_state->disableRedirect(TRUE);
@@ -58,15 +59,15 @@ class FormStateSetRedirect extends FormActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['destination'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Destination URL'),
-      '#description' => $this->t('This field supports tokens. Leave empty to disable redirect on the form state. Please note: External URLs are not supported.'),
+      '#description' => $this->t('Leave empty to disable redirect on the form state. Please note: External URLs are not supported.'),
       '#default_value' => $this->configuration['destination'],
       '#weight' => -49,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

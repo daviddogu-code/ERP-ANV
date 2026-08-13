@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\eca_user\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_test_array\Plugin\Action\ArrayWrite;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use Drupal\user\Event\UserEvents as CoreUserEvents;
 use Drupal\user\Event\UserFloodEvent;

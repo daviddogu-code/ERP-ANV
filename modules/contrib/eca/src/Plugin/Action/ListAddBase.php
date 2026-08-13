@@ -6,11 +6,14 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\ListInterface;
 use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Base class for actions adding an item to a list.
  */
 abstract class ListAddBase extends ListOperationBase {
+
+  use PluginFormTrait;
 
   /**
    * Adds an item to a list as configured.
@@ -18,12 +21,16 @@ abstract class ListAddBase extends ListOperationBase {
    * @param mixed $item
    *   The item to add.
    */
-  public function addItem($item): void {
+  public function addItem(mixed $item): void {
     if (!($list = $this->getItemList())) {
       return;
     }
 
-    switch ($this->configuration['method']) {
+    $method = $this->configuration['method'];
+    if ($method === '_eca_token') {
+      $method = $this->getTokenValue('method', 'append');
+    }
+    switch ($method) {
 
       case 'append':
         if ($list instanceof DataTransferObject) {
@@ -34,7 +41,7 @@ abstract class ListAddBase extends ListOperationBase {
         }
         else {
           $items = $list->getValue();
-          array_push($items, $item);
+          $items[] = $item;
           $list->setValue($items);
         }
         break;
@@ -51,8 +58,8 @@ abstract class ListAddBase extends ListOperationBase {
         break;
 
       case 'set':
-        $index = trim((string) $this->tokenServices->replaceClear($this->configuration['index']));
-        if (!$index || ctype_digit($index) || !($list instanceof ComplexDataInterface)) {
+        $index = trim((string) $this->tokenService->replaceClear($this->configuration['index']));
+        if (!$index || !($list instanceof ComplexDataInterface) || ctype_digit($index)) {
           $index = (int) $index;
         }
         $currentRekeyStateDisabled = FALSE;
@@ -91,7 +98,6 @@ abstract class ListAddBase extends ListOperationBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['method'] = [
       '#type' => 'select',
       '#title' => $this->t('Method'),
@@ -104,16 +110,18 @@ abstract class ListAddBase extends ListOperationBase {
         'set' => $this->t('Set by specified index key'),
       ],
       '#required' => TRUE,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['index'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Index key'),
-      '#description' => $this->t('When using the method <em>Set by specified index</em>, then an index key must be specified here. This field supports tokens.'),
+      '#description' => $this->t('When using the method <em>Set by specified index</em>, then an index key must be specified here.'),
       '#default_value' => $this->configuration['index'],
       '#weight' => 10,
       '#required' => FALSE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

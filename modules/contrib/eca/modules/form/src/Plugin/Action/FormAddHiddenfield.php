@@ -11,10 +11,11 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "eca_form_add_hiddenfield",
  *   label = @Translation("Form: add hidden field"),
  *   description = @Translation("Add a hidden input field to the current form in scope."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
-class FormAddHiddenfield extends FormAddFieldActionBase {
+class FormAddHiddenField extends FormAddFieldActionBase {
 
   /**
    * {@inheritdoc}
@@ -39,7 +40,7 @@ class FormAddHiddenfield extends FormAddFieldActionBase {
   protected function buildFieldElement(): array {
     $field_element = [
       '#type' => $this->configuration['type'],
-      '#value' => $this->tokenServices->replaceClear($this->configuration['value']),
+      '#value' => $this->tokenService->replaceClear($this->configuration['value']),
       '#weight' => (int) $this->configuration['weight'],
     ];
     return $field_element;
@@ -49,13 +50,14 @@ class FormAddHiddenfield extends FormAddFieldActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['value'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Value'),
-      '#description' => $this->t('The value of the hidden field. Supports tokens.'),
+      '#description' => $this->t('The value of the hidden field.'),
       '#default_value' => $this->configuration['value'],
+      '#eca_token_replacement' => TRUE,
     ];
+    $form = parent::buildConfigurationForm($form, $form_state);
     unset($form['title'], $form['description'], $form['required'], $form['default_value']);
     return $form;
   }

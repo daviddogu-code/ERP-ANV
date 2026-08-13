@@ -4,6 +4,7 @@ namespace Drupal\eca_form\Plugin\Action;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 use Drupal\eca\Plugin\FormFieldPluginTrait;
 use Drupal\eca_form\HookHandler;
 
@@ -14,12 +15,14 @@ use Drupal\eca_form\HookHandler;
  *   id = "eca_form_add_submit_button",
  *   label = @Translation("Form: add submit button"),
  *   description = @Translation("Add a submit button with a type and a label to a form."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */
 class FormAddSubmitButton extends FormActionBase {
 
   use FormFieldPluginTrait;
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -28,7 +31,7 @@ class FormAddSubmitButton extends FormActionBase {
     if (!($form = &$this->getCurrentForm())) {
       return;
     }
-    $name = trim((string) $this->tokenServices->replace($this->configuration['name']));
+    $name = trim((string) $this->tokenService->replace($this->configuration['name']));
     if ($name === '') {
       throw new \InvalidArgumentException('Cannot use an empty string as trigger name');
     }
@@ -38,7 +41,7 @@ class FormAddSubmitButton extends FormActionBase {
     $button_element = [
       '#type' => 'submit',
       '#name' => 'op',
-      '#value' => $this->tokenServices->replaceClear($this->configuration['value']),
+      '#value' => $this->tokenService->replaceClear($this->configuration['value']),
       '#weight' => (int) $this->configuration['weight'],
       '#access' => TRUE,
       '#submit' => [[HookHandler::class, 'submit']],
@@ -46,8 +49,12 @@ class FormAddSubmitButton extends FormActionBase {
     if (count($name) > 1) {
       $button_element['#parents'] = $name;
     }
-    if (!empty($this->configuration['button_type']) && ($this->configuration['button_type'] !== '_none')) {
-      $button_element['#button_type'] = $this->configuration['button_type'];
+    $button_type = $this->configuration['button_type'];
+    if ($button_type === '_eca_token') {
+      $button_type = $this->getTokenValue('button_type', '_none');
+    }
+    if (!empty($button_type) && ($button_type !== '_none')) {
+      $button_element['#button_type'] = $button_type;
     }
 
     if (isset($form['actions'])) {
@@ -76,7 +83,6 @@ class FormAddSubmitButton extends FormActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Trigger name'),
@@ -106,6 +112,7 @@ class FormAddSubmitButton extends FormActionBase {
       '#description' => $this->t('Here you can select the type of the button from the list.'),
       '#weight' => -8,
       '#required' => TRUE,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['weight'] = [
       '#type' => 'number',
@@ -115,7 +122,7 @@ class FormAddSubmitButton extends FormActionBase {
       '#weight' => -7,
       '#required' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

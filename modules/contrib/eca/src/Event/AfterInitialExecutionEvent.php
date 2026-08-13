@@ -2,9 +2,9 @@
 
 namespace Drupal\eca\Event;
 
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca\Entity\Objects\EcaEvent;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Dispatches after initial successor execution of an ECA configuration.
@@ -28,9 +28,9 @@ class AfterInitialExecutionEvent extends Event {
   /**
    * The applied system event.
    *
-   * @var \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event
+   * @var \Symfony\Contracts\EventDispatcher\Event
    */
-  protected object $event;
+  protected Event $event;
 
   /**
    * The name of the applying system event.
@@ -55,14 +55,14 @@ class AfterInitialExecutionEvent extends Event {
    *   The ECA configuration.
    * @param \Drupal\eca\Entity\Objects\EcaEvent $ecaEvent
    *   The ECA event object.
-   * @param \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event $event
+   * @param \Symfony\Contracts\EventDispatcher\Event $event
    *   The applied system event.
    * @param string $event_name
    *   The name of the applying system event.
    * @param array &$prestate
    *   Array holding arbitrary variables of a prestate (if any).
    */
-  public function __construct(Eca $eca, EcaEvent $ecaEvent, object $event, string $event_name, array &$prestate) {
+  public function __construct(Eca $eca, EcaEvent $ecaEvent, Event $event, string $event_name, array &$prestate) {
     $this->eca = $eca;
     $this->ecaEvent = $ecaEvent;
     $this->event = $event;
@@ -93,10 +93,10 @@ class AfterInitialExecutionEvent extends Event {
   /**
    * Get the applied system event.
    *
-   * @return \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event
+   * @return \Symfony\Contracts\EventDispatcher\Event
    *   The applied system event.
    */
-  public function getEvent(): object {
+  public function getEvent(): Event {
     return $this->event;
   }
 
@@ -119,7 +119,7 @@ class AfterInitialExecutionEvent extends Event {
    * @return mixed
    *   The value. Returns NULL if not present.
    */
-  public function &getPrestate(?string $name) {
+  public function &getPrestate(?string $name): mixed {
     if (!isset($name)) {
       return $this->prestate;
     }

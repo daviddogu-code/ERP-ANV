@@ -77,9 +77,9 @@ class LockTest extends KernelTestBase {
     $action->execute(NULL);
 
     // Simulate that the lock service is running under a different PHP process.
-    $reset_locks = \Closure::fromCallable(function () {
+    $reset_locks = (function () {
       $this->locks = [];
-    });
+    })(...);
     $reset_locks->call($lock);
 
     $this->assertFalse($lock->acquire('eca:user:1', 0.1));

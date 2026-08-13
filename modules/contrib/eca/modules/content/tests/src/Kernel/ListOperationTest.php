@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\eca_content\Kernel;
 
-use Drupal\eca\Plugin\DataType\DataTransferObject;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\eca\Plugin\DataType\DataTransferObject;
 use Drupal\user\Entity\User;
 
 /**
@@ -58,9 +58,9 @@ class ListOperationTest extends KernelTestBase {
       'method' => 'append',
       'object' => 'auth_user',
     ]);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $action->execute($auth_user);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $this->assertSame($auth_user, $users->get(2)->getValue());
 
     $users = DataTransferObject::create([User::load(0), User::load(1)]);
@@ -72,9 +72,9 @@ class ListOperationTest extends KernelTestBase {
       'method' => 'prepend',
       'object' => 'auth_user',
     ]);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $action->execute($auth_user);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $this->assertSame($auth_user, $users->get(0)->getValue());
     $this->assertSame(User::load(1)->id(), $users->get(2)->getValue()->id());
 
@@ -88,9 +88,9 @@ class ListOperationTest extends KernelTestBase {
       'index' => '1',
       'object' => 'auth_user',
     ]);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $action->execute($auth_user);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertSame($auth_user, $users->get(1)->getValue());
     $this->assertSame(User::load(0)->id(), $users->get(0)->getValue()->id());
   }
@@ -115,9 +115,9 @@ class ListOperationTest extends KernelTestBase {
       'token_name' => 'removed_user',
       'object' => 'auth_user',
     ]);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $action->execute($auth_user);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertFalse($token_services->hasTokenData('removed_user'));
 
     $users = DataTransferObject::create([
@@ -134,9 +134,9 @@ class ListOperationTest extends KernelTestBase {
       'token_name' => 'removed_user',
       'object' => 'auth_user',
     ]);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $action->execute($auth_user);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertTrue($token_services->hasTokenData('removed_user'));
     $this->assertSame($auth_user->id(), $token_services->getTokenData('removed_user')->id());
 
@@ -154,9 +154,9 @@ class ListOperationTest extends KernelTestBase {
       'token_name' => 'removed_user',
       'index' => '2',
     ]);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $action->execute($auth_user);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertTrue($token_services->hasTokenData('removed_user'));
     $this->assertSame($auth_user->id(), $token_services->getTokenData('removed_user')->id());
 
@@ -174,9 +174,9 @@ class ListOperationTest extends KernelTestBase {
       'token_name' => 'removed_user',
       'index' => '1',
     ]);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $action->execute($auth_user);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertTrue($token_services->hasTokenData('removed_user'));
     $this->assertSame(User::load(1)->id(), $token_services->getTokenData('removed_user')->id());
 
@@ -193,9 +193,9 @@ class ListOperationTest extends KernelTestBase {
       'method' => 'first',
       'token_name' => 'removed_user',
     ]);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $action->execute($auth_user);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertTrue($token_services->hasTokenData('removed_user'));
     $this->assertSame(User::load(0)->id(), $token_services->getTokenData('removed_user')->id());
 
@@ -212,9 +212,9 @@ class ListOperationTest extends KernelTestBase {
       'method' => 'last',
       'token_name' => 'removed_user',
     ]);
-    $this->assertSame(3, count($users->getProperties()));
+    $this->assertCount(3, $users->getProperties());
     $action->execute($auth_user);
-    $this->assertSame(2, count($users->getProperties()));
+    $this->assertCount(2, $users->getProperties());
     $this->assertTrue($token_services->hasTokenData('removed_user'));
     $this->assertSame($auth_user->id(), $token_services->getTokenData('removed_user')->id());
   }

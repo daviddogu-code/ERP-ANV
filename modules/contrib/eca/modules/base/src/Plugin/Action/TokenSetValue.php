@@ -2,9 +2,16 @@
 
 namespace Drupal\eca_base\Plugin\Action;
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
+use Drupal\eca\Plugin\DataType\DataTransferObject;
+use Drupal\eca\Plugin\FormFieldYamlTrait;
 use Drupal\eca\Service\YamlParser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -15,10 +22,13 @@ use Symfony\Component\Yaml\Exception\ParseException;
  * @Action(
  *   id = "eca_token_set_value",
  *   label = @Translation("Token: set value"),
- *   description = @Translation("Define a locally available token by a specific name and value.")
+ *   description = @Translation("Define a locally available token by a specific name and value."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class TokenSetValue extends ConfigurableActionBase {
+
+  use FormFieldYamlTrait;
 
   /**
    * The YAML parser.
@@ -30,11 +40,26 @@ class TokenSetValue extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_base\Plugin\Action\TokenSetValue $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setYamlParser($container->get('eca.service.yaml_parser'));
     return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $result = parent::access($object, $account, TRUE);
+    if ($result->isAllowed() && $this->configuration['use_yaml'] && $this->configuration['validate_yaml']) {
+      try {
+        $this->yamlParser->parse($this->configuration['value']);
+      }
+      catch (ParseException) {
+        $result = AccessResult::forbidden('YAML data is not valid.');
+      }
+    }
+    return $return_as_object ? $result : $result->isAllowed();
   }
 
   /**
@@ -48,14 +73,55 @@ class TokenSetValue extends ConfigurableActionBase {
       try {
         $value = $this->yamlParser->parse($value);
       }
-      catch (ParseException $e) {
-        \Drupal::logger('eca')->error('Tried parsing a Token value in action "eca_token_set_value" as YAML format, but parsing failed.');
+      catch (ParseException) {
+        $this->logger->error('Tried parsing a Token value in action "eca_token_set_value" as YAML format, but parsing failed.');
         return;
       }
     }
     else {
       // Allow direct assignment of available data from the Token environment.
-      $value = $this->tokenServices->getOrReplace($value);
+      $value = $this->tokenService->getOrReplace($value);
+      if ($value instanceof DataTransferObject) {
+        // Wrap the values with a new DTO, for example for having a new list.
+        $value = DataTransferObject::create($value->getValue());
+      }
+      elseif ($value instanceof EntityReferenceFieldItemListInterface) {
+        // Extract all referenced entities.
+        $referenced = $value->referencedEntities();
+        if ((count($referenced) === 1) && ($value->getFieldDefinition()->getFieldStorageDefinition()->getCardinality() === 1)) {
+          $referenced = reset($referenced);
+        }
+        $value = $referenced;
+      }
+      elseif ($value instanceof EntityReferenceItem) {
+        // Extract the single targeted referenced entity.
+        if (isset($value->entity)) {
+          $referenced = $value->entity;
+        }
+        else {
+          $referenced = NULL;
+          $items = $value->getParent();
+          if (($items instanceof EntityReferenceFieldItemListInterface) && ($entities = $items->referencedEntities())) {
+            foreach ($items as $delta => $item) {
+              if (($item === $value) || ($item->getValue() === $value->getValue())) {
+                $referenced = $entities[$delta] ?? NULL;
+                break;
+              }
+            }
+          }
+        }
+        $value = $referenced;
+      }
+      elseif ($value instanceof TypedDataInterface) {
+        $use_first_item = ($value instanceof FieldItemListInterface) && ($value->getFieldDefinition()->getFieldStorageDefinition()->getCardinality() === 1);
+
+        // Extract the value from typed data, such as field item lists.
+        $value = $value->getValue();
+
+        if ($use_first_item) {
+          $value = reset($value);
+        }
+      }
     }
 
     $this->setToken($name, $value);
@@ -69,8 +135,13 @@ class TokenSetValue extends ConfigurableActionBase {
    * @param mixed $value
    *   The token value.
    */
-  protected function setToken(string $name, $value): void {
-    $this->tokenServices->addTokenData($name, $value);
+  protected function setToken(string $name, mixed $value): void {
+    $name = trim($name);
+    if ($name === '') {
+      // Without a token name specified, a token cannot be set.
+      return;
+    }
+    $this->tokenService->addTokenData($name, $value);
   }
 
   /**
@@ -81,6 +152,7 @@ class TokenSetValue extends ConfigurableActionBase {
       'token_name' => '',
       'token_value' => '',
       'use_yaml' => FALSE,
+      'validate_yaml' => FALSE,
     ] + parent::defaultConfiguration();
   }
 
@@ -88,7 +160,6 @@ class TokenSetValue extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -102,16 +173,16 @@ class TokenSetValue extends ConfigurableActionBase {
       '#title' => $this->t('Value of the token'),
       '#default_value' => $this->configuration['token_value'],
       '#weight' => -20,
-      '#description' => $this->t('The value of the token. Other tokens can be reused here, for example <em>[node]</em> will directly assign the node entity, if available.'),
+      '#description' => $this->t('The value of the token.'),
+      '#eca_token_replacement' => TRUE,
     ];
-    $form['use_yaml'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Interpret above value as YAML format'),
-      '#description' => $this->t('Nested data can be set using YAML format, for example <em>mykey: "My value"</em>. When using this format, this option needs to be enabled. When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
-      '#default_value' => $this->configuration['use_yaml'],
-      '#weight' => -10,
-    ];
-    return $form;
+    $this->buildYamlFormFields(
+      $form,
+      $this->t('Interpret above value as YAML format'),
+      $this->t('Nested data can be set using YAML format, for example <em>mykey: "My value"</em>. When using this format, this option needs to be enabled. When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
+      -10,
+    );
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -121,6 +192,7 @@ class TokenSetValue extends ConfigurableActionBase {
     $this->configuration['token_name'] = $form_state->getValue('token_name');
     $this->configuration['token_value'] = $form_state->getValue('token_value');
     $this->configuration['use_yaml'] = !empty($form_state->getValue('use_yaml'));
+    $this->configuration['validate_yaml'] = !empty($form_state->getValue('validate_yaml'));
     parent::submitConfigurationForm($form, $form_state);
   }
 

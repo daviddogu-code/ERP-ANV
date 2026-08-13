@@ -12,7 +12,8 @@ use Drupal\eca\Plugin\FormPluginTrait;
  * @EcaCondition(
  *   id = "eca_form_triggered",
  *   label = @Translation("Form: compare triggered submission"),
- *   description = @Translation("Evaluates against the trigger name of the submission.")
+ *   description = @Translation("Evaluates against the trigger name of the submission."),
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class FormTriggered extends StringComparisonBase {
@@ -51,7 +52,7 @@ class FormTriggered extends StringComparisonBase {
    * {@inheritdoc}
    */
   protected function getRightValue(): string {
-    return $this->tokenServices->replaceClear($this->configuration['trigger_name']);
+    return $this->tokenService->replaceClear($this->configuration['trigger_name']);
   }
 
   /**
@@ -67,7 +68,6 @@ class FormTriggered extends StringComparisonBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['trigger_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Trigger name'),
@@ -75,7 +75,7 @@ class FormTriggered extends StringComparisonBase {
       '#default_value' => $this->configuration['trigger_name'],
       '#weight' => -70,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

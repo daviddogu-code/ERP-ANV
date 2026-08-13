@@ -2,8 +2,9 @@
 
 namespace Drupal\eca_workflow;
 
-use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\content_moderation\ModerationInformationInterface;
+use Drupal\eca\EntityOriginalTrait;
 use Drupal\eca\Event\BaseHookHandler;
 use Drupal\eca\Service\ContentEntityTypes;
 
@@ -15,6 +16,8 @@ use Drupal\eca\Service\ContentEntityTypes;
  *   change or may be removed completely, also on minor version updates.
  */
 class HookHandler extends BaseHookHandler {
+
+  use EntityOriginalTrait;
 
   /**
    * The content entity types service.
@@ -58,8 +61,9 @@ class HookHandler extends BaseHookHandler {
    */
   public function transition(ContentEntityInterface $entity): void {
     if ($this->moderationInformation->isModeratedEntity($entity) && $entity->hasField('moderation_state')) {
-      $from_state = isset($entity->original) ? $entity->original->moderation_state->value : NULL;
-      $to_state = $entity->moderation_state->value;
+      $original = $this->getOriginal($entity);
+      $from_state = $original instanceof ContentEntityInterface ? $original->get('moderation_state')->value : NULL;
+      $to_state = $entity->get('moderation_state')->value;
       if ($from_state !== $to_state) {
         $this->triggerEvent->dispatchFromPlugin('workflow:transition', $entity, $from_state, $to_state, $this->contentEntityTypes);
       }

@@ -6,8 +6,8 @@ use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Component\Utility\Random;
-use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
@@ -22,6 +22,7 @@ use Drupal\eca\Entity\Objects\EcaObject;
 use Drupal\eca\Form\RuntimePluginForm;
 use Drupal\eca\Plugin\ECA\Modeller\ModellerInterface;
 use Drupal\eca\Plugin\PluginUsageInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Defines the ECA entity type.
@@ -154,6 +155,19 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
   /**
    * {@inheritdoc}
    */
+  public static function postLoad(EntityStorageInterface $storage, array &$entities): void {
+    parent::postLoad($storage, $entities);
+    /** @var \Drupal\eca\Entity\Eca $entity */
+    foreach ($entities as $entity) {
+      if ($entity->get('weight') === NULL) {
+        $entity->set('weight', 0);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preSave(EntityStorageInterface $storage): void {
     parent::preSave($storage);
     foreach ([
@@ -178,7 +192,7 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
     // As ::trustData() states that dependencies are not calculated on save,
     // calculation is skipped when flagged as trusted.
     // @see Drupal\Core\Config\Entity\ConfigEntityInterface::trustData
-    if (static::$isTesting || $this->trustedData) {
+    if (static::$isTesting || $this->hasTrustedData()) {
       return $this;
     }
     parent::calculateDependencies();
@@ -212,10 +226,10 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
    */
   protected function isValidationDisabled(): bool {
     $request = $this->request();
-    /** @noinspection StrContainsCanBeUsedInspection */
+    // @noinspection StrContainsCanBeUsedInspection
     $isAjax = mb_strpos($request->get(MainContentViewSubscriber::WRAPPER_FORMAT, ''), 'drupal_ajax') !== FALSE;
     if ($isAjax && ($referer = $request->headers->get('referer')) && $query = parse_url($referer, PHP_URL_QUERY)) {
-      /** @noinspection StrContainsCanBeUsedInspection */
+      // @noinspection StrContainsCanBeUsedInspection
       return mb_strpos($query, 'eca_validation=off') !== FALSE;
     }
     return $request->query->get('eca_validation', '') === 'off';
@@ -229,7 +243,7 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
    *   return TRUE, FALSE otherwise.
    */
   public function isEditable(): bool {
-    if ($modeller = $this->getModeller()) {
+    if ($modeller = $this->getModeller(FALSE)) {
       return $modeller->isEditable();
     }
     return FALSE;
@@ -238,23 +252,39 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
   /**
    * Provides the modeller plugin associated with this ECA config entity.
    *
+   * @param bool $fallback
+   *   By default, this method falls back to the dummy modeller if no data for
+   *   the original modeller is available. That behavior can be overridden.
+   *
    * @return \Drupal\eca\Plugin\ECA\Modeller\ModellerInterface|null
    *   Returns the modeller plugin if possible, NULL otherwise.
    */
-  public function getModeller(): ?ModellerInterface {
+  public function getModeller(bool $fallback = TRUE): ?ModellerInterface {
     try {
-      /** @var \Drupal\eca\Plugin\ECA\Modeller\ModellerInterface $plugin */
+      /**
+       * @var \Drupal\eca\Plugin\ECA\Modeller\ModellerInterface $plugin
+       */
       $plugin = $this->modellerPluginManager()->createInstance($this->get('modeller'));
+      if ($fallback && $plugin->getPluginId() !== 'fallback' && !$this->getModel()->getModeldata()) {
+        $plugin = $this->modellerPluginManager()->createInstance('fallback');
+      }
     }
     catch (PluginException $e) {
       $this->logger()->error($e->getMessage());
       return NULL;
     }
-    if ($plugin !== NULL) {
-      $plugin->setConfigEntity($this);
-      return $plugin;
-    }
-    return NULL;
+    $plugin->setConfigEntity($this);
+    return $plugin;
+  }
+
+  /**
+   * Determines if the current ECA model has model data.
+   *
+   * @return bool
+   *   TRUE, if the current ECA has model data, FALSE otherwise.
+   */
+  public function hasModel(): bool {
+    return $this->getModel()->getModeldata() !== '';
   }
 
   /**
@@ -274,9 +304,14 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
         // providing that storage handler.
         return $this->model;
       }
-      /** @var \Drupal\eca\Entity\Model $model */
+      /**
+       * @var \Drupal\eca\Entity\Model|null $model
+       */
       $model = $storage->load($this->id());
       if ($model === NULL) {
+        /**
+         * @var \Drupal\eca\Entity\Model $model
+         */
         $model = $storage->create([
           'id' => $this->id(),
         ]);
@@ -458,7 +493,11 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
       foreach ($plugin->defaultConfiguration() + ['replace_tokens' => FALSE] as $key => $value) {
         // Convert potential strings from pseudo-checkboxes (for example a
         // dropdown with "yes" or "no" options).
-        if (is_bool($value) && isset($fields[$key]) && is_string($fields[$key]) && in_array(mb_strtolower($fields[$key]), ['yes', 'no'], TRUE)) {
+        if (is_bool($value) &&
+          isset($fields[$key]) &&
+          is_string($fields[$key]) &&
+          in_array(mb_strtolower($fields[$key]), ['yes', 'no'], TRUE)
+        ) {
           if (mb_strtolower($fields[$key]) === 'yes') {
             $fields[$key] = TRUE;
           }
@@ -488,6 +527,11 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
           $eca_validation_error = TRUE;
           $errorMsg = sprintf('%s "%s" (%s): %s', $type, $plugin_label, $label, 'This field requires a token name, not a token; please remove the brackets.');
           $messenger->addError($errorMsg);
+        }
+        if (!empty($form_field['#eca_token_select_option']) && isset($form_field['#options']) && is_array($form_field['#options']) && ($fields[$key] === '_eca_token' || $fields[$key] === '')) {
+          // Remember the original configuration value.
+          $replaced_fields[$key] = $fields[$key];
+          $fields[$key] = array_key_first($form_field['#options']);
         }
         if (isset($form_field['#type'], $fields[$key]) &&
           in_array($form_field['#type'], ['number', 'email', 'machine_name'], TRUE) &&
@@ -557,7 +601,7 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
       // Now re-add the previously fetched messages.
       $messenger->deleteAll();
       foreach ($messages_by_type as $messageType => $messages) {
-        foreach ($messages as $i => $message) {
+        foreach ($messages as $message) {
           $messenger->addMessage($message, $messageType);
         }
       }
@@ -565,7 +609,7 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
       // Check for errors.
       if ($errors = $form_state->getErrors()) {
         foreach ($errors as $error) {
-          $errorMsg = sprintf('%s "%s" (%s): %s', $type, $plugin->getPluginDefinition()['label'], $label, $error);
+          $errorMsg = sprintf('%s "%s" (%s): %s', $type, $plugin_label, $label, $error);
           $messenger->addError($errorMsg);
         }
         return FALSE;
@@ -610,42 +654,92 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
   public function getEventInfos(): array {
     $events = [];
     foreach ($this->getUsedEvents() as $used_event) {
-      $plugin = $used_event->getPlugin();
-      $event_info = $plugin->getPluginDefinition()['label'];
-      // If available, additionally display the first config value of the event.
-      if ($event_config = $used_event->getConfiguration()) {
-        $first_key = key($event_config);
-        $first_value = current($event_config);
-        $form = $plugin->buildConfigurationForm([], new FormState());
-        if (isset($form[$first_key]['#options'][$first_value])) {
-          $first_value = $form[$first_key]['#options'][$first_value];
-        }
-        $event_info .= ' (' . $first_value . ')';
-      }
-      $events[] = $event_info;
+      $events[] = $this->getEventInfo($used_event);
     }
     return $events;
   }
 
   /**
-   * Provides a list of used events by this ECA config entity.
+   * Returns an info string about the ECA event.
+   *
+   * @return string
+   *   The info string.
+   */
+  public function getEventInfo(EcaEvent $ecaEvent): string {
+    $plugin = $ecaEvent->getPlugin();
+    $event_info = $plugin->getPluginDefinition()['label'];
+    // If available, additionally display the first config value of the event.
+    if ($event_config = $ecaEvent->getConfiguration()) {
+      $first_key = key($event_config);
+      $first_value = current($event_config);
+      $form = $plugin->buildConfigurationForm([], new FormState());
+      if (isset($form[$first_key]['#options'][$first_value])) {
+        $first_value = $form[$first_key]['#options'][$first_value];
+      }
+      $event_info .= ' (' . $first_value . ')';
+    }
+    return $event_info;
+  }
+
+  /**
+   * Provides a list of all used events by this ECA config entity.
+   *
+   * @param array|null $ids
+   *   (optional) When set, only the subset of given event object IDs are being
+   *   returned.
    *
    * @return \Drupal\eca\Entity\Objects\EcaEvent[]
    *   The list of used events.
    */
-  public function getUsedEvents(): array {
-    if ($cached = $this->memoryCache()->get($this->buildCacheId('events'))) {
-      return $cached->data;
-    }
-
+  public function getUsedEvents(?array $ids = NULL): array {
     $events = [];
-    foreach ($this->events as $id => $def) {
-      if ($event = $this->getEcaObject('event', $def['plugin'], $id, $def['label'] ?? 'noname', $def['configuration'] ?? [], $def['successors'] ?? [])) {
+    $ids = $ids ?? array_keys($this->events);
+    foreach ($ids as $id) {
+      if (!isset($this->events[$id])) {
+        continue;
+      }
+      $def = &$this->events[$id];
+      /** @var \Drupal\eca\Entity\Objects\EcaEvent|null $event */
+      $event = $this->getEcaObject('event', $def['plugin'], $id, $def['label'] ?? 'noname', $def['configuration'] ?? [], $def['successors'] ?? []);
+      if ($event) {
         $events[$id] = $event;
       }
+      unset($def);
     }
-    $this->memoryCache()->set($this->buildCacheId('events'), $events, CacheBackendInterface::CACHE_PERMANENT, ['eca.memory_cache:' . $this->id]);
     return $events;
+  }
+
+  /**
+   * Get a single ECA event object.
+   *
+   * @param string $id
+   *   The ID of the event object within this ECA configuration.
+   *
+   * @return \Drupal\eca\Entity\Objects\EcaEvent|null
+   *   The ECA event object, or NULL if not found.
+   */
+  public function getEcaEvent(string $id): ?EcaEvent {
+    return current($this->getUsedEvents([$id])) ?: NULL;
+  }
+
+  /**
+   * Get the used conditions.
+   *
+   * @return array
+   *   List of used conditions.
+   */
+  public function getConditions(): array {
+    return $this->conditions;
+  }
+
+  /**
+   * Get the used actions.
+   *
+   * @return array
+   *   List of used action.
+   */
+  public function getActions(): array {
+    return $this->actions;
   }
 
   /**
@@ -653,7 +747,7 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
    *
    * @param \Drupal\eca\Entity\Objects\EcaObject $eca_object
    *   The ECA item, for which the successors are requested.
-   * @param \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event $event
+   * @param \Symfony\Contracts\EventDispatcher\Event $event
    *   The originally triggered event in which context to determine the list
    *   of valid successors.
    * @param array $context
@@ -663,7 +757,7 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
    * @return \Drupal\eca\Entity\Objects\EcaObject[]
    *   The list of valid successors.
    */
-  public function getSuccessors(EcaObject $eca_object, object $event, array $context): array {
+  public function getSuccessors(EcaObject $eca_object, Event $event, array $context): array {
     $successors = [];
     foreach ($eca_object->getSuccessors() as $successor) {
       $context['%successorid'] = $successor['id'];
@@ -716,12 +810,14 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
    * @return \Drupal\eca\Entity\Objects\EcaObject|null
    *   The ECA object if available, NULL otherwise.
    */
-  private function getEcaObject(string $type, string $plugin_id, string $id, string $label, array $fields, array $successors, EcaEvent $event = NULL): ?EcaObject {
+  private function getEcaObject(string $type, string $plugin_id, string $id, string $label, array $fields, array $successors, ?EcaEvent $event = NULL): ?EcaObject {
     $ecaObject = NULL;
     switch ($type) {
       case 'event':
         try {
-          /** @var \Drupal\eca\Plugin\ECA\Event\EventInterface $plugin */
+          /**
+           * @var \Drupal\eca\Plugin\ECA\Event\EventInterface $plugin
+           */
           $plugin = $this->eventPluginManager()->createInstance($plugin_id, $fields);
         }
         catch (PluginException $e) {
@@ -735,7 +831,9 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
       case 'action':
         if ($event !== NULL) {
           try {
-            /** @var \Drupal\Core\Action\ActionInterface $plugin */
+            /**
+             * @var \Drupal\Core\Action\ActionInterface $plugin
+             */
             $plugin = $this->actionPluginManager()->createInstance($plugin_id, $fields);
           }
           catch (PluginException $e) {
@@ -816,24 +914,15 @@ class Eca extends ConfigEntityBase implements EntityWithPluginCollectionInterfac
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
-    $this->memoryCache()->invalidateAll();
-    $storage->resetCache();
-    parent::postSave($storage, $update);
-  }
-
-  /**
    * Checks if a given value has the patterns of a token.
    *
    * @param string $value
    *   The field value.
    *
    * @return bool
-   *  Wether TRUE or FALSE based on the pattern.
+   *   Wether TRUE or FALSE based on the pattern.
    */
-  protected function valueIsToken($value) {
+  protected function valueIsToken($value): bool {
     return (mb_substr((string) $value, 0, 1) === '[') &&
     (mb_substr((string) $value, -1, 1) === ']') &&
     (mb_strlen((string) $value) <= 255);

@@ -3,6 +3,7 @@
 namespace Drupal\eca_render\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Un-serializes / deserializes data.
@@ -11,10 +12,13 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "eca_render_unserialize",
  *   label = @Translation("Render: unserialize"),
  *   description = @Translation("Un-serializes / deserializes data."),
+ *   eca_version_introduced = "1.1.0",
  *   deriver = "Drupal\eca_render\Plugin\Action\SerializeDeriver"
  * )
  */
 class Unserialize extends Serialize {
+
+  use PluginFormTrait;
 
   /**
    * {@inheritdoc}
@@ -29,7 +33,6 @@ class Unserialize extends Serialize {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $data_type_options = [
       'array' => $this->t('Array'),
     ];
@@ -43,8 +46,11 @@ class Unserialize extends Serialize {
       '#default_value' => $this->configuration['type'],
       '#required' => TRUE,
       '#weight' => -200,
+      '#eca_token_select_option' => TRUE,
     ];
-    $form['value']['#description'] = $this->t('The value to deserialize. This field supports tokens.');
+    $form = parent::buildConfigurationForm($form, $form_state);
+    $form['value']['#description'] = $this->t('The value to deserialize.');
+    $form['value']['#eca_token_replacement'] = TRUE;
     return $form;
   }
 
@@ -61,10 +67,17 @@ class Unserialize extends Serialize {
    */
   protected function doBuild(array &$build): void {
     $value = $this->configuration['value'];
-    $serialized = (string) $this->tokenServices->replace($value);
+    $serialized = (string) $this->tokenService->replace($value);
 
     $format = $this->configuration['format'];
+    if ($format === '_eca_token') {
+      $format = $this->getTokenValue('format', 'json');
+    }
+
     $type = $this->configuration['type'];
+    if ($type === '_eca_token') {
+      $type = $this->getTokenValue('type', 'array');
+    }
     if ($type === 'array') {
       $data = $this->serializer->decode($serialized, $format);
     }

@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\eca_content\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 
 /**
@@ -16,6 +16,8 @@ use Drupal\user\Entity\User;
  * @group eca_content
  */
 class EntityFieldValueEmptyTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * The modules.
@@ -47,10 +49,7 @@ class EntityFieldValueEmptyTest extends KernelTestBase {
     User::create(['uid' => 1, 'name' => 'admin'])->save();
 
     // Create the Article content type with a standard body field.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create(['type' => 'article', 'name' => 'Article']);
-    $node_type->save();
-    node_add_body_field($node_type);
+    $this->createContentType(['type' => 'article', 'name' => 'Article']);
     // Create a multi-value text field.
     FieldStorageConfig::create([
       'field_name' => 'field_string_multi',
@@ -136,7 +135,6 @@ class EntityFieldValueEmptyTest extends KernelTestBase {
     $this->assertTrue($condition->evaluate());
 
     // Now test for entity references.
-
     /** @var \Drupal\eca_content\Plugin\ECA\Condition\EntityFieldValueEmpty $condition */
     $condition = $condition_manager->createInstance('eca_entity_field_value_empty', [
       'field_name' => 'field_content_multi',

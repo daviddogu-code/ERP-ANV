@@ -4,7 +4,6 @@ namespace Drupal\eca_base\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Lock\LockBackendInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca\Plugin\CleanupInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -15,7 +14,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Action(
  *   id = "eca_lock_acquire",
  *   label = @Translation("Lock: acquire"),
- *   description = @Translation("Acquires a lock.")
+ *   description = @Translation("Acquires a lock."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class LockAcquire extends ConfigurableActionBase implements CleanupInterface {
@@ -30,8 +30,7 @@ class LockAcquire extends ConfigurableActionBase implements CleanupInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
-    /** @var \Drupal\eca_base\Plugin\Action\LockAcquire $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->setLock($container->get('lock'));
     return $instance;
@@ -53,14 +52,14 @@ class LockAcquire extends ConfigurableActionBase implements CleanupInterface {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['lock_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Lock name'),
-      '#description' => $this->t('The name identifies a lock, that may be shared by multiple processes. The lock will be automatically released when this ECA process is finished. This field supports tokens.'),
+      '#description' => $this->t('The name identifies a lock, that may be shared by multiple processes. The lock will be automatically released when this ECA process is finished.'),
       '#default_value' => $this->configuration['lock_name'],
       '#required' => TRUE,
       '#weight' => -50,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['lock_timeout'] = [
       '#type' => 'number',
@@ -82,10 +81,10 @@ class LockAcquire extends ConfigurableActionBase implements CleanupInterface {
       '#title' => $this->t('Name of token'),
       '#default_value' => $this->configuration['token_name'],
       '#weight' => -20,
-      '#description' => $this->t('Optionally define a token name to store the result of lock acquiry. The result value is <strong>1</strong> when acquiry was successful, and is set to <strong>0</strong> when it was not successful.'),
+      '#description' => $this->t('Optionally define a token name to store the result of lock acquisition. The result value is <strong>1</strong> when acquisition was successful, and is set to <strong>0</strong> when it was not successful.'),
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -102,7 +101,7 @@ class LockAcquire extends ConfigurableActionBase implements CleanupInterface {
   /**
    * {@inheritdoc}
    */
-  public function execute() {
+  public function execute(): void {
     $name = $this->getLockName();
     $timeout = $this->getTimeout();
     $lock_wait = $this->configuration['lock_wait'];
@@ -113,7 +112,7 @@ class LockAcquire extends ConfigurableActionBase implements CleanupInterface {
       usleep(250000);
     }
     if ($token_name !== '') {
-      $this->tokenServices->addTokenData($token_name, $acquired ? 1 : 0);
+      $this->tokenService->addTokenData($token_name, $acquired ? 1 : 0);
     }
     if (!$acquired && $lock_wait && ($token_name === '')) {
       throw new \RuntimeException(sprintf("Wait exceeded timeout for lock name %s.", $name));
@@ -144,7 +143,7 @@ class LockAcquire extends ConfigurableActionBase implements CleanupInterface {
    *   The lock name.
    */
   protected function getLockName(): string {
-    $name = trim((string) $this->tokenServices->replaceClear($this->configuration['lock_name']));
+    $name = trim((string) $this->tokenService->replaceClear($this->configuration['lock_name']));
     if ($name === '') {
       $name = 'lock_acquire';
     }
@@ -159,7 +158,7 @@ class LockAcquire extends ConfigurableActionBase implements CleanupInterface {
    *   The timeout.
    */
   protected function getTimeout(): float {
-    $timeout = trim((string) $this->tokenServices->replaceClear($this->configuration['lock_timeout']));
+    $timeout = trim((string) $this->tokenService->replaceClear($this->configuration['lock_timeout']));
     if (empty($timeout)) {
       $timeout = 20.0;
     }

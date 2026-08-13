@@ -53,7 +53,7 @@ interface ModellerInterface extends PluginInspectionInterface {
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \LogicException
    */
-  public function createNewModel(string $id, string $model_data, string $filename = NULL, bool $save = FALSE): Eca;
+  public function createNewModel(string $id, string $model_data, ?string $filename = NULL, bool $save = FALSE): Eca;
 
   /**
    * Saves an ECA config entity and its associated ECA model entity.
@@ -86,7 +86,7 @@ interface ModellerInterface extends PluginInspectionInterface {
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \LogicException
    */
-  public function save(string $data, string $filename = NULL, bool $status = NULL): bool;
+  public function save(string $data, ?string $filename = NULL, ?bool $status = NULL): bool;
 
   /**
    * Updates and ECA config entity from the given ECA model entity.
@@ -201,6 +201,15 @@ interface ModellerInterface extends PluginInspectionInterface {
   public function getTags(): array;
 
   /**
+   * Get the model's changelog.
+   *
+   * @return array
+   *   The list of changelog items with the key identifying the version and the
+   *   value containing the plain text description.
+   */
+  public function getChangelog(): array;
+
+  /**
    * Get the model's documentation.
    *
    * @return string
@@ -228,7 +237,7 @@ interface ModellerInterface extends PluginInspectionInterface {
    * Reads all ECA components and adds them to the ECA config entity.
    *
    * The model expects to have been given the model data prior to calling this
-   * method. It will then analyze its own data strcuture, extract all events,
+   * method. It will then analyze its own data structure, extract all events,
    * gateways, conditions and actions and stores them in the given ECA config
    * entity.
    *
@@ -249,10 +258,10 @@ interface ModellerInterface extends PluginInspectionInterface {
   public function getEca(): Eca;
 
   /**
-   * Determines, if during ::readComponents at least one error occured.
+   * Determines, if during ::readComponents at least one error occurred.
    *
    * @return bool
-   *   TRUE, if at least one error occured, FALSE otherwise.
+   *   TRUE, if at least one error occurred, FALSE otherwise.
    */
   public function hasError(): bool;
 

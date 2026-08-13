@@ -2,9 +2,10 @@
 
 namespace Drupal\eca_content\Plugin\Action;
 
-use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
@@ -21,6 +22,7 @@ use Drupal\eca\TypedData\PropertyPathTrait;
  *   id = "eca_get_field_value",
  *   label = @Translation("Entity: get field value"),
  *   description = @Translation("Get the value of any field in an entity and store it as a token."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "entity"
  * )
  */
@@ -32,7 +34,7 @@ class GetFieldValue extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   protected function getFieldName(): string {
-    return (string) $this->tokenServices->replace($this->configuration['field_name']);
+    return (string) $this->tokenService->replace($this->configuration['field_name']);
   }
 
   /**
@@ -49,13 +51,13 @@ class GetFieldValue extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['field_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Field name'),
-      '#description' => $this->t('The machine name of the field, that holds the value. This property supports tokens.'),
+      '#description' => $this->t('The machine name of the field, that holds the value.'),
       '#default_value' => $this->configuration['field_name'],
       '#weight' => -20,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['token_name'] = [
       '#type' => 'textfield',
@@ -65,7 +67,7 @@ class GetFieldValue extends ConfigurableActionBase {
       '#weight' => -10,
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -80,7 +82,7 @@ class GetFieldValue extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $result = AccessResult::forbidden();
     if (!($object instanceof AccessibleInterface) || !($object instanceof EntityInterface)) {
       return $return_as_object ? $result : $result->isAllowed();
@@ -92,9 +94,12 @@ class GetFieldValue extends ConfigurableActionBase {
     /** @var \Drupal\Core\Access\AccessResultInterface $result */
     $result = $entity->access('view', $account, TRUE);
 
-    $options = ['access' => 'view'];
-    $metadata = [];
     $field_name = $this->getFieldName();
+    $options = [
+      'access' => 'view',
+      'auto_item' => !($entity instanceof FieldableEntityInterface && $entity->hasField($field_name)),
+    ];
+    $metadata = [];
     $read_target = $this->getTypedProperty($entity->getTypedData(), $field_name, $options, $metadata);
     if (!isset($metadata['access']) || (!$read_target && $metadata['access']->isAllowed())) {
       throw new \InvalidArgumentException(sprintf("The provided field %s does not exist as a property path on the %s entity having ID %s.", $field_name, $entity->getEntityTypeId(), $entity->id()));
@@ -107,14 +112,18 @@ class GetFieldValue extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL) {
+  public function execute(mixed $entity = NULL): void {
     if (!($entity instanceof EntityInterface)) {
       return;
     }
-    $options = ['access' => 'view'];
+    $field_name = $this->getFieldName();
+    $options = [
+      'access' => 'view',
+      'auto_item' => !($entity instanceof FieldableEntityInterface && $entity->hasField($field_name)),
+    ];
     $metadata = [];
     $token_name = $this->configuration['token_name'];
-    $property_path = $this->normalizePropertyPath($this->getFieldName());
+    $property_path = $this->normalizePropertyPath($field_name);
     $read_target = $this->getTypedProperty($entity->getTypedData(), $property_path, $options, $metadata);
     if (!isset($metadata['access']) || (!$read_target && $metadata['access']->isAllowed())) {
       throw new \InvalidArgumentException(sprintf("The provided field %s does not exist as a property path on the %s entity having ID %s.", $property_path, $entity->getEntityTypeId(), $entity->id()));
@@ -127,7 +136,11 @@ class GetFieldValue extends ConfigurableActionBase {
     $path_items = explode('.', $property_path);
     $last_item = end($path_items);
     $delta_defined = FALSE;
-    while (!$delta_defined && ($path_item = array_pop($path_items)) !== NULL) {
+    while (!$delta_defined) {
+      $path_item = array_pop($path_items);
+      if ($path_item === NULL) {
+        break;
+      }
       if (ctype_digit($path_item)) {
         $delta_defined = TRUE;
         $path_item = (int) $path_item;
@@ -145,6 +158,7 @@ class GetFieldValue extends ConfigurableActionBase {
     }
     elseif ($read_target instanceof EntityReferenceItem) {
       // User input targets a reference item, use the contained entity.
+      // @todo The property is protected and should be accessed differently.
       if (isset($read_target->entity)) {
         $token_data = $read_target->entity;
       }
@@ -152,7 +166,7 @@ class GetFieldValue extends ConfigurableActionBase {
         $items = $read_target->getParent();
         if (($items instanceof EntityReferenceFieldItemListInterface) && ($entities = $items->referencedEntities())) {
           foreach ($items as $delta => $item) {
-            if (($item === $read_target) || ($item && ($item->getValue() === $read_target->getValue()))) {
+            if (($item === $read_target) || ($item->getValue() === $read_target->getValue())) {
               $token_data = $entities[$delta] ?? NULL;
               break;
             }
@@ -164,24 +178,35 @@ class GetFieldValue extends ConfigurableActionBase {
       // User input targets an entity, use it.
       $token_data = $read_target->getValue();
     }
-    elseif (!$delta_defined && ($read_target instanceof FieldItemListInterface) && ($read_target->getFieldDefinition()->getFieldStorageDefinition()->getCardinality() !== 1)) {
+    elseif (!$delta_defined && ($read_target instanceof FieldItemListInterface)) {
       // User input targets a list, use every value from it.
       $item_definition = $read_target->getItemDefinition();
       if ($item_definition instanceof ComplexDataDefinitionInterface) {
-        $main_property = $item_definition->getMainPropertyName() ?? 'value';
+        $main_property = $item_definition->getMainPropertyName();
         $item_property = $item_definition->getPropertyDefinition($last_item) ? $last_item : $main_property;
       }
       else {
-        $item_property = 'value';
+        $item_property = NULL;
       }
       $token_data = [];
+      /**
+       * @var \Drupal\Core\Field\FieldItemInterface $field_item
+       */
       foreach ($read_target as $i => $field_item) {
-        if (isset($field_item->$item_property)) {
+        if (!isset($item_property)) {
+          $token_data[$i] = $field_item->$last_item ?? $field_item->getValue();
+        }
+        elseif (isset($field_item->$item_property)) {
           $token_data[$i] = $field_item->$item_property;
         }
       }
+      if ($read_target->getFieldDefinition()->getFieldStorageDefinition()->getCardinality() === 1) {
+        // Directly use the first entry when this is not a multi-value field.
+        $token_data = $token_data ? reset($token_data) : NULL;
+      }
     }
-    $this->tokenServices->addTokenData($token_name, $token_data);
+
+    $this->tokenService->addTokenData($token_name, $token_data);
   }
 
 }

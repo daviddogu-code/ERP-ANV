@@ -630,6 +630,71 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-13 — Paso 1 hacia Drupal 11: ECA salta de la rama 1 a la 2 sin despeinarse, y de paso cae el último aviso de seguridad
+
+Era el paso que daba miedo: 36 procesos automáticos, 29 encendidos, todo el ERP colgando de ellos.
+Salió mejor de lo previsto.
+
+**Lo que se movió:** `eca` y sus seis submódulos de 1.1.13 a **2.1.22**, `bpmn_io` de 1.1.4 a
+2.0.12, `eca_flag` de 1.0.0 a 2.0.5 y `eca_tamper` de 1.0.6 a 2.0.10. Todo sobre el Drupal 10.6.15
+que ya corríamos, porque ECA 2 admite `^10.3 || ^11`. Composer no arrastró nada más: cinco
+paquetes, cero instalaciones, cero bajas.
+
+**Por qué la ruptura de ECA 2 no nos tocó.** ECA 2 rompe la API para quien la extienda desde
+código: los suscriptores de eventos desaparecen y `$tokenServices` pasa a llamarse
+`$tokenService`. Antes de tocar nada se revisaron nuestros módulos: ninguno extiende ECA. El único
+suscriptor de eventos que tenemos, `QueueTileRedirectSubscriber`, es de Symfony y redirige las
+baldosas de producción. Los 36 modelos son configuración pura.
+
+**Y la migración de los modelos no cambió ni una coma.** Se guardó una foto de los 73 objetos de
+configuración de ECA antes y otra después (`scripts/foto-eca.php`). Diferencia total entre las dos:
+**una línea**, el ajuste nuevo `service_user: ''` que ECA 2 añade vacío. Los 36 modelos, idénticos
+byte a byte. `drush eca:update` lo confirma por su cuenta: "36 modelos no necesitan cambios, 0
+errores".
+
+**El aviso de seguridad de Drupal, cerrado.** ECA 2.1.22 tapa `SA-CONTRIB-2026-074`, que era el
+último que quedaba. `composer audit` ahora solo señala `psy/psysh`, la consola interactiva que trae
+Drush: es una herramienta de línea de comandos, no está expuesta a la web y el fallo requiere
+ejecutar `drush php` dentro de un directorio con un fichero preparado. De 82 avisos en febrero a
+ninguno que afecte al sitio.
+
+**El atasco de Quick Tabs, que no era de ECA.** Al ir a ejecutar las actualizaciones apareció esto:
+*"la versión instalada del módulo Quick Tabs es demasiado antigua para actualizar"*. Herencia del
+salto del núcleo de esta mañana, que subió `quicktabs` de la rama 3 de desarrollo a la 4.3.1 y dejó
+dos cosas a medias. Bloqueaba **cualquier** actualización de **cualquier** módulo, así que había que
+resolverlo sí o sí:
+
+1. La versión de esquema se quedó en 8000 mientras la 4.3.1 declara haber borrado todo hasta la
+   103001. La única actualización borrada instalaba el módulo `js_cookie`, que la rama 4 ya no usa
+   porque la memoria de pestañas se guarda ahora en el navegador. `js_cookie` no está instalado,
+   que es justo el estado que la 4 espera, así que no faltaba trabajo: faltaba el número.
+2. La actualización posterior que añade el ajuste `remember_last_clicked_tab` **estaba anotada como
+   ejecutada sin haberse aplicado**: las cinco instancias seguían sin la clave. Que no fue una
+   anotación en bloque se sabe porque la *otra* actualización posterior de quicktabs, la de
+   `direct_linking`, sí dejó su marca en la configuración. Se desanotó y se dejó que el código del
+   propio módulo hiciera el trabajo, en vez de rellenar la configuración a mano.
+
+Vale la pena quedarse con esto: **una actualización puede constar como hecha sin haberse hecho.**
+Es un modo de fallo silencioso que no da error por ningún lado. Merece una revisión de las demás.
+
+**Herramientas nuevas, que hacían falta para esto y harán falta para los siete pasos que quedan:**
+
+- `scripts/cargan-las-paginas.php` — pide por dentro las 31 páginas que importan (producción,
+  vistas, y una ficha real de cada tipo de entidad, que se busca sola por la API) y comprueba que
+  responden. Hacía falta porque `comprobacion.php` mira datos y automatismos pero no dibuja ni una
+  pantalla, y dibujar es donde asoman las subidas malas: el fallo de `views_aggregator` de esta
+  mañana no rompió ni un dato, solo devolvía un 500 en la pantalla de pedidos.
+- `scripts/exportar-config.php` — exporta a `config/sync` solo los objetos que se le pidan. Hace
+  falta porque ahora mismo `drush config:export` a secas metería `update` y `upgrade_status`, que
+  están encendidos solo para diagnosticar la subida, en `core.extension` y de ahí al servidor.
+- `scripts/foto-eca.php`, `scripts/rutas-de-las-vistas.php`, `scripts/revisar-quicktabs.php` y
+  `scripts/arreglar-quicktabs.php`.
+
+**Comprobado al terminar:** 35 de 35 en la comprobación funcional (los seis automatismos siguen
+disparando: título de escandallo, copia de cantidad, enganche a la talla, movimiento de inventario,
+título de color y recálculo del total de línea), 31 de 31 páginas cargando, y `config/sync` al día
+con los seis objetos que cambiaron.
+
 ### 2026-08-13 — La otra mitad de la pregunta: hay versión para la 11 de todo menos de dos módulos
 
 El informe de `upgrade_status` dice si el código que tenemos usa cosas que Drupal 11 haya quitado.

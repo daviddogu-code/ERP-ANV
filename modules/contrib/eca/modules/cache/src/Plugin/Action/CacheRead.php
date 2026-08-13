@@ -5,15 +5,9 @@ namespace Drupal\eca_cache\Plugin\Action;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Action to read from cache.
- *
- * @Action(
- *   id = "eca_cache_read",
- *   label = @Translation("Cache: read"),
- *   description = @Translation("Read a value item from cache and store it as a token.")
- * )
+ * Abstract action to read from cache.
  */
-class CacheRead extends CacheActionBase {
+abstract class CacheRead extends CacheActionBase {
 
   /**
    * {@inheritdoc}
@@ -29,7 +23,6 @@ class CacheRead extends CacheActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of token'),
@@ -39,7 +32,7 @@ class CacheRead extends CacheActionBase {
       '#weight' => -30,
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -53,13 +46,15 @@ class CacheRead extends CacheActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute() {
+  public function execute(): void {
     if (!($cache = $this->getCacheBackend()) || !($key = $this->getCacheKey()) || !($name = trim($this->configuration['token_name']))) {
       return;
     }
 
-    if ($cached = $cache->get($key)) {
-      $this->tokenServices->addTokenData($name, $cached->data);
+    /** @var object|false $cached */
+    $cached = $cache->get($key);
+    if ($cached && property_exists($cached, 'data')) {
+      $this->tokenService->addTokenData($name, $cached->data);
     }
   }
 

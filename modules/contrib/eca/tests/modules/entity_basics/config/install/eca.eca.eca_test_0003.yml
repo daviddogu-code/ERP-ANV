@@ -6,7 +6,7 @@ dependencies:
 id: eca_test_0003
 modeller: bpmn_io
 label: 'Entity Events Part 2'
-version: 1.0.0
+version: v1
 weight: null
 events:
   Event_0865lkv:

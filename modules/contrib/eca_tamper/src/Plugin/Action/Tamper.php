@@ -2,19 +2,23 @@
 
 namespace Drupal\eca_tamper\Plugin\Action;
 
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Attribute\EcaAction;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Drupal\eca_tamper\Plugin\TamperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provide all tamper plugins as ECA actions.
- *
- * @Action(
- *   id = "eca_tamper",
- *   deriver = "Drupal\eca_tamper\Plugin\Action\TamperDeriver"
- * )
  */
+#[Action(
+  id: 'eca_tamper',
+  deriver: 'Drupal\eca_tamper\Plugin\Action\TamperDeriver',
+)]
+#[EcaAction(
+  version_introduced: '1.0.0',
+)]
 class Tamper extends ConfigurableActionBase {
 
   use TamperTrait;
@@ -22,7 +26,7 @@ class Tamper extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ConfigurableActionBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->tamperManager = $container->get('plugin.manager.tamper');
     return $instance;
@@ -31,11 +35,12 @@ class Tamper extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException | \Drupal\Core\TypedData\Exception\MissingDataException
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
   public function execute(): void {
     $value = $this->doTamper('eca_data', 'eca_token_name');
-    $this->tokenServices->addTokenData($this->configuration['eca_token_name'], $value);
+    $this->tokenService->addTokenData($this->configuration['eca_token_name'], $value);
   }
 
   /**
@@ -55,10 +60,10 @@ class Tamper extends ConfigurableActionBase {
     $form['eca_data'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Data to be tampered'),
-      '#description' => $this->t('This field supports tokens.'),
       '#default_value' => $this->configuration['eca_data'],
       '#required' => TRUE,
       '#weight' => -10,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['eca_token_name'] = [
       '#type' => 'textfield',

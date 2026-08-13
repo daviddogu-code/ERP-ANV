@@ -7,8 +7,8 @@ use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\eca\Plugin\FormFieldMachineName;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 
 /**
  * Build an entity form.
@@ -17,6 +17,7 @@ use Drupal\eca\Plugin\Action\ActionBase;
  *   id = "eca_render_entity_form",
  *   label = @Translation("Render: entity form"),
  *   description = @Translation("Build an entity form using a specified entity."),
+ *   eca_version_introduced = "1.1.0",
  *   type = "entity"
  * )
  */
@@ -39,7 +40,7 @@ class EntityForm extends RenderElementActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->formBuilder = $container->get('entity.form_builder');
     return $instance;
@@ -58,19 +59,18 @@ class EntityForm extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['operation'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('Operation'),
       '#default_value' => $this->configuration['operation'],
       '#description' => $this->t('Example: <em>default, save, delete</em>'),
       '#required' => TRUE,
       '#weight' => -30,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -97,10 +97,11 @@ class EntityForm extends RenderElementActionBase {
           ->createAccess($object->bundle(), $account, [], TRUE);
       }
       else {
-        $op = $this->configuration['operation'] === 'delete' ? 'delete' : 'update';
+        $operation = trim((string) $this->tokenService->replaceClear($this->configuration['operation']));
+        $operation = $operation === 'delete' ? 'delete' : 'update';
         $access_result = $this->entityTypeManager
           ->getAccessControlHandler($object->getEntityTypeId())
-          ->access($object, $op, $account, TRUE);
+          ->access($object, $operation, $account, TRUE);
       }
     }
     return $return_as_object ? $access_result : $access_result->isAllowed();
@@ -109,7 +110,7 @@ class EntityForm extends RenderElementActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL): void {
+  public function execute(mixed $entity = NULL): void {
     if (!($entity instanceof EntityInterface)) {
       return;
     }
@@ -122,7 +123,7 @@ class EntityForm extends RenderElementActionBase {
    */
   protected function doBuild(array &$build): void {
     if ($this->entity instanceof EntityInterface) {
-      $operation = trim((string) $this->tokenServices->replaceClear($this->configuration['operation']));
+      $operation = trim((string) $this->tokenService->replaceClear($this->configuration['operation']));
       if ($operation === '') {
         throw new \InvalidArgumentException("No form operation specified.");
       }

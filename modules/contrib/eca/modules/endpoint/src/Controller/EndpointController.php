@@ -4,10 +4,15 @@ namespace Drupal\eca_endpoint\Controller;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Ajax\AjaxHelperTrait;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\MessageCommand;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\MainContent\HtmlRenderer;
@@ -18,7 +23,9 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Event\AccessEventInterface;
 use Drupal\eca\Event\RenderEventInterface;
 use Drupal\eca\Event\TriggerEvent;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -27,88 +34,48 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 /**
  * The ECA endpoint controller.
  */
-class EndpointController implements ContainerInjectionInterface {
+final class EndpointController {
 
-  /**
-   * The trigger event service.
-   *
-   * @var \Drupal\eca\Event\TriggerEvent
-   */
-  protected TriggerEvent $triggerEvent;
-
-  /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected RendererInterface $renderer;
-
-  /**
-   * The main content renderer.
-   *
-   * @var \Drupal\Core\Render\MainContent\HtmlRenderer
-   */
-  protected HtmlRenderer $mainContentHtmlRenderer;
-
-  /**
-   * The current route match.
-   *
-   * @var \Drupal\Core\Routing\RouteMatchInterface
-   */
-  protected RouteMatchInterface $routeMatch;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected AccountInterface $currentUser;
-
-  /**
-   * The config factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected ConfigFactoryInterface $configFactory;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container): EndpointController {
-    return new static(
-      $container->get('eca.trigger_event'),
-      $container->get('renderer'),
-      $container->get('main_content_renderer.html'),
-      $container->get('current_route_match'),
-      $container->get('current_user'),
-      $container->get('config.factory')
-    );
-  }
+  use AjaxHelperTrait;
 
   /**
    * Constructs a new EcaEndpointController object.
    *
-   * @param \Drupal\eca\Event\TriggerEvent $trigger_event
+   * @param \Drupal\eca\Event\TriggerEvent $triggerEvent
    *   The trigger event service.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
-   * @param \Drupal\Core\Render\MainContent\HtmlRenderer $html_renderer
-   *   The main content renderer.
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   * @param \Drupal\Core\Render\MainContent\HtmlRenderer $mainContentHtmlRenderer
+   *   The main content HTML renderer.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
    *   The current route match.
-   * @param \Drupal\Core\Session\AccountInterface $current_user
+   * @param \Drupal\Core\Session\AccountInterface $currentUser
    *   The current user.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   The logger.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger.
+   * @param \Symfony\Component\DependencyInjection\ServiceLocator $mainContentRenderers
+   *   A service locator that contains the main content renderer services,
+   *   keyed by the 'format' attribute.
    */
-  public function __construct(TriggerEvent $trigger_event, RendererInterface $renderer, HtmlRenderer $html_renderer, RouteMatchInterface $route_match, AccountInterface $current_user, ConfigFactoryInterface $config_factory) {
-    $this->triggerEvent = $trigger_event;
-    $this->renderer = $renderer;
-    $this->mainContentHtmlRenderer = $html_renderer;
-    $this->routeMatch = $route_match;
-    $this->currentUser = $current_user;
-    $this->configFactory = $config_factory;
-  }
+  public function __construct(
+    #[Autowire(service: 'eca.trigger_event')]
+    protected TriggerEvent $triggerEvent,
+    protected RendererInterface $renderer,
+    #[Autowire(service: 'main_content_renderer.html')]
+    protected HtmlRenderer $mainContentHtmlRenderer,
+    protected RouteMatchInterface $routeMatch,
+    protected AccountInterface $currentUser,
+    protected ConfigFactoryInterface $configFactory,
+    #[Autowire(service: 'logger.channel.eca')]
+    protected LoggerChannelInterface $logger,
+    protected MessengerInterface $messenger,
+    #[AutowireLocator('render.main_content_renderer', indexAttribute: 'format')]
+    protected ServiceLocator $mainContentRenderers,
+  ) {}
 
   /**
    * Handles the request to the endpoint.
@@ -121,8 +88,11 @@ class EndpointController implements ContainerInjectionInterface {
    *   (optional) An additional path argument.
    * @param string|null $eca_endpoint_argument_2
    *   (optional) An additional path argument.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response|array|null
+   *   The response or a build array, NULL otherwise.
    */
-  public function handle(Request $request, ?AccountInterface $account = NULL, ?string $eca_endpoint_argument_1 = NULL, ?string $eca_endpoint_argument_2 = NULL) {
+  public function handle(Request $request, ?AccountInterface $account = NULL, ?string $eca_endpoint_argument_1 = NULL, ?string $eca_endpoint_argument_2 = NULL): mixed {
     $account = $account ?? $this->currentUser;
 
     $path_arguments = [];
@@ -150,7 +120,7 @@ class EndpointController implements ContainerInjectionInterface {
       // - An ECA configuration does react upon this for creating a response,
       //   but there is no ECA configuration that defines access for it.
       if (RfcLogLevel::DEBUG === (int) $this->configFactory->get('eca.settings')->get('log_level')) {
-        \Drupal::logger('eca')->debug("Returning a 404 page, because no access has been explicitly set for either revoking or granting access. Request path: %request_url", [
+        $this->logger->debug("Returning a 404 page, because no access has been explicitly set for either revoking or granting access. Request path: %request_url", [
           '%request_path' => $request->getPathInfo(),
         ]);
       }
@@ -158,7 +128,9 @@ class EndpointController implements ContainerInjectionInterface {
     }
 
     $build = [];
-    $response = new Response();
+    $response = $this->isAjax() ?
+      new AjaxResponse() :
+      new Response();
     // Make the response uncacheable by default.
     $response->setPrivate();
 
@@ -167,6 +139,22 @@ class EndpointController implements ContainerInjectionInterface {
     $previous_content = $response->getContent();
 
     $event = $this->triggerEvent->dispatchFromPlugin('eca_endpoint:response', $path_arguments, $request, $response, $account, $build);
+    if ($response instanceof AjaxResponse) {
+      if (Element::children($build)) {
+        $wrapper = $request->query->get(MainContentViewSubscriber::WRAPPER_FORMAT, 'drupal_modal');
+        if (!$this->mainContentRenderers->has($wrapper)) {
+          $wrapper = 'drupal_modal';
+        }
+        $response = $this->mainContentRenderers->get($wrapper)->renderResponse($build, $request, $this->routeMatch);
+      }
+      foreach ($this->messenger->deleteAll() as $type => $type_messages) {
+        /** @var string[]|\Drupal\Component\Render\MarkupInterface[] $type_messages */
+        foreach ($type_messages as $message) {
+          $response->addCommand(new MessageCommand((string) $message, NULL, ['type' => $type], FALSE));
+        }
+      }
+      return $response;
+    }
     if ($event instanceof RenderEventInterface) {
       $build = &$event->getRenderArray();
     }
@@ -184,7 +172,7 @@ class EndpointController implements ContainerInjectionInterface {
         $response->headers->set('Content-Type', 'text/html; charset=UTF-8');
       }
       [$content_type] = explode(';', $response->headers->get('Content-Type'), 2);
-      $content_type = trim((string) ($content_type ?: 'text/html'));
+      $content_type = trim(($content_type ?: 'text/html'));
       $is_html_response = mb_strpos($content_type, 'html') !== FALSE;
 
       if ($build && !$response->getContent()) {
@@ -268,17 +256,19 @@ class EndpointController implements ContainerInjectionInterface {
   public function access(?AccountInterface $account = NULL, ?string $eca_endpoint_argument_1 = NULL, ?string $eca_endpoint_argument_2 = NULL): AccessResultInterface {
     // Local menu links are being built up using a "fake" route match. Therefore
     // we catch the current route match from the global container instead.
-    $current_route_match = \Drupal::routeMatch();
-    $route = $current_route_match->getRouteObject();
+    $route = $this->routeMatch->getRouteObject();
     if ($route && ($route->getDefault('_controller') === 'Drupal\eca_endpoint\Controller\EndpointController::handle')) {
-      // Let ::handle decide whether access is allowed.
-      return AccessResult::allowed()
-        ->addCacheContexts([
-          'url.path',
-          'url.query_args',
-          'user',
-          'user.permissions',
-        ]);
+      $given_arguments = $this->routeMatch->getRawParameters()->all();
+      if ($eca_endpoint_argument_1 === ($given_arguments['eca_endpoint_argument_1'] ?? NULL) && $eca_endpoint_argument_2 === ($given_arguments['eca_endpoint_argument_2'] ?? NULL)) {
+        // Let ::handle decide whether access is allowed.
+        return AccessResult::allowed()
+          ->addCacheContexts([
+            'url.path',
+            'url.query_args',
+            'user',
+            'user.permissions',
+          ]);
+      }
     }
 
     $account = $account ?? $this->currentUser;

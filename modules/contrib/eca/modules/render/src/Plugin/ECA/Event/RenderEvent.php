@@ -6,27 +6,32 @@ use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Attribute\Token;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca\Entity\Objects\EcaEvent;
 use Drupal\eca\Event\Tag;
-use Drupal\eca\Plugin\ECA\EcaPluginBase;
 use Drupal\eca\Plugin\ECA\Event\EventBase;
+use Drupal\eca\Plugin\FormFieldMachineName;
 use Drupal\eca\Plugin\PluginUsageInterface;
 use Drupal\eca_render\Event\EcaRenderBlockEvent;
 use Drupal\eca_render\Event\EcaRenderContextualLinksEvent;
+use Drupal\eca_render\Event\EcaRenderEntityEvent;
 use Drupal\eca_render\Event\EcaRenderEntityOperationsEvent;
 use Drupal\eca_render\Event\EcaRenderExtraFieldEvent;
 use Drupal\eca_render\Event\EcaRenderLazyEvent;
+use Drupal\eca_render\Event\EcaRenderLocalTasksEvent;
 use Drupal\eca_render\Event\EcaRenderViewsFieldEvent;
 use Drupal\eca_render\RenderEvents;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Plugin implementation of ECA render events.
  *
  * @EcaEvent(
  *   id = "eca_render",
- *   deriver = "Drupal\eca_render\Plugin\ECA\Event\RenderEventDeriver"
+ *   deriver = "Drupal\eca_render\Plugin\ECA\Event\RenderEventDeriver",
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class RenderEvent extends EventBase implements PluginUsageInterface {
@@ -62,8 +67,7 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EcaPluginBase {
-    /** @var \Drupal\eca_render\Plugin\ECA\Event\RenderEvent $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->blockManager = $container->get('plugin.manager.block');
     $instance->entityFieldManager = $container->get('entity_field.manager');
@@ -91,6 +95,20 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
       'event_name' => RenderEvents::CONTEXTUAL_LINKS,
       'event_class' => EcaRenderContextualLinksEvent::class,
       'tags' => Tag::RUNTIME | Tag::CONFIG | Tag::CONTENT,
+    ];
+    $definitions['local_tasks'] = [
+      'label' => 'ECA local tasks',
+      'event_name' => RenderEvents::LOCAL_TASKS,
+      'event_class' => EcaRenderLocalTasksEvent::class,
+      'tags' => Tag::RUNTIME | Tag::CONFIG | Tag::CONTENT,
+      'eca_version_introduced' => '2.1.0',
+    ];
+    $definitions['entity'] = [
+      'label' => 'ECA entity',
+      'event_name' => RenderEvents::ENTITY,
+      'event_class' => EcaRenderEntityEvent::class,
+      'tags' => Tag::RUNTIME | Tag::CONFIG | Tag::CONTENT,
+      'eca_version_introduced' => '2.0.0',
     ];
     $definitions['entity_operations'] = [
       'label' => 'ECA entity operation links',
@@ -130,7 +148,7 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
         'block_machine_name' => '',
       ];
     }
-    if ($this->eventClass() === EcaRenderEntityOperationsEvent::class || $this->eventClass() === EcaRenderContextualLinksEvent::class || $this->eventClass() === EcaRenderExtraFieldEvent::class) {
+    if ($this->eventClass() === EcaRenderEntityEvent::class || $this->eventClass() === EcaRenderEntityOperationsEvent::class || $this->eventClass() === EcaRenderContextualLinksEvent::class || $this->eventClass() === EcaRenderExtraFieldEvent::class) {
       $values += [
         'entity_type_id' => '',
         'bundle' => '',
@@ -169,7 +187,6 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     if ($this->eventClass() === EcaRenderBlockEvent::class) {
       $form['block_name'] = [
         '#type' => 'textfield',
@@ -189,7 +206,7 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
         '#weight' => 0,
       ];
     }
-    if ($this->eventClass() === EcaRenderEntityOperationsEvent::class || $this->eventClass() === EcaRenderContextualLinksEvent::class || $this->eventClass() === EcaRenderExtraFieldEvent::class) {
+    if ($this->eventClass() === EcaRenderEntityEvent::class || $this->eventClass() === EcaRenderEntityOperationsEvent::class || $this->eventClass() === EcaRenderContextualLinksEvent::class || $this->eventClass() === EcaRenderExtraFieldEvent::class) {
       $form['entity_type_id'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Restrict by entity type ID'),
@@ -217,10 +234,9 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
     }
     if ($this->eventClass() === EcaRenderExtraFieldEvent::class) {
       $form['extra_field_name'] = [
-        '#type' => 'machine_name',
-        '#machine_name' => [
-          'exists' => [$this, 'alwaysFalse'],
-        ],
+        '#type' => 'textfield',
+        '#maxlength' => 1024,
+        '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
         '#title' => $this->t('Machine name of the extra field'),
         '#description' => $this->t('The <em>machine name</em> of the extra field. Must only container lowercase alphanumeric characters and underscores.'),
         '#default_value' => $this->configuration['extra_field_name'],
@@ -279,7 +295,7 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
         '#weight' => 10,
       ];
     }
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -307,7 +323,7 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
     if ($this->eventClass() === EcaRenderContextualLinksEvent::class) {
       $this->configuration['group'] = $form_state->getValue('group');
     }
-    if ($this->eventClass() === EcaRenderEntityOperationsEvent::class || $this->eventClass() === EcaRenderContextualLinksEvent::class || $this->eventClass() === EcaRenderExtraFieldEvent::class) {
+    if ($this->eventClass() === EcaRenderEntityEvent::class || $this->eventClass() === EcaRenderEntityOperationsEvent::class || $this->eventClass() === EcaRenderContextualLinksEvent::class || $this->eventClass() === EcaRenderExtraFieldEvent::class) {
       $this->configuration['entity_type_id'] = $form_state->getValue('entity_type_id');
       $this->configuration['bundle'] = $form_state->getValue('bundle');
     }
@@ -330,7 +346,7 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
   /**
    * {@inheritdoc}
    */
-  public function lazyLoadingWildcard(string $eca_config_id, EcaEvent $ecaEvent): string {
+  public function generateWildcard(string $eca_config_id, EcaEvent $ecaEvent): string {
     $derivative_id = $this->getDerivativeId();
     $configuration = $ecaEvent->getConfiguration();
     switch ($derivative_id) {
@@ -338,6 +354,7 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
       case 'block':
         return $configuration['block_machine_name'] ?? '*';
 
+      case 'entity':
       case 'entity_operations':
       case 'contextual_links':
       case 'extra_field':
@@ -394,9 +411,87 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
         return $configuration['name'] ?? '*';
 
       default:
-        return parent::lazyLoadingWildcard($eca_config_id, $ecaEvent);
+        return parent::generateWildcard($eca_config_id, $ecaEvent);
 
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function appliesForWildcard(Event $event, string $event_name, string $wildcard): bool {
+    if ($event instanceof EcaRenderBlockEvent) {
+      return ($event->getBlock()->getDerivativeId() === $wildcard);
+    }
+    if ($event instanceof EcaRenderContextualLinksEvent) {
+      [$w_group, $w_entity_type_ids, $w_bundles] = explode(':', $wildcard, 3);
+
+      if (($w_group !== '*') && !in_array($event->getGroup(), explode(',', $w_group), TRUE)) {
+        return FALSE;
+      }
+
+      if ($w_entity_type_ids !== '*') {
+        if (!($entity = $event->getEntity())) {
+          return FALSE;
+        }
+        if (!in_array($entity->getEntityTypeId(), explode(',', $w_entity_type_ids), TRUE)) {
+          return FALSE;
+        }
+      }
+
+      if ($w_bundles !== '*') {
+        if (!($entity = $event->getEntity())) {
+          return FALSE;
+        }
+        if (!in_array($entity->bundle(), explode(',', $w_bundles), TRUE)) {
+          return FALSE;
+        }
+      }
+
+      return TRUE;
+    }
+    if ($event instanceof EcaRenderEntityEvent || $event instanceof EcaRenderEntityOperationsEvent) {
+      [$w_entity_type_ids, $w_bundles] = explode(':', $wildcard);
+
+      if (($w_entity_type_ids !== '*') && !in_array($event->getEntity()->getEntityTypeId(), explode(',', $w_entity_type_ids), TRUE)) {
+        return FALSE;
+      }
+
+      if (($w_bundles !== '*') && !in_array($event->getEntity()->bundle(), explode(',', $w_bundles), TRUE)) {
+        return FALSE;
+      }
+
+      return TRUE;
+    }
+    if ($event instanceof EcaRenderExtraFieldEvent) {
+      [$w_display_type, $w_extra_field_name, $w_entity_type_ids, $w_bundles] = explode(':', $wildcard);
+
+      if ($w_display_type !== $event->getDisplayType()) {
+        return FALSE;
+      }
+
+      if ($w_extra_field_name !== $event->getExtraFieldName()) {
+        return FALSE;
+      }
+
+      if (($w_entity_type_ids !== '*') && !in_array($event->getEntity()->getEntityTypeId(), explode(',', $w_entity_type_ids), TRUE)) {
+        return FALSE;
+      }
+
+      if (($w_bundles !== '*') && !in_array($event->getEntity()->bundle(), explode(',', $w_bundles), TRUE)) {
+        return FALSE;
+      }
+
+      return TRUE;
+    }
+    if ($event instanceof EcaRenderLazyEvent) {
+      return ($event->name === $wildcard) || ($wildcard === '*');
+    }
+    if ($event instanceof EcaRenderViewsFieldEvent) {
+      return (($wildcard === '*') || (($event->getFieldPlugin()->options['name'] ?? '*') === $wildcard));
+    }
+
+    return TRUE;
   }
 
   /**
@@ -410,7 +505,7 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
       $this->entityFieldManager->clearCachedFieldDefinitions();
     }
     foreach ($this->cacheBackends as $cache) {
-      $cache->invalidateAll();
+      $cache->deleteAll();
     }
   }
 
@@ -425,6 +520,175 @@ class RenderEvent extends EventBase implements PluginUsageInterface {
    */
   public function alwaysFalse(): bool {
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[Token(
+    name: 'event',
+    description: 'The event.',
+    classes: [
+      EcaRenderContextualLinksEvent::class,
+      EcaRenderEntityEvent::class,
+      EcaRenderLazyEvent::class,
+      EcaRenderViewsFieldEvent::class,
+    ],
+    properties: [
+      new Token(name: 'argument', description: 'An optional argument for rendering the element.', classes: [
+        EcaRenderLazyEvent::class,
+      ]),
+      new Token(name: 'display', description: 'The entity display.', classes: [
+        EcaRenderEntityEvent::class,
+        EcaRenderExtraFieldEvent::class,
+      ]),
+      new Token(name: 'entity', description: 'The entity.', classes: [
+        EcaRenderEntityEvent::class,
+        EcaRenderExtraFieldEvent::class,
+        EcaRenderViewsFieldEvent::class,
+      ]),
+      new Token(name: 'extra_field_name', description: 'The name of the extra field.', classes: [
+        EcaRenderExtraFieldEvent::class,
+      ]),
+      new Token(name: 'group', description: 'The context group name.', classes: [
+        EcaRenderContextualLinksEvent::class,
+      ]),
+      new Token(name: 'mode', description: 'The view mode.', classes: [
+        EcaRenderEntityEvent::class,
+        EcaRenderExtraFieldEvent::class,
+      ]),
+      new Token(name: 'name', description: 'The name that identifies the lazy element for the event.', classes: [
+        EcaRenderLazyEvent::class,
+      ]),
+      new Token(name: 'options', description: 'The options array.', classes: [
+        EcaRenderExtraFieldEvent::class,
+      ]),
+      new Token(name: 'relationship', description: 'Get the relationship entities of the views row.', classes: [
+        EcaRenderViewsFieldEvent::class,
+      ]),
+      new Token(name: 'route_parameters', description: 'The route parameters.', classes: [
+        EcaRenderContextualLinksEvent::class,
+      ]),
+      new Token(name: 'view_display', description: 'The current display of the view.', classes: [
+        EcaRenderViewsFieldEvent::class,
+      ]),
+      new Token(name: 'view_id', description: 'The view ID.', classes: [
+        EcaRenderViewsFieldEvent::class,
+      ]),
+      new Token(name: 'view_args:?', description: 'The list of arguments given to the view.', classes: [
+        EcaRenderViewsFieldEvent::class,
+      ]),
+    ]
+  )]
+  protected function buildEventData(): array {
+    $event = $this->event;
+    $data = [];
+
+    if ($event instanceof EcaRenderContextualLinksEvent) {
+      $data += [
+        'group' => $event->getGroup(),
+        'route_parameters' => $event->getRouteParameters(),
+      ];
+    }
+    elseif ($event instanceof EcaRenderEntityEvent) {
+      $data += [
+        'entity' => $event->getEntity(),
+        'display' => $event->getDisplay(),
+        'mode' => $event->getViewMode(),
+      ];
+    }
+    elseif ($event instanceof EcaRenderExtraFieldEvent) {
+      $data += [
+        'extra_field_name' => $event->getExtraFieldName(),
+        'options' => $event->getOptions(),
+        'entity' => $event->getEntity(),
+        'display' => $event->getDisplay(),
+        'mode' => $event->getViewMode(),
+      ];
+    }
+    elseif ($event instanceof EcaRenderLazyEvent) {
+      $data += [
+        'name' => $event->name,
+        'argument' => $event->argument,
+      ];
+    }
+    elseif ($event instanceof EcaRenderViewsFieldEvent) {
+      $data += [
+        'entity' => $event->getEntity(),
+        'relationships' => $event->getRelationshipEntities(),
+        'view_args' => $event->getFieldPlugin()->view->args,
+        'view_id' => $event->getFieldPlugin()->view->id(),
+        'view_display' => $event->getFieldPlugin()->view->current_display,
+      ];
+    }
+
+    $data += parent::buildEventData();
+    return $data;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[Token(name: 'BLOCK_CONTEXT', description: 'The value of the block context under the given name of the token.', classes: [EcaRenderBlockEvent::class])]
+  #[Token(name: 'ROUTE_ENTITY', description: 'The entity from the route referenced by the token name as route parameter name.', classes: [EcaRenderContextualLinksEvent::class])]
+  #[Token(name: 'argument', description: 'An optional argument for rendering the element.', classes: [EcaRenderLazyEvent::class])]
+  #[Token(name: 'name', description: 'The name that identifies the lazy element for the event.', classes: [EcaRenderLazyEvent::class])]
+  #[Token(name: 'entity', description: 'The entity.', classes: [EcaRenderViewsFieldEvent::class])]
+  #[Token(name: 'ENTITY_TYPE', description: 'The entity by entity type, or the related entity by entity type.', classes: [EcaRenderViewsFieldEvent::class])]
+  #[Token(name: 'RELATED_ENTITY', description: 'The related entity.', classes: [EcaRenderViewsFieldEvent::class])]
+  public function getData(string $key): mixed {
+    $event = $this->event;
+
+    if ($event instanceof EcaRenderBlockEvent) {
+      $context_definitions = $event->getBlock()->getContextDefinitions();
+      if (isset($context_definitions[$key])) {
+        $context = $event->getBlock()->getContext($key);
+        if ($context->hasContextValue()) {
+          return $context->getContextValue();
+        }
+      }
+    }
+    elseif ($event instanceof EcaRenderContextualLinksEvent) {
+      $routeParameters = $event->getRouteParameters();
+      if (isset($routeParameters[$key])) {
+        $v = $routeParameters[$key];
+        if (is_scalar($v) && $this->entityTypeManager->hasDefinition($key) && ($entity = $this->entityTypeManager->getStorage($key)->load($v))) {
+          $v = $entity;
+        }
+        return $v;
+      }
+      if ($key === 'entity') {
+        $definitions = $this->entityTypeManager->getDefinitions();
+        foreach ($routeParameters as $name => $v) {
+          if (isset($definitions[$name])) {
+            if (is_scalar($v) && ($entity = $this->entityTypeManager->getStorage($name)->load($v))) {
+              $v = $entity;
+            }
+            return $v;
+          }
+        }
+      }
+    }
+    elseif ($event instanceof EcaRenderLazyEvent) {
+      if ($key === 'argument') {
+        return $event->argument;
+      }
+      if ($key === 'name') {
+        return $event->name;
+      }
+    }
+    elseif ($event instanceof EcaRenderViewsFieldEvent) {
+      if ($key === 'entity' || $key === $event->getEntity()->getEntityTypeId()) {
+        return $event->getEntity();
+      }
+      foreach ($event->getRelationshipEntities() as $i => $entity) {
+        if ($key === $i || $key === $entity->getEntityTypeId()) {
+          return $entity;
+        }
+      }
+    }
+
+    return parent::getData($key);
   }
 
 }

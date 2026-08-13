@@ -2,9 +2,9 @@
 
 namespace Drupal\eca\Event;
 
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\eca\Entity\Objects\EcaAction;
 use Drupal\eca\Entity\Objects\EcaObject;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Dispatches before a single action is being executed.
@@ -23,14 +23,14 @@ class BeforeActionExecutionEvent extends Event {
    *
    * @var mixed
    */
-  protected $object;
+  protected mixed $object;
 
   /**
    * The triggering system event.
    *
-   * @var \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event
+   * @var \Symfony\Contracts\EventDispatcher\Event
    */
-  protected object $event;
+  protected Event $event;
 
   /**
    * The predecessor.
@@ -46,7 +46,7 @@ class BeforeActionExecutionEvent extends Event {
    *
    * @var array
    */
-  protected $prestate = [];
+  protected array $prestate = [];
 
   /**
    * The BeforeActionExecutionEvent constructor.
@@ -55,14 +55,14 @@ class BeforeActionExecutionEvent extends Event {
    *   The action object as part of an ECA configuration.
    * @param mixed &$object
    *   The object that the action operates on.
-   * @param \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event $event
+   * @param \Symfony\Contracts\EventDispatcher\Event $event
    *   The triggering system event.
    * @param \Drupal\eca\Entity\Objects\EcaObject $predecessor
    *   The predecessor.
    */
-  public function __construct(EcaAction $ecaAction, &$object, object $event, EcaObject $predecessor) {
+  public function __construct(EcaAction $ecaAction, mixed &$object, Event $event, EcaObject $predecessor) {
     $this->ecaAction = $ecaAction;
-    $this->object = $object;
+    $this->object = &$object;
     $this->event = $event;
     $this->predecessor = $predecessor;
   }
@@ -83,17 +83,17 @@ class BeforeActionExecutionEvent extends Event {
    * @return mixed
    *   The object.
    */
-  public function &getObject() {
+  public function &getObject(): mixed {
     return $this->object;
   }
 
   /**
    * Get the applying system event.
    *
-   * @return \Drupal\Component\EventDispatcher\Event|\Symfony\Contracts\EventDispatcher\Event
+   * @return \Symfony\Contracts\EventDispatcher\Event
    *   The applying system event.
    */
-  public function getEvent(): object {
+  public function getEvent(): Event {
     return $this->event;
   }
 
@@ -116,7 +116,7 @@ class BeforeActionExecutionEvent extends Event {
    * @return mixed
    *   The value. Returns NULL if not present.
    */
-  public function &getPrestate(?string $name) {
+  public function &getPrestate(?string $name): mixed {
     if (!isset($name)) {
       return $this->prestate;
     }
@@ -136,7 +136,7 @@ class BeforeActionExecutionEvent extends Event {
    * @param mixed &$value
    *   The value to set, passed by reference.
    */
-  public function setPrestate(string $name, &$value) {
+  public function setPrestate(string $name, mixed &$value): void {
     $this->prestate[$name] = &$value;
   }
 

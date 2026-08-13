@@ -10,7 +10,8 @@ use Drupal\Core\Form\FormStateInterface;
  * @Action(
  *   id = "eca_render_details",
  *   label = @Translation("Render: HTML details"),
- *   description = @Translation("Build a HTML details element.")
+ *   description = @Translation("Build a HTML details element."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class Details extends RenderElementActionBase {
@@ -33,13 +34,13 @@ class Details extends RenderElementActionBase {
   protected function doBuild(array &$build): void {
     $build = [
       '#type' => 'details',
-      '#value' => $this->tokenServices->replaceClear($this->configuration['summary_value']),
-      '#title' => $this->tokenServices->replaceClear($this->configuration['title']),
+      '#value' => $this->tokenService->replaceClear($this->configuration['summary_value']),
+      '#title' => $this->tokenService->replaceClear($this->configuration['title']),
       '#open' => $this->configuration['open'],
     ];
 
     if ($this->configuration['introduction_text'] !== '') {
-      $introduction_text = (string) $this->tokenServices->replaceClear($this->configuration['introduction_text']);
+      $introduction_text = (string) $this->tokenService->replaceClear($this->configuration['introduction_text']);
       if ($introduction_text !== '') {
         $build['introduction_text'] = [
           '#type' => 'markup',
@@ -51,7 +52,7 @@ class Details extends RenderElementActionBase {
       }
     }
     if ($this->configuration['summary_value'] !== '') {
-      $summary_value = (string) $this->tokenServices->replaceClear($this->configuration['summary_value']);
+      $summary_value = (string) $this->tokenService->replaceClear($this->configuration['summary_value']);
       if ($summary_value !== '') {
         $build['#value'] = $summary_value;
       }
@@ -62,7 +63,6 @@ class Details extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['title'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Title'),
@@ -92,7 +92,7 @@ class Details extends RenderElementActionBase {
       '#default_value' => $this->configuration['summary_value'],
       '#required' => FALSE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

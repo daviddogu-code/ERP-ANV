@@ -5,9 +5,6 @@ namespace Drupal\eca_endpoint\Event;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\eca\Event\AccessEventInterface;
-use Drupal\eca\Plugin\DataType\DataTransferObject;
-use Drupal\eca\Token\DataProviderInterface;
-use Drupal\eca_endpoint\EndpointEvents;
 
 /**
  * Dispatched when an ECA Endpoint is being checked for access.
@@ -18,7 +15,7 @@ use Drupal\eca_endpoint\EndpointEvents;
  *
  * @package Drupal\eca_endpoint\Event
  */
-class EndpointAccessEvent extends EndpointEventBase implements AccessEventInterface, DataProviderInterface {
+class EndpointAccessEvent extends EndpointEventBase implements AccessEventInterface {
 
   /**
    * The arguments provided in the URL path.
@@ -77,32 +74,6 @@ class EndpointAccessEvent extends EndpointEventBase implements AccessEventInterf
    */
   public function getAccount(): AccountInterface {
     return $this->account;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasData(string $key): bool {
-    return $this->getData($key) !== NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getData(string $key) {
-    if ($key === 'event') {
-      if (!isset($this->eventData)) {
-        $this->eventData = DataTransferObject::create([
-          'machine-name' => EndpointEvents::ACCESS,
-          'arguments' => $this->pathArguments,
-          'uid' => $this->account->id(),
-        ]);
-      }
-
-      return $this->eventData;
-    }
-
-    return NULL;
   }
 
 }

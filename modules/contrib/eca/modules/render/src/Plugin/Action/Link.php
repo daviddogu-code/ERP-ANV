@@ -4,8 +4,11 @@ namespace Drupal\eca_render\Plugin\Action;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 
 /**
  * Build a link element.
@@ -13,10 +16,25 @@ use Drupal\Core\Url;
  * @Action(
  *   id = "eca_render_link",
  *   label = @Translation("Render: link"),
- *   description = @Translation("Build a link element, optionally displaying its content as a modal or dialog.")
+ *   description = @Translation("Build a link element, optionally displaying its content as a modal or dialog."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class Link extends RenderElementActionBase {
+
+  use PluginFormTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $url = $this->tokenService->replace($this->configuration['url']);
+    $result = AccessResult::allowedIf(is_string($url) && $url !== '');
+    if (!$result->isAllowed()) {
+      $result->setReason('The given url is invalid.');
+    }
+    return $return_as_object ? $result : $result->isAllowed();
+  }
 
   /**
    * {@inheritdoc}
@@ -36,7 +54,7 @@ class Link extends RenderElementActionBase {
    * {@inheritdoc}
    */
   protected function doBuild(array &$build): void {
-    $url = trim((string) $this->tokenServices->replaceClear($this->configuration['url']));
+    $url = trim((string) $this->tokenService->replaceClear($this->configuration['url']));
     if ($url === '') {
       throw new \InvalidArgumentException("Cannot build a link element without a URL.");
     }
@@ -47,7 +65,7 @@ class Link extends RenderElementActionBase {
       $url = Url::fromUri($url);
     }
 
-    $title = trim((string) $this->tokenServices->replaceClear($this->configuration['title']));
+    $title = trim((string) $this->tokenService->replaceClear($this->configuration['title']));
     if ($title === '') {
       $title = $url->toString();
     }
@@ -62,13 +80,17 @@ class Link extends RenderElementActionBase {
       ],
     ];
 
-    $display_as = explode(':', $this->configuration['display_as']);
+    $display_as = $this->configuration['display_as'];
+    if ($display_as === '_eca_token') {
+      $display_as = $this->getTokenValue('display_as', 'anchor');
+    }
+    $display_as = explode(':', $display_as);
     if (in_array('button', $display_as, TRUE)) {
       $build['#attributes']['class'][] = 'button';
       if (in_array('small', $display_as, TRUE)) {
         $build['#attributes']['class'][] = 'button--small';
       }
-      if (in_array('primray', $display_as, TRUE)) {
+      if (in_array('primary', $display_as, TRUE)) {
         $build['#attributes']['class'][] = 'button--primary';
       }
     }
@@ -80,7 +102,10 @@ class Link extends RenderElementActionBase {
       $url->setAbsolute(TRUE);
     }
 
-    $link_type = ($this->configuration['link_type'] ?? 'page');
+    $link_type = $this->configuration['link_type'] ?? 'page';
+    if ($link_type === '_eca_token') {
+      $link_type = $this->getTokenValue('link_type', 'page');
+    }
     if ($link_type === 'page_new_window') {
       $build['#attributes']['target'] = '_blank';
       $link_type = 'page';
@@ -92,19 +117,21 @@ class Link extends RenderElementActionBase {
       $build['#attributes']['data-dialog-renderer'] = 'off_canvas_top';
     }
     if ($link_type !== 'page') {
-      $width = trim((string) $this->tokenServices->replaceClear($this->configuration['width']));
-      if ($width === '' || !ctype_digit($width)) {
-        $width = '50';
-      }
-      if (!(mb_substr($width, -1) === '%')) {
-        $width .= '%';
+      if ($link_type !== 'ajax') {
+        $width = trim((string) $this->tokenService->replaceClear($this->configuration['width']));
+        if ($width === '' || !ctype_digit($width)) {
+          $width = '50';
+        }
+        if (!(mb_substr($width, -1) === '%')) {
+          $width .= '%';
+        }
+        $build['#attributes']['data-dialog-options'] = Json::encode([
+          'width' => $width,
+          'title' => $title,
+        ]);
+        $build['#attributes']['data-dialog-type'] = $link_type === 'modal' ? 'modal' : 'dialog';
       }
       $build['#attributes']['class'][] = 'use-ajax';
-      $build['#attributes']['data-dialog-options'] = Json::encode([
-        'width' => $width,
-        'title' => $title,
-      ]);
-      $build['#attributes']['data-dialog-type'] = $link_type === 'modal' ? 'modal' : 'dialog';
       $build['#attached']['library'][] = 'core/drupal.dialog.ajax';
     }
   }
@@ -113,22 +140,23 @@ class Link extends RenderElementActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['title'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Title'),
-      '#description' => $this->t('The title of the link. This field supports tokens.'),
+      '#description' => $this->t('The title of the link.'),
       '#weight' => -200,
       '#default_value' => $this->configuration['title'],
       '#required' => FALSE,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('URL'),
-      '#description' => $this->t('The link destination as a valid URL. This field supports tokens.'),
+      '#description' => $this->t('The link destination as a valid URL.'),
       '#weight' => -190,
       '#default_value' => $this->configuration['url'],
       '#required' => TRUE,
+      '#eca_token_replacement' => TRUE,
     ];
     $form['absolute'] = [
       '#type' => 'checkbox',
@@ -141,10 +169,11 @@ class Link extends RenderElementActionBase {
     $form['link_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Link type'),
-      '#description' => $this->t("Choose how the content of the link should be displayed. More about dialog types can be found <a target=\"_blank\" href=\":url\">here</a>.", [
+      '#description' => $this->t('Choose how the content of the link should be displayed. More about dialog types can be found <a target="_blank" href=":url">here</a>."', [
         ':url' => 'https://www.drupal.org/docs/drupal-apis/ajax-api/ajax-dialog-boxes#s-types-of-dialogs',
       ]),
       '#options' => [
+        'ajax' => $this->t('Ajax request'),
         'modal' => $this->t('Modal dialog'),
         'dialog' => $this->t('Non-modal dialog'),
         'off_canvas' => $this->t('Off-canvas dialog'),
@@ -155,6 +184,7 @@ class Link extends RenderElementActionBase {
       '#required' => TRUE,
       '#default_value' => $this->configuration['link_type'],
       '#weight' => -180,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['width'] = [
       '#type' => 'number',
@@ -178,8 +208,9 @@ class Link extends RenderElementActionBase {
       '#default_value' => $this->configuration['display_as'],
       '#required' => TRUE,
       '#weight' => -160,
+      '#eca_token_select_option' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

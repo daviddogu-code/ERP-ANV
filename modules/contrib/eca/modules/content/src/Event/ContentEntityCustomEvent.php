@@ -16,7 +16,7 @@ use Drupal\eca\Service\ContentEntityTypes;
  *
  * @package Drupal\eca_content\Event
  */
-class ContentEntityCustomEvent extends ContentEntityBaseEntity implements TokenReceiverInterface {
+class ContentEntityCustomEvent extends ContentEntityBaseContentEntity implements TokenReceiverInterface {
 
   use TokenReceiverTrait;
 
@@ -57,18 +57,13 @@ class ContentEntityCustomEvent extends ContentEntityBaseEntity implements TokenR
   }
 
   /**
-   * {@inheritdoc}
+   * Returns the event ID.
+   *
+   * @return string
+   *   The event ID.
    */
-  public function appliesForLazyLoadingWildcard(string $wildcard): bool {
-    return ($this->eventId === $wildcard) || ($wildcard === '');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applies(string $id, array $arguments): bool {
-    $argument_event_id = isset($arguments['event_id']) ? trim($arguments['event_id']) : '';
-    return ($argument_event_id === '') || ($this->eventId === $argument_event_id);
+  public function getEventId(): string {
+    return $this->eventId;
   }
 
 }

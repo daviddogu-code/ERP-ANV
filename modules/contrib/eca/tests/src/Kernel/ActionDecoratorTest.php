@@ -3,9 +3,9 @@
 namespace Drupal\Tests\eca\Kernel;
 
 use Drupal\Core\Action\ActionManager;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\PluginManager\Action;
 use Drupal\eca_test_array\Plugin\Action\ArrayWrite;
-use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Kernel tests for the decorator of the action manager.

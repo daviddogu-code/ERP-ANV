@@ -8,6 +8,7 @@ use Drupal\eca\Event\Tag;
 use Drupal\eca\Plugin\ECA\Event\EventBase;
 use Drupal\eca_test_array\Event\ArrayEvents;
 use Drupal\eca_test_array\Event\ArrayWriteEvent;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Plugin implementation of the ECA array events.
@@ -47,7 +48,6 @@ class ArrayEvent extends EventBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['key'] = [
       '#type' => 'textfield',
       '#required' => TRUE,
@@ -62,7 +62,7 @@ class ArrayEvent extends EventBase {
       '#title' => $this->t('Value'),
       '#weight' => 20,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -77,9 +77,18 @@ class ArrayEvent extends EventBase {
   /**
    * {@inheritdoc}
    */
-  public function lazyLoadingWildcard(string $eca_config_id, EcaEvent $ecaEvent): string {
+  public function generateWildcard(string $eca_config_id, EcaEvent $ecaEvent): string {
     $configuration = $ecaEvent->getConfiguration();
     return (trim($configuration['key']) === '' ? '*' : $configuration['key']) . '::' . (trim($configuration['value']) === '' ? '*' : $configuration['value']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function appliesForWildcard(Event $event, string $event_name, string $wildcard): bool {
+    /** @var \Drupal\eca_test_array\Event\ArrayWriteEvent $event */
+    [$key, $value] = explode('::', $wildcard, 2);
+    return ($event->key === '*' || $event->key === $key) && ($event->value === '*' || $event->value === $value);
   }
 
 }

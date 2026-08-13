@@ -3,6 +3,7 @@
 namespace Drupal\eca_render\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\eca\Plugin\FormFieldMachineName;
 
 /**
  * Get the active theme.
@@ -10,7 +11,8 @@ use Drupal\Core\Form\FormStateInterface;
  * @Action(
  *   id = "eca_get_active_theme",
  *   label = @Translation("Get active theme"),
- *   description = @Translation("Get the currently active theme and store the value as a token.")
+ *   description = @Translation("Get the currently active theme and store the value as a token."),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class GetActiveTheme extends ActiveThemeActionBase {
@@ -28,12 +30,10 @@ class GetActiveTheme extends ActiveThemeActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['token_name'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
+      '#element_validate' => [[FormFieldMachineName::class, 'validateElementsMachineName']],
       '#title' => $this->t('Token name'),
       '#description' => $this->t('Specify the name of the token, that holds the name of the currently active theme.'),
       '#default_value' => $this->configuration['token_name'],
@@ -41,7 +41,7 @@ class GetActiveTheme extends ActiveThemeActionBase {
       '#required' => TRUE,
       '#eca_token_reference' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -55,8 +55,8 @@ class GetActiveTheme extends ActiveThemeActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute() {
-    $this->tokenServices->addTokenData($this->configuration['token_name'], $this->themeManager->getActiveTheme()->getName());
+  public function execute(): void {
+    $this->tokenService->addTokenData($this->configuration['token_name'], $this->themeManager->getActiveTheme()->getName());
   }
 
 }

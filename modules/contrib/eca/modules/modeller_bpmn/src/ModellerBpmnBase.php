@@ -2,13 +2,17 @@
 
 namespace Drupal\eca_modeller_bpmn;
 
+use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Component\Utility\Random;
+use Drupal\Core\Action\ActionInterface;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Form\FormState;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca\Entity\Model;
+use Drupal\eca\Plugin\ECA\Condition\ConditionInterface;
 use Drupal\eca\Plugin\ECA\EcaPluginBase;
+use Drupal\eca\Plugin\ECA\Event\EventInterface;
 use Drupal\eca\Plugin\ECA\Modeller\ModellerBase;
 use Drupal\eca\Plugin\ECA\Modeller\ModellerInterface;
 use Drupal\eca\Service\Modellers;
@@ -68,7 +72,7 @@ abstract class ModellerBpmnBase extends ModellerBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EcaPluginBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->tokenBrowserService = $container->get('eca_ui.service.token_browser');
     return $instance;
@@ -136,7 +140,7 @@ abstract class ModellerBpmnBase extends ModellerBase {
   /**
    * {@inheritdoc}
    */
-  public function createNewModel(string $id, string $model_data, string $filename = NULL, bool $save = FALSE): Eca {
+  public function createNewModel(string $id, string $model_data, ?string $filename = NULL, bool $save = FALSE): Eca {
     $eca = Eca::create(['id' => mb_strtolower($id)]);
     $eca->getModel()->setModeldata($model_data);
     $this->setConfigEntity($eca);
@@ -150,7 +154,7 @@ abstract class ModellerBpmnBase extends ModellerBase {
   /**
    * {@inheritdoc}
    */
-  public function save(string $data, string $filename = NULL, bool $status = NULL): bool {
+  public function save(string $data, ?string $filename = NULL, ?bool $status = NULL): bool {
     $this->prepareForUpdate($data);
     $this->filename = $filename ?? '';
     if ($status !== NULL) {
@@ -191,9 +195,14 @@ abstract class ModellerBpmnBase extends ModellerBase {
           if (isset($object['@attributes']['modelerTemplate']) && $template['id'] === $object['@attributes']['modelerTemplate']) {
             $fields = $this->findFields($object[$idxExtension]);
             $id = $object['@attributes']['id'];
-            /** @var \DOMElement $element */
-            if ($element = $this->xpath->query("//*[@id='$id']")->item(0)) {
-              /** @var \DOMElement $extensions */
+            /**
+             * @var \DOMElement|null $element
+             */
+            $element = $this->xpath->query("//*[@id='$id']")->item(0);
+            if ($element) {
+              /**
+               * @var \DOMElement|null $extensions
+               */
               $extensions = $this->xpath->query("//*[@id='$id']/$idxExtension")
                 ->item(0);
               if (!$extensions) {
@@ -228,7 +237,9 @@ abstract class ModellerBpmnBase extends ModellerBase {
               }
               // Remove remaining fields from the model.
               foreach ($fields as $name => $value) {
-                /** @var \DOMElement $fieldElement */
+                /**
+                 * @var \DOMElement $fieldElement
+                 */
                 if ($fieldElement = $this->xpath->query("//*[@id='$id']/$idxExtension/camunda:field[@name='$name']")
                   ->item(0)) {
                   $extensions->removeChild($fieldElement);
@@ -252,9 +263,9 @@ abstract class ModellerBpmnBase extends ModellerBase {
    */
   public function enable(): ModellerInterface {
     $this->prepareForUpdate($this->eca->getModel()->getModeldata());
-    /** @var \DOMElement $element */
-    if ($element = $this->xpath->query("//*[@id='{$this->getId()}']")
-      ->item(0)) {
+    /** @var \DOMElement|null $element */
+    $element = $this->xpath->query("//*[@id='{$this->getId()}']")->item(0);
+    if ($element) {
       $element->setAttribute('isExecutable', 'true');
     }
     try {
@@ -271,9 +282,9 @@ abstract class ModellerBpmnBase extends ModellerBase {
    */
   public function disable(): ModellerInterface {
     $this->prepareForUpdate($this->eca->getModel()->getModeldata());
-    /** @var \DOMElement $element */
-    if ($element = $this->xpath->query("//*[@id='{$this->getId()}']")
-      ->item(0)) {
+    /** @var \DOMElement|null $element */
+    $element = $this->xpath->query("//*[@id='{$this->getId()}']")->item(0);
+    if ($element) {
       $element->setAttribute('isExecutable', 'false');
     }
     try {
@@ -291,9 +302,9 @@ abstract class ModellerBpmnBase extends ModellerBase {
   public function clone(): ?Eca {
     $this->prepareForUpdate($this->eca->getModel()->getModeldata());
     $id = $this->generateId();
-    /** @var \DOMElement $element */
-    if ($element = $this->xpath->query("//*[@id='{$this->getId()}']")
-      ->item(0)) {
+    /** @var \DOMElement|null $element */
+    $element = $this->xpath->query("//*[@id='{$this->getId()}']")->item(0);
+    if ($element) {
       $element->setAttribute('id', $id);
       $element->setAttribute('name', $this->getLabel() . ' (' . $this->t('clone') . ')');
     }
@@ -355,6 +366,24 @@ abstract class ModellerBpmnBase extends ModellerBase {
       $item = trim((string) $item);
     });
     return $tags;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getChangelog(): array {
+    $this->prepareForExport();
+    $process = $this->xmlNsPrefix() . 'process';
+    $extensions = $this->xmlNsPrefix() . 'extensionElements';
+    $changelog = [];
+    if (isset($this->xmlModel[$process][$extensions])) {
+      $v = 1;
+      while ($item = $this->findProperty($this->xmlModel[$process][$extensions], 'Changelog v' . $v)) {
+        $changelog['v' . $v] = $item;
+        $v++;
+      }
+    }
+    return $changelog;
   }
 
   /**
@@ -527,6 +556,42 @@ abstract class ModellerBpmnBase extends ModellerBase {
   }
 
   /**
+   * Prepares the plugin's configuration form and catches errors.
+   *
+   * @param \Drupal\eca\Plugin\ECA\Event\EventInterface|\Drupal\eca\Plugin\ECA\Condition\ConditionInterface|\Drupal\Core\Action\ActionInterface $plugin
+   *   The plugin.
+   *
+   * @return array
+   *   The configuration form.
+   */
+  protected function buildConfigurationForm(EventInterface|ConditionInterface|ActionInterface $plugin): array {
+    $form_state = new FormState();
+    try {
+      if ($plugin instanceof ActionInterface) {
+        $form = $this->actionServices->getConfigurationForm($plugin, $form_state) ?? [
+          'error_message' => [
+            '#type' => 'checkbox',
+            '#title' => $this->t('Error in configuration form!!!'),
+            '#description' => $this->t('Details can be found in the Drupal error log.'),
+          ],
+        ];
+      }
+      else {
+        $form = $plugin->buildConfigurationForm([], $form_state);
+      }
+    }
+    catch (\Throwable $ex) {
+      // @todo Replace this with some markup when that's supported by bpmn_io.
+      $form['error_message'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Error in configuration form!!!'),
+        '#description' => $ex->getMessage(),
+      ];
+    }
+    return $form;
+  }
+
+  /**
    * Returns all the templates for the modeller UI.
    *
    * This includes templates for events, conditions and actions.
@@ -535,19 +600,15 @@ abstract class ModellerBpmnBase extends ModellerBase {
    *   The list of all templates.
    */
   protected function getTemplates(): array {
-    $form_state = new FormState();
     $templates = [];
     foreach ($this->modellerServices->events() as $event) {
-      $templates[] = $this->properties($event, 'event', 'bpmn:Event', $event->buildConfigurationForm([], $form_state));
+      $templates[] = $this->properties($event, 'event', 'bpmn:Event', $this->buildConfigurationForm($event));
     }
     foreach ($this->conditionServices->conditions() as $condition) {
-      $templates[] = $this->properties($condition, 'condition', 'bpmn:SequenceFlow', $condition->buildConfigurationForm([], $form_state));
+      $templates[] = $this->properties($condition, 'condition', 'bpmn:SequenceFlow', $this->buildConfigurationForm($condition));
     }
     foreach ($this->actionServices->actions() as $action) {
-      $form = $this->actionServices->getConfigurationForm($action, $form_state);
-      if ($form !== NULL) {
-        $templates[] = $this->properties($action, 'action', 'bpmn:Task', $form);
-      }
+      $templates[] = $this->properties($action, 'action', 'bpmn:Task', $this->buildConfigurationForm($action));
     }
     return $templates;
   }
@@ -591,7 +652,8 @@ abstract class ModellerBpmnBase extends ModellerBase {
         ],
       ],
     ];
-    foreach ($this->prepareConfigFields($form) as $field) {
+    $extraDescriptions = [];
+    foreach ($this->prepareConfigFields($plugin, $form, $extraDescriptions) as $field) {
       if (!isset($field['value'])) {
         $value = '';
       }
@@ -630,6 +692,7 @@ abstract class ModellerBpmnBase extends ModellerBase {
       }
       $properties[] = $property;
     }
+    $extraDescriptions = array_unique($extraDescriptions);
     $pluginDefinition = $plugin->getPluginDefinition();
     $template = [
       'name' => (string) $pluginDefinition['label'],
@@ -641,8 +704,8 @@ abstract class ModellerBpmnBase extends ModellerBase {
       'appliesTo' => [$applies_to],
       'properties' => $properties,
     ];
-    if (isset($pluginDefinition['description'])) {
-      $template['description'] = (string) $pluginDefinition['description'];
+    if (isset($pluginDefinition['description']) || $extraDescriptions) {
+      $template['description'] = (string) ($pluginDefinition['description'] ?? '') . ' ' . implode(' ', $extraDescriptions);
     }
     if ($doc_url = $this->pluginDocUrl($plugin, $plugin_type)) {
       $template['documentationRef'] = $doc_url;
@@ -668,7 +731,7 @@ abstract class ModellerBpmnBase extends ModellerBase {
     }
     $provider = $plugin->getPluginDefinition()['provider'];
     $basePath = (mb_strpos($provider, 'eca_') === 0) ?
-      str_replace('_', '/', $provider) :
+      str_replace('eca_', 'eca/', $provider) :
       $provider;
     return sprintf('%s/plugins/%s/%ss/%s/', $domain, $basePath, $plugin_type, str_replace([':'], '_', $plugin->getPluginId()));
   }
@@ -690,7 +753,7 @@ abstract class ModellerBpmnBase extends ModellerBase {
         [$element['camunda:properties']['camunda:property']] :
         $element['camunda:properties']['camunda:property'];
       foreach ($elements as $child) {
-        if ($child['@attributes']['name'] === $property_name) {
+        if (isset($child['@attributes']['name']) && $child['@attributes']['name'] === $property_name) {
           return $child['@attributes']['value'];
         }
       }
@@ -734,52 +797,80 @@ abstract class ModellerBpmnBase extends ModellerBase {
   }
 
   /**
-   * Helper function to prepare a config field for actions and conditions.
+   * Helper function preparing config fields for events, conditions and actions.
    *
+   * @param \Drupal\Component\Plugin\PluginInspectionInterface $plugin
+   *   The event, condition or action plugin for which the template should
+   *   be build.
    * @param array $form
    *   The array to which the fields should be added.
+   * @param array $extraDescriptions
+   *   An array receiving all markup "fields" which can be displayed separately
+   *   in the UI.
+   *
+   * @return array
+   *   The prepared config fields.
    */
-  protected function prepareConfigFields(array $form): array {
+  protected function prepareConfigFields(PluginInspectionInterface $plugin, array $form, array &$extraDescriptions): array {
     // @todo Add support for nested form fields like e.g. in container/fieldset.
     $fields = [];
+    $default_configuration = $plugin instanceof ConfigurableInterface ? $plugin->defaultConfiguration() : [];
     foreach ($form as $key => $definition) {
       if (!is_array($definition)) {
         continue;
       }
       $label = $definition['#title'] ?? Modellers::convertKeyToLabel($key);
       $description = $definition['#description'] ?? NULL;
-      $value = $definition['#default_value'] ?? '';
+      $value = $definition['#default_value'] ?? $default_configuration[$key] ?? NULL;
       $weight = $definition['#weight'] ?? 0;
       $type = 'String';
       $required = $definition['#required'] ?? FALSE;
-      if (isset($definition['#type'])) {
-        // @todo Map to more proper property types of bpmn-js.
-        switch ($definition['#type']) {
+      // @todo Map to more proper property types of bpmn-js.
+      switch ($definition['#type'] ?? 'markup') {
 
-          case 'hidden':
-          case 'actions':
-            // The modellers can't handle these types, so we ignore them for
-            // the templates.
-            continue 2;
+        case 'hidden':
+        case 'actions':
+          // The modellers can't handle these types, so we ignore them for
+          // the templates.
+          continue 2;
 
-          case 'textarea':
-            $type = 'Text';
-            break;
+        case 'item':
+        case 'markup':
+        case 'container':
+          if (isset($definition['#markup'])) {
+            $extraDescriptions[] = (string) $definition['#markup'];
+          }
+          continue 2;
 
-          case 'checkbox':
+        case 'textarea':
+          $value = $value ?? '';
+          $type = 'Text';
+          break;
+
+        case 'checkbox':
+          $value = $value ?? FALSE;
+          if (!is_bool($value)) {
+            $this->logger->error('Found config field %field in %plugin with non-supported value.', [
+              '%field' => $key,
+              '%plugin' => $plugin->getPluginId(),
+            ]);
+          }
+          else {
             $fields[] = $this->checkbox($key, $label, $weight, $description, $value);
-            continue 2;
+          }
+          continue 2;
 
         case 'checkboxes':
         case 'radios':
         case 'select':
+          $value = $value ?? [];
           if (!is_array($value)) {
-            $fields[] = $this->optionsField($key, $label, $weight, $description, $definition['#options'], (string) $value, $required);
+            $options = $this->normalizeOptions(form_select_options($definition));
+            $fields[] = $this->optionsField($key, $label, $weight, $description, $options, (string) $value, $required);
             continue 2;
           }
           break;
 
-        }
       }
       if (is_bool($value)) {
         $fields[] = $this->checkbox($key, $label, $weight, $description, $value);
@@ -816,6 +907,36 @@ abstract class ModellerBpmnBase extends ModellerBase {
     });
 
     return $fields;
+  }
+
+  /**
+   * Normalizes an option list into a flat list of keys and labels.
+   *
+   * This can be called recursively, e.g. for nested option groups.
+   *
+   * @param array $formApiOptions
+   *   The list of options.
+   * @param string $prefix
+   *   An optional prefix which will be prepended to the label.
+   *
+   * @return array
+   *   The flat option list.
+   */
+  protected function normalizeOptions(array $formApiOptions, string $prefix = ''): array {
+    $options = [];
+    foreach ($formApiOptions as $formApiOption) {
+      switch ($formApiOption['type']) {
+        case 'option':
+          $options[$formApiOption['value']] = $prefix . $formApiOption['label'];
+          break;
+
+        case 'optgroup':
+          $options += $this->normalizeOptions($formApiOption['options'], $formApiOption['label'] . ': ');
+          break;
+
+      }
+    }
+    return $options;
   }
 
   /**

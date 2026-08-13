@@ -3,7 +3,6 @@
 namespace Drupal\eca_test_array\Plugin\Action;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\eca\Plugin\Action\ActionBase;
 use Drupal\eca\Plugin\Action\ConfigurableActionBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -37,7 +36,7 @@ class ArrayIncrement extends ConfigurableActionBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ActionBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->eventDispatcher = $container->get('event_dispatcher');
     return $instance;
@@ -56,7 +55,6 @@ class ArrayIncrement extends ConfigurableActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['key'] = [
       '#type' => 'textfield',
       '#required' => TRUE,
@@ -64,7 +62,7 @@ class ArrayIncrement extends ConfigurableActionBase {
       '#title' => $this->t('Key'),
       '#weight' => 10,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

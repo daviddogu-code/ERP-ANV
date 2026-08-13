@@ -8,13 +8,15 @@ use Drupal\eca\Event\Tag;
 use Drupal\eca\Plugin\ECA\Event\EventBase;
 use Drupal\eca_queue\Event\ProcessingTaskEvent;
 use Drupal\eca_queue\QueueEvents;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Plugin implementation for ECA Queue events.
  *
  * @EcaEvent(
  *   id = "eca_queue",
- *   deriver = "Drupal\eca_queue\Plugin\ECA\Event\QueueEventDeriver"
+ *   deriver = "Drupal\eca_queue\Plugin\ECA\Event\QueueEventDeriver",
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class QueueEvent extends EventBase {
@@ -55,7 +57,6 @@ class QueueEvent extends EventBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     if ($this->eventClass() === ProcessingTaskEvent::class) {
       $form['task_name'] = [
         '#type' => 'textfield',
@@ -83,7 +84,7 @@ class QueueEvent extends EventBase {
         '#default_value' => $this->configuration['cron'],
       ];
     }
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
@@ -102,7 +103,7 @@ class QueueEvent extends EventBase {
   /**
    * {@inheritdoc}
    */
-  public function lazyLoadingWildcard(string $eca_config_id, EcaEvent $ecaEvent): string {
+  public function generateWildcard(string $eca_config_id, EcaEvent $ecaEvent): string {
     $configuration = $ecaEvent->getConfiguration();
     $argument_task_name = isset($configuration['task_name']) ? mb_strtolower(trim($configuration['task_name'])) : '';
     $argument_task_value = isset($configuration['task_value']) ? mb_strtolower(trim($configuration['task_value'])) : '';
@@ -114,6 +115,27 @@ class QueueEvent extends EventBase {
       $wildcard .= '::' . $argument_task_value;
     }
     return $wildcard;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function appliesForWildcard(Event $event, string $event_name, string $wildcard): bool {
+    /** @var \Drupal\eca_queue\Event\ProcessingTaskEvent $event */
+    $task_name = mb_strtolower(trim((string) $event->getTask()->getTaskName()));
+    $task_value = mb_strtolower(trim((string) $event->getTask()->getTaskValue()));
+    return in_array($wildcard, [
+      '*',
+      $task_name,
+      $task_name . '::' . $task_value,
+    ], TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function handleExceptions(): bool {
+    return TRUE;
   }
 
 }

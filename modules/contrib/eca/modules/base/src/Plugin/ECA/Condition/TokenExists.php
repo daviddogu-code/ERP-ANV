@@ -14,7 +14,8 @@ use Drupal\eca\Plugin\ECA\Condition\ConditionBase;
  *
  * @EcaCondition(
  *   id = "eca_token_exists",
- *   label = @Translation("Token: exists")
+ *   label = @Translation("Token: exists"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class TokenExists extends ConditionBase {
@@ -61,8 +62,8 @@ class TokenExists extends ConditionBase {
     $token_exists = NULL;
 
     // First, try a cautious but quick lookup into available data.
-    $token_data = $this->tokenServices->getTokenData($token_name);
-    if (($token_data instanceof EntityInterface) && $this->tokenServices->getTokenType($token_data)) {
+    $token_data = $this->tokenService->getTokenData($token_name);
+    if (($token_data instanceof EntityInterface) && $this->tokenService->getTokenType($token_data)) {
       // When no brackets are given, the intention of the check is directly
       // targeted towards the entity itself, and in this case there is one.
       $token_exists = TRUE;
@@ -83,7 +84,7 @@ class TokenExists extends ConditionBase {
       if (mb_substr($token_name, 0, 1) !== '[') {
         $token_name = '[' . $token_name . ']';
       }
-      $token_exists = trim((string) $this->tokenServices->replaceClear($token_name)) !== '';
+      $token_exists = trim((string) $this->tokenService->replaceClear($token_name)) !== '';
     }
 
     return $this->negationCheck($token_exists);

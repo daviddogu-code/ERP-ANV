@@ -3,14 +3,14 @@
 namespace Drupal\Tests\eca_content\Kernel;
 
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_test_array\Plugin\Action\ArrayWrite;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl;
 use Drupal\node\Entity\Node;
-use Drupal\node\Entity\NodeType;
+use Drupal\Tests\eca\ContentTypeCreationTrait;
 use Drupal\user\Entity\User;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 
@@ -21,6 +21,8 @@ use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
  * @group eca_content
  */
 class ContentEventsTest extends KernelTestBase {
+
+  use ContentTypeCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -71,13 +73,11 @@ class ContentEventsTest extends KernelTestBase {
     $config = $this->config('language.negotiation');
 
     // Create the Article content type with revisioning and translation enabled.
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create([
+    $this->createContentType([
       'type' => 'article',
       'name' => 'Article',
       'new_revision' => TRUE,
     ]);
-    $node_type->save();
     ContentLanguageSettings::create([
       'id' => 'node.article',
       'target_entity_type_id' => 'node',
@@ -131,7 +131,7 @@ class ContentEventsTest extends KernelTestBase {
           'label' => 'Write bundlecreate',
           'configuration' => [
             'key' => 'bundlecreate',
-            'value' => 'bundlecreate [event:machine-name]',
+            'value' => 'bundlecreate [event:machine_name]',
           ],
           'successors' => [],
         ],
@@ -140,7 +140,7 @@ class ContentEventsTest extends KernelTestBase {
           'label' => 'Write bundledelete',
           'configuration' => [
             'key' => 'bundledelete',
-            'value' => 'bundledelete [event:machine-name]',
+            'value' => 'bundledelete [event:machine_name]',
           ],
           'successors' => [],
         ],
@@ -149,24 +149,20 @@ class ContentEventsTest extends KernelTestBase {
     $ecaConfig = Eca::create($eca_config_values);
     $ecaConfig->trustData()->save();
 
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create([
+    $this->createContentType([
       'type' => 'type1',
       'name' => 'Type one',
       'new_revision' => TRUE,
     ]);
-    $node_type->save();
 
     $this->assertTrue(!isset(ArrayWrite::$array['bundlecreate']), "The configuration only listens for type2, not type1.");
     $this->assertTrue(!isset(ArrayWrite::$array['bundledelete']), "The configuration only listens for type2, not type1.");
 
-    /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = NodeType::create([
+    $node_type = $this->createContentType([
       'type' => 'type2',
       'name' => 'Type two',
       'new_revision' => TRUE,
     ]);
-    $node_type->save();
 
     $this->assertEquals('bundlecreate eca.content_entity.bundlecreate', ArrayWrite::$array['bundlecreate']);
     $this->assertTrue(!isset(ArrayWrite::$array['bundledelete']));
@@ -349,6 +345,16 @@ class ContentEventsTest extends KernelTestBase {
             ['id' => 'write_prepareview', 'condition' => ''],
           ],
         ],
+        'validate' => [
+          'plugin' => 'content_entity:validate',
+          'label' => 'validate',
+          'configuration' => [
+            'type' => 'node article',
+          ],
+          'successors' => [
+            ['id' => 'write_validate', 'condition' => ''],
+          ],
+        ],
         'fieldvaluesinit' => [
           'plugin' => 'content_entity:fieldvaluesinit',
           'label' => 'fieldvaluesinit',
@@ -507,6 +513,15 @@ class ContentEventsTest extends KernelTestBase {
           ],
           'successors' => [],
         ],
+        'write_validate' => [
+          'plugin' => 'eca_test_array_write',
+          'label' => 'Write validate',
+          'configuration' => [
+            'key' => 'validate',
+            'value' => 'validate [node:title]',
+          ],
+          'successors' => [],
+        ],
         'write_fieldvaluesinit' => [
           'plugin' => 'eca_test_array_write',
           'label' => 'Write fieldvaluesinit',
@@ -530,6 +545,8 @@ class ContentEventsTest extends KernelTestBase {
     ]);
     $this->assertEquals('create English node', ArrayWrite::$array['create']);
     $this->assertEquals('fieldvaluesinit English node', ArrayWrite::$array['fieldvaluesinit']);
+    $node->validate();
+    $this->assertEquals('validate English node', ArrayWrite::$array['validate']);
     $node->save();
     $this->assertEquals('presave English node', ArrayWrite::$array['presave']);
     $this->assertEquals('insert English node', ArrayWrite::$array['insert']);

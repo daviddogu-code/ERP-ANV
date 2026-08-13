@@ -1,11 +1,4 @@
 services:
-
-  eca_base.subscriber:
-    class: Drupal\eca_base\EventSubscriber\EcaBase
-    parent: eca.default_event_subscriber
-    tags:
-      - { name: event_subscriber }
-
   eca_base.hook_handler:
     class: Drupal\eca_base\HookHandler
     arguments:

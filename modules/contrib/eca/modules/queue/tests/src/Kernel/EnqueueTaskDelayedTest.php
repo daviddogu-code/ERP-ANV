@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\eca_queue\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\eca\Entity\Eca;
 use Drupal\eca_queue\Plugin\Action\EnqueueTaskDelayed;
 use Drupal\eca_queue\Task;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
@@ -58,7 +58,7 @@ class EnqueueTaskDelayedTest extends KernelTestBase {
     $token_services->addTokenData('entity', User::load(0));
     $token_services->addTokenData('admin', User::load(1));
 
-    // Create an action for enqueing a task.
+    // Create an action for enqueuing a task.
     $defaults = [
       'task_name' => 'delayed_task',
       'task_value' => '',

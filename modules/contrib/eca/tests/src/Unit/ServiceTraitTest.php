@@ -3,8 +3,8 @@
 namespace Drupal\Tests\eca\Unit;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
-use Drupal\eca\Service\ServiceTrait;
 use Drupal\Tests\UnitTestCase;
+use Drupal\eca\Service\ServiceTrait;
 use PHPUnit\Framework\MockObject\MockObject;
 
 /**

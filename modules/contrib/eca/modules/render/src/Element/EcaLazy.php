@@ -2,15 +2,14 @@
 
 namespace Drupal\eca_render\Element;
 
-use Drupal\Core\Render\Element\RenderElement;
-use Drupal\eca\Event\TriggerEvent;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
  * Provides a lazy render element, for being built up via ECA.
  *
  * @RenderElement("eca_lazy")
  */
-class EcaLazy extends RenderElement {
+class EcaLazy extends RenderElementBase {
 
   /**
    * {@inheritdoc}
@@ -39,7 +38,12 @@ class EcaLazy extends RenderElement {
    */
   public static function generatePlaceholder(array $element) {
     $build = [
-      '#lazy_builder' => [__CLASS__ . '::buildElement', [$element['#name'], $element['#argument']]],
+      '#lazy_builder' => [
+        __CLASS__ . '::buildElement', [
+          $element['#name'],
+          $element['#argument'],
+        ],
+      ],
       '#create_placeholder' => TRUE,
     ];
 
@@ -64,7 +68,7 @@ class EcaLazy extends RenderElement {
    */
   public static function buildElement(string $name, string $argument = '') {
     $render = [];
-    TriggerEvent::get()->dispatchFromPlugin('eca_render:lazy_element', $name, $argument, $render);
+    _eca_trigger_event()->dispatchFromPlugin('eca_render:lazy_element', $name, $argument, $render);
     return $render;
   }
 

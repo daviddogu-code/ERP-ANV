@@ -9,7 +9,8 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @Action(
  *   id = "eca_endpoint_get_request_header",
- *   label = @Translation("Request: Get header")
+ *   label = @Translation("Request: Get header"),
+ *   eca_version_introduced = "1.1.0"
  * )
  */
 class GetRequestHeader extends RequestActionBase {
@@ -17,9 +18,9 @@ class GetRequestHeader extends RequestActionBase {
   /**
    * {@inheritdoc}
    */
-  protected function getRequestValue() {
+  protected function getRequestValue(): mixed {
     $headers = $this->getRequest()->headers->all();
-    $name = trim((string) $this->tokenServices->replaceClear($this->configuration['name']));
+    $name = trim((string) $this->tokenService->replaceClear($this->configuration['name']));
     if ($name === '') {
       return $headers;
     }
@@ -43,16 +44,16 @@ class GetRequestHeader extends RequestActionBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::buildConfigurationForm($form, $form_state);
     $form['name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Header name'),
-      '#description' => $this->t('The name / key of the request header. Example: <em>Content-Type</em>. This field supports tokens. When this field is empty, then all headers will be returned as a list, keyed by header name.'),
+      '#description' => $this->t('The name / key of the request header. Example: <em>Content-Type</em>. When this field is empty, then all headers will be returned as a list, keyed by header name.'),
       '#default_value' => $this->configuration['name'],
       '#weight' => -20,
       '#required' => FALSE,
+      '#eca_token_replacement' => TRUE,
     ];
-    return $form;
+    return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**

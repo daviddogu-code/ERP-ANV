@@ -9,8 +9,12 @@ use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\eca\EntityOriginalTrait;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 use Drupal\eca\Service\YamlParser;
 use Drupal\eca\Token\TokenInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -20,6 +24,8 @@ use Symfony\Component\Yaml\Exception\ParseException;
  */
 class EntityLoader {
 
+  use EntityOriginalTrait;
+  use PluginFormTrait;
   use StringTranslationTrait;
 
   /**
@@ -34,7 +40,7 @@ class EntityLoader {
    *
    * @var \Drupal\eca\Token\TokenInterface
    */
-  protected TokenInterface $tokenServices;
+  protected TokenInterface $tokenService;
 
   /**
    * The YAML parser.
@@ -44,22 +50,49 @@ class EntityLoader {
   protected YamlParser $yamlParser;
 
   /**
+   * The logger channel.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected LoggerChannelInterface $logger;
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected LanguageManagerInterface $languageManager;
+
+  /**
+   * The plugin ID.
+   *
+   * @var string
+   */
+  protected string $pluginId;
+
+  /**
    * Constructs a new EntityLoader object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
-   * @param \Drupal\eca\Token\TokenInterface $token_services
+   * @param \Drupal\eca\Token\TokenInterface $token_service
    *   The Token services.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The string translation service.
    * @param \Drupal\eca\Service\YamlParser $yaml_parser
    *   The YAML parser.
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   The logger channel.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, TokenInterface $token_services, TranslationInterface $string_translation, YamlParser $yaml_parser) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, TokenInterface $token_service, TranslationInterface $string_translation, YamlParser $yaml_parser, LoggerChannelInterface $logger, LanguageManagerInterface $language_manager) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->tokenServices = $token_services;
+    $this->tokenService = $token_service;
     $this->stringTranslation = $string_translation;
     $this->yamlParser = $yaml_parser;
+    $this->logger = $logger;
+    $this->languageManager = $language_manager;
   }
 
   /**
@@ -102,6 +135,7 @@ class EntityLoader {
       '#default_value' => $plugin_configuration['from'],
       '#description' => $this->t('Loads the entity from the given list and/or properties below.'),
       '#weight' => -70,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['entity_type'] = [
       '#type' => 'select',
@@ -110,6 +144,7 @@ class EntityLoader {
       '#default_value' => $plugin_configuration['entity_type'],
       '#description' => $this->t('The type of the entity to be loaded.'),
       '#weight' => -60,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['entity_id'] = [
       '#type' => 'textfield',
@@ -129,7 +164,8 @@ class EntityLoader {
       '#type' => 'textarea',
       '#title' => $this->t('Property values'),
       '#default_value' => $plugin_configuration['properties'],
-      '#description' => $this->t('A key-value list of raw field values of the entity to load. This will only be used when loading by properties is selected above. Supports tokens and YAML format. Example:<em><br/>field_mynumber: 1</em>. When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
+      '#description' => $this->t('A key-value list of raw field values of the entity to load. This will only be used when loading by properties is selected above. Supports YAML format. Example:<em><br />field_mynumber: 1</em>. When using tokens and YAML altogether, make sure that tokens are wrapped as a string. Example: <em>title: "[node:title]"</em>'),
+      '#eca_token_replacement' => TRUE,
     ];
     $form['langcode'] = [
       '#type' => 'select',
@@ -138,6 +174,7 @@ class EntityLoader {
       '#default_value' => $plugin_configuration['langcode'],
       '#description' => $this->t('The language code of the entity to be loaded.'),
       '#weight' => -30,
+      '#eca_token_select_option' => TRUE,
     ];
     $form['latest_revision'] = [
       '#type' => 'checkbox',
@@ -217,7 +254,7 @@ class EntityLoader {
     }
     if ($id === 'langcode') {
       $langcodes = [];
-      foreach (\Drupal::languageManager()->getLanguages() as $langcode => $language) {
+      foreach ($this->languageManager->getLanguages() as $langcode => $language) {
         $langcodes[$langcode] = $language->getName();
       }
       return [
@@ -234,50 +271,55 @@ class EntityLoader {
    *   (Optional) A passed through entity object.
    * @param array $plugin_configuration
    *   (Optional) The plugin configuration values.
+   * @param string $pluginId
+   *   (Optional) The plugin ID which is calling the method.
    *
    * @return \Drupal\Core\Entity\EntityInterface|null
    *   The loaded entity, or NULL if not found.
-   *
-   * @throws \InvalidArgumentException
-   *   When the provided argument is not NULL and not an entity object.
    */
-  public function loadEntity($entity = NULL, array $plugin_configuration = []): ?EntityInterface {
-    if (!($entity instanceof EntityInterface) && !is_null($entity)) {
-      throw new \InvalidArgumentException(sprintf("The entity argument must be an instance of \Drupal\Core\Entity\EntityInterface or NULL, %s given.", gettype($entity)));
+  public function loadEntity(?EntityInterface $entity = NULL, array $plugin_configuration = [], string $pluginId = 'eca_token_load_entity'): ?EntityInterface {
+    $this->pluginId = $pluginId;
+    $config = $plugin_configuration + $this->defaultConfiguration();
+    $token = $this->tokenService;
+    $from = $config['from'];
+    if ($from === '_eca_token') {
+      $from = $this->getTokenValue('from', 'current');
+    }
+    $entity_type = $config['entity_type'];
+    if ($entity_type === '_eca_token') {
+      $entity_type = $this->getTokenValue('entity_type', '_none');
     }
 
-    $config = $plugin_configuration + $this->defaultConfiguration();
-    $token = $this->tokenServices;
-
-    switch ($config['from']) {
+    switch ($from) {
 
       case 'id':
         $entity = NULL;
-        if (!empty($config['entity_type'])
-          && $config['entity_type'] !== '_none'
+        if (!empty($entity_type)
+          && $entity_type !== '_none'
           && $config['entity_id'] !== ''
-          && $this->entityTypeManager->hasDefinition($config['entity_type'])) {
+          && $this->entityTypeManager->hasDefinition($entity_type)) {
           $entity_id = trim((string) $token->replaceClear($config['entity_id']));
           if ($entity_id !== '') {
-            $entity = $this->entityTypeManager->getStorage($config['entity_type'])->load($entity_id);
+            $entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id);
           }
         }
         break;
 
       case 'properties':
         $entity = NULL;
-        if (!empty($config['entity_type'])
-          && $config['entity_type'] !== '_none'
+        $properties = NULL;
+        if (!empty($entity_type)
+          && $entity_type !== '_none'
           && $config['properties'] !== ''
-          && $this->entityTypeManager->hasDefinition($config['entity_type'])) {
+          && $this->entityTypeManager->hasDefinition($entity_type)) {
           try {
             $properties = $this->yamlParser->parse($config['properties']);
           }
           catch (ParseException $e) {
-            \Drupal::logger('eca')->error('Tried parsing properties as YAML format for loading an entity, but parsing failed.');
+            $this->logger->error('Tried parsing properties as YAML format for loading an entity, but parsing failed.');
           }
           if (is_array($properties) && !empty($properties)) {
-            $storage = $this->entityTypeManager->getStorage($config['entity_type']);
+            $storage = $this->entityTypeManager->getStorage($entity_type);
             $query = $storage->getQuery();
             $query->accessCheck(FALSE);
             foreach ($properties as $name => $value) {
@@ -290,8 +332,17 @@ class EntityLoader {
             $query->range(0, 1);
 
             $result = $query->execute();
+            /** @var int[] $result */
+            array_walk($result, static function (&$item) {
+              $item = (int) $item;
+            });
+            /**
+             * @var \Drupal\Core\Entity\EntityInterface[] $entities
+             */
             $entities = $result ? $storage->loadMultiple($result) : [];
-            $entity = $entities ? reset($entities) : NULL;
+            if ($first = reset($entities)) {
+              $entity = $first;
+            }
           }
         }
         break;
@@ -299,16 +350,25 @@ class EntityLoader {
     }
 
     if ($entity !== NULL && $config['unchanged']) {
-      if (!isset($entity->original) && !$entity->isNew()) {
-        /** @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage */
+      $original = $this->getOriginal($entity);
+      if (!isset($original) && !$entity->isNew()) {
+        /**
+         * @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage
+         */
         $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
-        $entity->original = $storage->loadUnchanged($entity->id());
+        $original = $storage->loadUnchanged($entity->id());
       }
-      $entity = $entity->original ?? NULL;
+      $entity = $original;
     }
 
     if ($entity instanceof TranslatableInterface) {
-      $langcode = $config['langcode'] === '_interface' ? \Drupal::languageManager()->getCurrentLanguage()->getId() : $config['langcode'];
+      $langcode = $config['langcode'];
+      if ($langcode === '_interface') {
+        $langcode = $this->languageManager->getCurrentLanguage()->getId();
+      }
+      elseif ($langcode === '_eca_token') {
+        $langcode = $this->getTokenValue('langcode', $this->languageManager->getCurrentLanguage()->getId());
+      }
       if (!(($langcode === LanguageInterface::LANGCODE_DEFAULT) && $entity->isDefaultTranslation()) && ($entity->language()->getId() !== $langcode)) {
         if ($entity->hasTranslation($langcode)) {
           $entity = $entity->getTranslation($langcode);
@@ -320,7 +380,9 @@ class EntityLoader {
     }
 
     if ($entity instanceof RevisionableInterface) {
-      /** @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage */
+      /**
+       * @var \Drupal\Core\Entity\RevisionableStorageInterface $storage
+       */
       $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
       if ($config['latest_revision'] && !$entity->isLatestRevision()) {
         $entity = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
@@ -335,6 +397,13 @@ class EntityLoader {
     }
 
     return $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginId(): string {
+    return $this->pluginId;
   }
 
 }

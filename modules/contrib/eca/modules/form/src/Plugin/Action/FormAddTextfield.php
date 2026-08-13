@@ -9,6 +9,7 @@ namespace Drupal\eca_form\Plugin\Action;
  *   id = "eca_form_add_textfield",
  *   label = @Translation("Form: add text field"),
  *   description = @Translation("Add a plain text field, textarea or formatted text to the current form in scope."),
+ *   eca_version_introduced = "1.0.0",
  *   type = "form"
  * )
  */

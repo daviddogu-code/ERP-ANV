@@ -52,6 +52,18 @@ entity.eca.export:
     _controller: '\Drupal\eca_ui\Controller\EcaController::export'
   requirements:
     _permission: 'administer eca'
+    _csrf_token: 'TRUE'
+entity.eca.export_recipe:
+  path: '/admin/config/workflow/eca/{eca}/recipe'
+  defaults:
+    _title: 'Export as recipe'
+    _form: '\Drupal\eca_ui\Form\ExportRecipe'
+  options:
+    parameters:
+      eca:
+        type: 'entity:eca'
+  requirements:
+    _permission: 'administer eca'
 
 eca.settings:
   path: '/admin/config/workflow/eca/settings'

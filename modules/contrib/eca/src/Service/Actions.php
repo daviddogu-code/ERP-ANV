@@ -9,14 +9,19 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\eca\ErrorHandlerTrait;
 use Drupal\eca\Plugin\Action\ActionInterface;
+use Drupal\eca\Plugin\ECA\PluginFormTrait;
 use Drupal\eca\PluginManager\Action;
+use Drupal\eca\Token\TokenInterface;
 
 /**
  * Service class for Drupal core actions in ECA.
  */
 class Actions {
 
+  use ErrorHandlerTrait;
+  use PluginFormTrait;
   use ServiceTrait;
 
   /**
@@ -41,6 +46,20 @@ class Actions {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
+   * The Token services.
+   *
+   * @var \Drupal\eca\Token\TokenInterface
+   */
+  protected TokenInterface $tokenService;
+
+  /**
+   * The plugin ID.
+   *
+   * @var string
+   */
+  protected string $pluginId;
+
+  /**
    * Actions constructor.
    *
    * @param \Drupal\eca\PluginManager\Action $action_manager
@@ -48,12 +67,15 @@ class Actions {
    * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
    *   The logger channel service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type managewr service.
+   *   The entity type manager service.
+   * @param \Drupal\eca\Token\TokenInterface $token_service
+   *   The Token services.
    */
-  public function __construct(Action $action_manager, LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(Action $action_manager, LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager, TokenInterface $token_service) {
     $this->actionManager = $action_manager->getDecoratedActionManager();
     $this->logger = $logger;
     $this->entityTypeManager = $entity_type_manager;
+    $this->tokenService = $token_service;
   }
 
   /**
@@ -65,6 +87,7 @@ class Actions {
   public function actions(): array {
     $actions = &drupal_static('eca_actions');
     if ($actions === NULL) {
+      $this->enableExtendedErrorHandling('Collecting all available actions');
       $actions = [];
       foreach ($this->actionManager->getDefinitions() as $plugin_id => $definition) {
         if (!empty($definition['confirm_form_route_name'])) {
@@ -80,6 +103,7 @@ class Actions {
           $actions[] = $action;
         }
       }
+      $this->resetExtendedErrorHandling();
       $this->sortPlugins($actions);
     }
     return $actions;
@@ -98,10 +122,12 @@ class Actions {
    */
   public function createInstance(string $plugin_id, array $configuration = []): ?CoreActionInterface {
     try {
-      /** @var \Drupal\Core\Action\ActionInterface $action */
+      /**
+       * @var \Drupal\Core\Action\ActionInterface $action
+       */
       $action = $this->actionManager->createInstance($plugin_id, $configuration);
     }
-    catch (\Exception $e) {
+    catch (\Exception | \Throwable $e) {
       $action = NULL;
       $this->logger->error('The action plugin %pluginid can not be initialized. ECA is ignoring this action. The issue with this action: %msg', [
         '%pluginid' => $plugin_id,
@@ -130,8 +156,9 @@ class Actions {
         $form = $action->buildConfigurationForm([], $form_state);
       }
       catch (\Throwable | \AssertionError | \Exception $e) {
-        $this->logger->error('The configuration form of %label action plugin can not be loaded. Plugin ignored.', [
+        $this->logger->error('The configuration form of %label action plugin can not be loaded. Plugin ignored. %message', [
           '%label' => $action->getPluginId(),
+          '%message' => $e->getMessage(),
         ]);
         return NULL;
       }
@@ -158,6 +185,7 @@ class Actions {
           ]),
           '#default_value' => $actionConfig['object'] ?? '',
           '#weight' => 2,
+          '#eca_token_reference' => TRUE,
         ];
       }
       // Important: When adding checkbox fields, the extra field must be added
@@ -180,7 +208,15 @@ class Actions {
       return NULL;
     }
 
-    return $form;
+    $this->pluginId = $action->getPluginId();
+    return $this->updateConfigurationForm($form);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginId(): string {
+    return $this->pluginId;
   }
 
 }

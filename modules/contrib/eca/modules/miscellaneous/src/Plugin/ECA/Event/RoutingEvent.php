@@ -2,18 +2,19 @@
 
 namespace Drupal\eca_misc\Plugin\ECA\Event;
 
-use Drupal\Component\EventDispatcher\Event;
 use Drupal\Core\Routing\RouteBuildEvent;
 use Drupal\Core\Routing\RoutingEvents;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\eca\Plugin\ECA\Event\EventBase;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Plugin implementation of the ECA Events for routing.
  *
  * @EcaEvent(
  *   id = "routing",
- *   deriver = "Drupal\eca_misc\Plugin\ECA\Event\RoutingEventDeriver"
+ *   deriver = "Drupal\eca_misc\Plugin\ECA\Event\RoutingEventDeriver",
+ *   eca_version_introduced = "1.0.0"
  * )
  */
 class RoutingEvent extends EventBase {
@@ -39,7 +40,7 @@ class RoutingEvent extends EventBase {
         'label' => 'Route building finished',
         'event_name' => RoutingEvents::FINISHED,
         'event_class' => Event::class,
-        'description' =>  new TranslatableMarkup('Fires, when route building has ended.'),
+        'description' => new TranslatableMarkup('Fires, when route building has ended.'),
       ],
     ];
   }

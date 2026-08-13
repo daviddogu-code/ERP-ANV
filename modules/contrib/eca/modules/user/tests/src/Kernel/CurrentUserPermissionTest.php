@@ -76,24 +76,24 @@ class CurrentUserPermissionTest extends KernelTestBase {
     $this->assertFalse($condition->evaluate(), 'Non-assigned permission must evaluate to false.');
 
     $condition = $condition_manager->createInstance('eca_current_user_permission', ['permission' => 'access content']);
-    $this->assertTrue($condition->evaluate(), 'Assigned permission must evalue to true.');
+    $this->assertTrue($condition->evaluate(), 'Assigned permission must evaluate to true.');
 
     // End of tests with authenticated user.
     $account_switcher->switchBack();
 
-    // Now switch to priviledged user.
+    // Now switch to privileged user.
     $account_switcher->switchTo(User::load(1));
 
     $condition = $condition_manager->createInstance('eca_current_user_permission', ['permission' => 'this permission does not exist']);
-    $this->assertTrue($condition->evaluate(), 'Priviledged user must always have access.');
+    $this->assertTrue($condition->evaluate(), 'Privileged user must always have access.');
 
     $condition = $condition_manager->createInstance('eca_current_user_permission', ['permission' => 'administer site configuration']);
-    $this->assertTrue($condition->evaluate(), 'Priviledged user must always have access.');
+    $this->assertTrue($condition->evaluate(), 'Privileged user must always have access.');
 
     $condition = $condition_manager->createInstance('eca_current_user_permission', ['permission' => 'access content']);
-    $this->assertTrue($condition->evaluate(), 'Priviledged user must always have access.');
+    $this->assertTrue($condition->evaluate(), 'Privileged user must always have access.');
 
-    // End of tests with priviledged user.
+    // End of tests with privileged user.
     $account_switcher->switchBack();
   }
 
