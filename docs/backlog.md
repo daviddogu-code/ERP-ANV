@@ -630,6 +630,66 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-13 — La otra mitad de la pregunta: hay versión para la 11 de todo menos de dos módulos
+
+El informe de `upgrade_status` dice si el código que tenemos usa cosas que Drupal 11 haya quitado.
+No dice si existe una versión publicada a la que actualizar, que es la mitad que decide el
+calendario. `scripts/hay-version-para-11.php` la responde: consulta el historial de versiones de
+drupal.org para cada uno de los 99 paquetes del proyecto y cruza la compatibilidad declarada.
+
+**El resultado, y es mejor de lo que cabía esperar:**
+
+| | paquetes |
+|---|---|
+| Ya están en una versión que admite la 11 | 37 |
+| Hay versión que admite la 10 **y** la 11 a la vez | 60 |
+| Solo hay versión que exige la 11 | **0** |
+| No hay ninguna versión para la 11 | 2 |
+
+Ese cero es el dato importante. Significa que **todo el proyecto se puede actualizar sobre Drupal
+10, módulo a módulo, con el ERP funcionando entre paso y paso.** No hay ni un solo paquete que
+obligue a moverse a la vez que el núcleo. El salto de la 11 queda reducido a mover el núcleo y
+nada más, que es la única forma de que sea depurable si algo falla.
+
+**Los dos que no tienen versión.** Los dos salían limpios de código en el informe de
+`upgrade_status` —están en el grupo de "solo les falta declarar la 11 en su `.info.yml`"—, así que
+el bloqueo es la etiqueta, no el código:
+
+- **`simple_popup_views` 8.x-1.2**, de noviembre de 2022. El proyecto figura como "mantenido
+  activamente" pero no publica nada desde entonces. Es el visor de fotos de ocho vistas:
+  productos, inventario, líneas de pedido, patrones y los dos escandallos. Molesta perderlo, pero
+  no toca lógica de negocio.
+- **`pdf_serialization` 2.2.0**, de septiembre de 2023, y este es peor: drupal.org lo marca como
+  **`unsupported`**. Genera los PDF de las órdenes de compra. Ya le llevamos dos parches.
+
+Para los dos, la salida barata es un parche que cambie el `core_version_requirement` y probarlo.
+Para `pdf_serialization` hay además que decidir a medio plazo, porque un proyecto sin soporte no
+recibe avisos de seguridad y eso ya nos costó dieciséis meses de exposición con ECA.
+
+**Cuatro confirmaciones que cierran dudas del plan:**
+
+- **ECA 2.1.22 declara `^10.3 || ^11`**, así que el salto de la rama 1 a la 2 —la parte peligrosa—
+  se puede hacer sobre el Drupal 10 que corremos, sola y con la red puesta. Y de paso 2.1.22 es
+  justamente la versión que cierra `SA-CONTRIB-2026-074`, el último aviso de seguridad que queda.
+- **ECK 2.1.0 declara `^9.4 || ^10 || ^11`**. Igual: se hace antes del núcleo.
+- **`field_permissions` deja de ser un bloqueo expreso.** La 8.x-1.5 admite la 11 y está cubierta
+  por avisos. No hace falta el gancho de repuesto que habíamos pensado para `field_tec_cost`.
+- **`dxpr_theme` 8.1.5 declara `^9.3 || ^10 || ^11`.** Esto cambia el plan del tema a mejor: en
+  vez de parchear la dependencia de `core/modernizr` a mano, se actualiza el tema, y **también
+  sobre Drupal 10**, así que la rotura visual se ve y se arregla antes del salto. Eso sí, es un
+  salto de tres versiones mayores en el tema del sitio, así que de visual va a cambiar bastante.
+
+**Y un aviso que va en contra de lo que conseguimos esta mañana.** Ocho módulos solo tienen
+versión para la 11 fuera de la política de avisos de seguridad, y uno de ellos **solo tiene rama
+de desarrollo**: `editablefields`. Los otros siete son `conditional_fields` (alpha6), `context`
+(rc2), `feeds_tamper` (rc1), `filefield_paths` (rc1), `pwa` (beta7), `ultimate_cron` (beta1) y
+`float_labels` (estable, pero el proyecto renuncia a la cobertura). Acabamos de sacar el proyecto
+de las ramas de desarrollo precisamente porque nos escondieron un fallo crítico; subir a la 11
+mete a `editablefields` de vuelta ahí. Hay que decidirlo a conciencia, no de pasada.
+
+Dos paquetes no se pudieron consultar, `eca_ui` y `eca_modeller_bpmn`, y no es un problema: son
+submódulos del proyecto `eca` y no tienen página propia en drupal.org.
+
 ### 2026-08-13 — El informe de compatibilidad con Drupal 11: cuatro módulos con trabajo real, y el tema deja de ser el bloqueante
 
 Tres horas y media de análisis, 115 proyectos, 47.000 líneas de informe en bruto. El resultado
