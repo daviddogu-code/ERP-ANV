@@ -16,7 +16,7 @@ function pwa_a2hs_help($route_name, RouteMatchInterface $route_match) {
     case 'help.page.pwa_a2hs':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('This module provides a block with a button to promt users to add the app to their home screen.') . '</p>';
+      $output .= '<p>' . t('This module provides a block with a button to prompt users to add the app to their home screen.') . '</p>';
       $output .= '<p>' . t('The block and/or button will show when your website meets all of the requirements of a PWA, is installable by the current browser, and the beforeinstallprompt event is triggered.') . '</p>';
       return $output;
 

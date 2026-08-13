@@ -1,7 +1,13 @@
 uuid: b9823815-4d50-4c8d-905e-5446b7140fee
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - taxonomy_unique
+third_party_settings:
+  taxonomy_unique:
+    enabled: true
+    message: 'Unit %term already exists in vocabulary %vocabulary.'
 name: Units
 vid: tec_units
 description: 'Material units'

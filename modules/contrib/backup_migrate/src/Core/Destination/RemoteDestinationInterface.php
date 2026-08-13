@@ -3,7 +3,7 @@
 namespace Drupal\backup_migrate\Core\Destination;
 
 /**
- * Interface RemoteDestinationInterface.
+ * An interface for managing remote destinations.
  *
  * @package Drupal\backup_migrate\Core\Destination
  */

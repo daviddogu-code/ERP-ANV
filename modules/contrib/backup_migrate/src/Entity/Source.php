@@ -24,7 +24,6 @@ namespace Drupal\backup_migrate\Entity;
  *     "config" = "config"
  *   },
  *   links = {
- *     "canonical" = "/admin/config/development/backup_migrate/settings/source/{backup_migrate_source}",
  *     "add-form" = "/admin/config/development/backup_migrate/settings/source/add",
  *     "edit-form" = "/admin/config/development/backup_migrate/settings/source/{backup_migrate_source}/edit",
  *     "delete-form" = "/admin/config/development/backup_migrate/settings/source/{backup_migrate_source}/delete",
@@ -45,6 +44,7 @@ class Source extends WrapperEntityBase {
    * Return the plugin manager.
    *
    * @return string
+   *   The requested string.
    */
   public function getPluginManager() {
     return \Drupal::service('plugin.manager.backup_migrate_source');

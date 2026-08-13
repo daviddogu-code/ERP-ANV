@@ -2,12 +2,14 @@
 
 namespace Drupal\backup_migrate\Core\Main;
 
+use Drupal\backup_migrate\Core\Config\Config;
 use Drupal\backup_migrate\Core\Config\ConfigInterface;
 use Drupal\backup_migrate\Core\Plugin\PluginManagerInterface;
 use Drupal\backup_migrate\Core\Exception\BackupMigrateException;
 use Drupal\backup_migrate\Core\Plugin\PluginCallerTrait;
 use Drupal\backup_migrate\Core\Plugin\PluginManager;
 use Drupal\backup_migrate\Core\Service\ServiceManager;
+use Drupal\backup_migrate\Entity\Schedule;
 
 /**
  * The core Backup and Migrate service.
@@ -16,17 +18,23 @@ class BackupMigrate implements BackupMigrateInterface {
   use PluginCallerTrait;
 
   /**
-   * @var \Drupal\backup_migrate\Core\Plugin\PluginManagerInterface
+   * Stores the value.
+   *
+   * @var \Drupal\backup_migrate\Core\Plugin\PluginManagerInterface The sources
    */
   protected $sources;
 
   /**
-   * @var \Drupal\backup_migrate\Core\Plugin\PluginManagerInterface
+   * Stores the value.
+   *
+   * @var \Drupal\backup_migrate\Core\Plugin\PluginManagerInterface The destinations
    */
   protected $destinations;
 
   /**
-   * @var \Drupal\backup_migrate\Core\Service\ServiceManagerTheservicelocatorforthisobject
+   * Stores the value.
+   *
+   * @var \Drupal\backup_migrate\Core\Service\ServiceManagerTheservicelocatorforthisobject The services
    */
   protected $services;
 
@@ -56,6 +64,20 @@ class BackupMigrate implements BackupMigrateInterface {
         'source_id' => $source_id,
         'destination_id' => $destination_id,
       ]);
+
+      // Pass encryption config for Scheduled backups.
+      $schedule_id = $this->plugins()->confGet('metadata')->get('bam_scheduleid');
+
+      if ($schedule_id) {
+        $schedule = Schedule::load($schedule_id);
+        $encrypt = $schedule->get('encrypt');
+        $encrypt_password = $schedule->get('encrypt_password');
+        if ($encrypt) {
+          $config['encrypt']['encrypt'] = $encrypt;
+          $config['encrypt']['encrypt_password'] = $encrypt_password;
+          $this->plugins()->setConfig(new Config($config));
+        }
+      }
 
       // Get the source and the destination to use.
       $source = $this->sources()->get($source_id);
@@ -97,18 +119,22 @@ class BackupMigrate implements BackupMigrateInterface {
       }
 
       // Let plugins react to a successful operation.
-      $this->plugins()->call('backupSucceed', $file);
+      $this->plugins()->call('backupSuccess', $file);
     }
     catch (\Exception $e) {
       // Let plugins react to a failed operation.
-      $this->plugins()->call('backupFail', $e);
+      $this->plugins()->call('backupFailure', $e);
 
       // The consuming software needs to deal with this.
       throw $e;
     }
 
     // Allow the plugins to tear down.
-    $this->plugins()->call('tearDown', NULL, ['operation' => 'backup', 'source_id' => $source_id, 'destination_id' => $destination_id]);
+    $this->plugins()->call('tearDown', NULL, [
+      'operation' => 'backup',
+      'source_id' => $source_id,
+      'destination_id' => $destination_id,
+    ]);
   }
 
   /**
@@ -150,6 +176,9 @@ class BackupMigrate implements BackupMigrateInterface {
       // Do the actual source restore.
       $import_result = $source->importFromFile($file);
       if (!$import_result) {
+        if ($file->getExtLast() == 'ssl') {
+          throw new BackupMigrateException('The file needs to be decrypted. Please check the "Decrypt file" option and enter the decryption password.');
+        }
         throw new BackupMigrateException('The file could not be imported.');
       }
 
@@ -177,6 +206,7 @@ class BackupMigrate implements BackupMigrateInterface {
    * pass new configuration to the plugins.
    *
    * @param \Drupal\backup_migrate\Core\Config\ConfigInterface $config
+   *   The configuration values.
    */
   public function setConfig(ConfigInterface $config) {
     $this->plugins()->setConfig($config);
@@ -186,6 +216,7 @@ class BackupMigrate implements BackupMigrateInterface {
    * Get the list of available destinations.
    *
    * @return \Drupal\backup_migrate\Core\Plugin\PluginManagerInterface
+   *   The requested integer.
    */
   public function destinations() {
     return $this->destinations;
@@ -195,6 +226,7 @@ class BackupMigrate implements BackupMigrateInterface {
    * Set the destinations plugin manager.
    *
    * @param \Drupal\backup_migrate\Core\Plugin\PluginManagerInterface $destinations
+   *   The destinations.
    */
   public function setDestinationManager(PluginManagerInterface $destinations) {
     $this->destinations = $destinations;
@@ -204,6 +236,7 @@ class BackupMigrate implements BackupMigrateInterface {
    * Get the list of sources.
    *
    * @return \Drupal\backup_migrate\Core\Plugin\PluginManagerInterface
+   *   The requested integer.
    */
   public function sources() {
     return $this->sources;
@@ -213,6 +246,7 @@ class BackupMigrate implements BackupMigrateInterface {
    * Set the sources plugin manager.
    *
    * @param \Drupal\backup_migrate\Core\Plugin\PluginManagerInterface $sources
+   *   The sources.
    */
   public function setSourceManager(PluginManagerInterface $sources) {
     $this->sources = $sources;
@@ -222,6 +256,7 @@ class BackupMigrate implements BackupMigrateInterface {
    * Get the service locator.
    *
    * @return \Drupal\backup_migrate\Core\Service\ServiceManager
+   *   The return value.
    */
   public function services() {
     return $this->services;
@@ -231,6 +266,7 @@ class BackupMigrate implements BackupMigrateInterface {
    * Set the service locator.
    *
    * @param \Drupal\backup_migrate\Core\Service\ServiceManager $services
+   *   The services.
    */
   public function setServiceManager(ServiceManager $services) {
     $this->services = $services;

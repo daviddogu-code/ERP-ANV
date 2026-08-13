@@ -4,11 +4,13 @@ namespace Drupal\pwa\Form;
 
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\File\FileUrlGenerator;
+use Drupal\Core\Config\TypedConfigManagerInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManager;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Routing\RequestContext;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\file\FileStorageInterface;
 use Drupal\file\FileUsage\FileUsageInterface;
@@ -65,7 +67,7 @@ class ManifestConfigurationForm extends ConfigFormBase {
   /**
    * The file url generator.
    *
-   * @var \Drupal\Core\File\FileUrlGenerator
+   * @var \Drupal\Core\File\FileUrlGeneratorInterface
    */
   protected $fileUrlGenerator;
 
@@ -75,6 +77,13 @@ class ManifestConfigurationForm extends ConfigFormBase {
    * @var \Drupal\Core\Language\LanguageManager
    */
   protected $languageManager;
+
+  /**
+   * The request context.
+   *
+   * @var \Drupal\Core\Routing\RequestContext
+   */
+  protected $requestContext;
 
   /**
    * Constructor; saves dependencies.
@@ -93,10 +102,14 @@ class ManifestConfigurationForm extends ConfigFormBase {
    *   The messenger service.
    * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $streamWrapperManager
    *   The stream wrapper manager.
-   * @param \Drupal\Core\File\FileUrlGenerator $fileUrlGenerator
+   * @param \Drupal\Core\File\FileUrlGeneratorInterface $fileUrlGenerator
    *   The file url generator.
    * @param \Drupal\Core\Language\LanguageManager $languageManager
    *   The language manager service.
+   * @param \Drupal\Core\Routing\RequestContext $request_context
+   *   The request context.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface|null $typedConfigManager
+   *   The typed config manager.
    */
   public function __construct(
     CacheTagsInvalidatorInterface $cacheTagsInvalidator,
@@ -106,10 +119,12 @@ class ManifestConfigurationForm extends ConfigFormBase {
     ManifestInterface $manifest,
     MessengerInterface $messenger,
     StreamWrapperManagerInterface $streamWrapperManager,
-    FileUrlGenerator $fileUrlGenerator,
+    FileUrlGeneratorInterface $fileUrlGenerator,
     LanguageManager $languageManager,
+    RequestContext $request_context,
+    ?TypedConfigManagerInterface $typedConfigManager = NULL,
   ) {
-    parent::__construct($configFactory);
+    parent::__construct($configFactory, $typedConfigManager);
     $this->cacheTagsInvalidator = $cacheTagsInvalidator;
     $this->fileStorage          = $fileStorage;
     $this->fileUsage            = $fileUsage;
@@ -122,6 +137,7 @@ class ManifestConfigurationForm extends ConfigFormBase {
     $this->streamWrapperManager = $streamWrapperManager;
     $this->fileUrlGenerator     = $fileUrlGenerator;
     $this->languageManager      = $languageManager;
+    $this->requestContext       = $request_context;
   }
 
   /**
@@ -138,6 +154,8 @@ class ManifestConfigurationForm extends ConfigFormBase {
       $container->get('stream_wrapper_manager'),
       $container->get('file_url_generator'),
       $container->get('language_manager'),
+      $container->get('router.request_context'),
+      $container->get('config.typed') ?? NULL,
     );
   }
 
@@ -193,10 +211,17 @@ class ManifestConfigurationForm extends ConfigFormBase {
       '#default_value' => $config->get('short_name'),
     ];
 
+    $form['app_id'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Application ID'),
+      '#default_value' => $config->get('app_id') ?? $this->getBaseUrlWithoutProtocol(),
+      '#description' => $this->t('Enter the unique App ID. Defaults to the site URL without the protocol.'),
+    ];
+
     $form['start_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Start URL'),
-      '#description' => $this->t('The preferred URL that should be loaded when the user launches the web application.<br>Note, that you can either use an relative or absoulte path here (e.g. "/mypwa" or "https://example.com".<br>See the w3c definition <a href="@link" target="_blank">here</a>.', ['@link' => 'https://w3c.github.io/manifest/#start_url-member']),
+      '#description' => $this->t('The preferred URL that should be loaded when the user launches the web application.<br>Note, that you can either use an relative or absolute path here (e.g. "/mypwa" or "https://example.com".<br>See the w3c definition <a href="@link" target="_blank">here</a>.', ['@link' => 'https://w3c.github.io/manifest/#start_url-member']),
       '#default_value' => $config->get('start_url'),
       '#required' => TRUE,
     ];
@@ -311,8 +336,8 @@ class ManifestConfigurationForm extends ConfigFormBase {
       '#type' => 'managed_file',
       '#description' => $this->t('This image is your application icon (png files only, format: 512x512, transparent background, padding 20-30%). The padding is needed, so the icons are not getting cropped on Android phone Home-Screens (To verify an Icon, you can visit <a href="@link">Maskable App</a>).<br><strong>Note</strong>, that this uses the icons in "pwa/assets" as a fallback, if no icon is uploaded.', ['@link' => 'https://maskable.app/']),
       '#upload_validators' => [
-        'file_validate_extensions' => ['png'],
-        'file_validate_image_resolution' => ['512x512', '512x512'],
+        'FileExtension' => ['extensions' => 'png'],
+        'FileImageDimensions' => ['maxDimensions' => '512x512', 'minDimensions' => '512x512'],
       ],
       '#default_value' => $imageFid,
       '#upload_location' => 'public://pwa/',
@@ -349,6 +374,7 @@ class ManifestConfigurationForm extends ConfigFormBase {
     $config
       ->set('name', $form_state->getValue('name'))
       ->set('short_name', $form_state->getValue('short_name'))
+      ->set('app_id', $form_state->getValue('app_id'))
       ->set('orientation', $form_state->getValue('orientation'))
       ->set('categories', $categoriesArray)
       ->set('theme_color', $form_state->getValue('theme_color'))
@@ -461,6 +487,15 @@ class ManifestConfigurationForm extends ConfigFormBase {
     $this->cacheTagsInvalidator->invalidateTags(['manifestjson']);
 
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Helper function to get the base URL without the protocol.
+   */
+  private function getBaseUrlWithoutProtocol() {
+    $base_url = $this->requestContext->getCompleteBaseUrl();
+    $parsed_url = parse_url($base_url);
+    return $parsed_url['host'] . ($parsed_url['path'] ?? '');
   }
 
 }

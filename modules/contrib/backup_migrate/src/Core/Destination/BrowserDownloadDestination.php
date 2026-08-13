@@ -8,7 +8,7 @@ use Drupal\backup_migrate\Core\Plugin\PluginCallerInterface;
 use Drupal\backup_migrate\Core\Plugin\PluginCallerTrait;
 
 /**
- *
+ * A destination that downloads files to the browser.
  *
  * @package Drupal\backup_migrate\Core\Destination
  */
@@ -21,8 +21,14 @@ class BrowserDownloadDestination extends StreamDestination implements WritableDe
   public function saveFile(BackupFileReadableInterface $file) {
     // Set some default download headers.
     $headers = [
-      ['key' => 'Content-Disposition', 'value' => 'attachment; filename="' . $file->getFullName() . '"'],
-      ['key' => 'Cache-Control', 'value' => 'no-cache'],
+      [
+        'key' => 'Content-Disposition',
+        'value' => 'attachment; filename="' . $file->getFullName() . '"',
+      ],
+      [
+        'key' => 'Cache-Control',
+        'value' => 'no-cache',
+      ],
     ];
 
     // Set a mime-type header.
@@ -32,7 +38,9 @@ class BrowserDownloadDestination extends StreamDestination implements WritableDe
     else {
       // Get the mime type for this file if possible.
       $mime = 'application/octet-stream';
-      $mime = $this->plugins()->call('alterMime', $mime, ['ext' => $file->getExtLast()]);
+      $mime = $this->plugins()->call('alterMime', $mime, [
+        'ext' => $file->getExtLast(),
+      ]);
 
       $headers[] = ['key' => 'Content-Type', 'value' => $mime];
     }
@@ -74,11 +82,10 @@ class BrowserDownloadDestination extends StreamDestination implements WritableDe
    */
   public function checkWritable() {
     // Check that we're running as a web process via a browser.
-    // @todo we could check if the 'HTTP_ACCEPT' header contains the right mime but that is probably overkill.
+    // @todo It could check if the 'HTTP_ACCEPT' header contains the right mime
+    // but that is probably overkill.
     if (!isset($_SERVER['REQUEST_METHOD'])) {
-      throw new DestinationNotWritableException(
-        "The download destination only works when accessed through a http client."
-      );
+      throw new DestinationNotWritableException('The download destination only works when accessed through a http client.');
     }
   }
 

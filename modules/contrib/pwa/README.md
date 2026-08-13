@@ -58,7 +58,7 @@ provided.
 
 **Note**, that the main reason the service_worker is split from the main module
 are the amount of inefficiencies it has. Please visit
-https://www.drupal.org/project/pwa/issues/3377120 for more informations on the
+https://www.drupal.org/project/pwa/issues/3377120 for more information on the
 issues.
 
 REQUIREMENTS (pwa_service_worker only)

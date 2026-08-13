@@ -68,7 +68,7 @@ class Manifest implements ManifestInterface {
     ModuleHandlerInterface $moduleHandler,
     RequestStack $requestStack,
     ThemeManagerInterface $themeManager,
-    EntityTypeManagerInterface $entityTypeManager
+    EntityTypeManagerInterface $entityTypeManager,
   ) {
     $this->configFactory = $configFactory;
     $this->moduleHandler = $moduleHandler;
@@ -93,10 +93,7 @@ class Manifest implements ManifestInterface {
       'short_name' => $config->get('short_name'),
       'start_url' => $config->get('start_url'),
       'display' => $config->get('display'),
-      // @todo The id is used to identify the pwa against other pwa's hosted
-      // on the same side, use start_url for now (as it is normally used as
-      // fallback anyway):
-      'id' => $config->get('start_url'),
+      'id' => $config->get('app_id'),
       // Recommended fields:
       'theme_color' => $config->get('theme_color'),
       'background_color' => $config->get('background_color'),

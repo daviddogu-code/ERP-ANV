@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Entity Prepopulate
+ * Entity Prepopulate.
  */
 
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;

@@ -2,17 +2,19 @@ uuid: e6c5f6df-9143-4f75-8bed-8536e8db435e
 langcode: en
 status: true
 dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - eck.eck_type.tec_crm.tec_contact_person
   module:
     - eck
 id: tec_crm_contacts
 label: 'TEC CRM: Contacts'
 type: 'canonical_entities:tec_crm'
-pattern: '[tec_crm:field_tec_contact_type:0]/[tec_crm:id]'
+pattern: '/[tec_crm:field_tec_contact_type:0]/[tec_crm:id]'
 selection_criteria:
   47aa150a-34ed-4fe0-ae72-cc9f83c0ffbd:
     id: 'entity_bundle:tec_crm'
     negate: false
-    uuid: 47aa150a-34ed-4fe0-ae72-cc9f83c0ffbd
     context_mapping:
       tec_crm: tec_crm
     bundles:

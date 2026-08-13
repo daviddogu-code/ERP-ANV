@@ -9,7 +9,7 @@ use Drupal\backup_migrate\Core\File\BackupFileReadableInterface;
 use Drupal\backup_migrate\Core\Plugin\PluginBase;
 
 /**
- *
+ * A destination for stream-style locations.
  *
  * @package Drupal\backup_migrate\Core\Destination
  */

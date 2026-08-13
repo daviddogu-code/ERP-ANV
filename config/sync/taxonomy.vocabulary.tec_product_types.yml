@@ -1,7 +1,13 @@
 uuid: e035f921-575b-449b-8f18-dbf91a493ee3
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - taxonomy_unique
+third_party_settings:
+  taxonomy_unique:
+    enabled: true
+    message: 'Procut type %term already exists.'
 name: 'Product types'
 vid: tec_product_types
 description: 'Catalog of Product types'

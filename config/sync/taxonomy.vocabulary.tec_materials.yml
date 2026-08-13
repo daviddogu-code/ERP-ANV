@@ -1,7 +1,13 @@
 uuid: befab943-6ef3-4912-b7bc-a6ee1f2119c2
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - taxonomy_unique
+third_party_settings:
+  taxonomy_unique:
+    enabled: true
+    message: 'Material %term already exists.'
 name: Materials
 vid: tec_materials
 description: 'Various types of materials'

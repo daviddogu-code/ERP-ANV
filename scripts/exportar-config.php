@@ -29,19 +29,28 @@ $sync = \Drupal::service('config.storage.sync');
 
 $todos = $activa->listAll();
 $elegidos = [];
+$aBorrar = [];
 foreach ($patrones as $patron) {
   if (str_contains($patron, '*')) {
     $regex = '/^' . str_replace('\*', '.*', preg_quote($patron, '/')) . '$/';
     $elegidos = array_merge($elegidos, preg_grep($regex, $todos));
+    // Lo que sigue en config/sync pero ya no existe activo: una actualizacion
+    // lo ha retirado y hay que quitarlo tambien de la copia, o volvera a
+    // aparecer en la proxima importacion.
+    $aBorrar = array_merge($aBorrar, array_diff(preg_grep($regex, $sync->listAll()), $todos));
   }
   elseif (in_array($patron, $todos, TRUE)) {
     $elegidos[] = $patron;
   }
+  elseif ($sync->exists($patron)) {
+    $aBorrar[] = $patron;
+  }
   else {
-    printf("  %-56s no existe en la configuracion activa\n", $patron);
+    printf("  %-56s no existe ni activo ni en config/sync\n", $patron);
   }
 }
 $elegidos = array_unique($elegidos);
+$aBorrar = array_unique($aBorrar);
 sort($elegidos);
 
 echo "\n";
@@ -58,4 +67,9 @@ foreach ($elegidos as $nombre) {
   $escritos++;
 }
 
-printf("\n  %d objetos escritos en config/sync\n\n", $escritos);
+foreach ($aBorrar as $nombre) {
+  $sync->delete($nombre);
+  printf("  %-56s BORRADO, ya no existe activo\n", $nombre);
+}
+
+printf("\n  %d escritos, %d borrados en config/sync\n\n", $escritos, count($aBorrar));

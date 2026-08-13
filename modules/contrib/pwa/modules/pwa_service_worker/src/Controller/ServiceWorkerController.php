@@ -50,7 +50,7 @@ class ServiceWorkerController implements ContainerInjectionInterface {
    *
    * @see https://www.drupal.org/project/drupal/issues/2940481
    *   This service is currently still marked as @internal as of Drupal core
-   *   9.2.x, but will hopefully be stablized and no longer be @internal soon.
+   *   9.2.x, but will hopefully be stabilized and no longer be @internal soon.
    */
   private $moduleExtensionList;
 
@@ -100,7 +100,7 @@ class ServiceWorkerController implements ContainerInjectionInterface {
     ModuleExtensionList $moduleExtensionList,
     ModuleHandlerInterface $moduleHandler,
     ThemeManagerInterface $themeManager,
-    ManifestInterface $manifest
+    ManifestInterface $manifest,
   ) {
     $this->configFactory       = $configFactory;
     $this->httpClient          = $httpClient;
@@ -208,7 +208,7 @@ class ServiceWorkerController implements ContainerInjectionInterface {
    *   The current request object.
    *
    * @return \Drupal\Core\Cache\CacheableResponse
-   *   The
+   *   The content of the service-worker file.
    */
   public function serviceWorkerRegistration(Request $request) {
     $path = $this->moduleExtensionList->getPath('pwa_service_worker');
@@ -277,6 +277,9 @@ class ServiceWorkerController implements ContainerInjectionInterface {
 
     // Fill placeholders and return final file.
     $data = str_replace(array_keys($replace), array_values($replace), $sw);
+
+    // @todo This isn't specified in the api docs.
+    $this->moduleHandler->alter('pwa_service_worker_data', $data);
 
     $response = new CacheableResponse($data, 200, [
       'Content-Type' => 'application/javascript',

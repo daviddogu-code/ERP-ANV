@@ -44,8 +44,58 @@ if (!$rutas) {
       '/admin/structure/quicktabs',
     ],
     paginasDeVista(),
+    exportaciones(),
     fichasDeEjemplo()
   );
+}
+
+/**
+ * Las descargas: el inventario a Excel y las ordenes de compra a PDF.
+ *
+ * Van aparte de las paginas normales porque no se pintan igual y porque tiran
+ * de librerias que nadie mira: `xls_serialization` arrastra `phpspreadsheet`,
+ * que en la tanda de agosto salto de la 1.30 a la 3.10 de golpe. Una descarga
+ * rota no se nota hasta que alguien la necesita.
+ */
+function exportaciones(): array {
+  $rutas = [];
+  $factory = \Drupal::configFactory();
+  $gestor = \Drupal::entityTypeManager();
+
+  foreach ($factory->listAll('views.view.') as $nombre) {
+    $vista = $factory->get($nombre);
+    if (!$vista->get('status')) {
+      continue;
+    }
+    $base = $vista->get('base_table');
+    foreach ($vista->get('display') ?? [] as $display) {
+      if (($display['display_plugin'] ?? '') !== 'data_export') {
+        continue;
+      }
+      $ruta = $display['display_options']['path'] ?? NULL;
+      if (!$ruta) {
+        continue;
+      }
+      // Las que llevan argumento necesitan uno de verdad; se coge la entidad
+      // mas reciente del tipo sobre el que va la vista.
+      if (str_contains($ruta, '%')) {
+        // La tabla base no es el tipo de entidad: cuando la entidad tiene datos
+        // traducibles, Views apunta a `<tipo>_field_data`.
+        $tipo = preg_replace('/_field_data$|_data$/', '', (string) $base);
+        if (!$tipo || !$gestor->hasDefinition($tipo)) {
+          continue;
+        }
+        $ids = $gestor->getStorage($tipo)->getQuery()
+          ->accessCheck(FALSE)->sort('id', 'DESC')->range(0, 1)->execute();
+        if (!$ids) {
+          continue;
+        }
+        $ruta = str_replace('%', (string) reset($ids), $ruta);
+      }
+      $rutas[] = '/' . ltrim($ruta, '/');
+    }
+  }
+  return $rutas;
 }
 
 /**

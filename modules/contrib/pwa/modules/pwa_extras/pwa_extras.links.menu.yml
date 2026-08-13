@@ -1,6 +1,5 @@
 pwa_extras.settings:
   title: PWA Extras Settings
   description: 'Progressive web app Extras configuration'
-  parent: pwa.admin_index
+  parent: pwa.config
   route_name: pwa_extras.settings
-  weight: 1

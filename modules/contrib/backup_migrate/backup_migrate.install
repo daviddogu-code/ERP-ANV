@@ -12,7 +12,7 @@ use Drupal\backup_migrate\Entity\Schedule;
 /**
  * Migrate last_run information from raw KeyValue to State API.
  */
-function backup_migrate_update_5001() {
+function backup_migrate_update_50001() {
   // Legacy KV name format.
   $kv = \Drupal::keyValue('backup_migrate_schedule:last_run');
 
@@ -23,6 +23,20 @@ function backup_migrate_update_5001() {
     $last = (int) $kv->get($id);
     $kv->delete($id);
     $schedule->setLastRun($last);
+  }
+}
+
+/**
+ * Add encrypt and encrypt_password default values to existing Schedules.
+ */
+function backup_migrate_update_50002() {
+  // Update existing Schedule config entities to include the new fields.
+  $storage = \Drupal::entityTypeManager()->getStorage('backup_migrate_schedule');
+  $entities = $storage->loadMultiple();
+  foreach ($entities as $entity) {
+    $entity->encrypt = FALSE;
+    $entity->encrypt_password = '';
+    $entity->save();
   }
 }
 

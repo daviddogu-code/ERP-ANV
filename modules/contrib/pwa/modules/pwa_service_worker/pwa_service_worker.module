@@ -53,8 +53,8 @@ function pwa_service_worker_page_attachments(array &$attachments) {
   // @todo This isn't specified in the api docs:
   \Drupal::moduleHandler()->alter('pwa_service_worker_install_path', $installPath);
   $attachments['#attached']['drupalSettings']['pwa_service_worker']['installPath'] = $installPath;
-  // @todo Is there a use case, in which we would seperate the service worker
-  // scope from the manifest scope? If so, create a seperate service worker
+  // @todo Is there a use case, in which we would separate the service worker
+  // scope from the manifest scope? If so, create a separate service worker
   // "scope" setting:
   $scope = \Drupal::config('pwa.config')->get('scope');
   $attachments['#attached']['drupalSettings']['pwa_service_worker']['scope'] = !empty($scope) ? $scope : NULL;

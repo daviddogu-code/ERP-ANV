@@ -1,7 +1,13 @@
 uuid: 2c4c0674-3d17-4cfc-aa4b-dbf52cc33320
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - taxonomy_unique
+third_party_settings:
+  taxonomy_unique:
+    enabled: true
+    message: 'Color %term already exists.'
 name: Colors
 vid: tec_colors
 description: 'Holds colors of all products and materials'

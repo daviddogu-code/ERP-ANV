@@ -3,13 +3,34 @@
 namespace Drupal\backup_migrate\Form;
 
 use Drupal\backup_migrate\Drupal\Config\DrupalConfigHelper;
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for performing a 1-click site backup.
  */
 class BackupMigrateAdvancedBackupForm extends FormBase {
+
+  /**
+   * Constructs a BackupMigrateAdvancedBackupForm object.
+   *
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   *   The module handler.
+   */
+  public function __construct(
+    protected readonly ModuleHandlerInterface $moduleHandler,
+  ) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static($container->get('module_handler'));
+  }
 
   /**
    * {@inheritdoc}
@@ -24,7 +45,7 @@ class BackupMigrateAdvancedBackupForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Leave a message about the Entire Site backup.
     // @see https://www.drupal.org/project/backup_migrate/issues/3151290
-    $this->messenger()->addMessage($this->t('It is recommended to not use the "Entire site" backup as it has a tendency of failing on anything but the tiniest of sites. Hopefully this will be fixed in a future release.'));
+    $this->messenger()->addMessage($this->t('It is recommended to not use the "Entire site" backup as it has a tendency of failing on anything but the tiniest of sites. Hopefully this will be fixed in a future release.'), MessengerInterface::TYPE_WARNING);
 
     $form = [];
 
@@ -41,10 +62,10 @@ class BackupMigrateAdvancedBackupForm extends FormBase {
       "#tree" => FALSE,
     ];
     $form['source']['source_id'] = DrupalConfigHelper::getSourceSelector($bam, $this->t('Backup Source'));
-    $form['source']['source_id']['#default_value'] = \Drupal::config('backup_migrate.settings')->get('backup_migrate_source_id');
+    $form['source']['source_id']['#default_value'] = $this->config('backup_migrate.settings')->get('backup_migrate_source_id');
 
     $form += DrupalConfigHelper::buildAllPluginsForm($bam->plugins(), 'backup');
-    if (\Drupal::moduleHandler()->moduleExists('token')) {
+    if ($this->moduleHandler->moduleExists('token')) {
       $filename_token = [
         '#theme' => 'token_tree_link',
         '#token_types' => ['site'],
@@ -57,7 +78,7 @@ class BackupMigrateAdvancedBackupForm extends FormBase {
     else {
       $filename_token = [
         '#type' => 'markup',
-        '#markup' => 'In order to use tokens for File Name, please install & enable <a href="https://www.drupal.org/project/token" arget="_blank">Token module</a>. <p></p>',
+        '#markup' => 'In order to use tokens for File Name, please install & enable <a href="https://www.drupal.org/project/token" target="_blank">Token module</a>. <p></p>',
       ];
     }
     array_splice($form['file'], 4, 0, ['filename_token' => $filename_token]);
@@ -71,7 +92,7 @@ class BackupMigrateAdvancedBackupForm extends FormBase {
     ];
 
     $form['destination']['destination_id'] = DrupalConfigHelper::getDestinationSelector($bam, $this->t('Backup Destination'));
-    $form['destination']['destination_id']['#default_value'] = \Drupal::config('backup_migrate.settings')->get('backup_migrate_destination_id');
+    $form['destination']['destination_id']['#default_value'] = $this->config('backup_migrate.settings')->get('backup_migrate_destination_id');
 
     $form['quickbackup']['submit'] = [
       '#type' => 'submit',
@@ -88,11 +109,21 @@ class BackupMigrateAdvancedBackupForm extends FormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
+    // @todo Currently there is a problem, where the download destination does not
+    // support taking the site offline.
+    // @see https://www.drupal.org/project/backup_migrate/issues/3475192
+    $destinationId = $form_state->getValue('destination_id');
+    $siteOffline = !empty($form_state->getValue('utils')['site_offline']) ? $form_state->getValue('utils')['site_offline'] : FALSE;
+    if ($destinationId === 'download' && $siteOffline) {
+      $form_state->setErrorByName('destination_id', $this->t('The Backup Destination "Download" does not support taking the site offline during backup.'));
+      $form_state->setErrorByName('utils][site_offline');
+    }
+
     $bam = backup_migrate_get_service_object($form_state->getValues());
 
     // Let the plugins validate their own config data.
     if ($plugin_errors = $bam->plugins()->map('configErrors', ['operation' => 'backup'])) {
-      $has_token_module = \Drupal::moduleHandler()->moduleExists('token');
+      $has_token_module = $this->moduleHandler->moduleExists('token');
 
       foreach ($plugin_errors as $plugin_key => $errors) {
         if ($plugin_key == "namer" && isset($errors[0])) {
@@ -101,7 +132,7 @@ class BackupMigrateAdvancedBackupForm extends FormBase {
           }
         }
         foreach ($errors as $error) {
-          $form_state->setErrorByName($plugin_key . '][' . $error->getFieldKey(), $this->t($error->getMessage(), $error->getReplacement()));
+          $form_state->setErrorByName($plugin_key . '][' . $error->getFieldKey(), new FormattableMarkup($error->getMessage(), $error->getReplacement()));
         }
       }
     }

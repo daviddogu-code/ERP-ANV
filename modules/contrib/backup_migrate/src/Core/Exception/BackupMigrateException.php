@@ -2,15 +2,25 @@
 
 namespace Drupal\backup_migrate\Core\Exception;
 
-use Exception;
-
 /**
- *
+ * Provides the backup migrate exception class.
  *
  * @package Drupal\backup_migrate\Core\Exception
  */
-class BackupMigrateException extends Exception {
+class BackupMigrateException extends \Exception {
+
+  /**
+   * The replacement values.
+   *
+   * @var array
+   */
   protected $replacement = [];
+
+  /**
+   * The raw exception message.
+   *
+   * @var string
+   */
   protected $messageRaw = 'Unknown exception';
 
   /**
@@ -38,6 +48,7 @@ class BackupMigrateException extends Exception {
    * Get the unmodified message with replacement tokens.
    *
    * @return null|string
+   *   The requested string.
    */
   public function getMessageRaw() {
     return $this->messageRaw;

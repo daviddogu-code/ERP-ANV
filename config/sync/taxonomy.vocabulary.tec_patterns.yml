@@ -1,7 +1,13 @@
 uuid: 76c3f5ac-a985-490c-ac24-47bdd9616999
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - taxonomy_unique
+third_party_settings:
+  taxonomy_unique:
+    enabled: true
+    message: 'Pattern %term already exists.'
 name: Patterns
 vid: tec_patterns
 description: 'Holds Patterns of all products'

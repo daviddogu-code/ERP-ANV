@@ -8,6 +8,9 @@ pwa.config:
     short_name:
       type: label
       label: 'Short name'
+    app_id:
+      type: label
+      label: 'App id'
     description:
       type: text
       label: 'Description'

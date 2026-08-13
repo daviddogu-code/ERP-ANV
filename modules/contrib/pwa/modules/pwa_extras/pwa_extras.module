@@ -5,7 +5,7 @@
  * Contains pwa_extras.module.
  */
 
-use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 
 /**
  * Implements hook_page_attachments().
@@ -78,7 +78,7 @@ function pwa_extras_apple_touch_icons() {
   ];
 
   foreach ($touchIcons as &$touchIcon) {
-    $touchIcon = Html::escape($touchIcon);
+    $touchIcon = Xss::filter($touchIcon, ['link']);
   }
 
   return $touchIcons;
@@ -96,7 +96,7 @@ function pwa_extras_apple_meta_tags($site_name = '', $status_color = '') {
   ];
 
   foreach ($metaTags as &$metaTag) {
-    $metaTag = Html::escape($metaTag);
+    $metaTag = Xss::filter($metaTag, ['meta']);
   }
 
   return $metaTags;
@@ -120,7 +120,7 @@ function pwa_extras_apple_home_screen_icons() {
   ];
 
   foreach ($homeScreenItems as &$homeScreenItem) {
-    $homeScreenItem = Html::escape($homeScreenItem);
+    $homeScreenItem = Xss::filter($homeScreenItem, ['link']);
   }
 
   return $homeScreenItems;

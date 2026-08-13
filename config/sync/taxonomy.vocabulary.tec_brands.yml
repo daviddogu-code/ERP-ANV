@@ -1,7 +1,13 @@
 uuid: 1dde6319-e081-4d33-8866-05de4e0285f9
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - taxonomy_unique
+third_party_settings:
+  taxonomy_unique:
+    enabled: true
+    message: 'Brand %term already exists.'
 name: Brands
 vid: tec_brands
 description: 'Collection of Brands'
