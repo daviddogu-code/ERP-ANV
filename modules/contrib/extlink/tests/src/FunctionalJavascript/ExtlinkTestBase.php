@@ -3,8 +3,10 @@
 namespace Drupal\Tests\extlink\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\filter\Entity\FilterFormat;
 use Drupal\Tests\TestFileCreationTrait;
+use Drupal\filter\Entity\FilterFormat;
+use Drupal\filter\FilterFormatInterface;
+use Drupal\user\UserInterface;
 
 /**
  * Base class for External Link tests.
@@ -28,23 +30,23 @@ abstract class ExtlinkTestBase extends WebDriverTestBase {
   /**
    * User with various administrative permissions.
    *
-   * @var Drupaluser
+   * @var \Drupal\user\UserInterface
    */
-  protected $adminUser;
+  protected UserInterface $adminUser;
 
   /**
    * Normal visitor with limited permissions.
    *
-   * @var Drupaluser
+   * @var \Drupal\user\UserInterface
    */
-  protected $normalUser;
+  protected UserInterface $normalUser;
 
   /**
    * Normal visitor with limited permissions.
    *
-   * @var Drupaluser
+   * @var \Drupal\filter\FilterFormatInterface
    */
-  protected $emptyFormat;
+  protected FilterFormatInterface $emptyFormat;
 
   /**
    * Drupal path of the (general) External Links admin page.
@@ -60,6 +62,11 @@ abstract class ExtlinkTestBase extends WebDriverTestBase {
    * Xpath for External Links Mailto class.
    */
   const EXTLINK_MAILTO_XPATH = '//*[local-name() = "svg" and @class="mailto"]';
+
+  /**
+   * Xpath for External Links Tel class.
+   */
+  const EXTLINK_TEL_XPATH = '//*[local-name() = "svg" and @class="tel"]';
 
   // Set up file creation trait for image test.
   use TestFileCreationTrait {

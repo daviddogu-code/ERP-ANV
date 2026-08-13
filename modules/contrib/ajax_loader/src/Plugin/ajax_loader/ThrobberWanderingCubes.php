@@ -5,7 +5,7 @@ namespace Drupal\ajax_loader\Plugin\ajax_loader;
 use Drupal\ajax_loader\ThrobberPluginBase;
 
 /**
- * Class ThrobberWanderingCubes.
+ * Provides the "Wandering Cubes" throbber.
  *
  * @Throbber(
  *   id = "throbber_wandering_cubes",

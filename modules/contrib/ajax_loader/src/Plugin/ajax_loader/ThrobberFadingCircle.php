@@ -5,7 +5,7 @@ namespace Drupal\ajax_loader\Plugin\ajax_loader;
 use Drupal\ajax_loader\ThrobberPluginBase;
 
 /**
- * Class ThrobberFadingCircle.
+ * Provides the "Fading Circle" throbber.
  *
  * @Throbber(
  *   id = "throbber_fading_circle",

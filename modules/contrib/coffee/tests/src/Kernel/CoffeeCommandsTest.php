@@ -5,6 +5,7 @@ namespace Drupal\Tests\coffee\Kernel;
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\NodeType;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 
@@ -15,12 +16,14 @@ use Drupal\user\Entity\User;
  */
 class CoffeeCommandsTest extends KernelTestBase {
 
+  use UserCreationTrait;
+
   /**
    * Modules to enable.
    *
    * @var array
    */
-  public static $modules = ['coffee', 'coffee_test', 'system', 'node', 'user'];
+  protected static $modules = ['coffee', 'coffee_test', 'system', 'node', 'user'];
 
   /**
    * {@inheritdoc}
@@ -28,7 +31,7 @@ class CoffeeCommandsTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('system', ['sequences', 'router']);
+    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
     $this->installConfig('coffee');
 
@@ -40,15 +43,11 @@ class CoffeeCommandsTest extends KernelTestBase {
     $node_type->save();
 
     // Create user that can create a node for our bundle.
-    $role = Role::create([
-      'id' => 'page_creator',
-      'permissions' => ['create page content'],
-    ]);
-    $role->save();
+    $role_id = $this->createRole(['create page content'], 'page_creator');
 
     $user = User::create([
       'name' => $this->randomMachineName(),
-      'roles' => [$role->id()],
+      'roles' => [$role_id],
     ]);
     $user->save();
 
@@ -62,13 +61,13 @@ class CoffeeCommandsTest extends KernelTestBase {
   public function testHookCoffeeCommands() {
     $expected_hook = [
       'value' => Url::fromRoute('<front>')->toString(),
-      'label' => t('Coffee hook fired!'),
+      'label' => 'Coffee hook fired!',
       'command' => ':test',
     ];
 
     $expected_system = [
       'value' => Url::fromRoute('<front>')->toString(),
-      'label' => t('Go to front page'),
+      'label' => 'Go to front page',
       'command' => ':front',
     ];
 
@@ -79,6 +78,10 @@ class CoffeeCommandsTest extends KernelTestBase {
     ];
 
     $commands = \Drupal::moduleHandler()->invokeAll('coffee_commands');
+    // Convert the command labels to strings for the comparison.
+    array_walk($commands, function (array &$command): void {
+      $command['label'] = (string) $command['label'];
+    });
     $this->assertContains($expected_hook, $commands);
     $this->assertContains($expected_system, $commands);
     $this->assertContains($expected_node, $commands);

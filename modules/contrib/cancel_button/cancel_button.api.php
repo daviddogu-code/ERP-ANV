@@ -31,7 +31,7 @@ use Drupal\Core\Url;
  *     where the button appears.
  *   - 'form_state': The FormState object.
  */
-function hook_cancel_button_destination_alter(Url &$destination, array $context) {
+function hook_cancel_button_destination_alter(Url &$destination, array $context): void {
   if ($context['entity_type']->id() === 'node') {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $context['form_state']->getFormObject()->getEntity();

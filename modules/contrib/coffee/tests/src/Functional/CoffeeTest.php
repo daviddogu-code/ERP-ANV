@@ -23,7 +23,7 @@ class CoffeeTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['coffee', 'coffee_test', 'menu_link_content'];
+  protected static $modules = ['coffee', 'coffee_test', 'menu_link_content'];
 
   /**
    * The user for tests.
@@ -129,19 +129,22 @@ class CoffeeTest extends BrowserTestBase {
     // Ensure that the coffee assets are not loaded for users without the
     // adequate permission.
     $this->drupalGet('');
-    $this->assertSession()->responseNotContains('coffee/js/coffee.js');
+    // GitLab CI installs the module under test at a path (e.g.,
+    // `modules/custom/coffee-MR_ID`) that we can't necessarily anticipate, so
+    // just look for a script tag that mentions the name of the JS file.
+    $this->assertSession()->elementNotExists('css', 'script[src*="coffee.js"]');
 
     // Ensure that the coffee assets are loaded properly for users with the
     // adequate permission.
     $this->drupalLogin($this->coffeeUser);
     $this->drupalGet('');
-    $this->assertSession()->responseContains('coffee/js/coffee.js');
+    $this->assertSession()->elementExists('css', 'script[src*="coffee.js"]');
 
     // Ensure that the coffee assets are not loaded for users without the
     // adequate permission.
     $this->drupalLogin($this->webUser);
     $this->drupalGet('');
-    $this->assertSession()->responseNotContains('coffee/js/coffee.js');
+    $this->assertSession()->elementNotExists('css', 'script[src*="coffee.js"]');
   }
 
   /**

@@ -183,8 +183,22 @@ foreach ($nuestros as $nombre => $versionNuestra) {
     }
   }
 
+  // Lo que de verdad decide si hay trabajo que hacer: si la version que ya
+  // corremos admite la 11. Si la admite, el modulo no bloquea el salto y
+  // moverlo es una decision aparte, no un requisito. Confundir las dos cosas
+  // lleva a saltar de version mayor sin necesidad, que es riesgo regalado.
+  $nuestraAdmite = FALSE;
+  foreach ($doc->releases->release as $r) {
+    if (normaliza((string) $r->version) !== normaliza($versionNuestra)) {
+      continue;
+    }
+    $nuestraAdmite = admite((string) ($r->core_compatibility ?? ''), NUCLEO_11);
+    break;
+  }
+
   $resultados[$nombre] = [
     'nuestra' => $versionNuestra,
+    'nuestraAdmite' => $nuestraAdmite,
     'mejor' => $mejor,
     'puente' => $mejorPuente,
   ];
@@ -198,13 +212,14 @@ if (!$csv) {
 // Salida.
 // -----------------------------------------------------------------------------
 if ($csv) {
-  echo "modulo,version_nuestra,mejor_para_11,compatibilidad,estable,cubre_avisos,sirve_de_puente,fecha\n";
+  echo "modulo,version_nuestra,nuestra_admite_11,mejor_para_11,compatibilidad,estable,cubre_avisos,sirve_de_puente,fecha\n";
   foreach ($resultados as $n => $r) {
-    $m = $r['mejor'];
+    $m = $r['puente'] ?: $r['mejor'];
     printf(
-      "%s,%s,%s,\"%s\",%s,%s,%s,%s\n",
+      "%s,%s,%s,%s,\"%s\",%s,%s,%s,%s\n",
       $n,
       $r['nuestra'],
+      $r['nuestraAdmite'] ? 'si' : 'no',
       $m['version'] ?? '',
       $m['compat'] ?? '',
       isset($m) && $m['madurez'] === 4 ? 'si' : 'no',
@@ -225,7 +240,7 @@ foreach ($resultados as $n => $r) {
   if (!$r['mejor']) {
     $sinNada[$n] = $r;
   }
-  elseif (normaliza($r['nuestra']) === normaliza($r['mejor']['version'])) {
+  elseif ($r['nuestraAdmite']) {
     $yaEsta[$n] = $r;
   }
   elseif ($r['puente']) {

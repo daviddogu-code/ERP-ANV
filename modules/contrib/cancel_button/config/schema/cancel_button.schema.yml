@@ -8,12 +8,15 @@ cancel_button.settings:
       type: sequence
       label: 'Default (fallback) destination settings for the Cancel button on Entity forms'
       sequence:
-          type: mapping
-          label: 'Default settings for the cancel button'
-          mapping:
-            path:
-              type: string
-              label: 'The default path where the Cancel button will take users to, on entity forms for entity types without specific configuration'
-            enabled:
-              type: boolean
-              label: 'Whether the cancel button is enabled for this entity type'
+        type: mapping
+        label: 'Default settings for the cancel button'
+        mapping:
+          path:
+            type: string
+            label: 'The default path where the Cancel button will take users to, on entity forms for entity types without specific configuration'
+          enabled:
+            type: boolean
+            label: 'Whether the cancel button is enabled for this entity type'
+          only_add_form_enabled:
+            type: boolean
+            label: 'Whether the cancel button is enabled for this entity type only for Entity Add Form'

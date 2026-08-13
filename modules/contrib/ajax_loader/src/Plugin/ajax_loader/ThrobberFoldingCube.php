@@ -5,7 +5,7 @@ namespace Drupal\ajax_loader\Plugin\ajax_loader;
 use Drupal\ajax_loader\ThrobberPluginBase;
 
 /**
- * Class ThrobberFoldingCube.
+ * Provides the "Folding Cube" throbber.
  *
  * @Throbber(
  *   id = "throbber_folding_cube",

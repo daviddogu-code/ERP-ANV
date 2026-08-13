@@ -12,11 +12,33 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 abstract class ThrobberPluginBase extends PluginBase implements ThrobberPluginInterface, ContainerFactoryPluginInterface {
 
-  protected $path;
-  protected $markup;
-  /** @codingStandardsIgnoreLine. */
-  protected $css_file;
-  protected $label;
+  /**
+   * The path to extension.
+   *
+   * @var string
+   */
+  protected string $path;
+
+  /**
+   * The markup.
+   *
+   * @var string
+   */
+  protected ?string $markup = NULL;
+
+  /**
+   * The path to the css file.
+   *
+   * @var string
+   */
+  protected ?string $cssFile = NULL;
+
+  /**
+   * The label.
+   *
+   * @var mixed
+   */
+  protected mixed $label;
 
   /**
    * ThrobberPluginBase constructor.
@@ -27,13 +49,15 @@ abstract class ThrobberPluginBase extends PluginBase implements ThrobberPluginIn
    *   String with plugin id.
    * @param mixed $plugin_definition
    *   Plugin definition value.
+   * @param \Drupal\Core\Extension\ModuleExtensionList $extensionList
+   *   The module extension list.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ModuleExtensionList $extensionList) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->path = '/' . $extensionList->getPath('ajax_loader');
     $this->markup = $this->setMarkup();
-    $this->css_file = $this->setCssFile();
+    $this->cssFile = $this->setCssFile();
   }
 
   /**
@@ -77,7 +101,7 @@ abstract class ThrobberPluginBase extends PluginBase implements ThrobberPluginIn
    *   Return the css file.
    */
   public function getCssFile() {
-    return $this->css_file;
+    return $this->cssFile;
   }
 
   /**

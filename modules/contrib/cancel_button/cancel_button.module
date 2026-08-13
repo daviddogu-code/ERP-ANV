@@ -5,20 +5,20 @@
  * Contains implementations of hooks.
  */
 
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Entity\EntityFormInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
 use Drupal\field_ui\FieldUI;
-use Drupal\core\Entity\EntityInterface;
 
 /**
  * Implements hook_form_alter().
  *
  * Add a 'Cancel' button to all entity forms.
  */
-function cancel_button_form_alter(&$form, FormStateInterface $form_state) {
+function cancel_button_form_alter(&$form, FormStateInterface $form_state): void {
 
   if ($form_state->getFormObject() instanceof EntityFormInterface) {
     // If this is an entity form, get the current request and the current route.
@@ -43,9 +43,11 @@ function cancel_button_form_alter(&$form, FormStateInterface $form_state) {
     // if the button has to be enabled.
     if (array_key_exists($entity_type_id, $cancel_button_settings)) {
       $cancel_button_setting_enabled = $cancel_button_settings[$entity_type_id]['enabled'];
+      $cancel_button_setting_only_add_form_enabled = $cancel_button_settings[$entity_type_id]['only_add_form_enabled'] ?? FALSE;
     }
     else {
       $cancel_button_setting_enabled = $cancel_button_settings['default']['enabled'];
+      $cancel_button_setting_only_add_form_enabled = $cancel_button_settings['default']['only_add_form_enabled'] ?? FALSE;
     }
 
     // Layout builder already adds its own cancel buttons. Don't add another.
@@ -54,12 +56,19 @@ function cancel_button_form_alter(&$form, FormStateInterface $form_state) {
     }
 
     if ($cancel_button_setting_enabled) {
+
+      $entity = $form_state->getFormObject()->getEntity();
+      // Do not show the button if the "Only Entity Add Form" feature is
+      // enabled, and it is not the “Entity Add” form.
+      if ($cancel_button_setting_only_add_form_enabled && !$entity->isNew()) {
+        return;
+      }
+
       // If the 'cancel' button is enabled for this entity type,
       // get the default redirect for the current entity type as a
       // final fallback. If this is a bundle, then the redirect path is
       // stored at the bundle level.
       if ($entity_type->hasKey('bundle')) {
-        $entity = $form_state->getFormObject()->getEntity();
         $bundle_entity_id = $entity->bundle();
         $config_key = $entity_type_id . '_' . $bundle_entity_id;
       }
@@ -115,7 +124,8 @@ function cancel_button_form_alter(&$form, FormStateInterface $form_state) {
               // Redirect to the collection otherwise.
               if (empty($destination) && $entity->hasLinkTemplate('collection')) {
                 $collection_destination = $entity->toUrl('collection', [
-                  'language' => \Drupal::languageManager()->getCurrentLanguage()],
+                  'language' => \Drupal::languageManager()->getCurrentLanguage(),
+                ],
                 );
                 $collection_route_name = $collection_destination->getRouteName();
                 if (!empty($route_provider->getRoutesByNames([$collection_route_name]))) {

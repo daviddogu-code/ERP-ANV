@@ -43,7 +43,7 @@ interface ThrobberManagerInterface {
    * Loads all available throbbers.
    *
    * @return mixed
-   *   Return incative for All Throbber Instances.
+   *   Return inactive for All Throbber Instances.
    */
   public function loadAllThrobberInstances();
 

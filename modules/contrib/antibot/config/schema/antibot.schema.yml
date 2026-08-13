@@ -8,6 +8,12 @@ antibot.settings:
       sequence:
         type: string
         label: 'The form ID'
+    excluded_form_ids:
+      type: sequence
+      label: 'The form IDs that should never be protected'
+      sequence:
+        type: string
+        label: 'The form ID'
     show_form_ids:
       type: boolean
       label: 'Show form IDs to admins'

@@ -49,6 +49,35 @@ if (!$rutas) {
 }
 
 /**
+ * La sesion que hay que colgar de cada peticion.
+ *
+ * No vale una sesion de mentira montada a mano. Hay modulos que sustituyen la
+ * bolsa de metadatos de la sesion por una suya con metodos propios: masquerade
+ * lo hace, y una bolsa normal revienta con "getMasquerade() no existe" en todas
+ * las paginas a la vez. Como esa cascada aparece justo despues de subir un
+ * modulo, se confunde con un fallo de la subida y se pierde media tarde. Se
+ * coge la del contenedor, que es la de verdad.
+ */
+function sesion(): \Symfony\Component\HttpFoundation\Session\SessionInterface {
+  static $sesion = NULL;
+  if ($sesion !== NULL) {
+    return $sesion;
+  }
+  try {
+    return $sesion = \Drupal::service('session');
+  }
+  catch (\Throwable $e) {
+    return $sesion = new \Symfony\Component\HttpFoundation\Session\Session(
+      new \Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage(
+        'MOCK',
+        '',
+        \Drupal::service('session_manager.metadata_bag')
+      )
+    );
+  }
+}
+
+/**
  * Las direcciones de las vistas que tienen pagina propia.
  */
 function paginasDeVista(): array {
@@ -129,9 +158,7 @@ echo '  ' . str_repeat('-', 96) . "\n";
 $malas = 0;
 foreach ($rutas as $ruta) {
   $peticion = Request::create($ruta, 'GET');
-  $peticion->setSession(new \Symfony\Component\HttpFoundation\Session\Session(
-    new \Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage()
-  ));
+  $peticion->setSession(sesion());
 
   $t0 = microtime(TRUE);
   $nota = '';

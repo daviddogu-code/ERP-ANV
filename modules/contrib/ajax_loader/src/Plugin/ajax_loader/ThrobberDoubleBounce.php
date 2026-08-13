@@ -5,7 +5,7 @@ namespace Drupal\ajax_loader\Plugin\ajax_loader;
 use Drupal\ajax_loader\ThrobberPluginBase;
 
 /**
- * Class ThrobberDoubleBounce.
+ * Provides the "Double Bounce" throbber.
  *
  * @Throbber(
  *   id = "throbber_double_bounce",

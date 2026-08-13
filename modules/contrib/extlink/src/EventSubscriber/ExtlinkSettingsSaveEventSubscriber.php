@@ -3,6 +3,7 @@
 namespace Drupal\extlink\EventSubscriber;
 
 use Drupal\Core\Asset\AssetCollectionOptimizerInterface;
+use Drupal\Core\Asset\AssetQueryStringInterface;
 use Drupal\Core\Asset\LibraryDiscoveryInterface;
 use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
@@ -14,39 +15,29 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class ExtlinkSettingsSaveEventSubscriber implements EventSubscriberInterface {
 
   /**
-   * The CSS/JS asset library discovery service.
-   *
-   * @var \Drupal\Core\Asset\LibraryDiscoveryInterface
-   */
-  protected $libraryDiscovery;
-
-  /**
-   * The JS asset optimizer service.
-   *
-   * @var \Drupal\Core\Asset\AssetCollectionOptimizerInterface
-   */
-  protected $jsOptimizer;
-
-  /**
    * ExtlinkSettingsSaveEventSubscriber constructor.
    *
-   * @param \Drupal\Core\Asset\LibraryDiscoveryInterface $library_discovery
+   * @param \Drupal\Core\Asset\LibraryDiscoveryInterface $libraryDiscovery
    *   The CSS/JS asset library discovery service.
-   * @param \Drupal\Core\Asset\AssetCollectionOptimizerInterface $js_optimizer
+   * @param \Drupal\Core\Asset\AssetCollectionOptimizerInterface $jsOptimizer
    *   The JS asset optimizer service.
+   * @param \Drupal\Core\Asset\AssetQueryStringInterface $assetQueryString
+   *   The asset query string service.
    */
-  public function __construct(LibraryDiscoveryInterface $library_discovery, AssetCollectionOptimizerInterface $js_optimizer) {
-    $this->libraryDiscovery = $library_discovery;
-    $this->jsOptimizer = $js_optimizer;
+  public function __construct(
+    protected LibraryDiscoveryInterface $libraryDiscovery,
+    protected AssetCollectionOptimizerInterface $jsOptimizer,
+    protected AssetQueryStringInterface $assetQueryString,
+  ) {
   }
 
   /**
-   * Acts on changes to extlink.settings to flush JS library and assets.
+   * Acts on changes to extlink settings to flush JS library and assets.
    *
    * @param \Drupal\Core\Config\ConfigCrudEvent $event
    *   The configuration event.
    */
-  public function onConfigSave(ConfigCrudEvent $event) {
+  public function onConfigSave(ConfigCrudEvent $event): void {
     $config = $event->getConfig();
     if ($config->getName() === 'extlink.settings') {
       $flush_js_files = $config->get('extlink_use_external_js_file');
@@ -64,7 +55,7 @@ class ExtlinkSettingsSaveEventSubscriber implements EventSubscriberInterface {
         // settings are saved. Also flush the optimized JS files when disabling
         // or enabling using the external JS files.
         $this->jsOptimizer->deleteAll();
-        _drupal_flush_css_js();
+        $this->assetQueryString->reset();
       }
     }
   }
@@ -72,7 +63,7 @@ class ExtlinkSettingsSaveEventSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     return [ConfigEvents::SAVE => 'onConfigSave'];
   }
 

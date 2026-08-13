@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\admin_toolbar_search;
 
 use Drupal\Core\Cache\Cache;
@@ -77,7 +79,7 @@ class SearchLinks {
    * @param \Drupal\Core\Cache\CacheBackendInterface $toolbar_cache
    *   Cache backend instance to use.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   Config factory mservice.
+   *   Config factory service.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RouteProviderInterface $route_provider, CacheContextsManager $cache_context_manager, CacheBackendInterface $toolbar_cache, ConfigFactoryInterface $config_factory) {
     $this->entityTypeManager = $entity_type_manager;
@@ -91,13 +93,19 @@ class SearchLinks {
   /**
    * Gets extra links for admin toolbar search feature.
    *
-   * @return array
+   * @return array<mixed>
    *   An array of link data for the JSON used for search.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function getLinks() {
+    // If the 'admin_toolbar_tools' module is disabled, the following code
+    // should not be executed.
+    if (!$this->moduleHandler->moduleExists('admin_toolbar_tools')) {
+      return [];
+    }
+
     $max_bundle_number = $this->config->get('max_bundle_number');
     $additional_keys = $this->cacheContextManager->convertTokensToKeys([
       'languages:' . LanguageInterface::TYPE_INTERFACE,
@@ -120,18 +128,23 @@ class SearchLinks {
       $content_entity = $entities['content_entity'];
       // Load the remaining items that were not loaded by the toolbar.
       $content_entity_bundle_storage = $this->entityTypeManager->getStorage($content_entity_bundle);
-      $bundles_ids = $content_entity_bundle_storage->getQuery()->sort('weight')->range($max_bundle_number)->execute();
+      $bundles_ids = $content_entity_bundle_storage->getQuery()
+        ->sort('weight')
+        ->sort($this->entityTypeManager->getDefinition($content_entity_bundle)->getKey('label') ?: '')
+        ->range($max_bundle_number)
+        ->accessCheck()
+        ->execute();
       if (!empty($bundles_ids)) {
         $bundles = $this->entityTypeManager
           ->getStorage($content_entity_bundle)
           ->loadMultiple($bundles_ids);
         foreach ($bundles as $machine_name => $bundle) {
           $cache_tags = Cache::mergeTags($cache_tags, $bundle->getEntityType()->getListCacheTags());
-          $tparams = [
+          $label_params = [
             '@entity_type' => $bundle->getEntityType()->getLabel(),
             '@bundle' => $bundle->label(),
           ];
-          $label_base = $this->t('@entity_type > @bundle', $tparams);
+          $label_base = $this->t('@entity_type > @bundle', $label_params);
           $params = [$content_entity_bundle => $machine_name];
           if ($this->routeExists('entity.' . $content_entity_bundle . '.overview_form')) {
             // Some bundles have an overview/list form that make a better root
@@ -187,6 +200,18 @@ class SearchLinks {
                 ];
               }
             }
+            // Add operation link: Manage permissions.
+            if ($this->routeExists('entity.' . $content_entity_bundle . '.entity_permissions_form')) {
+              $url = Url::fromRoute('entity.' . $content_entity_bundle . '.entity_permissions_form', $params);
+              if ($url->access()) {
+                $url_string = $url->toString();
+                $links[] = [
+                  'labelRaw' => $label_base . ' > ' . $this->t('Manage permissions'),
+                  'value' => $url_string,
+                ];
+              }
+            }
+            // Add operation link: Devel.
             if ($this->moduleHandler->moduleExists('devel') && $this->routeExists('entity.' . $content_entity_bundle . '.devel_load')) {
               $url = Url::fromRoute($route_name = 'entity.' . $content_entity_bundle . '.devel_load', $params);
               if ($url->access()) {
@@ -222,13 +247,18 @@ class SearchLinks {
       $cache_tags = Cache::mergeTags($cache_tags, ['config:menu_list']);
       foreach ($menus as $menu_id => $menu) {
         $route_name = 'entity.menu.edit_form';
+        $label_params = [
+          '@entity_type' => $menu->getEntityType()->getLabel(),
+          '@bundle' => $menu->label(),
+        ];
+        $label_base = $this->t('@entity_type > @bundle', $label_params);
         $params = ['menu' => $menu_id];
         $url = Url::fromRoute($route_name, $params);
         if ($url->access()) {
           $url_string = $url->toString();
 
           $links[] = [
-            'labelRaw' => $this->t('Menus > @menu_label', ['@menu_label' => $menu->label()]),
+            'labelRaw' => $label_base . ' > ' . $this->t('Edit'),
             'value' => $url_string,
           ];
         }
@@ -240,7 +270,7 @@ class SearchLinks {
           $url_string = $url->toString();
 
           $links[] = [
-            'labelRaw' => $this->t('Menus > @menu_label > Add link', ['@menu_label' => $menu->label()]),
+            'labelRaw' => $label_base . ' > ' . $this->t('Add link'),
             'value' => $url_string,
           ];
         }
@@ -255,7 +285,7 @@ class SearchLinks {
             $url_string = $url->toString();
 
             $links[] = [
-              'labelRaw' => $this->t('Menus > @menu_label > Delete', ['@menu_label' => $menu->label()]),
+              'labelRaw' => $label_base . ' > ' . $this->t('Delete'),
               'value' => $url_string,
             ];
           }
@@ -268,7 +298,7 @@ class SearchLinks {
             $url_string = $url->toString();
 
             $links[] = [
-              'labelRaw' => $this->t('Menus > @menu_label > Devel', ['@menu_label' => $menu->label()]),
+              'labelRaw' => $label_base . ' > ' . $this->t('Devel'),
               'value' => $url_string,
             ];
           }
@@ -284,7 +314,7 @@ class SearchLinks {
   /**
    * Gets a list of content entities.
    *
-   * @return array
+   * @return array<string, mixed>
    *   An array of metadata about content entities.
    */
   protected function getBundleableEntitiesList() {

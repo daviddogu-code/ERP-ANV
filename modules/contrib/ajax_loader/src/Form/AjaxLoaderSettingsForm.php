@@ -2,26 +2,32 @@
 
 namespace Drupal\ajax_loader\Form;
 
-use Drupal\ajax_loader\ThrobberManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ajax_loader\ThrobberManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class AjaxLoaderSettingsForm.
+ * Provides the throbber settings form.
  *
  * @package Drupal\ajax_throbber\Form
  */
 class AjaxLoaderSettingsForm extends ConfigFormBase {
 
+  /**
+   * The throbber manager.
+   *
+   * @var \Drupal\ajax_loader\ThrobberManagerInterface
+   */
   protected $throbberManager;
 
   /**
    * Function to construct.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ThrobberManagerInterface $throbber_manager) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager, ThrobberManagerInterface $throbber_manager) {
+    parent::__construct($config_factory, $typedConfigManager);
 
     $this->throbberManager = $throbber_manager;
   }
@@ -37,6 +43,7 @@ class AjaxLoaderSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('ajax_loader.throbber_manager')
     );
   }

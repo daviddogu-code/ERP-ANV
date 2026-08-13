@@ -15,21 +15,40 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class ThrobberManager extends DefaultPluginManager implements ThrobberManagerInterface, MapperInterface {
 
+  /**
+   * The route admin context to determine whether a route is an admin one.
+   *
+   * @var \Drupal\Core\Routing\AdminContext
+   */
   protected $adminContext;
+
+  /**
+   * The currently active request object.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
   protected $request;
+
+  /**
+   * The configuration factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
   protected $configFactory;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(\Traversable $namespaces,
-                              CacheBackendInterface $cache_backend,
-                              ModuleHandlerInterface $module_handler,
-                              AdminContext $admin_context,
-                              RequestStack $request_stack,
-                              ConfigFactoryInterface $config_factory) {
+  public function __construct(
+    \Traversable $namespaces,
+    CacheBackendInterface $cache_backend,
+    ModuleHandlerInterface $module_handler,
+    AdminContext $admin_context,
+    RequestStack $request_stack,
+    ConfigFactoryInterface $config_factory,
+  ) {
     parent::__construct('Plugin/ajax_loader', $namespaces, $module_handler, 'Drupal\ajax_loader\ThrobberPluginInterface', 'Drupal\ajax_loader\Annotation\Throbber');
-
+    $this->alterInfo('ajax_loader_throbber_info');
     $this->setCacheBackend($cache_backend, 'throbber_manager');
     $this->adminContext = $admin_context;
     $this->configFactory = $config_factory;

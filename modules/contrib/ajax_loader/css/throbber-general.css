@@ -4,23 +4,23 @@
 }
 
 .ajax-throbber {
+  position: relative;
   width: 40px;
   height: 40px;
-  position: relative;
 }
 
 /* Override core throbber */
 .ajax-progress.ajax-progress-fullscreen {
+  position: fixed;
+  z-index: 11000;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: visible;
+  width: 2em;
+  height: 2em;
+  margin: auto;
   background-color: transparent;
   background-image: none;
-  z-index: 11000;
-  position: fixed;
-  height: 2em;
-  width: 2em;
-  overflow: visible;
-  margin: auto;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
 }

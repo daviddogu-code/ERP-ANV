@@ -2,10 +2,10 @@ name: Cancel Button
 type: module
 description: 'This small module adds a Cancel button to Entity forms.'
 package: Content
-core_version_requirement: ^8 || ^9 || ^10
+core_version_requirement: ^8 || ^9 || ^10 || ^11
 configure: cancel_button.admin_settings
 
-# Information added by Drupal.org packaging script on 2023-02-20
-version: '8.x-1.4'
+# Information added by Drupal.org packaging script on 2024-11-28
+version: '8.x-1.5'
 project: 'cancel_button'
-datestamp: 1676921896
+datestamp: 1732804485

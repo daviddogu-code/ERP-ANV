@@ -14,7 +14,7 @@ ajax_loader.throbber:
   js:
     js/ajax-throbber.js: {}
   dependencies:
-      - core/jquery
-      - core/drupal
-      - core/drupalSettings
-      - core/drupal.ajax
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+    - core/drupal.ajax

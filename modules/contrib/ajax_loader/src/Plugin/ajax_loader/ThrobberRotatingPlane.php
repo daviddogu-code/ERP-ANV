@@ -5,7 +5,7 @@ namespace Drupal\ajax_loader\Plugin\ajax_loader;
 use Drupal\ajax_loader\ThrobberPluginBase;
 
 /**
- * Class ThrobberRotatingPlane.
+ * Provides the "Rotating Plane" throbber.
  *
  * @Throbber(
  *   id = "throbber_rotating_plane",

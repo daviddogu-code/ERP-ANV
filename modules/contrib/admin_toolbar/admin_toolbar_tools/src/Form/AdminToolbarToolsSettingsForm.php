@@ -1,12 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\admin_toolbar_tools\Form;
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Menu\MenuLinkManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -31,34 +30,31 @@ class AdminToolbarToolsSettingsForm extends ConfigFormBase {
   protected $menuLinkManager;
 
   /**
-   * AdminToolbarToolsSettingsForm constructor.
+   * The module handler.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
-   *   The factory for configuration objects.
-   * @param \Drupal\Core\Menu\MenuLinkManagerInterface $menuLinkManager
-   *   A menu link manager instance.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cacheMenu
-   *   A cache menu instance.
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  public function __construct(ConfigFactoryInterface $configFactory, MenuLinkManagerInterface $menuLinkManager, CacheBackendInterface $cacheMenu) {
-    parent::__construct($configFactory);
-    $this->cacheMenu = $cacheMenu;
-    $this->menuLinkManager = $menuLinkManager;
-  }
+  protected $moduleHandler;
 
   /**
    * {@inheritdoc}
+   *
+   * @return static
+   *   Returns an instance of this plugin.
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('plugin.manager.menu.link'),
-      $container->get('cache.menu')
-    );
+    $instance = parent::create($container);
+    $instance->cacheMenu = $container->get('cache.menu');
+    $instance->menuLinkManager = $container->get('plugin.manager.menu.link');
+    $instance->moduleHandler = $container->get('module_handler');
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @return array<string>
+   *   An array of configuration names that this form is responsible for.
    */
   protected function getEditableConfigNames() {
     return [
@@ -75,6 +71,14 @@ class AdminToolbarToolsSettingsForm extends ConfigFormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @param array<string, mixed> $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return array<string, mixed>
+   *   The form array with the form elements.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('admin_toolbar_tools.settings');
@@ -83,36 +87,41 @@ class AdminToolbarToolsSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Maximum number of bundle sub-menus to display'),
       '#description' => $this->t('Loading a large number of items can cause performance issues.'),
       '#default_value' => $config->get('max_bundle_number'),
+      '#min' => 1,
+      '#max' => 500,
     ];
 
-    $form['hoverintent_functionality'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enable/Disable the hoverintent functionality'),
-      '#description' => $this->t('Check it if you want to enable the hoverintent feature.'),
-      '#default_value' => $config->get('hoverintent_functionality'),
-    ];
-
-    $form['show_local_tasks'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enable/Disable local tasks display'),
-      '#description' => $this->t('Local tasks such as node edit and delete.'),
-      '#default_value' => $config->get('show_local_tasks'),
-    ];
+    // Hide the option to show local tasks if the core toolbar is disabled.
+    if ($this->moduleHandler->moduleExists('toolbar')) {
+      $form['show_local_tasks'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Enable/Disable local tasks display'),
+        '#description' => $this->t('Local tasks such as node edit and delete.'),
+        '#default_value' => $config->get('show_local_tasks'),
+      ];
+    }
 
     return parent::buildForm($form, $form_state);
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @param array<mixed> $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return void
+   *   Nothing to return.
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->config('admin_toolbar_tools.settings')
       ->set('max_bundle_number', $form_state->getValue('max_bundle_number'))
-      ->set('hoverintent_functionality', $form_state->getValue('hoverintent_functionality'))
       ->set('show_local_tasks', $form_state->getValue('show_local_tasks'))
       ->save();
     parent::submitForm($form, $form_state);
-    $this->cacheMenu->invalidateAll();
+    $this->cacheMenu->deleteAll();
     $this->menuLinkManager->rebuild();
   }
 

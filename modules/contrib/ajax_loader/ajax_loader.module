@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Primarily contains Drupal hooks.
+ */
+
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
@@ -8,7 +13,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 function ajax_loader_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.ajax_loader':
-      $output = file_get_contents(\Drupal::service('extension.list.module')->getPath('ajax_loader')  . '/README.txt');
+      $output = file_get_contents(\Drupal::service('extension.list.module')->getPath('ajax_loader') . '/README.txt');
       return '<pre>' . $output . '</pre>';
   }
 }

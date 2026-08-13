@@ -5,7 +5,7 @@ namespace Drupal\ajax_loader\Plugin\ajax_loader;
 use Drupal\ajax_loader\ThrobberPluginBase;
 
 /**
- * Class ThrobberPulse.
+ * Provides the "Pulse" throbber.
  *
  * @Throbber(
  *   id = "throbber_pulse",

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\cancel_button\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -61,7 +63,7 @@ class CancelButtonEntityRoutesTest extends BrowserTestBase {
   /**
    * Tests that the cancel button loads on entity forms without errors.
    */
-  public function testEntityFormCancelButton() {
+  public function testEntityFormCancelButton(): void {
     foreach ($this->entities as $entity) {
       $uri = $entity->toUrl('edit-form');
       $this->drupalGet($uri);

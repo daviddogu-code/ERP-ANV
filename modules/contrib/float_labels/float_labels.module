@@ -109,7 +109,7 @@ function float_labels_should_process_form(array $form) {
   $form_id = $form['#form_id'];
   $shouldProcess = FALSE;
 
-  $included_forms = preg_split($newLines, $config->get('included_forms'));
+  $included_forms = preg_split($newLines, $config->get('included_forms') ?? '');
 
   foreach ($included_forms as $form_match) {
     if (strpos($form_match, '/') === 0) {
@@ -124,7 +124,7 @@ function float_labels_should_process_form(array $form) {
   }
 
   if ($shouldProcess) {
-    $excluded_forms = preg_split($newLines, $config->get('excluded_forms'));
+    $excluded_forms = preg_split($newLines, $config->get('excluded_forms') ?? '');
 
     foreach ($excluded_forms as $form_match) {
       if (strpos($form_match, '/') === 0) {
@@ -155,8 +155,8 @@ function float_labels_attach(&$element) {
   $newLines = '/(\r\n|\r|\n)/';
 
   $element['#attached']['drupalSettings']['float_labels'] = [
-    'include' => preg_split($newLines, $config->get('included_selectors')),
-    'exclude' => preg_split($newLines, $config->get('excluded_selectors')),
+    'includes' => preg_split($newLines, $config->get('included_selectors'), -1, PREG_SPLIT_NO_EMPTY),
+    'excludes' => preg_split($newLines, $config->get('excluded_selectors'), -1, PREG_SPLIT_NO_EMPTY),
     'mark_required' => $config->get('mark_required'),
   ];
 

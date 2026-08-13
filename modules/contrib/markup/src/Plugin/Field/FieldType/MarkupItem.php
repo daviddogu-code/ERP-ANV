@@ -14,7 +14,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   id = "markup",
  *   label = @Translation("Markup"),
  *   description = @Translation("Provides field to output markup on the entities edit form"),
- *   category = @Translation("General"),
+ *   category = "formatted_text",
  *   default_widget = "markup",
  *   default_formatter = "markup",
  *   list_class = "\Drupal\markup\Field\MarkupItemList",
@@ -67,7 +67,7 @@ class MarkupItem extends FieldItemBase {
     $element['markup'] = [
       '#type'          => 'text_format',
       '#title'         => $this->t('Markup'),
-      '#default_value' => isset($settings['markup']['value']) ? $settings['markup']['value'] : '',
+      '#default_value' => $settings['markup']['value'] ?? '',
       '#format'        => !empty($settings['markup']['format']) ? $settings['markup']['format'] : filter_default_format(),
       '#required'      => TRUE,
       '#rows'          => 15,

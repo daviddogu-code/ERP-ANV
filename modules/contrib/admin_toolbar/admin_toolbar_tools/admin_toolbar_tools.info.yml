@@ -3,11 +3,9 @@ description: Adds menu links like Flush cache, Run cron, Run updates, and Logout
 package: Administration
 configure: admin_toolbar_tools.settings
 type: module
-core_version_requirement: ^9.2 || ^10
-dependencies:
-  - admin_toolbar:admin_toolbar
+core_version_requirement: ^9.5 || ^10 || ^11
 
-# Information added by Drupal.org packaging script on 2023-09-29
-version: '3.4.2'
+# Information added by Drupal.org packaging script on 2025-12-30
+version: '3.6.3'
 project: 'admin_toolbar'
-datestamp: 1696006156
+datestamp: 1767127271

@@ -12,7 +12,7 @@ class ExtlinkTestNoFollow extends ExtlinkTestBase {
   /**
    * Checks to see if extlink and nofollow work together when both are enabled.
    */
-  public function testExtlinkEnabledNoFollowEnabled() {
+  public function testExtlinkEnabledNoFollowEnabled(): void {
     // No Follow Enabled.
     $this->config('extlink.settings')->set('extlink_nofollow', TRUE)->save();
 
@@ -50,7 +50,7 @@ class ExtlinkTestNoFollow extends ExtlinkTestBase {
   /**
    * Checks to see if external link no follow works with extlink disabled.
    */
-  public function testExtlinkDisabledNoFollowEnabled() {
+  public function testExtlinkDisabledNoFollowEnabled(): void {
     // No Follow Enabled, Disable Extlink.
     $this->config('extlink.settings')->set('extlink_nofollow', TRUE)->save();
     $this->config('extlink.settings')->set('extlink_class', '0')->save();
@@ -90,7 +90,7 @@ class ExtlinkTestNoFollow extends ExtlinkTestBase {
   /**
    * Checks to see if rel no follow is added if disabled.
    */
-  public function testExtlinkDisabledNoFollowDisabled() {
+  public function testExtlinkDisabledNoFollowDisabled(): void {
     // No Follow Enabled, Extlink Disabled.
     $this->config('extlink.settings')->set('extlink_nofollow', FALSE)->save();
     $this->config('extlink.settings')->set('extlink_follow_no_override', FALSE)->save();
@@ -130,7 +130,7 @@ class ExtlinkTestNoFollow extends ExtlinkTestBase {
   /**
    * Checks to see if rel no follow is overridden.
    */
-  public function testExtlinkNoFollowNoOverride() {
+  public function testExtlinkNoFollowNoOverride(): void {
     // No Follow Enabled, Extlink Disabled.
     $this->config('extlink.settings')->set('extlink_nofollow', TRUE)->save();
     $this->config('extlink.settings')->set('extlink_follow_no_override', TRUE)->save();

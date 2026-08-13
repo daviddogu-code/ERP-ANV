@@ -9,7 +9,7 @@
       .not('.float-labels-processed, :button, select');
 
     if (settings.includes && settings.includes.length > 0) {
-      $elements = $elements.is(settings.includes.join(', '));
+      $elements = $elements.add(settings.includes.join(', '));
     }
 
     if (settings.excludes && settings.excludes.length > 0) {

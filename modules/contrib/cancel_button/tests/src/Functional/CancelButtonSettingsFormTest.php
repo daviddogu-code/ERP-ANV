@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\cancel_button\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -58,7 +60,7 @@ class CancelButtonSettingsFormTest extends BrowserTestBase {
   /**
    * Test setting the default cancel button destinations on the config form.
    */
-  public function testCancelButtonDefaultDestinations() {
+  public function testCancelButtonDefaultDestinations(): void {
 
     $this->drupalGet('admin/config/content/cancel-button');
     // Check that the page loads.

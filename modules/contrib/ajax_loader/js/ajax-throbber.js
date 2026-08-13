@@ -1,6 +1,4 @@
 (function ($, window, Drupal, drupalSettings) {
-
-  'use strict';
   /**
    * Prepare the Ajax request before it is sent.
    *
@@ -32,7 +30,7 @@
       // that value is included in the submission. As per above, submissions
       // that use $.ajax() are already serialized prior to the element being
       // disabled, so this is only needed for IFRAME submissions.
-      var v = $.fieldValue(this.element);
+      const v = $.fieldValue(this.element);
       if (v !== null) {
         options.extraData[this.element.name] = v;
       }
@@ -50,12 +48,20 @@
 
     // Insert progress indicator.
     let callable = this.progress.type;
-    if (this.progress.type === 'throbber' && drupalSettings.ajaxLoader.alwaysFullscreen) {
+    if (
+      this.progress.type === 'throbber' &&
+      drupalSettings.ajaxLoader.alwaysFullscreen
+    ) {
       // Always show throbber as fullscreen overlay.
       callable = 'fullscreen';
     }
-    var progressIndicatorMethod = 'setProgressIndicator' + callable.slice(0, 1).toUpperCase() + callable.slice(1).toLowerCase();
-    if (progressIndicatorMethod in this && typeof this[progressIndicatorMethod] === 'function') {
+    const progressIndicatorMethod = `setProgressIndicator${callable
+      .slice(0, 1)
+      .toUpperCase()}${callable.slice(1).toLowerCase()}`;
+    if (
+      progressIndicatorMethod in this &&
+      typeof this[progressIndicatorMethod] === 'function'
+    ) {
       this[progressIndicatorMethod].call(this);
     }
   };
@@ -64,11 +70,14 @@
    * Overrides the throbber progress indicator.
    */
   Drupal.Ajax.prototype.setProgressIndicatorThrobber = function () {
-
     if (!this.progressIsSet()) {
-      this.progress.element = $('<div class="ajax-progress ajax-progress-throbber"><div class="ajax-loader">' + drupalSettings.ajaxLoader.markup + '</div></div>');
+      this.progress.element = $(
+        `<div class="ajax-progress ajax-progress-throbber"><div class="ajax-loader">${drupalSettings.ajaxLoader.markup}</div></div>`,
+      );
       if (this.progress.message && !drupalSettings.ajaxLoader.hideAjaxMessage) {
-        this.progress.element.find('.ajax-loader').after('<div class="message">' + this.progress.message + '</div>');
+        this.progress.element
+          .find('.ajax-loader')
+          .after(`<div class="message">${this.progress.message}</div>`);
       }
       $(this.element).after(this.progress.element);
     }
@@ -78,10 +87,13 @@
    * Sets the fullscreen progress indicator.
    */
   Drupal.Ajax.prototype.setProgressIndicatorFullscreen = function () {
-
     if (!this.progressIsSet()) {
-      this.progress.element = $('<div class="ajax-progress ajax-progress-fullscreen">' + drupalSettings.ajaxLoader.markup + '</div>');
-      $(drupalSettings.ajaxLoader.throbberPosition).after(this.progress.element);
+      this.progress.element = $(
+        `<div class="ajax-progress ajax-progress-fullscreen">${drupalSettings.ajaxLoader.markup}</div>`,
+      );
+      $(drupalSettings.ajaxLoader.throbberPosition).after(
+        this.progress.element,
+      );
     }
   };
 
@@ -90,7 +102,11 @@
    */
   Drupal.Ajax.prototype.progressIsSet = function () {
     // return false;
-    return (this.progress.type !== 'throbber' && this.progress.hasOwnProperty('element') && this.progress.element.hasOwnProperty('length') && this.progress.element.length > 0);
+    return (
+      this.progress.type !== 'throbber' &&
+      this.progress.hasOwnProperty('element') &&
+      this.progress.element.hasOwnProperty('length') &&
+      this.progress.element.length > 0
+    );
   };
-
 })(jQuery, this, Drupal, drupalSettings);

@@ -35,7 +35,8 @@
         "irc": "irc://irc.freenode.org/drupal-contribute",
         "source": "https://git.drupalcode.org/project/coffee"
     },
-    "license": "GPL-2.0+",
+    "keywords": ["Drupal"],
+    "license": "GPL-2.0-or-later",
     "minimum-stability": "dev",
     "require": {},
     "extra": {

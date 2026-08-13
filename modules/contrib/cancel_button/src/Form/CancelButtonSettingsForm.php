@@ -3,6 +3,7 @@
 namespace Drupal\cancel_button\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -41,6 +42,8 @@ class CancelButtonSettingsForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
    * @param \Drupal\Core\Path\PathValidatorInterface $path_validator
    *   The path validator.
    * @param \Drupal\Core\Routing\RequestContext $request_context
@@ -48,8 +51,8 @@ class CancelButtonSettingsForm extends ConfigFormBase {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, PathValidatorInterface $path_validator, RequestContext $request_context, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager, PathValidatorInterface $path_validator, RequestContext $request_context, EntityTypeManagerInterface $entity_type_manager) {
+    parent::__construct($config_factory, $typedConfigManager);
 
     $this->pathValidator = $path_validator;
     $this->requestContext = $request_context;
@@ -59,9 +62,10 @@ class CancelButtonSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('path.validator'),
       $container->get('router.request_context'),
       $container->get('entity_type.manager')
@@ -71,14 +75,14 @@ class CancelButtonSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'cancel_button_admin_settings';
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEditableConfigNames() {
+  protected function getEditableConfigNames(): array {
     return [
       'cancel_button.settings',
     ];
@@ -87,7 +91,7 @@ class CancelButtonSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $url_prefix = $this->requestContext->getCompleteBaseUrl();
 
     // Get the entities and bundles which will be listed in the settings form.
@@ -126,10 +130,12 @@ class CancelButtonSettingsForm extends ConfigFormBase {
 
       // Settings related to enabling the cancel button on the entity forms.
       if (array_key_exists($id, $entity_type_cancel_destinations)) {
-        $default_enabled = isset($entity_type_cancel_destinations[$id]['enabled']) ? $entity_type_cancel_destinations[$id]['enabled'] : TRUE;
+        $default_enabled = $entity_type_cancel_destinations[$id]['enabled'] ?? TRUE;
+        $only_add_form_default_enabled = $entity_type_cancel_destinations[$id]['only_add_form_enabled'] ?? FALSE;
       }
       else {
-        $default_enabled = isset($entity_type_cancel_destinations['default']['enabled']) ? $entity_type_cancel_destinations['default']['enabled'] : TRUE;
+        $default_enabled = $entity_type_cancel_destinations['default']['enabled'] ?? TRUE;
+        $only_add_form_default_enabled = $entity_type_cancel_destinations['default']['only_add_form_enabled'] ?? FALSE;
       }
       $checkbox = [
         '#type' => 'checkbox',
@@ -137,6 +143,7 @@ class CancelButtonSettingsForm extends ConfigFormBase {
         '#default_value' => $default_enabled,
       ];
       $enabled_checkbox = $id . '_cancel_enabled';
+
       // Determine states for the path textfield based on whether the cancel
       // button is enabled for the entity type.
       $states = [
@@ -145,6 +152,17 @@ class CancelButtonSettingsForm extends ConfigFormBase {
         ],
         'required' => [
           ':input[name="' . $enabled_checkbox . '"]' => ['checked' => TRUE],
+        ],
+      ];
+
+      $only_add_form_checkbox = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Add cancel button only for "Entity Add" form of the @label entity type.', [
+          '@label' => $label,
+        ]),
+        '#default_value' => $only_add_form_default_enabled,
+        '#states' => [
+          'enabled' => $states['enabled'],
         ],
       ];
 
@@ -162,6 +180,9 @@ class CancelButtonSettingsForm extends ConfigFormBase {
         }
         // Display one 'enabled' checkbox for the entity type.
         $form['entity_type_cancel_destination'][$id . '_bundles'][$id . '_cancel_enabled'] = $checkbox;
+
+        // Display one 'only_add_form_enabled' checkbox for the entity type.
+        $form['entity_type_cancel_destination'][$id . '_bundles'][$id . '_cancel_only_add_form_enabled'] = $only_add_form_checkbox;
 
         // Build the form elements for all bundles.
         foreach ($bundles[$id] as $bundle) {
@@ -208,6 +229,9 @@ class CancelButtonSettingsForm extends ConfigFormBase {
 
         $form['entity_type_cancel_destination'][$id][$id . '_cancel_enabled'] = $checkbox;
 
+        // Display one 'only_add_form_enabled' checkbox for the entity type.
+        $form['entity_type_cancel_destination'][$id][$id . '_cancel_only_add_form_enabled'] = $only_add_form_checkbox;
+
         // Build the form element.
         $form['entity_type_cancel_destination'][$id][$id . '_cancel_destination'] = [
           '#type' => 'textfield',
@@ -225,7 +249,7 @@ class CancelButtonSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     $result = $this->getEntityTypesToDisplay();
     $entity_types = $result["entity_types"];
     $bundles = $result["bundles"];
@@ -268,7 +292,7 @@ class CancelButtonSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $config = $this->config('cancel_button.settings');
     $result = $this->getEntityTypesToDisplay();
     $entity_types = $result["entity_types"];
@@ -288,6 +312,7 @@ class CancelButtonSettingsForm extends ConfigFormBase {
         $config->set('entity_type_cancel_destination.' . $id . '.path', $form_state->getValue($id . '_cancel_destination'));
       }
       $config->set('entity_type_cancel_destination.' . $id . '.enabled', (bool) $form_state->getValue($id . '_cancel_enabled'));
+      $config->set('entity_type_cancel_destination.' . $id . '.only_add_form_enabled', (bool) $form_state->getValue($id . '_cancel_only_add_form_enabled'));
     }
     $config->save();
     parent::submitForm($form, $form_state);
@@ -296,7 +321,7 @@ class CancelButtonSettingsForm extends ConfigFormBase {
   /**
    * Gets all the entity types and bundles if applicable for processing.
    */
-  public function getEntityTypesToDisplay() {
+  public function getEntityTypesToDisplay(): array {
     $entity_types = $this->entityTypeManager->getDefinitions();
     $entity_types_to_return = [];
     $bundles = [];

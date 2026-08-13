@@ -5,7 +5,7 @@ namespace Drupal\ajax_loader\Plugin\ajax_loader;
 use Drupal\ajax_loader\ThrobberPluginBase;
 
 /**
- * Class ThrobberChasingDots.
+ * Provides the "Chasing Dots" throbber.
  *
  * @Throbber(
  *   id = "throbber_chasing_dots",

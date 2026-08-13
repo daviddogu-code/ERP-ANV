@@ -8,8 +8,8 @@ coffee.configuration:
       type: sequence
       label: 'Coffee menus'
       sequence:
-        - type: string
-          label: 'Menu'
+        type: string
+        label: 'Menu'
     max_results:
       type: integer
       label: 'Number of items to show in the search result'

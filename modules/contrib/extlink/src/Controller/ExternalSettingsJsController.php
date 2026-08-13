@@ -17,7 +17,6 @@ class ExternalSettingsJsController extends ControllerBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\extlink\Controller\ExternalSettingsJsController $controller */
     $controller = parent::create($container);
     $controller->configFactory = $container->get('config.factory');
     $controller->moduleHandler = $container->get('module_handler');

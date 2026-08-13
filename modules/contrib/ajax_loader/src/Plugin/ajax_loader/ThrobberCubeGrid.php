@@ -5,7 +5,7 @@ namespace Drupal\ajax_loader\Plugin\ajax_loader;
 use Drupal\ajax_loader\ThrobberPluginBase;
 
 /**
- * Class ThrobberCubeGrid.
+ * Provides the "Cube Grid" throbber.
  *
  * @Throbber(
  *   id = "throbber_cube_grid",
