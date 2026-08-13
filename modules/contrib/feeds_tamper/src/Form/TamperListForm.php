@@ -76,7 +76,7 @@ class TamperListForm extends FormBase {
    * @return array
    *   The form structure.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, FeedTypeInterface $feeds_feed_type = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?FeedTypeInterface $feeds_feed_type = NULL) {
     $this->feedsFeedType = $feeds_feed_type;
     $tamper_meta = $this->feedTypeTamperManager->getTamperMeta($this->feedsFeedType);
     $this->tampers = $tamper_meta->getTampersGroupedBySource();
@@ -90,11 +90,11 @@ class TamperListForm extends FormBase {
     ];
 
     if (!$mappings) {
-      $this->messenger()->addWarning($this->t('There are no <a href="@url">mappings</a> defined for this importer.', $args));
+      $this->messenger()->addWarning($this->t('There are no <a href="@url">mappings</a> defined for this feed type.', $args));
       return $form;
     }
 
-    // Help message at the top. I have a seceret, I added the link back to the
+    // Help message at the top. I have a secret, I added the link back to the
     // mappings because it makes my life a lot easier while testing this.
     $message = $this->t('Configure plugins to modify Feeds data before it gets saved. Each <a href="@url">mapping</a> can be manipulated individually.', $args);
     $form['help'] = [

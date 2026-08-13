@@ -3,14 +3,19 @@
 namespace Drupal\feeds_tamper;
 
 use Drupal\feeds\FeedTypeInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Manager for FeedTypeTamperMeta instances.
  */
 class FeedTypeTamperManager implements FeedTypeTamperManagerInterface {
 
-  use ContainerAwareTrait;
+  /**
+   * The service container.
+   *
+   * @var \Symfony\Component\DependencyInjection\ContainerInterface
+   */
+  protected $container;
 
   /**
    * An array of FeedsTamper instances.
@@ -18,6 +23,16 @@ class FeedTypeTamperManager implements FeedTypeTamperManagerInterface {
    * @var \Drupal\feeds_tamper\FeedTypeTamperMeta[]
    */
   protected $tamperMetas = [];
+
+  /**
+   * Constructs a new FeedTypeTamperManager.
+   *
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container.
+   */
+  public function __construct(ContainerInterface $container) {
+    $this->container = $container;
+  }
 
   /**
    * {@inheritdoc}

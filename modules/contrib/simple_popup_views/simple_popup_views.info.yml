@@ -1,7 +1,7 @@
 name: Simple Popup Views
 type: module
 description: 'Convert views field as popup'
-core_version_requirement: ^8.8 || ^9 || ^10
+core_version_requirement: ^10 || ^11
 package: Views
 dependencies:
   - drupal:views

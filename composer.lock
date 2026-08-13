@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ed80186656aa0851ecf9d173d28a7048",
+    "content-hash": "f90021ddc2988965ac916ff0f6081fb5",
     "packages": [
         {
             "name": "andileco/eval-math",
@@ -4311,34 +4311,35 @@
         },
         {
             "name": "drupal/feeds_tamper",
-            "version": "2.0.0-beta3",
+            "version": "2.0.0-rc1",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/feeds_tamper.git",
-                "reference": "8.x-2.0-beta3"
+                "reference": "8.x-2.0-rc1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/feeds_tamper-8.x-2.0-beta3.zip",
-                "reference": "8.x-2.0-beta3",
-                "shasum": "5e70d15af38b41d913eb4d8ffea99db29024cbc9"
+                "url": "https://ftp.drupal.org/files/projects/feeds_tamper-8.x-2.0-rc1.zip",
+                "reference": "8.x-2.0-rc1",
+                "shasum": "1ad70a221ff6816482bf4b437cc95e3ec72d9146"
             },
             "require": {
-                "drupal/core": "^8 || ^9 || ^10",
+                "drupal/core": "^8 || ^9 || ^10 || ^11",
                 "drupal/feeds": "^3.0",
                 "drupal/tamper": "^1.0-alpha3"
             },
             "require-dev": {
-                "drupal/feeds": "3.x-dev"
+                "drupal/feeds": "^3.0 || 3.x-dev",
+                "drupal/tamper": "1.x-dev"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-2.0-beta3",
-                    "datestamp": "1670507596",
+                    "version": "8.x-2.0-rc1",
+                    "datestamp": "1763674137",
                     "security-coverage": {
                         "status": "not-covered",
-                        "message": "Beta releases are not covered by Drupal security advisories."
+                        "message": "RC releases are not covered by Drupal security advisories."
                     }
                 }
             },
@@ -4352,7 +4353,7 @@
                     "homepage": "https://www.drupal.org/user/581844"
                 },
                 {
-                    "name": "Honza Pobořil",
+                    "name": "honza pobořil",
                     "homepage": "https://www.drupal.org/user/123612"
                 },
                 {
@@ -4360,7 +4361,7 @@
                     "homepage": "https://www.drupal.org/user/642118"
                 },
                 {
-                    "name": "MegaChriz",
+                    "name": "megachriz",
                     "homepage": "https://www.drupal.org/user/654114"
                 },
                 {

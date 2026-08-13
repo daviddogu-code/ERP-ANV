@@ -1,0 +1,18 @@
+Declara compatibilidad con Drupal 11.
+
+La ultima version publicada es la 8.x-1.2, de noviembre de 2022, y no
+hay rama para la 11. upgrade_status lo analizo el 13 de agosto de 2026
+y no encontro codigo retirado: el unico aviso es esta etiqueta. Se
+amplia a mano para que el nucleo lo deje instalar.
+
+--- a/simple_popup_views.info.yml
++++ b/simple_popup_views.info.yml
+@@ -1,7 +1,7 @@
+ name: Simple Popup Views
+ type: module
+ description: 'Convert views field as popup'
+-core_version_requirement: ^8.8 || ^9 || ^10
++core_version_requirement: ^10 || ^11
+ package: Views
+ dependencies:
+   - drupal:views

@@ -1,0 +1,23 @@
+Declara compatibilidad con Drupal 11.
+
+El proyecto esta marcado como sin mantenimiento en drupal.org y su
+ultima version es la 2.2.0, de septiembre de 2023. upgrade_status lo
+analizo el 13 de agosto de 2026: los siete avisos que salen estan todos
+dentro de tests/, que no se ejecuta en produccion, y son del analizador
+al no resolver la clase base de PHPUnit, no codigo retirado de verdad.
+El unico aviso real es esta etiqueta.
+
+Es el modulo que genera los PDF de los pedidos. Si algun dia deja de
+funcionar, la salida son las plantillas de Entity Print.
+
+--- a/pdf_serialization.info.yml
++++ b/pdf_serialization.info.yml
+@@ -2,7 +2,7 @@
+ type: module
+ description: 'Provides PDF as a serialization format.'
+ core: 8.x
+-core_version_requirement: ^8 || ^9 || ^10
++core_version_requirement: ^10 || ^11
+ package: Web services
+ dependencies:
+   - views_data_export:views_data_export

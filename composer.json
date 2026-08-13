@@ -79,7 +79,7 @@
         "drupal/epp": "^1.7",
         "drupal/extlink": "^2.0",
         "drupal/feeds": "^3.0@beta",
-        "drupal/feeds_tamper": "2.0.0-beta3",
+        "drupal/feeds_tamper": "2.0.0-rc1",
         "drupal/field_formatter_class": "^1.9",
         "drupal/field_group": "^4.0",
         "drupal/field_label": "^1.5",
@@ -187,12 +187,19 @@
         ],
         "composer-exit-on-patch-failure": true,
         "patches": {
+            "drupal/editablefields": {
+                "Declarar compatibilidad con Drupal 11": "patches/editablefields-declarar-drupal-11.patch"
+            },
             "drupal/inline_entity_form": {
                 "Fix Oops on IEF Cancel when entities is NULL (#3516478)": "patches/ief-close-all-forms-null-entities.patch"
             },
             "drupal/pdf_serialization": {
                 "Add an interface for PdfManager class (#3286248-4)": "patches/pdf_serialization-add-pdfmanager-interface-4.patch",
-                "Update PdfEncoder.php (#3286248-6)": "patches/pdf_serialization-update-pdfencoder-6.patch"
+                "Update PdfEncoder.php (#3286248-6)": "patches/pdf_serialization-update-pdfencoder-6.patch",
+                "Declarar compatibilidad con Drupal 11": "patches/pdf-serialization-declarar-drupal-11.patch"
+            },
+            "drupal/simple_popup_views": {
+                "Declarar compatibilidad con Drupal 11": "patches/simple-popup-views-declarar-drupal-11.patch"
             },
             "drupal/views_aggregator": {
                 "Fix TypeError on empty multi-value fields in getCellRaw()": "patches/views_aggregator-getcellraw-empty-array.patch"

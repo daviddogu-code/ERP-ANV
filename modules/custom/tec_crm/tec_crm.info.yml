@@ -1,7 +1,7 @@
 name: 'TEC CRM'
 description: 'Customer Relationship Management'
 type: module
-core_version_requirement: '^9.4 || ^10'
+core_version_requirement: ^10 || ^11
 dependencies:
   - address
   - ai_interpolator

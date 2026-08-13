@@ -1,7 +1,7 @@
 name: 'TEC Inventory'
 description: 'Inventory management'
 type: module
-core_version_requirement: '^9.4 || ^10'
+core_version_requirement: ^10 || ^11
 dependencies:
   - eca
   - eca_content

@@ -9,3 +9,7 @@ Update PdfEncoder.php (#3286248-6)
 Source: patches/pdf_serialization-update-pdfencoder-6.patch
 
 
+Declarar compatibilidad con Drupal 11
+Source: patches/pdf-serialization-declarar-drupal-11.patch
+
+

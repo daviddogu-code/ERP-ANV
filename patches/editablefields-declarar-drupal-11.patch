@@ -1,0 +1,16 @@
+Declara compatibilidad con Drupal 11.
+
+El modulo no tiene publicada una version para la 11 y su ultimo commit
+es de 2022. upgrade_status lo analizo el 13 de agosto de 2026 y no
+encontro ni una sola llamada a codigo retirado: el unico aviso es esta
+etiqueta. Se amplia a mano para que el nucleo lo deje instalar.
+
+--- a/editablefields.info.yml
++++ b/editablefields.info.yml
+@@ -1,5 +1,5 @@
+ name: 'Editable Fields'
+ type: module
+ description: 'Allows you to make some fields editable from the display.'
+-core_version_requirement: ^8 || ^9 || ^10
++core_version_requirement: ^10 || ^11
+ package: 'Fields'

@@ -37,7 +37,7 @@ class UiCrudTest extends FeedsTamperJavascriptTestBase {
     parent::setUp();
 
     // Add body field.
-    node_add_body_field($this->nodeType);
+    $this->addBodyField();
 
     // Add a feed type with mapping to body.
     $this->feedType = $this->createFeedType([
@@ -54,6 +54,7 @@ class UiCrudTest extends FeedsTamperJavascriptTestBase {
 
     $this->url = $this->feedType->toUrl('tamper');
 
+    // Get the manager for FeedTypeTamperMeta instances.
     $this->feedTypeTamperManager = \Drupal::service('feeds_tamper.feed_type_tamper_manager');
   }
 

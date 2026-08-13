@@ -1,7 +1,7 @@
 name: 'TEC Brands'
 description: 'Manage brands'
 type: module
-core_version_requirement: '^9.4 || ^10'
+core_version_requirement: ^10 || ^11
 dependencies:
   - ai_interpolator
   - coffee
