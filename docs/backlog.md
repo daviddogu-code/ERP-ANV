@@ -172,54 +172,17 @@ puntos de correo y el de las cuentas.
 
 ### Limpieza de datos y arreglo del importador
 
-**Todo el contenido que hay dentro es de prueba y se borra entero.** Decisión del dueño del 12
-de agosto, y anula cualquier duda anterior sobre qué se rescataba: el ERP nunca se usó, así que
-no hay nada dentro que valga la pena conservar. Se vacía y se empieza con datos reales.
+~~**Todo el contenido que hay dentro es de prueba y se borra entero.**~~ **Borrado el 14 de
+agosto de 2026.** El detalle está abajo, en Hecho: 7.003 fichas y 892 términos fuera en
+sesenta y siete segundos, y el ERP en verde después. El vocabulario de tipos de contacto se
+respetó, que era el aviso que podía costar caro.
 
-Lo que se borra, con el recuento del 12 de agosto:
+Del orden en que se hizo y de por qué, en Hecho. Aquí queda solo lo que sigue pendiente.
 
-- **110 órdenes de compra** con 522 líneas, y **13 pedidos de venta** con 61 líneas.
-- **869 materiales**, con los 13.615 movimientos de inventario que cuelgan de ellos.
-- **13 productos**, con sus 83 variaciones de color y 118 de talla.
-- **22 fichas de cliente** y **12 registros de producción.**
-
-Lo que se queda, porque son listas de configuración y no datos: **tipos de producto (23),
-unidades (13), tallas (14), tipos de material (23) y colores (37)**. Son las listas de las que
-tiran luego los materiales y los productos de verdad, y están bien. La revisión pendiente de
-los colores deja de ser delicada: lo que la hacía arriesgada era que 300 materiales colgaban de
-esa paleta, y esos materiales se van.
-
-Dos vocabularios sí se van, decidido antes y sin cambios:
-
-- **Patrones (11)**: un trozo del ERP que quedó a medias y que ningún producto usa. Al
-  quitarlos hay que retirar también la estructura vacía que dejan atrás: el campo en productos,
-  sus dos vistas y los campos propios del vocabulario.
-- **Marcas (12)**: se van con los productos de prueba que las usaban.
-
-Tres avisos para cuando se ejecute. El borrado **tiene un orden obligado**, porque unas cosas
-cuelgan de otras: primero movimientos de inventario y líneas, después pedidos, productos y
-materiales, y al final los vocabularios. Y son casi 15.000 registros, así que va en un script,
-no a mano desde la pantalla. Queda pendiente de montar, aparte, el acceso directo desde la
-portada para las tallas, como el que ya tienen tipos de producto y unidades.
-
-El tercer aviso es nuevo, del 13 de agosto, y es el más peligroso porque falla en silencio.
-**El vocabulario de tipos de contacto no se toca bajo ningún concepto.** El módulo
-`tec_crm_ux` lleva grabados a fuego los dos identificadores en su código:
-
-    const TEC_CRM_UX_TYPE_CUSTOMER = 1395;
-    const TEC_CRM_UX_TYPE_SUPPLIER = 1396;
-
-De esos dos números depende que el ERP sepa si una ficha es de un cliente o de un proveedor, y
-eso decide qué campos se le enseñan a cada uno. Si esos términos se borran y se vuelven a
-crear, los nuevos tendrán otros identificadores y el sistema dejará de distinguirlos **sin dar
-ningún error**: empezará a enseñar campos de proveedor en las fichas de cliente. Si alguna vez
-hay que recrearlos, hay que actualizar esas dos líneas de
-`modules/custom/tec_crm_ux/tec_crm_ux.module` a la vez.
-
-**El importador de materiales** pasa a ser la pieza central del arranque: con el borrado ya no
-sirve para corregir lo que hay, sino para meter el catálogo real de golpe. Existe
-(`tec_inventory_csv_importer`) y por él entraron 470 de los 869 materiales de prueba, pero está
-a medio hacer:
+**El importador de materiales es ahora lo único que separa al ERP de tener catálogo.** Antes era
+una mejora; desde el borrado es la puerta de entrada, porque no hay otra manera de meter 869
+materiales. Existe (`tec_inventory_csv_importer`) y por él entraron 470 de los de prueba, pero
+está a medio hacer:
 
 - **Rellena 5 de los 56 campos** de un material: nombre, descripción, trazabilidad, unidad de
   uso y tipo de material. Precios, unidades de compra y de stock, factores de conversión,
@@ -228,27 +191,86 @@ a medio hacer:
 - **El proveedor no se enlaza nunca.** El importador sí lee una columna `Suppliers` del CSV,
   está declarada ahí dentro, pero no está conectada a ningún campo: lee el dato y lo tira. Lo
   mismo le ocurre a una columna de coste.
-- **Hay dos campos de proveedor** en los materiales y hay que elegir cuál es el bueno antes de
-  tocar nada: `field_tec_vendor` (etiqueta "Supplier", obligatorio, se elige de una lista) y
-  `field_tec_suppliers` (etiqueta "Suppliers", opcional, admite varios y crea proveedores
-  nuevos sobre la marcha).
+- ~~**Hay dos campos de proveedor y hay que elegir cuál es el bueno.**~~ **Resuelto el 14 de
+  agosto, y lo resolvieron los datos.** Al sacar los materiales a CSV antes de borrarlos se
+  contó cuántos traían cada campo relleno: `field_tec_vendor` lo tenían **38 materiales** y
+  `field_tec_suppliers` **ninguno, cero de 869**. O sea que el campo que se usaba de verdad es
+  `field_tec_vendor`, el obligatorio que se elige de una lista, y el otro se puede retirar. La
+  decisión se llevaba semanas en el aire y se contestó sola en cuanto hubo con qué contar.
 - **Procesa solo 100 filas por pasada**, así que con 869 materiales hay que lanzarlo nueve
   veces o subir ese límite.
 - **Inventa unidades y tipos de material** cuando el texto del Excel no coincide exactamente.
   Escribir "metros" donde el sistema tiene "metro" no da error: crea una unidad nueva. Como
   las 13 unidades y los 23 tipos son correctos, conviene apagarlo para que una errata falle
-  en voz alta en lugar de ensuciar el catálogo.
+  en voz alta en lugar de ensuciar el catálogo. Que esto pasaba de verdad ya no es una
+  sospecha: el borrado se encontró **seis términos duplicados** creados así, entre ellos un
+  color "Blue " con un espacio detrás y un tipo de material repetido.
 - Arrastra además una docena de columnas declaradas y sin usar, restos de pruebas, que
   enredan a la hora de entender qué espera el fichero.
 
-El trabajo es: elegir el campo de proveedor, mapear los campos que faltan, limpiar las columnas
-sobrantes y generar la plantilla de Excel con una columna por dato y los nombres exactos que el
-importador espera.
+El trabajo es: mapear los campos que faltan, conectar el proveedor a `field_tec_vendor`, limpiar
+las columnas sobrantes y generar la plantilla de Excel con una columna por dato y los nombres
+exactos que el importador espera.
 
-**Se arregla antes del borrado, no después.** Así el ERP no se queda ni un solo día vacío y sin
-manera de rellenarlo. Y de paso la plantilla se puede ensayar sobre los materiales de prueba,
-que para eso siguen ahí: el importador reconoce cada material por su nombre y actualiza los que
-ya existen, así que se ve enseguida si los 56 campos entran donde deben.
+~~**Se arregla antes del borrado, no después.**~~ Se hizo al revés, por decisión del dueño del
+14 de agosto, y el motivo era bueno: así el servidor recibe una base limpia de un solo empujón
+en vez de recibir la sucia y limpiarla después. El precio de esa decisión es que ahora mismo el
+ERP está vacío y sin manera de rellenarlo, así que el importador pasa a ser urgente.
+
+**Y el banco de pruebas está guardado.** Antes de borrar, los 869 materiales salieron a
+`C:\laragon\backups\materiales-antes-del-borrado\materiales.csv`, con las 57 columnas y todos
+los valores, las referencias con su etiqueta legible delante del identificador. Sirve para dos
+cosas: ensayar el importador arreglado contra datos reales, y saber qué aspecto tienen de verdad
+los datos que tendrá que tragar. Sale fuera del proyecto a propósito, que lleva costes y
+proveedores dentro y eso no va a GitHub.
+
+De ese CSV sale además el mapa de por dónde empezar. **Solo ocho campos estaban rellenos en los
+869 materiales**: tipo de material, si se fracciona, nivel de stock, trazabilidad, unidades,
+control de unidad de uso y la unidad de uso (860 de 869). A media tabla, la mitad del catálogo:
+unidades de paquete y de compra 52%, color 50%. Y a partir de ahí, casi nada — **precio 50
+materiales, coste 15, plazo de entrega 3, punto de pedido 2, SKU interno ninguno**. Los cinco
+campos `placeholder` y `field_tec_importer_item_id` están vacíos del todo, así que sobran. Esto
+confirma lo que se sospechaba y lo cuantifica: el catálogo de prueba no estaba mal, estaba a
+medio rellenar, y lo que faltaba era justo lo que el importador no sabe meter.
+
+### Los tres cabos que dejó el borrado
+
+- **Retirar Marcas y Patrones de la configuración.** Sus términos se borraron, pero los dos
+  vocabularios siguen ahí vacíos, y con ellos el campo en productos, tres vistas
+  (`tec_brands`, `tec_patterns`, `tec_pattern_elements`), los formularios, los permisos en tres
+  roles y los campos propios de cada vocabulario.
+
+  **No se puede borrar del tirón, y esto es el hallazgo.** Los dos procesos de duplicar
+  producto —`process_llpx4tp` y `process_icpsbgv`, "TEC Product: Duplicate product" y su
+  clon— copian `field_tec_brand` y `field_tec_pattern` al duplicar. Si se borran los campos sin
+  desmontar antes esos dos procesos, **se rompe el duplicado de productos**, que es una función
+  viva y de las que más se usan. Así que el orden es: primero quitar esos dos pasos de los dos
+  procesos, y después los campos, las vistas y los vocabularios. Es un cambio de configuración,
+  o sea que viaja por Git y se puede revisar antes de aplicar.
+
+  Es la razón por la que el 14 de agosto se paró aquí: el borrado de datos y el desmontaje de
+  configuración son dos trabajos distintos, y mezclarlos a las tres de la mañana era la manera
+  de no saber después qué había roto qué.
+
+- **Decidir qué se hace con 315 ficheros huérfanos.** Son sobre todo las imágenes de los
+  productos y patrones que se borraron. Drupal no los borra solo: sin activar la opción de
+  marcar como temporales los que nadie usa, se quedan en el disco para siempre y con su ficha
+  en la base de datos. No molestan, pero engordan cada copia de seguridad y viajan al servidor
+  en el despliegue. Antes de borrarlos hay que comprobar cuáles tienen de verdad cero usos, que
+  algunos pueden estar colgando de los doce nodos o de los colores que se quedan.
+
+- **Devolverle a la prueba de humo las seis pantallas que ha perdido.** Con la base vacía no hay
+  con qué pedirlas, así que se salta `o/draft/%`, `po/draft/%`, `po/%/print`, `o/pf/%/print`,
+  `po/%/x/pdf` y `tec_crm/%/reorder`. Pasó de mirar veintiséis pantallas a veinte, y las seis que
+  faltan son las peores de perder: los dos editores de líneas —donde vivía el error 500 del 13
+  de agosto—, las dos de imprimir y la del PDF.
+
+  El 14 de agosto se hizo lo baratísimo, que era **que lo diga**: antes se las saltaba en
+  silencio y el resumen ponía "todas cargan", que es la clase de frase con la que uno despliega
+  tranquilo sin motivo. Ahora las nombra una por una. Lo que falta es lo bueno: **que la prueba
+  se fabrique un pedido con líneas**, lo pida, y lo borre, igual que hace ya la comprobación del
+  ERP desde esa misma noche. Mientras no lo haga, el despliegue se verifica con seis pantallas
+  menos, y una de ellas es la que ya se rompió una vez.
 
 ## 4. Cuando el ERP nuevo ya funcione
 
@@ -746,6 +768,103 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-14 — El ERP se queda vacío: 7.003 fichas y 892 términos fuera, y el ERP en verde después
+
+El contenido de prueba ya no está. Sesenta y siete segundos de reloj para lo que llevaba semanas
+en la lista, y ni un solo error. Pero lo que se aprendió por el camino vale más que el borrado.
+
+**El recuento real era la mitad de lo que decía este backlog.** Aquí ponía "casi 15.000
+registros" desde el 12 de agosto. Eran **7.003 fichas de contenido y 892 términos**. La cifra
+vieja venía de sumar los 13.615 movimientos de inventario que se contaron una vez en la pantalla
+de inventario, y esa pantalla cuenta filas de una vista, no fichas: multiplicaba. Se descubrió al
+contar de verdad con `scripts/que-hay-dentro.php`, antes de tocar nada, y es el argumento a favor
+de contar antes de planificar: el plan que se había hecho para 15.000 registros incluía lotes,
+pausas y reintentos que no hacían falta.
+
+**El orden importaba de verdad, y hubo que averiguarlo en tres pasadas.** El primer mapa de
+dependencias salió de la configuración —qué campo apunta a qué—, y estaba incompleto: la
+configuración dice qué *puede* apuntar, no qué apunta. Hicieron falta dos guiones más
+(`quien-apunta-a-que.php` y `dos-riesgos.php`) leyendo las tablas de datos para encontrar tres
+cosas que no estaban en el plan: **catorce registros de producción**, **cuarenta y siete
+importaciones** y **treinta y una redirecciones** del servidor viejo. Ninguna aparecía en la
+lista original. Los dieciséis pasos finales se ejecutaron en cascada, de las hojas al tronco:
+producción, escandallos de línea, escandallos, movimientos, líneas, pedidos, variaciones,
+productos, fichas de CRM, materiales, nodos, redirecciones y por último los vocabularios.
+
+**El fallo de la bandera silenciosa no se activó ni una vez.** Era el riesgo serio: en este ERP,
+borrar un material que está en uso deja puesta una bandera de bloqueo, y una línea con esa
+bandera **deja de recalcular sin avisar a nadie**. Por eso los 29 procesos de ECA se apagaron
+antes de empezar y se volvieron a encender al acabar, y por eso el orden iba de las hojas al
+tronco: cuando le llegó el turno al material, ya no le colgaba nada. Al terminar, en todo el sitio
+quedaba **una sola bandera puesta, `tec_eca_gui_lock`**, que es la que debe estar en reposo.
+
+**Y apagar ECA tiene un precio que nadie cuenta: 7.033 errores en el registro.** El módulo sigue
+escuchando aunque sus procesos estén apagados, así que cada entidad borrada disparó el motor, que
+no encontró nada suscrito y lo anotó como error. No rompe nada y es inevitable mientras se apague
+así, pero conviene saberlo antes de verlo y pensar que algo ha ido mal.
+
+**El registro entero, a la basura, y con motivo.** Tenía **15.439 líneas desde el 4 de mayo de
+2024**: 7.822 errores de ECA, las 505 emergencias falsas de la errata que se arregló el día
+antes —el arreglo evita las nuevas, no borra las viejas—, 2.053 avisos de cron, 308 de
+`upgrade_status`, que ya ni está instalado. Todo eso es diagnóstico de una época de pruebas cuyos
+datos acaban de desaparecer. Un registro donde el próximo fallo de verdad va a aparecer como la
+línea 15.440 no es un registro, es un pajar. Vaciado. Si algún día hiciera falta, está entero en
+la copia de seguridad de esa noche.
+
+**Los 869 materiales salieron a CSV antes de morir, y de ahí salió una respuesta gratis.** El
+fichero está en `C:\laragon\backups\materiales-antes-del-borrado\materiales.csv`, 57 columnas,
+162 KB, fuera del proyecto porque lleva costes y proveedores dentro. Al escribirlo se contó
+cuántos materiales traían cada campo relleno, y eso contestó de golpe una pregunta que llevaba
+semanas abierta: **de los dos campos de proveedor, el que se usaba es `field_tec_vendor`** —38
+materiales— y `field_tec_suppliers` estaba **vacío en los 869**. Se iba a decidir a ojo y la
+decidieron los datos. El resto del retrato: solo ocho campos rellenos en todo el catálogo, precio
+en 50 materiales, coste en 15, plazo de entrega en 3, SKU en ninguno.
+
+**La comprobación del ERP cambió de oficio.** Vigilaba recuentos —4.773 escandallos, 869
+materiales, 18 pedidos—, y contra una base vacía eso no avisa de nada. Ahora vigila que los
+**dieciséis tipos de contenido sigan declarados** en las seis entidades, que los vocabularios que
+se quedan tengan lo que tenían, y que los automatismos reaccionen. Esa última parte era la única
+que probaba algo de verdad, y era también la única que dependía de los datos de prueba: se
+apoyaba en un material cualquiera de los 869 y en una línea de pedido con precio. **Ahora se
+fabrica sus propios datos, los usa y los borra**, y se ha comprobado que dos pasadas seguidas dan
+lo mismo. Cuarenta comprobaciones, cuarenta en verde.
+
+Fabricar esos datos enseñó dos cosas sobre el ERP que no estaban escritas en ningún sitio:
+
+- **Una línea de pedido con precio y cantidad no calcula nada, y hace bien.** El primer maniquí
+  llevaba solo eso, y el total salía vacío. Parecía un fallo grave. No lo es: el proceso solo
+  escucha el evento de actualizar, y todo lo que calcula gira alrededor del escandallo de la
+  talla. Una línea que no cuelga de una talla no es un caso real y el proceso la deja en paz. Con
+  la talla puesta, cambiar la cantidad a 6 con precio 12,50 da **75,00** al primer intento.
+- **Al guardar una línea, ECA crea por su cuenta un escandallo de línea y lo engancha.** Nadie lo
+  pide y no se ve en ninguna pantalla. La primera sonda dejó uno huérfano y la comprobación
+  siguiente habría fallado por encontrar contenido donde debía haber cero, sin pista de por qué.
+  Ahora se va a buscar y se borra.
+
+**La prueba de humo perdió seis pantallas y ahora al menos lo dice.** Al quedarse sin datos no
+encuentra con qué pedir las vistas que llevan un identificador en la dirección, así que se las
+salta: `o/draft/%`, `po/draft/%`, las dos de imprimir, el PDF y `tec_crm/%/reorder`. Pasó de
+mirar veintiséis a mirar veinte **y el resumen seguía diciendo "todas cargan"**, que es la clase
+de frase con la que se despliega tranquilo sin motivo. Y la peor de las seis es `o/draft/%`,
+justo la que se rompió el día antes. Ahora las nombra una por una. Fabricarle un pedido de
+mentira, como hace ya la comprobación, queda apuntado arriba.
+
+**Donde se paró a propósito: Marcas y Patrones.** Sus términos se borraron, pero los vocabularios
+siguen ahí vacíos con sus campos, tres vistas y sus formularios. Al ir a retirarlos apareció el
+motivo para no hacerlo esa noche: **los dos procesos de duplicar producto copian
+`field_tec_brand` y `field_tec_pattern`**, así que borrar los campos rompe el duplicado de
+productos. Borrar datos y desmontar configuración son dos trabajos distintos, y mezclarlos a las
+tres de la mañana era la manera de no saber después qué había roto qué.
+
+Lo que se queda dentro: 32 colores, 22 tipos de material, 23 tipos de producto, 14 tallas, 13
+unidades, los 3 tipos de contacto —intactos, que ahí estaba el fallo que costaba caro—, 12 nodos
+de navegación, 8 enlaces de menú, 2 redirecciones y 3 importaciones. Y de paso se limpiaron
+**seis términos duplicados** que había creado el importador con sus erratas, entre ellos un color
+"Blue " con un espacio detrás.
+
+Guiones nuevos, todos en `scripts/`: `que-hay-dentro.php`, `quien-apunta-a-que.php`,
+`dos-riesgos.php`, `borrar-datos-de-prueba.php` y `exportar-materiales.php`.
 
 ### 2026-08-14 — Las carpetas sobrantes, y un volcado de la base de datos que se descargaba sin contraseña
 

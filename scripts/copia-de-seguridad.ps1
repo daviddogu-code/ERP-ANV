@@ -51,9 +51,14 @@ Write-Host "  Copiando a $destino"
 Write-Host ''
 
 # --- 1. La base de datos --------------------------------------------------
+# Tiene que ser drush.php y no drush. En Windows, `vendor/bin/drush` es un
+# guion de shell (#!/usr/bin/env sh), asi que darselo a php no dumpea nada: lo
+# escupe como texto y termina con exito aparente. Lo unico que lo delataba era
+# la comprobacion del final. Paso el 13 de agosto de 2026 al subir Drush a la
+# 13.7.6, y la copia del 14 salio sin base de datos por esto.
 Write-Host '  1 de 5   la base de datos...'
 Push-Location $raiz
-php vendor\bin\drush sql:dump --gzip --result-file="$destino/bd.sql" 2>&1 | Out-Null
+php vendor\bin\drush.php sql:dump --gzip --result-file="$destino/bd.sql" 2>&1 | Out-Null
 Pop-Location
 
 # --- 2. El arbol del proyecto ---------------------------------------------

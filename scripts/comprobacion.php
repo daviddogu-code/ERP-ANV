@@ -7,57 +7,67 @@
  * Sirve para responder una sola pregunta despues de cada cambio grande:
  * el ERP, ¿sigue haciendo lo mismo que antes?
  *
- * Hace tres cosas. Cuenta el contenido y lo compara con las cifras de
- * referencia, crea entidades de verdad para ver si los automatismos de ECA
- * reaccionan, y revisa que no haya quedado nada roto. Todo lo que crea lo
- * borra al terminar, y lo que modifica lo deja como estaba.
+ * Hace tres cosas. Comprueba que la estructura sigue en pie, crea entidades de
+ * verdad para ver si los automatismos de ECA reaccionan, y revisa que no haya
+ * quedado nada roto. Todo lo que crea lo borra al terminar, y lo que modifica
+ * lo deja como estaba.
  *
- * Las cifras de referencia son del 13 de agosto de 2026, verificadas contra
- * la copia anterior a la limpieza de modulos. Si el borrado de datos de
- * prueba se llega a ejecutar, hay que actualizarlas.
+ * El 14 de agosto de 2026 cambio de fondo. Hasta esa noche vigilaba recuentos:
+ * 4.773 elementos de escandallo, 869 materiales, 18 pedidos. Esa noche se borro
+ * todo el contenido de pruebas, y una comprobacion que solo sepa contar
+ * contenido no sirve para nada contra una base vacia.
+ *
+ * Asi que ahora vigila otra cosa. Que los dieciseis tipos de contenido sigan
+ * declarados, que los vocabularios que se quedan tengan lo que tenian, y que
+ * los automatismos sigan reaccionando. Esto ultimo era lo unico que de verdad
+ * probaba algo, y era tambien lo unico que dependia de los datos de prueba: se
+ * apoyaba en un material cualquiera de los 869 y en una linea de pedido con
+ * precio. Ahora se fabrica sus propios datos, los usa, y los borra. Es mas
+ * trabajo, pero deja de depender de que alguien no haya borrado el material del
+ * que colgaba la prueba.
  */
 
 // -----------------------------------------------------------------------------
-// Cifras de referencia.
+// Cifras de referencia. Del 14 de agosto de 2026, despues del borrado.
 // -----------------------------------------------------------------------------
-// Tres cifras subieron la noche del 13 de agosto de 2026, y no por un fallo: son
-// los dos pedidos que se crearon a mano para comprobar que la pantalla de editar
-// lineas volvia a abrir tras el arreglo del error 500, el 755 y el 756, con ocho
-// lineas cada uno. De ahi los dos pedidos, las dieciseis lineas y los veinticuatro
-// elementos de escandallo que cuelgan de ellas. Se actualizan a proposito: una
-// cifra que falla siempre por un motivo conocido deja de servir para avisar.
-const REFERENCIA = [
-  'tec_inventory' => [
-    'tec_bom_item' => 4773,
-    'tec_inventory_transaction' => 40,
-    'tec_line_item_bom_item' => 202,
-  ],
-  'tec_product' => [
-    'tec_product' => 13,
-    'tec_color_variation' => 83,
-    'tec_size_variation' => 118,
-  ],
-  'tec_line_item' => [
-    'tec_sales_order_line_item' => 101,
-    'tec_po_line_item' => 522,
-  ],
-  'tec_order' => [
-    'tec_sales_order' => 18,
-    'tec_purchase_order' => 110,
-  ],
-  'tec_crm' => [
-    'tec_contact_organization' => 20,
-    'tec_contact_person' => 2,
-  ],
+// Los tipos de contenido de cada entidad. Aqui no se cuenta contenido, se
+// comprueba que la estructura sigue declarada: si un dia falta un tipo de esta
+// lista, alguien ha borrado configuracion sin querer, y eso es mucho mas grave
+// que un recuento que baila.
+const REFERENCIA_TIPOS = [
+  'tec_inventory' => ['tec_bom_item', 'tec_inventory_item', 'tec_inventory_transaction', 'tec_line_item_bom_item'],
+  'tec_product' => ['tec_color_variation', 'tec_product', 'tec_size_variation'],
+  'tec_line_item' => ['tec_po_line_item', 'tec_sales_order_line_item'],
+  'tec_order' => ['tec_draft_order', 'tec_purchase_order', 'tec_sales_order'],
+  'tec_crm' => ['tec_contact_organization', 'tec_contact_person'],
+  'tec_production_entry' => ['tec_production_entry'],
 ];
 
+// Las seis entidades de contenido quedaron a cero y tienen que seguir a cero
+// hasta que entren datos de verdad. El dia que entren, estas cifras cambian y
+// vuelven a ser lo que eran: un aviso de que alguien ha borrado algo.
+const REFERENCIA_CONTENIDO = [
+  'tec_inventory' => 0,
+  'tec_product' => 0,
+  'tec_line_item' => 0,
+  'tec_order' => 0,
+  'tec_crm' => 0,
+  'tec_production_entry' => 0,
+];
+
+// Los vocabularios. Los tres primeros se vaciaron a proposito; `tec_brands` y
+// `tec_patterns` siguen existiendo vacios porque retirarlos es un cambio de
+// configuracion aparte: los dos procesos de duplicar producto copian sus
+// campos, y hay que desmontarlos antes. Cuando se retiren, estas dos lineas se
+// van con ellos.
 const REFERENCIA_TAXONOMIA = [
-  'tec_inventory' => 869,
-  'tec_colors' => 37,
-  'tec_brands' => 12,
+  'tec_inventory' => 0,
+  'tec_brands' => 0,
+  'tec_patterns' => 0,
+  'tags' => 0,
+  'tec_colors' => 32,
   'tec_crm_contact_type' => 3,
-  'tec_materials' => 23,
-  'tec_patterns' => 11,
+  'tec_materials' => 22,
   'tec_product_types' => 23,
   'tec_sizes' => 14,
   'tec_units' => 13,
@@ -65,7 +75,15 @@ const REFERENCIA_TAXONOMIA = [
 
 const REFERENCIA_VARIOS = [
   'usuarios' => 7,
+  // Estos 315 ficheros son en su mayoria imagenes de los productos que se
+  // borraron. Drupal no los borra solo: sin la opcion de marcar como temporales
+  // los que nadie usa, se quedan ahi para siempre. Cuando se decida que hacer
+  // con ellos, esta cifra baja.
   'ficheros' => 315,
+  'nodos' => 12,
+  'redirecciones' => 2,
+  'importaciones' => 3,
+  'enlaces_menu' => 8,
   'procesos_eca' => 36,
   'procesos_eca_encendidos' => 29,
   // Eran 146 hasta el 13 de agosto de 2026. Se quedaron en 145 cuando dxpr_theme
@@ -111,19 +129,25 @@ echo " COMPROBACION DEL ERP - " . date('d/m/Y H:i:s') . "\n";
 echo "===============================================================\n";
 
 // -----------------------------------------------------------------------------
-// 1. Recuentos de contenido.
+// 1. La estructura sigue en pie.
 // -----------------------------------------------------------------------------
-titulo('1. El contenido sigue entero');
+titulo('1. La estructura sigue en pie');
 
-foreach (REFERENCIA as $tipo => $bundles) {
-  foreach ($bundles as $bundle => $esperado) {
-    $n = (int) $etm->getStorage($tipo)->getQuery()
-      ->accessCheck(FALSE)
-      ->condition('type', $bundle)
-      ->count()
-      ->execute();
-    comprobar($resultados, $bundle, $n === $esperado, "$n (se esperaban $esperado)");
-  }
+$info = \Drupal::service('entity_type.bundle.info');
+foreach (REFERENCIA_TIPOS as $entidad => $esperados) {
+  $hay = array_keys($info->getBundleInfo($entidad));
+  sort($hay);
+  $faltan = array_diff($esperados, $hay);
+  $sobran = array_diff($hay, $esperados);
+  comprobar($resultados, "tipos de $entidad", !$faltan && !$sobran,
+    count($hay) . ' de ' . count($esperados)
+    . ($faltan ? ', FALTA ' . implode(' y ', $faltan) : '')
+    . ($sobran ? ', sobra ' . implode(' y ', $sobran) : ''));
+}
+
+foreach (REFERENCIA_CONTENIDO as $entidad => $esperado) {
+  $n = (int) $etm->getStorage($entidad)->getQuery()->accessCheck(FALSE)->count()->execute();
+  comprobar($resultados, "contenido de $entidad", $n === $esperado, "$n (se esperaban $esperado)");
 }
 
 foreach (REFERENCIA_TAXONOMIA as $vid => $esperado) {
@@ -135,11 +159,18 @@ foreach (REFERENCIA_TAXONOMIA as $vid => $esperado) {
   comprobar($resultados, "taxonomia $vid", $n === $esperado, "$n (se esperaban $esperado)");
 }
 
-$n = (int) $etm->getStorage('user')->getQuery()->accessCheck(FALSE)->count()->execute();
-comprobar($resultados, 'usuarios', $n === REFERENCIA_VARIOS['usuarios'], "$n (se esperaban " . REFERENCIA_VARIOS['usuarios'] . ")");
-
-$n = (int) $etm->getStorage('file')->getQuery()->accessCheck(FALSE)->count()->execute();
-comprobar($resultados, 'ficheros', $n === REFERENCIA_VARIOS['ficheros'], "$n (se esperaban " . REFERENCIA_VARIOS['ficheros'] . ")");
+foreach ([
+  'usuarios' => 'user',
+  'ficheros' => 'file',
+  'nodos' => 'node',
+  'redirecciones' => 'redirect',
+  'importaciones' => 'feeds_feed',
+  'enlaces_menu' => 'menu_link_content',
+] as $etiqueta => $entidad) {
+  $n = (int) $etm->getStorage($entidad)->getQuery()->accessCheck(FALSE)->count()->execute();
+  comprobar($resultados, $etiqueta, $n === REFERENCIA_VARIOS[$etiqueta],
+    "$n (se esperaban " . REFERENCIA_VARIOS[$etiqueta] . ")");
+}
 
 // -----------------------------------------------------------------------------
 // 2. Estructura: modulos y automatismos.
@@ -171,14 +202,27 @@ comprobar($resultados, 'parche de inline_entity_form', $parche_puesto,
 // -----------------------------------------------------------------------------
 // 3. Los automatismos reaccionan.
 // -----------------------------------------------------------------------------
+// Esta parte se fabrica todo lo que necesita. El orden de creacion importa: el
+// material va primero porque todo lo demas cuelga de el, y por eso al borrar se
+// recorre la lista al reves. Si se borrara el material teniendo cosas colgadas,
+// se tropezaria con el fallo conocido de la bandera que se queda puesta.
 titulo('3. Los automatismos reaccionan');
 
 $creadas = [];
 $restaurar = [];
+$marca = 'COMPROBACION ' . date('His');
 
-$tid = reset($etm->getStorage('taxonomy_term')->getQuery()
-  ->accessCheck(FALSE)->condition('vid', 'tec_inventory')->exists('name')->range(0, 1)->execute());
-$material = $etm->getStorage('taxonomy_term')->load($tid);
+$unidad = reset($etm->getStorage('taxonomy_term')->getQuery()
+  ->accessCheck(FALSE)->condition('vid', 'tec_units')->range(0, 1)->execute());
+
+$material = $etm->getStorage('taxonomy_term')->create([
+  'vid' => 'tec_inventory',
+  'name' => $marca . ' material',
+  'field_tec_units' => $unidad ? ['target_id' => $unidad] : [],
+  'field_tec_stock_level' => 0,
+]);
+$material->save();
+$creadas[] = ['taxonomy_term', $material->id()];
 
 // 3.1 y 3.2 - process_p2q045n.
 $bom = $etm->getStorage('tec_inventory')->create([
@@ -201,11 +245,12 @@ comprobar($resultados, 'escandallo: copia de cantidad', $copia !== NULL && (floa
   'entrada = ' . var_export($copia, TRUE));
 
 // 3.3 - process_uhiwdqa.
-$sid = reset($etm->getStorage('tec_product')->getQuery()
-  ->accessCheck(FALSE)->condition('type', 'tec_size_variation')->range(0, 1)->execute());
-$talla = $etm->getStorage('tec_product')->load($sid);
-$restaurar[] = ['tec_product', $talla->id(), 'field_tec_bom', $talla->get('field_tec_bom')->getValue()];
-$antes = count($talla->get('field_tec_bom')->getValue());
+$talla = $etm->getStorage('tec_product')->create([
+  'type' => 'tec_size_variation',
+  'title' => $marca . ' talla',
+]);
+$talla->save();
+$creadas[] = ['tec_product', $talla->id()];
 
 $bom2 = $etm->getStorage('tec_inventory')->create([
   'type' => 'tec_bom_item',
@@ -217,25 +262,23 @@ $bom2 = $etm->getStorage('tec_inventory')->create([
 $bom2->save();
 $creadas[] = ['tec_inventory', $bom2->id()];
 $talla = $etm->getStorage('tec_product')->loadUnchanged($talla->id());
-$despues = array_column($talla->get('field_tec_bom')->getValue(), 'target_id');
-comprobar($resultados, 'escandallo: se engancha a la talla', in_array($bom2->id(), $despues),
-  "de $antes a " . count($despues));
+$enganchados = array_column($talla->get('field_tec_bom')->getValue(), 'target_id');
+comprobar($resultados, 'escandallo: se engancha a la talla', in_array($bom2->id(), $enganchados),
+  count($enganchados) . ' en la talla');
 
 // 3.4 - process_oy5yfqx.
-$restaurar[] = ['taxonomy_term', $material->id(), 'field_tec_stock_mutations', $material->get('field_tec_stock_mutations')->getValue()];
-$antes = count($material->get('field_tec_stock_mutations')->getValue());
 $mov = $etm->getStorage('tec_inventory')->create([
   'type' => 'tec_inventory_transaction',
-  'title' => 'COMPROBACION automatica',
+  'title' => $marca . ' movimiento',
   'field_tec_inventory' => ['target_id' => $material->id()],
   'field_tec_quantity' => 7,
 ]);
 $mov->save();
 $creadas[] = ['tec_inventory', $mov->id()];
 $material = $etm->getStorage('taxonomy_term')->loadUnchanged($material->id());
-$despues = array_column($material->get('field_tec_stock_mutations')->getValue(), 'target_id');
-comprobar($resultados, 'inventario: el movimiento se engancha', in_array($mov->id(), $despues),
-  "de $antes a " . count($despues));
+$movimientos = array_column($material->get('field_tec_stock_mutations')->getValue(), 'target_id');
+comprobar($resultados, 'inventario: el movimiento se engancha', in_array($mov->id(), $movimientos),
+  count($movimientos) . ' en el material');
 
 // 3.5 - process_hkreor6.
 $cid = reset($etm->getStorage('taxonomy_term')->getQuery()
@@ -251,72 +294,58 @@ $cv = $etm->getStorage('tec_product')->loadUnchanged($cv->id());
 comprobar($resultados, 'color: titulo automatico', $cv->label() !== '' && $cv->label() !== NULL,
   "'" . $cv->label() . "'");
 
-// 3.6 - process_lvy385w, sobre una linea real sin bandera y con escandallo sano.
-$bloqueadas = $db->select('flagging', 'f')->fields('f', ['entity_id'])
-  ->condition('flag_id', 'tec_eca_line_item_lock')->execute()->fetchCol();
-$rotas = $db->query("SELECT DISTINCT b.entity_id
-  FROM {tec_line_item__field_tec_line_item_bom} b
-  INNER JOIN {tec_inventory__field_tec_inventory} i ON i.entity_id = b.field_tec_line_item_bom_target_id
-  LEFT JOIN {taxonomy_term_field_data} t ON t.tid = i.field_tec_inventory_target_id
-  WHERE t.tid IS NULL")->fetchCol();
-$excluir = array_merge($bloqueadas, $rotas);
+// 3.6 - process_lvy385w. Dos cosas que se averiguaron a base de sonda la noche
+// del 14 de agosto, y que conviene no volver a averiguar:
+//
+// La linea tiene que colgar de una talla. El proceso solo escucha el evento de
+// actualizar, y todo lo que calcula gira alrededor del escandallo de la talla:
+// una linea con precio y cantidad y nada mas no es un caso real, y el proceso
+// la deja en paz, con el total vacio. Por eso se reutiliza la talla del 3.3,
+// que ya tiene un escandallo colgado.
+//
+// Y al guardar, el proceso crea por su cuenta un elemento de escandallo de
+// linea y lo engancha. Nadie lo pide y no aparece en ningun sitio, asi que hay
+// que ir a buscarlo para borrarlo: si se queda, la siguiente comprobacion
+// encuentra contenido donde deberia haber cero y falla sin motivo aparente.
+$linea = $etm->getStorage('tec_line_item')->create([
+  'type' => 'tec_sales_order_line_item',
+  'title' => $marca . ' linea',
+  'field_tec_price' => 12.5,
+  'field_tec_quantity' => 4,
+  'field_tec_size_variation' => ['target_id' => $talla->id()],
+]);
+$linea->save();
+$linea = $etm->getStorage('tec_line_item')->loadUnchanged($linea->id());
 
-$linea = NULL;
-foreach ($etm->getStorage('tec_line_item')->loadMultiple(
-  $etm->getStorage('tec_line_item')->getQuery()->accessCheck(FALSE)
-    ->condition('type', 'tec_sales_order_line_item')
-    ->exists('field_tec_price')->exists('field_tec_quantity')->execute()
-) as $li) {
-  if (in_array($li->id(), $excluir)) {
-    continue;
-  }
-  if ((float) $li->get('field_tec_price')->value > 0
-    && (float) $li->get('field_tec_quantity')->value > 0
-    && $li->get('field_tec_line_item_total_number')->value) {
-    $linea = $li;
-    break;
-  }
-}
+$linea->set('field_tec_quantity', 6);
+$linea->save();
+$linea = $etm->getStorage('tec_line_item')->loadUnchanged($linea->id());
+$total = (float) $linea->get('field_tec_line_item_total_number')->value;
+comprobar($resultados, 'linea de pedido: recalcula el total', abs($total - 75.0) < 0.01,
+  "12,5 x 6 = " . number_format($total, 2, ',', ''));
 
-if ($linea) {
-  $precio = (float) $linea->get('field_tec_price')->value;
-  $c_orig = $linea->get('field_tec_quantity')->getValue();
-  $t_orig = $linea->get('field_tec_line_item_total_number')->getValue();
-  $c = (float) $linea->get('field_tec_quantity')->value;
-  $linea->set('field_tec_quantity', $c + 1);
-  $linea->save();
-  $r = $etm->getStorage('tec_line_item')->loadUnchanged($linea->id());
-  $total = (float) $r->get('field_tec_line_item_total_number')->value;
-  comprobar($resultados, 'linea de pedido: recalcula el total',
-    abs($total - $precio * ($c + 1)) < 0.01,
-    "$precio x " . ($c + 1) . " = $total");
-  $r->set('field_tec_quantity', $c_orig);
-  $r->set('field_tec_line_item_total_number', $t_orig);
-  $r->save();
-  $restaurar[] = ['__bandera_linea', $linea->id(), NULL, NULL];
+$de_propina = array_column($linea->get('field_tec_line_item_bom')->getValue(), 'target_id');
+foreach ($etm->getStorage('flagging')->loadByProperties(['entity_id' => $linea->id()]) as $bandera) {
+  $bandera->delete();
 }
-else {
-  comprobar($resultados, 'linea de pedido: recalcula el total', FALSE, 'no hay ninguna linea valida para probar');
+$linea->delete();
+foreach ($etm->getStorage('tec_inventory')->loadMultiple($de_propina) as $sobra) {
+  $sobra->delete();
 }
 
 // -----------------------------------------------------------------------------
-// Limpieza de lo creado.
+// Limpieza de lo creado. Al reves del orden de creacion, y quitando antes las
+// banderas que ECA pone al vuelo, que si no se quedan colgadas sin dueno.
 // -----------------------------------------------------------------------------
 foreach (array_reverse($creadas) as [$tipo, $id]) {
+  foreach ($etm->getStorage('flagging')->loadByProperties(['entity_id' => $id]) as $bandera) {
+    $bandera->delete();
+  }
   if ($e = $etm->getStorage($tipo)->load($id)) {
     $e->delete();
   }
 }
 foreach ($restaurar as [$tipo, $id, $campo, $valor]) {
-  if ($tipo === '__bandera_linea') {
-    foreach ($etm->getStorage('flagging')->loadByProperties([
-      'flag_id' => 'tec_eca_line_item_lock',
-      'entity_id' => $id,
-    ]) as $f) {
-      $f->delete();
-    }
-    continue;
-  }
   if ($e = $etm->getStorage($tipo)->loadUnchanged($id)) {
     $e->set($campo, $valor);
     $e->save();
@@ -328,14 +357,13 @@ foreach ($restaurar as [$tipo, $id, $campo, $valor]) {
 // -----------------------------------------------------------------------------
 titulo('4. Nada se ha quedado roto');
 
-$colgadas = $db->query("SELECT flag_id, COUNT(*) AS n FROM {flagging}
-  WHERE flag_id LIKE '%lock%' GROUP BY flag_id")->fetchAllKeyed();
-$linea_lock = (int) ($colgadas['tec_eca_line_item_lock'] ?? 0);
-$inv_lock = (int) ($colgadas['tec_eca_inventory_lock'] ?? 0);
-$prod_lock = (int) ($colgadas['tec_eca_product_lock'] ?? 0);
-comprobar($resultados, 'sin banderas de bloqueo colgadas',
-  $linea_lock === 0 && $inv_lock === 0 && $prod_lock === 0,
-  "lineas: $linea_lock, inventario: $inv_lock, productos: $prod_lock");
+// En reposo solo debe haber una bandera puesta en todo el sitio, la del panel
+// de ECA. Cualquier otra es un bloqueo que se quedo colgado, y un bloqueo
+// colgado significa que ese material o esa linea ya no recalcula y nadie avisa.
+$banderas = $db->query('SELECT flag_id, COUNT(*) AS n FROM {flagging} GROUP BY flag_id')->fetchAllKeyed();
+$otras = array_diff_key($banderas, ['tec_eca_gui_lock' => TRUE]);
+comprobar($resultados, 'sin banderas colgadas', !$otras,
+  $otras ? 'sobran: ' . json_encode($otras) : 'solo tec_eca_gui_lock');
 
 $errores = $db->query('SELECT COUNT(*) FROM {watchdog} WHERE wid > :w AND severity <= 3 AND type <> :t',
   [':w' => $wid_inicial, ':t' => 'eca'])->fetchField();

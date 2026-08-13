@@ -168,7 +168,13 @@ function paginasDeVista(): array {
  * vista antes de pedir la pagina, y solo se acepta si trae filas.
  *
  * Devuelve NULL cuando no hay ningun argumento que sirva, que no es un fallo:
- * significa que esa pantalla no tiene datos con los que probarse.
+ * significa que esa pantalla no tiene datos con los que probarse. Pero se anota
+ * y se dice al final, porque un salto callado es peor que un fallo. La noche del
+ * 14 de agosto se borro el contenido de pruebas y esta prueba paso de mirar
+ * veintiuna pantallas a mirar veinte sin decir una palabra, y la que dejo de
+ * mirar era precisamente la de editar las lineas de un pedido, la que se habia
+ * roto el dia antes. Un "todas cargan" que en realidad es "todas las que he
+ * podido" hay que leerlo con esa letra pequena delante.
  */
 function conArgumentosReales(string $ruta, string $vistaId, string $displayId, ?string $base): ?string {
   if (!str_contains($ruta, '%')) {
@@ -177,6 +183,7 @@ function conArgumentosReales(string $ruta, string $vistaId, string $displayId, ?
   // Con dos argumentos habria que probar combinaciones, y no hay ninguna vista
   // asi en el ERP. Si algun dia la hay, aparecera como pantalla sin cubrir.
   if (substr_count($ruta, '%') !== 1) {
+    sinDatos($ruta . '  (' . $vistaId . ', mas de un argumento)');
     return NULL;
   }
   foreach (argumentosPosibles($vistaId, $displayId, $base) as $valor) {
@@ -184,7 +191,19 @@ function conArgumentosReales(string $ruta, string $vistaId, string $displayId, ?
       return str_replace('%', (string) $valor, $ruta);
     }
   }
+  sinDatos($ruta . '  (' . $vistaId . ')');
   return NULL;
+}
+
+/**
+ * Va guardando las pantallas que no se han podido probar por falta de datos.
+ */
+function sinDatos(?string $pantalla = NULL): array {
+  static $lista = [];
+  if ($pantalla !== NULL) {
+    $lista[] = $pantalla;
+  }
+  return $lista;
 }
 
 /**
@@ -355,6 +374,17 @@ foreach ($rutas as $ruta) {
 
 echo "\n";
 printf("  %d paginas, %d con problemas\n\n", count($rutas), $malas);
+
+$sin = sinDatos();
+if ($sin) {
+  printf("  %d pantallas no se han podido probar porque no hay datos con los que\n", count($sin));
+  echo "  pedirlas. No es un fallo, pero tampoco estan miradas:\n\n";
+  foreach (array_unique($sin) as $pantalla) {
+    echo '      ' . $pantalla . "\n";
+  }
+  echo "\n";
+}
+
 echo $malas === 0
-  ? "Todas cargan.\n\n"
+  ? ($sin ? "Cargan todas las que se han podido pedir.\n\n" : "Todas cargan.\n\n")
   : "HAY $malas paginas rotas. No seguir hasta entenderlas.\n\n";
