@@ -21,7 +21,7 @@ class EckBundleAccessControlHandler extends EckEntityAccessControlHandlerBase {
   /**
    * {@inheritdoc}
    */
-  public function createAccess($entity_bundle = NULL, AccountInterface $account = NULL, array $context = [], $return_as_object = FALSE) {
+  public function createAccess($entity_bundle = NULL, ?AccountInterface $account = NULL, array $context = [], $return_as_object = FALSE) {
     $access = parent::createAccess($entity_bundle, $account, $context, TRUE)
       ->orIf($this->checkBundleAccess($entity_bundle, 'create', NULL, $account));
 

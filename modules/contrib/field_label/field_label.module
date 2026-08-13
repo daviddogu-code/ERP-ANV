@@ -135,7 +135,7 @@ function field_label_field_formatter_third_party_settings_form(FormatterInterfac
         $elements['field_label']['plural_label'] = [
           '#type' => 'textfield',
           '#title' => t('Plural label value'),
-          '#description' => t('Overwrite the default field label.'),
+          '#description' => t('Overwrite the default field label when there are muliple values.'),
           '#default_value' => $settings['plural_label']['value'],
         ];
       }

@@ -3,9 +3,9 @@
 namespace Drupal\field_formatter_class\Plugin\migrate\destination;
 
 use Drupal\migrate\MigrateException;
-use Drupal\migrate\Plugin\migrate\destination\PerComponentEntityDisplay;
-use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Plugin\migrate\destination\PerComponentEntityDisplay;
 use Drupal\migrate\Row;
 
 /**

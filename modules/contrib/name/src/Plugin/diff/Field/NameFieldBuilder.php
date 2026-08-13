@@ -7,7 +7,8 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\diff\DiffEntityParser;
 use Drupal\diff\FieldDiffBuilderBase;
-use Drupal\name\NameFormatterInterface;
+use Drupal\name\Service\FormatOptionInterface;
+use Drupal\name\Service\NameFormatterInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -25,10 +26,13 @@ class NameFieldBuilder extends FieldDiffBuilderBase {
 
   /**
    * The name formatter.
-   *
-   * @var \Drupal\name\NameFormatterInterface
    */
-  protected $formatter;
+  protected NameFormatterInterface $formatter;
+
+  /**
+   * The name format options service.
+   */
+  protected ?FormatOptionInterface $formatOptions;
 
   /**
    * Constructs a Name Field diff builder instance.
@@ -43,12 +47,15 @@ class NameFieldBuilder extends FieldDiffBuilderBase {
    *   The entity type manager.
    * @param \Drupal\diff\DiffEntityParser $entity_parser
    *   The entity parser.
-   * @param \Drupal\name\NameFormatterInterface $formatter
+   * @param \Drupal\name\Service\NameFormatterInterface $formatter
    *   The name formatter.
+   * @param \Drupal\name\Service\FormatOptionInterface|null $format_options
+   *   The name format options service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, DiffEntityParser $entity_parser, NameFormatterInterface $formatter) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, DiffEntityParser $entity_parser, NameFormatterInterface $formatter, ?FormatOptionInterface $format_options) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $entity_parser);
     $this->formatter = $formatter;
+    $this->formatOptions = $format_options;
   }
 
   /**
@@ -61,22 +68,23 @@ class NameFieldBuilder extends FieldDiffBuilderBase {
       $plugin_definition,
       $container->get('entity_type.manager'),
       $container->get('diff.entity_parser'),
-      $container->get('name.formatter')
+      $container->get('name.formatter'),
+      $container->get('name.format_options', ContainerInterface::NULL_ON_INVALID_REFERENCE)
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function build(FieldItemListInterface $items) {
+  public function build(FieldItemListInterface $field_items): array {
     $result = [];
     if ($this->configuration['compare_format']) {
-      foreach ($items as $item) {
+      foreach ($field_items as $item) {
         $result[] = (string) $this->formatter->format($item->filteredArray(), $this->configuration['compare_format']);
       }
     }
     else {
-      foreach ($items as $item) {
+      foreach ($field_items as $item) {
         $output = [];
         $values = $item->toArray();
         foreach ($item->activeComponents() as $key => $label) {
@@ -91,12 +99,12 @@ class NameFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form['compare_format'] = [
       '#type' => 'select',
       '#title' => $this->t('Name format'),
       '#default_value' => $this->configuration['compare_format'],
-      '#options' => name_get_custom_format_options(),
+      '#options' => $this->formatOptions?->getCustomFormatOptions() ?? [],
       '#empty_option' => $this->t('-- components --'),
     ];
 
@@ -106,7 +114,7 @@ class NameFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->configuration['compare_format'] = $form_state->getValue('compare_format');
 
     parent::submitConfigurationForm($form, $form_state);
@@ -115,9 +123,9 @@ class NameFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     $default_configuration = [
-      'format' => '',
+      'compare_format' => '',
     ];
     $default_configuration += parent::defaultConfiguration();
 

@@ -6,3 +6,10 @@ field.formatter.third_party.field_formatter_class:
       type: string
       label: Class
 
+field.widget.third_party.field_formatter_class:
+  type: mapping
+  label: 'Field formatter class settings'
+  mapping:
+    class:
+      type: string
+      label: Classes

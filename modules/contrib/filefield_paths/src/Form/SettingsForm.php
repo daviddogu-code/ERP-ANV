@@ -3,11 +3,13 @@
 namespace Drupal\filefield_paths\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\File\FileSystem;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Drupal\filefield_paths\MoveFileProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -26,7 +28,7 @@ class SettingsForm extends ConfigFormBase {
   protected $streamWrapperManager;
 
   /**
-   * Fi;esystem service.
+   * Filesystem service.
    *
    * @var \Drupal\Core\File\FileSystemInterface
    */
@@ -35,10 +37,21 @@ class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, StreamWrapperManagerInterface $stream_wrapper_manager, FileSystemInterface $file_system) {
-    parent::__construct($config_factory);
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    StreamWrapperManagerInterface $stream_wrapper_manager,
+    FileSystemInterface $file_system,
+    TypedConfigManagerInterface $typed_config_manager,
+    protected /*readonly*/ ?MoveFileProcessorInterface $moveFileProcessor = NULL,
+  ) {
+    parent::__construct($config_factory, $typed_config_manager);
     $this->streamWrapperManager = $stream_wrapper_manager;
     $this->fileSystem = $file_system;
+    if ($this->moveFileProcessor === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $moveFileProcessor argument is deprecated in filefield_paths:8.x-1.0 and it will be required in filefield_paths:2.0.0. See https://www.drupal.org/node/3562442', E_USER_DEPRECATED);
+      // @phpstan-ignore-next-line
+      $this->moveFileProcessor = \Drupal::service(MoveFileProcessorInterface::class);
+    }
   }
 
   /**
@@ -48,7 +61,9 @@ class SettingsForm extends ConfigFormBase {
     return new static(
       $container->get('config.factory'),
       $container->get('stream_wrapper_manager'),
-      $container->get('file_system')
+      $container->get('file_system'),
+      $container->get('config.typed'),
+      $container->get(MoveFileProcessorInterface::class),
     );
   }
 
@@ -71,13 +86,18 @@ class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, Request $request = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?Request $request = NULL) {
+    $description = $this->t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.');
+    $description .= '<br />';
+    $description .= $this->t('It is recommended to use the temporary file system (temporary://) whenever possible, especially for files that do not require previewing before form submission. Alternatively, if your server configuration permits, the private file system (private://) is preferred for situations where file previews — such as image previews — are needed before the form is submitted, as it provides secure and appropriate access for this functionality.');
+    $description .= '<br />';
+    $description .= '<strong>' . $this->t('Never use the public directory (public://) if the site supports private files, or private files can be temporarily exposed publicly.') . '</strong>';
     $form['temp_location'] = [
       '#title' => $this->t('Temporary file location'),
       '#type' => 'textfield',
       '#default_value' => $this->config('filefield_paths.settings')
-        ->get('temp_location') ?: filefield_paths_recommended_temporary_scheme() . 'filefield_paths',
-      '#description'   => t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.<br />It is recommended that you use the temporary file system (temporary://) or, as a 2nd choice, the private file system (private://) if your server configuration allows for one of those.<br /><strong>Never use the public directory (public://) if the site supports private files, or private files can be temporarily exposed publicly.</strong>'),
+        ->get('temp_location') ?: $this->moveFileProcessor->recommendedTemporaryScheme() . 'filefield_paths',
+      '#description' => $description,
     ];
 
     return parent::buildForm($form, $form_state);

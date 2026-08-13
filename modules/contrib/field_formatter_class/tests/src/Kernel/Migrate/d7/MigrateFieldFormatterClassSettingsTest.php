@@ -15,7 +15,7 @@ class MigrateFieldFormatterClassSettingsTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'field_formatter_class',
     'field',
     'comment',
@@ -32,17 +32,10 @@ class MigrateFieldFormatterClassSettingsTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->migrateFields();
-    $this->loadFixture(implode(DIRECTORY_SEPARATOR, [
-      DRUPAL_ROOT,
-      drupal_get_path('module', 'field_formatter_class'),
-      'tests',
-      'fixtures',
-      'update',
-      'drupal7.php',
-    ]));
+    $this->loadFixture(__DIR__ . '/../../../../fixtures/update/drupal7.php');
     $migrations = [
       'd7_field_instance',
       'd7_view_modes',
@@ -62,16 +55,16 @@ class MigrateFieldFormatterClassSettingsTest extends MigrateDrupal7TestBase {
    * @param string $class
    *   The expected class name.
    */
-  protected function assertComponent($display_id, $field_id, $class) {
+  protected function assertComponent(string $display_id, string $field_id, string $class) {
     $component = EntityViewDisplay::load($display_id)->getComponent($field_id);
     $this->assertIsArray($component);
-    $this->assertIdentical($class, $component['third_party_settings']['field_formatter_class']['class']);
+    $this->assertSame($class, $component['third_party_settings']['field_formatter_class']['class']);
   }
 
   /**
    * Tests that all expected configuration gets migrated.
    */
-  public function testConfigurationMigration() {
+  public function testConfigurationMigration(): void {
     $this->assertComponent('node.article.default', 'field_tags', 'classtest1');
     $this->assertComponent('node.article.default', 'field_image', 'classtest1 classtest2');
     $this->assertComponent('comment.comment_node_book.default', 'comment_body', 'class test');

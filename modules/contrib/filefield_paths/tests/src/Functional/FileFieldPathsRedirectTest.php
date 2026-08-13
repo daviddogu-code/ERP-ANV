@@ -7,7 +7,8 @@ use Drupal\Core\StreamWrapper\PublicStream;
 /**
  * Test redirect module integration.
  *
- * @group File (Field) Paths
+ * @group filefield_paths
+ * @runTestsInSeparateProcesses
  */
 class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
 
@@ -68,7 +69,7 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
     $source_dir = $this->randomMachineName();
     $field_name = mb_strtolower($this->randomMachineName());
     $third_party_settings['filefield_paths']['file_path']['value'] = $source_dir;
-    $this->createFileField($field_name, 'node', $this->contentType, [], [], $third_party_settings);
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
 
     // Create a node with a test file.
     /** @var \Drupal\file\Entity\File $test_file */

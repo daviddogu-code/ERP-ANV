@@ -5,10 +5,11 @@
  * Provides custom HTML class settings for field formatters.
  */
 
-use Drupal\Component\Utility\Xss;
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Field\FormatterInterface;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FormatterInterface;
+use Drupal\Core\Field\WidgetInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 
@@ -22,14 +23,14 @@ function field_formatter_class_help($route_name, RouteMatchInterface $route_matc
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
       $output .= '<p>' . t('Allows site administrators to add classes to the
-        outer HTML wrapper for any field display, so that CSS and Javascript can
-        target them.') . '</p>';
+        outer HTML wrapper for any field form or display, so that CSS and Javascript
+        can target them.') . '</p>';
       $output .= '<p>' . t("It's particulary useful for adding classes required
         by various jQuery plugins and CSS grid systems.") . '</p>';
       $output .= '<h3>' . t('Configuration') . '</h3>';
       $output .= '<p>' . t('The Field Formatter Class settings are found in the
-        Manage display tab for content types, users, and other entities. A text
-        box is available for each field, revealed by using the formatter
+        Manage form and Manage display tabs for content types, users, and other entities.
+        A text box is available for each field, revealed by using the formatter
         settings edit button (gear wheel icon) for that field.') . '</p>';
       $output .= '<p>' . t('This module supports the use of tokens in the Field
         Formatter Class setting. For more information about tokens, see the
@@ -66,6 +67,7 @@ function field_formatter_class_field_formatter_third_party_settings_form(Formatt
     '#type' => 'textfield',
     '#title' => t('Field Formatter Class'),
     '#default_value' => $plugin->getThirdPartySetting('field_formatter_class', 'class'),
+    '#maxlength' => 256,
   ];
   if (\Drupal::moduleHandler()->moduleExists('token')) {
     $element['token_help'] = [
@@ -91,7 +93,69 @@ function field_formatter_class_preprocess_field(&$variables) {
     $token = \Drupal::service('token');
     /** @var \Drupal\Core\Entity\EntityInterface $object */
     $object = $variables['element']['#object'];
-    $class = $token->replace($class, [$object->getEntityTypeId() => $object], ['clear' => true]);
+    $class = $token->replace($class, [$object->getEntityTypeId() => $object], ['clear' => TRUE]);
+    $class = explode(' ', $class);
+    foreach ($class as $thisClass) {
+      $variables['attributes']['class'][] = Html::escape($thisClass);
+    }
+  }
+}
+
+/**
+ * Implements hook_field_widget_third_party_settings_form().
+ */
+function field_formatter_class_field_widget_third_party_settings_form(WidgetInterface $plugin, FieldDefinitionInterface $field_definition, $form_mode, array $form, FormStateInterface $form_state) {
+  $form['class'] = [
+    '#type' => 'textfield',
+    '#title' => t('Field Formatter Class'),
+    '#default_value' => $plugin->getThirdPartySetting('field_formatter_class', 'class'),
+  ];
+  if (\Drupal::moduleHandler()->moduleExists('token')) {
+    $form['token_help'] = [
+      '#theme' => 'token_tree_link',
+      '#token_types' => [$field_definition->getTargetEntityTypeId()],
+    ];
+  }
+  return $form;
+}
+
+/**
+ * Implements hook_field_widget_settings_summary_alter().
+ */
+function field_formatter_class_field_widget_settings_summary_alter(array &$summary, array $context) {
+  $setting = $context['widget']->getThirdPartySetting('field_formatter_class', 'class');
+
+  if (!empty($setting)) {
+    $summary[] = t('Class: @class', ['@class' => Xss::filter($setting, [])]);
+  }
+}
+
+/**
+ * Implements hook_field_widget_complete_form_alter().
+ */
+function field_formatter_class_field_widget_complete_form_alter(&$field_widget_complete_form, FormStateInterface $form_state, $context) {
+  $thirdPartySettings = $context['widget']->getThirdPartySettings('field_formatter_class');
+  if (empty($thirdPartySettings)) {
+    return;
+  }
+
+  $field_widget_complete_form['widget']['#third_party_settings']['field_formatter_class'] = $thirdPartySettings;
+  $field_widget_complete_form['widget']['#object'] = $context['items']->getEntity();
+}
+
+/**
+ * Implements hook_preprocess().
+ */
+function field_formatter_class_preprocess(&$variables, $hook) {
+
+  // Add class for whole field.
+  if (isset($variables['element']['#third_party_settings']['field_formatter_class'])) {
+    $class = $variables['element']['#third_party_settings']['field_formatter_class']['class'];
+    /** @var \Drupal\Core\Utility\Token $token */
+    $token = \Drupal::service('token');
+    /** @var \Drupal\Core\Entity\EntityInterface $object */
+    $object = $variables['element']['#object'];
+    $class = $token->replace($class, [$object->getEntityTypeId() => $object], ['clear' => TRUE]);
     $class = explode(' ', $class);
     foreach ($class as $thisClass) {
       $variables['attributes']['class'][] = Html::escape($thisClass);
