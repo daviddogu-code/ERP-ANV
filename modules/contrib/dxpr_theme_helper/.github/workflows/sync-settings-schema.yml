@@ -1,0 +1,35 @@
+name: Sync settings schema to SKILL.md
+
+on:
+  push:
+    branches: [3.x]
+    paths:
+      - 'data/settings-schema.json'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Sync schema to SKILL.md files
+        run: node scripts/sync-settings-schema/sync.js
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: sync settings schema to SKILL.md files [skip ci]"
+            git push
+          fi

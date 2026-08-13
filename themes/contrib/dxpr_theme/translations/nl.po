@@ -895,7 +895,7 @@ msgstr ""
 "gewijzigd, met behulp van het veld Koptekstafbeelding in het "
 "knooppuntformulier."
 #: features/sooper-page-title/page_title-theme-settings.inc:137,117
-msgid "Backound Image Opacity"
+msgid "Background Image Opacity"
 msgstr "Dekking van de achtergrondafbeelding"
 #: features/sooper-page-title/page_title-theme-settings.inc:141,121
 msgid ""
@@ -1318,8 +1318,8 @@ msgstr ""
 msgid "Header height after scrolling past scroll offset. Default is 50."
 msgstr "Headerhoogte na scrollen voorbij scroll-offset. Standaard is 50."
 #: features/sooper-header/header-theme-settings.inc:201,191,196
-msgid "Customize Navigation Colors"
-msgstr "Navigatiekleuren aanpassen"
+msgid "Custom Header Colors"
+msgstr "Aangepaste headerkleuren"
 #: features/sooper-header/header-theme-settings.inc:216,206,211
 msgid "Custom Navbar Background"
 msgstr "Aangepaste navigatiebalkachtergrond"
@@ -1412,11 +1412,11 @@ msgstr ""
 "Hoogte van koptekst in mobiele weergave. 10px - 200px. Standaard is 60."
 #: features/sooper-layout/layout-theme-settings.inc:82,71
 msgid ""
-"Max width of the website container. 480px - 4100px. Default is 1280px. With "
+"Max width of the website container. 480px - 4100px. Default is 1320px. With "
 "Side-Header enabled we typically use 980px."
 msgstr ""
 "Maximale breedte van de websitecontainer. 480px - 4100px. Standaard is "
-"1280px. Als Side-Header is ingeschakeld, gebruiken we meestal 980px."
+"1320px. Als Side-Header is ingeschakeld, gebruiken we meestal 980px."
 #: features/sooper-layout/layout-theme-settings.inc:122
 msgid "Path to  background image"
 msgstr "Pad naar achtergrondafbeelding"

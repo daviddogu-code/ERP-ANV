@@ -5,67 +5,85 @@
 // Fonts
 @import "../includes/variables";
 
-body, .toooltip {
-  font-family: "Source Sans Pro", "Source Sans Pro";
-  font-weight: 400;
-  font-style: normal;
+// Default font stack fallback.
+$default-font-stack: -apple-system, blinkmacsystemfont, "Segoe UI", roboto, helvetica, arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+body, .tooltip {
+  font-family: var(--dxt-setting-body-font-face, #{$default-font-stack});
+  font-style: var(--dxt-setting-body-font-style, normal);
+  font-weight: var(--dxt-setting-body-font-weight, 400);
 }
 
-h1,h2,h3,h4,h5,h6,label,.field--label {
-  font-family: "Source Sans Pro Light", "Source Sans Pro";
-  font-weight: 300;
-  font-style: normal;
+h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6,
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6,
+label, .field--label {
+  font-family: var(--dxt-setting-headings-font-face, #{$default-font-stack});
+  font-style: var(--dxt-setting-headings-font-style, normal);
+  font-weight: var(--dxt-setting-headings-font-weight, 700);
 }
 
-nav,nav ul li,nav a {
-  font-family: "Source Sans Pro", "Source Sans Pro";
-  font-weight: 300;
-  font-style: normal;
+.dxpr-theme-header .nav {
+  font-family: var(--dxt-setting-nav-font-face, #{$default-font-stack});
+  font-style: var(--dxt-setting-nav-font-style, normal);
+  font-weight: var(--dxt-setting-nav-font-weight, 400);
 }
 
 .site-name, .navbar-brand {
-  font-family: "Source Sans Pro Light", "Source Sans Pro";
-  font-weight: 300;
-  font-style: normal;
+  font-family: var(--dxt-setting-sitename-font-face, #{$default-font-stack});
+  font-style: var(--dxt-setting-sitename-font-style, normal);
+  font-weight: var(--dxt-setting-sitename-font-weight, 400);
 }
 
 blockquote, blockquote p {
-  font-family: "Source Sans Pro Light Italic", "Source Sans Pro";
-  font-weight: 300;
-  font-style: italic;
+  font-family: var(--dxt-setting-blockquote-font-face, #{$default-font-stack});
+  font-size: var(--dxt-setting-blockquote-font-size);
+  font-style: var(--dxt-setting-blockquote-font-style, italic);
+  font-weight: var(--dxt-setting-blockquote-font-weight, 400);
+  line-height: var(--dxt-setting-blockquote-line-height);
 }
 
 // Typography
 
-body, html {
-  color: $text;
-  font-size: $font-size-base;
+body {
+  color: dxpr-color('text');
+  font-size: var(--dxt-setting-body-font-size);
 }
 
 body, p, .lead {
-  line-height: 1.6;
+  line-height:  var(--dxt-setting-body-line-height);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  margin-top: 0;
+h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6,
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+  font-weight: var(--dxt-setting-headings-bold);
+  letter-spacing: var(--dxt-setting-headings-letter-spacing);
+  line-height: var(--dxt-setting-headings-line-height);
   margin-bottom: 10px;
+  margin-top: 0;
+  text-transform: var(--dxt-setting-headings-uppercase);
 }
-h1 {
-  font-size: $font-size-h1;
+
+h1, .h1 {
+  font-size: var(--dxt-setting-h1-font-size)
 }
-h2 {
-  font-size: $font-size-h2;
+
+h2, .h2 {
+  font-size: var(--dxt-setting-h2-font-size)
 }
-h3, .block-title {
-  font-size: $font-size-h3;
+
+h3, .h3, .block-title {
+  font-size: var(--dxt-setting-h3-font-size)
 }
-h4 {
-  font-size: $font-size-h4;
+
+h4, .h4 {
+  font-size: var(--dxt-setting-h4-font-size)
 }
-h5 {
+
+h5, .h5 {
   font-size: $font-size-h5;
 }
-h6 {
+
+h6, .h6 {
   font-size: $font-size-h6;
 }
 
@@ -73,6 +91,7 @@ h3.field--label {
   font-size: $font-size-h4;
   margin-bottom: 0;
 }
+
 h3.field--label + div,
 h3.field--label + ul {
   margin-bottom: 10px;
@@ -88,27 +107,30 @@ h3.field--label + ul {
     //   content: '';
     // }
   }
+
   a {
-    color: $text;
+    color: dxpr-color('text');
   }
 }
 
 a,
 .btn-link,
 .nav-link {
-  color: $primary;
+  color: dxpr-color('link');
+
   svg {
-    fill: $primary;
+    fill: dxpr-color('link');
   }
 }
 
 a {
   transition: color 200ms;
-  text-decoration: none;
+
   &:hover,
   &:focus {
     outline: none;
   }
+
   svg {
     transition: fill 200ms;
   }
@@ -116,22 +138,42 @@ a {
 
 a:hover, a:focus,
 .btn-link:hover, .btn-link:focus  {
+  color: dxpr-color('headings');
   text-decoration: underline;
-  color: $accent1;
+
   svg {
-    fill: $accent1;
+    fill: dxpr-color('accent1');
   }
 }
 
-h1, h2, h3, h4, h5, h6, .navbar-brand, th, .nav-tabs > li > a {
-  color: $text-headings;
+h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6,
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6,
+.navbar-brand, th, .nav-tabs > li > a {
+  color: dxpr-color('headings');
+
   a {
-    color: $text-headings;
+    color: dxpr-color('headings');
+
     &:hover,
     &:focus {
-      text-decoration: none;
-      color: $primary;
+      color: dxpr-color('base');
     }
+  }
+}
+
+h1 a, .h1 a,
+h2 a, .h2 a,
+h3 a, .h3 a,
+h4 a, .h4 a,
+h5 a, .h5 a,
+h6 a, .h6 a,
+.display-1 a, .display-2 a, .display-3 a,
+.display-4 a, .display-5 a, .display-6 a {
+  color: dxpr-color('base');
+
+  &:hover,
+  &:focus {
+    color: dxpr-color('accent1');
   }
 }
 
@@ -139,34 +181,27 @@ h1, h2, h3, h4, h5, h6, .navbar-brand, th, .nav-tabs > li > a {
   max-width: 100%;
 }
 
-hr {
+hr, .card hr {
+  border-top: 4px solid dxpr-color('card');
+  border-top-color: var(--dxt-setting-divider-color);
+  border-top-width: var(--dxt-setting-divider-thickness);
   height: 0;
-  border-top: 4px solid $card;
-  margin-bottom: 20px;
-  margin-top: 20px;
-}
-.region-sidebar-first hr,
-.region-sidebar-second hr {
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-.dxpr-theme-footer hr {
-  border-top-color: $footer-text;
-}
-.card hr,
-.jumbotron hr {
-  border-top-color: $card-text; // card text color
+  margin: 20px auto 20px var(--dxt-setting-divider-position);
+  width: var(--dxt-setting-divider-length);
 }
 
-.submitted {
-  color: $gray-light;
-  a {
-    color: $gray-light;
-    text-decoration: underline;
-    &:hover, &:focus {
-      text-decoration: none;
-    }
-  }
+.region-sidebar-first hr,
+.region-sidebar-second hr {
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.dxpr-theme-footer hr {
+  border-top-color: dxpr-color('footertext');
+}
+
+.jumbotron hr {
+  border-top-color: dxpr-color('cardtext'); // card text color
 }
 
 .node .links {
@@ -176,19 +211,43 @@ hr {
 .main-container .block-menu-block .nav {
   > li {
     float: none;
-    > a {
-      &:hover,
-      &:focus,
-      &.active {
-      }
-    }
   }
 }
 
 .region-sidebar-first,
 .region-sidebar-second {
-  color: $gray-light;
+  color: dxpr-color('graylight');
+
   a {
-    color: $text;
+    color: dxpr-color('text');
+  }
+}
+
+@media screen and (width <= 768px) {
+  body, p {
+    font-size:  var(--dxt-setting-body-mobile-font-size);
+  }
+  h1, .h1 { font-size: var(--dxt-setting-h1-mobile-font-size) }
+  h2, .h2 { font-size: var(--dxt-setting-h2-mobile-font-size) }
+  h3, .h3 { font-size: var(--dxt-setting-h3-mobile-font-size) }
+  h4, .h4 { font-size: var(--dxt-setting-h4-mobile-font-size) }
+
+  blockquote, .blockquote p {
+    font-size: var(--dxt-setting-blockquote-mobile-font-size);
+  }
+}
+
+#system-theme-settings #edit-typography .details-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#system-theme-settings #edit-typography .details-wrapper > details {
+  width: 100%;
+}
+
+@media (width <= 976px) {
+  #system-theme-settings #edit-typography .details-wrapper > .js-form-item.form-item.js-form-type-range.form-type-range {
+    width: 300px;
   }
 }

@@ -2,3 +2,7 @@
 .idea
 node_modules
 deploy.sh
+
+# Claude Code — ignore all except skills
+.claude/*
+!.claude/skills/

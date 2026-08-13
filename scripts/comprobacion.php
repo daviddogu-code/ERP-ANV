@@ -62,11 +62,15 @@ const REFERENCIA_VARIOS = [
   'ficheros' => 315,
   'procesos_eca' => 36,
   'procesos_eca_encendidos' => 29,
-  'modulos' => 146,
+  // Eran 146 hasta el 13 de agosto de 2026. Se quedaron en 145 cuando dxpr_theme
+  // 8 trajo los colores del tema a sus propios ajustes y desinstalo `color`, que
+  // ya no estaba en el nucleo. Los veintiun ajustes de color siguen ahi y no
+  // quedo ni un resto del modulo viejo.
+  'modulos' => 145,
 ];
 
 // Herramientas de diagnostico que se instalan durante la actualizacion y se
-// quitan al terminar. No cuentan para el total de 146.
+// quitan al terminar. No cuentan para el total.
 const MODULOS_TEMPORALES = ['upgrade_status', 'update'];
 
 // -----------------------------------------------------------------------------

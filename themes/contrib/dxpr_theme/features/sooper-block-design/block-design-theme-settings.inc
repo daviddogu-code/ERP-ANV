@@ -24,6 +24,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_preset'] = [
     '#type' => 'select',
     '#title' => t('Block Design Preset'),
+    '#ai_description' => 'Quick-apply design preset for sidebar blocks and widget areas. (empty)=theme defaults. block_boxed=white boxes with shadow. block_outline=bordered blocks. block_card=Bootstrap card style. title_inverted=dark title bar. title_sticker=compact title. default_divider=title with divider. custom=full manual control.',
     '#default_value' => ((theme_get_setting('block_preset') !== NULL)) ? theme_get_setting('block_preset') : 'none',
     '#options' => [
       '' => t('None (Theme Defaults)'),
@@ -58,7 +59,7 @@ function block_design_theme_settings(array &$form, $theme) {
   ];
 
   $card_options = [
-    '' => t('None'),
+    '' => t('Custom'),
     'card card-body' => t('Card'),
     'card card-body bg-primary' => t('Card DXPR Theme Primary Color'),
     'card card-body dxpr-theme-util-background-accent1' => t('Card Accent 1 Color'),
@@ -71,6 +72,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['block_el']['block_card'] = [
     '#type' => 'select',
     '#title' => t('Block Card Style'),
+    '#ai_description' => 'Bootstrap card class applied to blocks. (empty)=no card. card card-body=default white card. bg-primary=primary color card. Use accent variants for colored sidebar sections. Overrides block_padding, block_border when set.',
     '#default_value' => theme_get_setting('block_card'),
     '#options' => $card_options,
   ];
@@ -78,6 +80,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['block_el']['block_background'] = [
     '#type' => 'select',
     '#title' => t('Block Background'),
+    '#ai_description' => 'Background color for blocks (when not using block_card). Creates colored block containers. Use a theme palette color or custom.',
     '#default_value' => theme_get_setting('block_background'),
     '#options' => _dxpr_theme_color_options($theme),
   ];
@@ -85,6 +88,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['block_el']['block_background_custom'] = [
     '#type' => 'textfield',
     '#title' => t('Custom Value'),
+    '#ai_description' => 'Custom hex for block background. Only used when block_background=custom. Light grays (#f5f5f5, #f8f9fa) create subtle card-like blocks.',
     '#default_value' => ((theme_get_setting('block_background_custom') !== NULL)) ? theme_get_setting('block_background_custom') : '#eeeeee',
     '#states' => [
       'visible' => [
@@ -94,35 +98,66 @@ function block_design_theme_settings(array &$form, $theme) {
   ];
 
   $form['dxpr_theme_settings']['block']['block_advanced']['block_el']['block_padding'] = [
-    '#type' => 'textfield',
-    '#title' => t('Block padding'),
-    '#default_value' => ((theme_get_setting('block_padding') !== NULL)) ? theme_get_setting('block_padding') : '0',
-    '#attributes' => ['class' => ['border-size-slider']],
-    '#size' => 9,
-    '#maxlength' => 9,
+    '#type' => 'range',
+    '#title' => t('Block Padding'),
+    '#ai_description' => 'Internal padding inside blocks. 0=no padding. 10-15px=compact. 20-30px=comfortable. Disabled when block_card is set.',
+    '#default_value' => ((theme_get_setting('block_padding') !== NULL)) ? theme_get_setting('block_padding') : 0,
+    '#min' => 0,
+    '#max' => 30,
+    '#step' => 1,
+    '#attributes' => [
+      'class' => ['dxb-slider', 'block-padding-range', 'border-size-slider'],
+      'data-dxb-slider' => TRUE,
+    ],
+    '#states' => [
+      'disabled' => [
+        'select[name="block_card"]' => ['!value' => ''],
+      ],
+    ],
   ];
 
   $form['dxpr_theme_settings']['block']['block_advanced']['block_el']['block_border_radius'] = [
-    '#type' => 'textfield',
+    '#type' => 'range',
     '#title' => t('Block Border Radius'),
-    '#default_value' => ((theme_get_setting('block_border_radius') !== NULL)) ? theme_get_setting('block_border_radius') : '0',
-    '#attributes' => ['class' => ['border-radius-slider']],
-    '#size' => 9,
-    '#maxlength' => 9,
+    '#ai_description' => 'Rounded corners on blocks. 0=sharp corners (corporate). 4-8px=subtle rounding (modern standard). 12-20px=noticeably rounded (friendly). Disabled when block_card is set.',
+    '#default_value' => ((theme_get_setting('block_border_radius') !== NULL)) ? theme_get_setting('block_border_radius') : 0,
+    '#min' => 0,
+    '#max' => 100,
+    '#step' => 1,
+    '#attributes' => [
+      'class' => ['dxb-slider', 'block-border-radius-range', 'border-radius-slider'],
+      'data-dxb-slider' => TRUE,
+    ],
+    '#states' => [
+      'disabled' => [
+        'select[name="block_card"]' => ['!value' => ''],
+      ],
+    ],
   ];
 
   $form['dxpr_theme_settings']['block']['block_advanced']['block_el']['block_border'] = [
-    '#type' => 'textfield',
+    '#type' => 'range',
     '#title' => t('Block Border'),
-    '#default_value' => ((theme_get_setting('block_border') !== NULL)) ? theme_get_setting('block_border') : '0',
-    '#attributes' => ['class' => ['border-size-slider']],
-    '#size' => 9,
-    '#maxlength' => 9,
+    '#ai_description' => 'Border width around blocks. 0=no border. 1px=subtle outline. 2-3px=visible frame. Disabled when block_card is set.',
+    '#default_value' => ((theme_get_setting('block_border') !== NULL)) ? theme_get_setting('block_border') : 0,
+    '#min' => 0,
+    '#max' => 30,
+    '#step' => 1,
+    '#attributes' => [
+      'class' => ['dxb-slider', 'block-border-range', 'border-size-slider'],
+      'data-dxb-slider' => TRUE,
+    ],
+    '#states' => [
+      'disabled' => [
+        'select[name="block_card"]' => ['!value' => ''],
+      ],
+    ],
   ];
 
   $form['dxpr_theme_settings']['block']['block_advanced']['block_el']['block_border_color'] = [
     '#type' => 'select',
     '#title' => t('Block Border Color'),
+    '#ai_description' => 'Color of the block border. Often a light gray (#dee2e6) for subtle definition. Only visible when block_border>0.',
     '#default_value' => theme_get_setting('block_border_color'),
     '#options' => _dxpr_theme_color_options($theme),
     '#states' => [
@@ -135,6 +170,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['block_el']['block_border_color_custom'] = [
     '#type' => 'textfield',
     '#title' => t('Custom Value'),
+    '#ai_description' => 'Custom hex for block border. Only used when block_border_color=custom.',
     '#default_value' => ((theme_get_setting('block_border_color_custom') !== NULL)) ? theme_get_setting('block_border_color_custom') : '#eeeeee',
     '#states' => [
       'visible' => [
@@ -154,6 +190,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_font_size'] = [
     '#type' => 'radios',
     '#title' => t('Title Font Size'),
+    '#ai_description' => 'Heading level for block titles. h2=large section heading. h3=standard block title (default). h4=smaller heading. body=paragraph-sized (subtle).',
     '#default_value' => ((theme_get_setting('title_font_size') !== NULL)) ? theme_get_setting('title_font_size') : 'h3',
     '#options' => [
       'h1' => t('h1'),
@@ -167,6 +204,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_align'] = [
     '#type' => 'radios',
     '#title' => t('Title Align'),
+    '#ai_description' => 'Block title text alignment. left=standard (default). center=formal/symmetrical. right=unconventional.',
     '#default_value' => ((theme_get_setting('title_align') !== NULL)) ? theme_get_setting('title_align') : 'left',
     '#options' => [
       'left' => t('Left'),
@@ -178,6 +216,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_card'] = [
     '#type' => 'select',
     '#title' => t('Title Card Style'),
+    '#ai_description' => 'Bootstrap card styling on the title element separately from the block body. Creates a highlighted title bar.',
     '#default_value' => theme_get_setting('title_card'),
     '#options' => $card_options,
   ];
@@ -185,6 +224,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_background'] = [
     '#type' => 'select',
     '#title' => t('Title Background'),
+    '#ai_description' => 'Background color for block titles. Creates colored title bars. Combined with contrasting text creates the inverted title look.',
     '#default_value' => theme_get_setting('title_background'),
     '#options' => _dxpr_theme_color_options($theme),
   ];
@@ -192,6 +232,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_background_custom'] = [
     '#type' => 'textfield',
     '#title' => t('Custom Value'),
+    '#ai_description' => 'Custom hex for title background. Only used when title_background=custom.',
     '#default_value' => ((theme_get_setting('title_background_custom') !== NULL)) ? theme_get_setting('title_background_custom') : '#eeeeee',
     '#states' => [
       'visible' => [
@@ -201,35 +242,66 @@ function block_design_theme_settings(array &$form, $theme) {
   ];
 
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_padding'] = [
-    '#type' => 'textfield',
-    '#title' => t('Title padding'),
-    '#default_value' => ((theme_get_setting('title_padding') !== NULL)) ? theme_get_setting('title_padding') : '0',
-    '#attributes' => ['class' => ['border-size-slider']],
-    '#size' => 9,
-    '#maxlength' => 9,
+    '#type' => 'range',
+    '#title' => t('Title Padding'),
+    '#ai_description' => 'Padding inside the title element. 5-10px=compact. 15-20px=comfortable. 25-30px=spacious title bar. Disabled when title_card is set.',
+    '#default_value' => ((theme_get_setting('title_padding') !== NULL)) ? theme_get_setting('title_padding') : 10,
+    '#min' => 0,
+    '#max' => 30,
+    '#step' => 1,
+    '#attributes' => [
+      'class' => ['dxb-slider', 'title-padding-range', 'border-size-slider'],
+      'data-dxb-slider' => TRUE,
+    ],
+    '#states' => [
+      'disabled' => [
+        'select[name="title_card"]' => ['!value' => ''],
+      ],
+    ],
   ];
 
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_border'] = [
-    '#type' => 'textfield',
+    '#type' => 'range',
     '#title' => t('Title Border'),
-    '#default_value' => ((theme_get_setting('title_border') !== NULL)) ? theme_get_setting('title_border') : '0',
-    '#attributes' => ['class' => ['border-size-slider']],
-    '#size' => 9,
-    '#maxlength' => 9,
+    '#ai_description' => 'Border width on block titles. 0=no border. 1-2px=subtle underline/frame. 3+px=bold accent.',
+    '#default_value' => ((theme_get_setting('title_border') !== NULL)) ? theme_get_setting('title_border') : 0,
+    '#min' => 0,
+    '#max' => 30,
+    '#step' => 1,
+    '#attributes' => [
+      'class' => ['dxb-slider', 'title-border-range', 'border-size-slider'],
+      'data-dxb-slider' => TRUE,
+    ],
+    '#states' => [
+      'disabled' => [
+        'select[name="title_card"]' => ['!value' => ''],
+      ],
+    ],
   ];
 
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_border_radius'] = [
-    '#type' => 'textfield',
+    '#type' => 'range',
     '#title' => t('Title Border Radius'),
-    '#default_value' => ((theme_get_setting('title_border_radius') !== NULL)) ? theme_get_setting('title_border_radius') : '0',
-    '#attributes' => ['class' => ['border-radius-slider']],
-    '#size' => 9,
-    '#maxlength' => 9,
+    '#ai_description' => 'Rounded corners on the title element. 0=sharp. 4-8px=subtle.',
+    '#default_value' => ((theme_get_setting('title_border_radius') !== NULL)) ? theme_get_setting('title_border_radius') : 0,
+    '#min' => 0,
+    '#max' => 30,
+    '#step' => 1,
+    '#attributes' => [
+      'class' => ['dxb-slider', 'title-border-radius-range', 'border-radius-slider'],
+      'data-dxb-slider' => TRUE,
+    ],
+    '#states' => [
+      'disabled' => [
+        'select[name="title_card"]' => ['!value' => ''],
+      ],
+    ],
   ];
 
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_border_color'] = [
     '#type' => 'select',
     '#title' => t('Title Border Color'),
+    '#ai_description' => 'Color of the title border. Often an accent color for decorative emphasis.',
     '#default_value' => theme_get_setting('title_border_color'),
     '#options' => _dxpr_theme_color_options($theme),
     '#states' => [
@@ -242,6 +314,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_border_color_custom'] = [
     '#type' => 'textfield',
     '#title' => t('Custom Value'),
+    '#ai_description' => 'Custom hex for title border. Only used when title_border_color=custom.',
     '#default_value' => ((theme_get_setting('title_border_color_custom') !== NULL)) ? theme_get_setting('title_border_color_custom') : '#eeeeee',
     '#states' => [
       'visible' => [
@@ -254,6 +327,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['title_el']['title_align'] = [
     '#type' => 'radios',
     '#title' => t('Title Align'),
+    '#ai_description' => 'Block title text alignment. left=standard (default). center=formal/symmetrical. right=unconventional.',
     '#default_value' => ((theme_get_setting('title_align') !== NULL)) ? theme_get_setting('title_align') : 'left',
     '#options' => [
       'left' => t('Left'),
@@ -271,7 +345,8 @@ function block_design_theme_settings(array &$form, $theme) {
     '#type' => 'checkbox',
     '#title' => t('Title Sticker Mode'),
     '#default_value' => ((theme_get_setting('title_sticker') !== NULL)) ? theme_get_setting('title_sticker') : 0,
-    '#description' => t("In Sticker mode the title's width is flexible. By default the title takes the full width of the block"),
+    '#description' => t("When enabled, the title width adjusts to fit its content instead of spanning the full block width."),
+    '#ai_description' => 'When enabled, title element shrinks to fit its text content instead of spanning full block width. Creates compact modern title label. Works well with title_background. Overrides title_align.',
     '#prefix' => '<br>',
   ];
 
@@ -285,13 +360,15 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['divider_el']['block_divider'] = [
     '#type' => 'checkbox',
     '#title' => t('Add Divider to Block'),
+    '#ai_description' => 'Add a horizontal divider line between block title and content. Creates clean visual separation. Popular in minimal/editorial designs.',
     '#default_value' => ((theme_get_setting('block_divider') !== NULL)) ? theme_get_setting('block_divider') : 0,
   ];
 
   $form['dxpr_theme_settings']['block']['block_advanced']['divider_el']['block_divider_custom'] = [
     '#type' => 'checkbox',
     '#title' => t('Customize Divider'),
-    '#description' => t('Turn on to customize block divider specifically. To customize the divider default styling globally across the website find the Divider settings in the Typography tab.'),
+    '#description' => t('Override the global divider styles from the Typography tab for this block only.'),
+    '#ai_description' => 'Enable to override global divider settings with block-specific divider styling. Disable to inherit global divider_thickness/length/color.',
     '#default_value' => ((theme_get_setting('block_divider_custom') !== NULL)) ? theme_get_setting('block_divider_custom') : 0,
     '#states' => [
       'visible' => [
@@ -303,6 +380,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['divider_el']['block_divider_color'] = [
     '#type' => 'select',
     '#title' => t('Divider Color'),
+    '#ai_description' => 'Color for block-specific divider. Only active when block_divider=true and block_divider_custom=true.',
     '#default_value' => theme_get_setting('block_divider_color'),
     '#options' => _dxpr_theme_color_options($theme),
     '#states' => [
@@ -316,6 +394,7 @@ function block_design_theme_settings(array &$form, $theme) {
   $form['dxpr_theme_settings']['block']['block_advanced']['divider_el']['block_divider_color_custom'] = [
     '#type' => 'textfield',
     '#title' => t('Custom Value'),
+    '#ai_description' => 'Custom hex for block divider. Only used when block_divider_color=custom.',
     '#default_value' => ((theme_get_setting('block_divider_color_custom') !== NULL)) ? theme_get_setting('block_divider_color_custom') : '#eeeeee',
     '#states' => [
       'visible' => [
@@ -326,44 +405,74 @@ function block_design_theme_settings(array &$form, $theme) {
     ],
   ];
 
-  $form['dxpr_theme_settings']['block']['block_advanced']['divider_el']['block_divider_thickness'] = [
-    '#type' => 'textfield',
-    '#title' => t('Divider Thickness'),
-    '#default_value' => ((theme_get_setting('block_divider_thickness') !== NULL)) ? theme_get_setting('block_divider_thickness') : '4',
-    '#size' => 9,
-    '#maxlength' => 9,
+  $form['dxpr_theme_settings']['block']['block_advanced']['divider_el']['block_divider_thickness_wrapper'] = [
+    '#type' => 'container',
+    '#attributes' => ['class' => ['dxb-slider-wrapper-container']],
     '#states' => [
       'visible' => [
         ':input[name="block_divider"]' => ['checked' => TRUE],
         ':input[name="block_divider_custom"]' => ['checked' => TRUE],
       ],
     ],
+    'block_divider_thickness' => [
+      '#type' => 'range',
+      '#title' => t('Divider Thickness'),
+      '#ai_description' => 'Thickness of block dividers. 1-2px=hairline. 3-4px=standard. Only active when block_divider=true and block_divider_custom=true.',
+      '#default_value' => ((theme_get_setting('block_divider_thickness') !== NULL)) ? theme_get_setting('block_divider_thickness') : 4,
+      '#min' => 0,
+      '#max' => 20,
+      '#step' => 1,
+      '#attributes' => [
+        'class' => ['dxb-slider', 'block-divider-thickness-range'],
+        'data-dxb-slider' => TRUE,
+      ],
+    ],
   ];
 
-  $form['dxpr_theme_settings']['block']['block_advanced']['divider_el']['block_divider_length'] = [
-    '#type' => 'textfield',
-    '#title' => t('Divider Length'),
-    '#default_value' => ((theme_get_setting('block_divider_length') !== NULL)) ? theme_get_setting('block_divider_length') : '10',
-    '#size' => 9,
-    '#maxlength' => 9,
+  $form['dxpr_theme_settings']['block']['block_advanced']['divider_el']['block_divider_length_wrapper'] = [
+    '#type' => 'container',
+    '#attributes' => ['class' => ['dxb-slider-wrapper-container']],
     '#states' => [
       'visible' => [
         ':input[name="block_divider"]' => ['checked' => TRUE],
         ':input[name="block_divider_custom"]' => ['checked' => TRUE],
       ],
     ],
+    'block_divider_length' => [
+      '#type' => 'range',
+      '#title' => t('Divider Length'),
+      '#ai_description' => 'Width of block dividers. 0=full width. Short lengths (30-80px) create accent marks. Only active when block_divider=true and block_divider_custom=true.',
+      '#default_value' => ((theme_get_setting('block_divider_length') !== NULL)) ? theme_get_setting('block_divider_length') : 10,
+      '#min' => 0,
+      '#max' => 500,
+      '#step' => 1,
+      '#attributes' => [
+        'class' => ['dxb-slider', 'block-divider-length-range'],
+        'data-dxb-slider' => TRUE,
+      ],
+    ],
   ];
 
-  $form['dxpr_theme_settings']['block']['block_advanced']['divider_el']['block_divider_spacing'] = [
-    '#type' => 'textfield',
-    '#title' => t('Divider Spacing'),
-    '#default_value' => ((theme_get_setting('block_divider_spacing') !== NULL)) ? theme_get_setting('block_divider_spacing') : '20',
-    '#size' => 9,
-    '#maxlength' => 9,
+  $form['dxpr_theme_settings']['block']['block_advanced']['divider_el']['block_divider_spacing_wrapper'] = [
+    '#type' => 'container',
+    '#attributes' => ['class' => ['dxb-slider-wrapper-container']],
     '#states' => [
       'visible' => [
         ':input[name="block_divider"]' => ['checked' => TRUE],
         ':input[name="block_divider_custom"]' => ['checked' => TRUE],
+      ],
+    ],
+    'block_divider_spacing' => [
+      '#type' => 'range',
+      '#title' => t('Divider Spacing'),
+      '#ai_description' => 'Vertical space above and below the block divider. 10-15px=tight. 20px=standard. 30+px=generous. Only active when block_divider=true and block_divider_custom=true.',
+      '#default_value' => ((theme_get_setting('block_divider_spacing') !== NULL)) ? theme_get_setting('block_divider_spacing') : 20,
+      '#min' => 0,
+      '#max' => 100,
+      '#step' => 1,
+      '#attributes' => [
+        'class' => ['dxb-slider', 'block-divider-spacing-range'],
+        'data-dxb-slider' => TRUE,
       ],
     ],
   ];
@@ -373,14 +482,15 @@ function block_design_theme_settings(array &$form, $theme) {
     '#type' => 'details',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#description' => t('The custom block design only applies to selected regions.'),
-    '#suffix' => '</div><div class="block-preview">' . _dxpr_theme_block_preview() . '</div></div>',
+    '#description' => t('Block design styles only apply to selected regions.'),
+    '#suffix' => '</div></div>',
   ];
 
   $form['dxpr_theme_settings']['block']['regions']['block_design_regions'] = [
     '#type' => 'checkboxes',
     '#multiple' => TRUE,
     '#title' => t('Regions'),
+    '#ai_description' => 'Select which theme regions these block design settings apply to. Common choices: sidebar_first, sidebar_second (sidebar widgets), footer (footer blocks), content (main content blocks).',
     '#default_value' => ((theme_get_setting('block_design_regions') !== NULL)) ? theme_get_setting('block_design_regions') : [],
     '#options' => [
       'secondary_header' => t('Secondary Header'),
@@ -397,52 +507,4 @@ function block_design_theme_settings(array &$form, $theme) {
       'footer' => t('Footer'),
     ],
   ];
-}
-
-/**
- * Generate block preview markup.
- */
-function _dxpr_theme_block_preview() {
-  $block_card = theme_get_setting('block_card');
-  $title_card = theme_get_setting('title_card');
-  $output = <<<EOT
-<div class="blocks-preview">
-  <div class="region region-sidebar-second">
-    <section class="block block-tagclouds clearfix {$block_card}" id="block-tagclouds-2">
-      <div class="wrap-block-title"><h2 class="block-title {$title_card}">Tags in Tags</h2></div>
-      <hr class="block-hr">
-      <span class=
-      "tagclouds-term"><a class="tagclouds level1" href="#" title=
-      "">Business</a></span> <span class="tagclouds-term"><a class=
-      "tagclouds level6" href="#" title="">Inspiration</a></span>
-      <span class="tagclouds-term"><a class="tagclouds level3" href=
-      "#" title="">Oppurtunities</a></span> <span class=
-      "tagclouds-term"><a class="tagclouds level3" href="#" title=
-      "">Secrets</a></span> <span class="tagclouds-term"><a class=
-      "tagclouds level5" href="#" title="">Travel</a></span>
-    </section>
-    <section class="block block-views clearfix {$block_card}" id=
-    "block-views-cms-blog-cat-blog-categories">
-      <div class="wrap-block-title"><h2 class="block-title {$title_card}">Categories</h2></div>
-      <hr class="block-hr">
-      <div class=
-      "view view-cms-blog-cat view-id-cms_blog_cat view-display-id-blog_categories view-dom-id-414e72d6e00d6259852916a789bc63e5 ">
-      <div class="view-content">
-          <ul class="dxpr-theme-processed nav">
-            <li class="">
-              <a href="#">Business <span class=
-              "dxpr-theme-util-text-muted">(12)</span></a>
-            </li>
-            <li class="">
-              <a href="#">Lifestyle <span class=
-              "dxpr-theme-util-text-muted">(3)</span></a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-  </div>
-</div>
-EOT;
-  return $output;
 }

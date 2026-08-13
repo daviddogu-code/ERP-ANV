@@ -1,6 +1,17 @@
 Contributing guidelines
 =======================
 
+### Using GitHub Templates
+
+All issues and pull requests **must** use the templates provided in `.github/`:
+
+- **Issues**: Use the appropriate template from `.github/ISSUE_TEMPLATE/` (Bug,
+  Feature Proposal, Refactoring, etc.). Do not create blank issues.
+- **Pull Requests**: The PR template (`.github/pull_request_template.md`) will
+  auto-populate. Fill out all sections completely.
+
+Issues or PRs that do not use templates will be closed and asked to resubmit.
+
 ### Git workflow
 
 1. Every pull request must be linked to an issue, no exceptions
@@ -10,12 +21,12 @@ Contributing guidelines
    com/alphagov/styleguides/blob/master/git.md)
 4. Pull requests must contain a short description of your solution
 5. Branch naming convention: person/target-branch/#issue-description-of-branch.
-    1. person — The name of the owner of the branch. For example Jur, Rokaya,
+    1. person: the name of the owner of the branch. For example Jur, Rokaya,
        Shaaer, Denis, etc.
-    2. main-branch — A reference to the target branch you want to merge into
-    3. #issue — Every branch must be linked to a GitHub issue. Enter the issue
+    2. main-branch: a reference to the target branch you want to merge into
+    3. #issue: every branch must be linked to a GitHub issue. Enter the issue
        number here.
-    4. description-of-branch — Describe what's inside, for example" fix-for-
+    4. description-of-branch: describe what's inside, for example" fix-for-
        jumping-controls-bug or new-icon-set-for-parameter-definition.
 6. Unlike in dxpr_builder repository, we do push artifacts (.css files etc) to
    the repository here. This is because DXPR Theme is released on Drupal.org,
@@ -23,7 +34,9 @@ Contributing guidelines
    create artifacts on the fly.
 7. If the issue defines a "Scope of affected files" do not include changes to
    files not in this list unless absolutely necessary. When you do this you must
-   explain why. 
+   explain why.
+8. Do NOT run `npx`, `npm run`, or `grunt` directly to build artifacts. Use the
+   Docker watch process or Docker build commands from the README instead. 
 
 ### Code ownership
 

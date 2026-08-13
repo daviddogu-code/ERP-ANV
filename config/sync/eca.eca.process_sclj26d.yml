@@ -396,6 +396,7 @@ actions:
       value: '1'
       eca_data: '[soCount]'
       eca_token_name: soNext
+      skip_on_nan: false
     successors:
       -
         id: Activity_so_pad

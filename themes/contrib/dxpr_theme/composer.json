@@ -23,7 +23,8 @@
         }
     ],
     "require": {
-        "drupal/bootstrap5": "^3",
-        "drupal/color": "^1.0.3"
+        "drupal/bootstrap5": "^3 || ^4",
+        "drupal/media_library_form_element": "^2.1",
+        "drupal/dxpr_theme_helper": "^3.0"
     }
 }

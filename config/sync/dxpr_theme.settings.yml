@@ -101,7 +101,6 @@ page_title_image_position: center_center
 background_image_style: cover
 background_image_position: center_center
 background_image_attachment: fixed
-header_position: 0
 header_top_layout: logo_left_menu_left
 header_style: normal
 header_top_bg_opacity: '1'
@@ -134,9 +133,6 @@ dropdown_hover_background: ''
 dropdown_hover_background_custom: ''
 dropdown_hover_text_color: ''
 dropdown_hover_text_color_custom: ''
-header_side_align: left
-header_side_direction: left
-header_side_width: '300'
 hamburger_menu: three-dash
 hamburger_animation: cross
 menu_type: uppercase
@@ -224,3 +220,4 @@ title_type:
   bold: 0
   italic: 0
 page_title_image_path: ''
+color_scheme: dxpr-theme-2025

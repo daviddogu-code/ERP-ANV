@@ -1,41 +1,265 @@
 @charset "UTF-8";
-//colors
-$primary: #0550e6;
-$highlight: #e6eefd;
-$text: #222330;
-$textLight: rgba(86,86,86,.6);
+
+// Sidebar width defined at root so it can be used by body-wrapper too
+:root {
+  --dxt-admin-sidebar-width: 40vw;
+  --dxt-admin-sidebar-max-width: 1100px;
+
+  // Default value for menu link spacing - needed for live preview detection
+  --dxt-setting-menu-link-spacing: 10px;
+}
+
+// CSS-first layout: Set displacement offset when settings form exists
+// This prevents FOUC by positioning sidebar correctly before JS runs
+html:has(#system-theme-settings) {
+  --drupal-displace-offset-right: var(--dxt-admin-sidebar-width);
+}
+
+// Apply margin to body content when settings sidebar is present (CSS-only, no JS wrapper needed)
+// Exclude fixed-position elements like the header which need special handling
+body:has(#system-theme-settings) > *:not(#system-theme-settings, #navbar, script, style, .visually-hidden) {
+  margin-right: var(--dxt-admin-sidebar-width) !important;
+}
+
+// Fixed header should not extend under the settings sidebar
+body:has(#system-theme-settings) #navbar.dxpr-theme-header--fixed,
+body:has(#system-theme-settings) #navbar.affix {
+  right: var(--dxt-admin-sidebar-width) !important;
+  width: calc(100% - var(--dxt-admin-sidebar-width)) !important;
+}
+
+// Body padding for fixed header should include both header height and admin toolbar offset
+// This ensures proper spacing on theme settings page
+html:has(#system-theme-settings) body.body--dxpr-theme-header-fixed.body--dxpr-theme-header-not-overlay {
+  padding-top: calc(var(--dxt-setting-header-top-height, 100px) + var(--drupal-displace-offset-top, 0px)) !important;
+}
 
 #system-theme-settings {
-  background: white;
-  color: $text;
-  font-size: 15px;
-  margin-top: 60px;
+  // Color palette - Primary (3 colors)
+  --dxt-admin-color-primary-50: #eaedfa;
+  --dxt-admin-color-primary-500: #314dd0;
+  --dxt-admin-color-primary-600: #2d46bd;
+
+  // Color palette - Neutral (10 colors)
+  --dxt-admin-color-neutral-0: #fff;
+  --dxt-admin-color-neutral-100: #f2f2f7;
+  --dxt-admin-color-neutral-200: #e5e5ea;
+  --dxt-admin-color-neutral-300: #d1d5db;
+  --dxt-admin-color-neutral-400: #9ca3af;
+  --dxt-admin-color-neutral-500: #8e8e93;
+  --dxt-admin-color-neutral-600: #636366;
+  --dxt-admin-color-neutral-700: #48484a;
+  --dxt-admin-color-neutral-800: #374151;
+  --dxt-admin-color-neutral-900: #1c1c1e;
+
+  // Color palette - Shadow (4 colors)
+  --dxt-admin-color-shadow-8: rgb(0 0 0 / 8%);
+  --dxt-admin-color-shadow-10: rgb(0 0 0 / 10%);
+  --dxt-admin-color-shadow-15: rgb(0 0 0 / 15%);
+  --dxt-admin-color-shadow-20: rgb(0 0 0 / 20%);
+
+  // Semantic aliases
+  --dxt-admin-bg: var(--dxt-admin-color-neutral-100);
+  --dxt-admin-accent: var(--dxt-admin-color-primary-500);
+  --dxt-admin-accent-hover: var(--dxt-admin-color-primary-600);
+  --dxt-admin-accent-light: var(--dxt-admin-color-primary-50);
+  --dxt-admin-text: var(--dxt-admin-color-neutral-900);
+  --dxt-admin-text-muted: var(--dxt-admin-color-neutral-500);
+  --dxt-admin-text-disabled: var(--dxt-admin-color-neutral-400);
+  --dxt-admin-border: var(--dxt-admin-color-neutral-300);
+  --dxt-admin-surface: var(--dxt-admin-color-neutral-0);
+  --dxt-admin-surface-alt: var(--dxt-admin-color-neutral-200);
+  --dxt-admin-toggle-off: var(--dxt-admin-color-neutral-500);
+  --dxt-admin-toggle-off-hover: var(--dxt-admin-color-neutral-600);
+  --dxt-admin-toggle-off-active: var(--dxt-admin-color-neutral-700);
+  --dxt-admin-focus-ring: rgb(49 77 208 / 25%);
+  --dxt-admin-selected-bg: rgb(49 77 208 / 15%);
+  --dxt-admin-selected-bg-hover: rgb(49 77 208 / 20%);
+  --dxt-admin-search-bg: rgb(118 118 128 / 8%);
+  --dxt-admin-search-bg-focus: rgb(118 118 128 / 12%);
+  --dxt-admin-tab-hover: rgb(255 255 255 / 60%);
+  --dxt-admin-tab-active: rgb(255 255 255 / 80%);
+
+  // Border radius scale
+  --dxt-radius-sm: 8px;
+  --dxt-radius-md: 12px;
+  --dxt-radius-lg: 16px;
+  --dxt-radius-xl: 24px;
+  --dxt-radius-full: 9999px;
+
+  background: var(--dxt-admin-bg);
+  border-left: 1px solid var(--dxt-admin-color-shadow-8);
+  bottom: 0;
+  margin: 0;
+  max-width: var(--dxt-admin-sidebar-max-width);
+  overflow-y: auto;
+
+  // Padding for fixed search header (~70px) and save button (~100px)
+  padding: 70px 0 100px;
+  position: fixed;
+  right: calc(var(--drupal-displace-offset-right, 0) - var(--dxt-admin-sidebar-width));
+  top: var(--drupal-displace-offset-top, 0);
+  width: var(--dxt-admin-sidebar-width);
+  z-index: 9999;
+
+  * {
+    color: var(--dxt-admin-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+    font-size: 16px !important;
+    line-height: 1.2 !important;
+  }
+
+  // Link styling - WCAG AAA compliant
+  a:not(.vertical-tabs__menu-item a) {
+    color: var(--dxt-admin-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.15s ease, text-decoration-color 0.15s ease;
+
+    &:visited {
+      color: #5e35b1; // Purple for visited links
+    }
+
+    &:hover {
+      color: var(--dxt-admin-accent-hover);
+      text-decoration-thickness: 2px;
+    }
+
+    &:focus {
+      outline: 2px solid var(--dxt-admin-accent);
+      outline-offset: 2px;
+      text-decoration: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--dxt-admin-accent);
+      outline-offset: 2px;
+    }
+
+    &:active {
+      color: var(--dxt-admin-accent-hover);
+      text-decoration-thickness: 2px;
+    }
+  }
+
+  // Search functionality - fixed at top of sidebar
+  .dxpr-search-container {
+    background: var(--dxt-admin-bg);
+    box-shadow: 0 4px 16px var(--dxt-admin-color-shadow-10);
+    margin: 0;
+    max-width: var(--dxt-admin-sidebar-max-width);
+    padding: 8px 16px 12px;
+    position: fixed;
+    right: calc(var(--drupal-displace-offset-right, 0) - var(--dxt-admin-sidebar-width));
+    top: var(--drupal-displace-offset-top, 0);
+    width: var(--dxt-admin-sidebar-width);
+    z-index: 10001;
+  }
+
+  #dxpr-settings-search {
+    background: var(--dxt-admin-search-bg);
+    border: none;
+    border-radius: var(--dxt-radius-md);
+    outline: none;
+    padding: 12px 40px 12px 16px;
+    transition: background-color 0.2s ease;
+    width: 100%;
+
+    &:focus {
+      background: var(--dxt-admin-search-bg-focus);
+      box-shadow: none;
+    }
+
+    &::placeholder {
+      color: var(--dxt-admin-text-muted);
+      opacity: 1;
+    }
+  }
+
+  .dxpr-search-clear {
+    align-items: center;
+    background: var(--dxt-admin-text-muted) !important;
+    border: none !important;
+    border-radius: 50%;
+    color: var(--dxt-admin-bg) !important;
+    cursor: pointer;
+    display: none;
+    font-size: 12px !important;
+    height: 18px;
+    justify-content: center;
+    line-height: 1;
+    padding: 0 !important;
+    position: absolute;
+    right: 28px;
+    top: calc(50% - 3px);
+    transform: translateY(-50%);
+    width: 18px;
+
+    &:hover {
+      background: var(--dxt-admin-text) !important;
+    }
+  }
+
   // Header
-  * { 
+  *:not(.reinvented-color-wheel *) {
     box-sizing: border-box;
-    border-radius: 0;
-    color: $text;
-    font-weight: normal;
-    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol" !important;
   }
-  #edit-actions {
-    border: none;
-    border-top: 1px solid $textLight;
-    margin: 40px 0 0 0;
+
+  // Save button - fixed at bottom of sidebar
+  #edit-actions.form-actions {
+    background: var(--dxt-admin-bg) !important;
+    border: none !important;
+    bottom: var(--drupal-displace-offset-bottom, 0);
+    box-shadow: 0 -4px 16px var(--dxt-admin-color-shadow-10);
+    margin: 0 !important;
+    max-width: var(--dxt-admin-sidebar-max-width);
+    padding: 12px 16px !important;
+    position: fixed;
+    right: calc(var(--drupal-displace-offset-right, 0) - var(--dxt-admin-sidebar-width));
+    width: var(--dxt-admin-sidebar-width);
+    z-index: 10000;
   }
-  #edit-submit {
-    background: $primary;
-    border: none;
-    color: white;
-    font-size: 18px;
-    padding: 20px;
-    margin: 20px;
-    width: 300px;
+
+  // Unified button styling - black bg, white text
+  button,
+  input[type="submit"],
+  input[type="button"],
+  .btn,
+  .button {
+    background: var(--dxt-admin-color-neutral-900) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: var(--dxt-admin-surface) !important;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 12px 16px;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background: var(--dxt-admin-color-neutral-800) !important;
+    }
+
+    &:focus {
+      outline: 2px solid var(--dxt-admin-accent);
+      outline-offset: 2px;
+    }
+
+    &:active {
+      background: var(--dxt-admin-color-neutral-700) !important;
+    }
   }
+
+  #edit-actions #edit-submit {
+    margin: 0;
+    padding: 16px;
+    width: 100%;
+  }
+
   .settings-header {
-    padding: 30px;
     margin-bottom: 0;
+    padding: 20px 16px;
   }
+
   .form-wrapper,
   .tabs-left > .tab-content,
   .tabs-right > .tab-content,
@@ -45,564 +269,1483 @@ $textLight: rgba(86,86,86,.6);
     border: none;
     box-shadow: none;
   }
-  .tabs-left > .tab-content, .tabs-right > .tab-content {
 
-  }
   details.form-wrapper,
   div.form-wrapper {
     background: transparent;
+    border: none;
     clear: both;
-    border-left: 1px solid $text;
-    border-radius: 0;
-    margin-top: 0;
-    margin-bottom: 20px;
+    margin: 0 0 24px;
+    overflow: hidden;
+    padding: 0;
+
     .panel-heading {
       background: transparent;
       border: none;
     }
+
     .panel-title {
-      border: none;
       background: transparent;
-      font-size: inherit;
+      border: none;
+
       .panel-title {
+        background: none;
         outline: none;
         text-decoration: none;
-        background: none;
+
         &:hover,
         &:active {
           outline: none;
           text-decoration: none;
-          background: $highlight;
         }
       }
     }
-    .card, .card-body {
-      color: #354051;
-    }
+
     .card-header {
-      border: none;
       background: transparent;
-      font-size: 18px;
-      font-weight: bold;
+      font-weight: 600;
+      padding: 12px 16px;
     }
+
     summary {
-      padding: 10px 15px;
-      --bs-bg-opacity: unset;
+      align-items: center;
       border: unset;
+      cursor: pointer;
+      display: flex;
+      font-weight: 700;
+      justify-content: space-between;
+      padding: 16px;
+      transition: background-color 0.15s ease;
+
+      --bs-bg-opacity: unset;
+
       .details-title {
-        outline: none;
-        text-decoration: none;
         background: none;
         color: inherit;
+        outline: none;
+        text-decoration: none;
       }
+
+      &:hover {
+        background: var(--dxt-admin-tab-hover);
+      }
+
+      &:focus {
+        box-shadow: inset 0 0 0 2px var(--dxt-admin-accent);
+        outline: none;
+      }
+
       &::before {
         display: none;
       }
+
       &::marker {
         content: '';
       }
+
+      // Custom chevron icon - hidden by default, shown on hover/focus
+      &::after {
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23636366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 16px;
+        content: '';
+        flex-shrink: 0;
+        height: 16px;
+        margin-left: 8px;
+        opacity: 0;
+        transition: opacity 0.15s ease, transform 0.2s ease;
+        width: 16px;
+      }
+
+      &:hover::after,
+      &:focus::after {
+        opacity: 1;
+      }
     }
+
+    &[open] > summary::after {
+      transform: rotate(180deg);
+    }
+
+    &[open] > summary:hover::after,
+    &[open] > summary:focus::after {
+      opacity: 1;
+    }
+
     .description {
-      color: $textLight;
-      font-size: 12px;
-      padding: 5px 0;
+      color: var(--dxt-admin-text-muted);
+      font-size: 13px !important;
       margin: 0;
+      padding: 4px 0;
     }
+
+    // Inner content padding
+    // .details-wrapper,
+    // .fieldset-wrapper {
+    //   padding: 0 16px 16px;
+    // }
   }
+
   label,
   legend {
-    width: 200px;
-    float: left;
-    display: block;
-    padding: 0 0 5px 0;
-    border: none;
-    outline: none;
-    font-size: 18px;
     background-color: unset;
+    border: none;
+    display: block;
+    font-size: 19px !important;
+    margin-bottom: 6px;
+    outline: none;
+    width: 100%;
   }
-  .form-item {
-    clear: both;
-    min-height: 3em;
-    &:after{
-      content: "";
-      display: table;
-      clear: both;
+
+  .no-preview {
+    position: relative;
+
+    &::after {
+      background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20class%3D%22feather%20feather-eye-off%22%3E%3Cpath%20d%3D%22M17.94%2017.94A10.07%2010.07%200%200%201%2012%2020c-7%200-11-8-11-8a18.45%2018.45%200%200%201%205.06-5.94M9.9%204.24A9.12%209.12%200%200%201%2012%204c7%200%2011%208%2011%208a18.5%2018.5%200%200%201-2.16%203.19m-6.72-1.07a3%203%200%201%201-4.24-4.24M1%201l22%2022%22%2F%3E%3C%2Fsvg%3E');
+      background-size: contain;
+      content: '';
+      display: inline-block;
+      filter: invert(100%) brightness(70%);
+      height: 16px;
+      margin-left: .4em;
+      position: absolute;
+      right: 0;
+      top: 2px;
+      width: 16px;
     }
+  }
+
+  .no-preview-info {
+    bottom: 0;
+    color: var(--dxt-admin-text-muted);
+    font-size: 13px !important;
+    line-height: 1.3;
+    position: absolute;
+    right: 16px;
+
+    span.no-preview {
+      display: inline-block;
+      margin-right: 1.5em;
+
+      &::after {
+        height: 1em;
+        margin-left: 0;
+        width: 1em;
+      }
+    }
+  }
+
+  .form-radios .no-preview::after, .form-checkboxes .no-preview::after, .form-item-block-card .no-preview::after, .form-item-block-divider .no-preview::after {
+    display: none;
+  }
+
+  .form-item {
+    background-color: unset;
+        margin-bottom: 0;
+    padding: 12px 0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
     .js-form-type-radio {
       min-height: 20px;
     }
   }
-  .form-control {
-    border-color: $text;
+
+  .media-library-item {
+    width: auto;
+
+    .media-library-item__remove {
+      height: auto;
+      padding: 6px 10px;
+      width: auto;
+    }
   }
-  .form-type-select::after {
-    color: $textLight;
-  }
+
   // selects fix
   .form-item-field-settings-granularity {
-    .option.checkbox.control-label { float: left; margin-right: 2em; }
-    .help-block { clear: both; }
+    .option.checkbox.control-label {
+      float: left;
+      margin-right: 2em;
+    }
+
+    .help-block {
+      clear: both;
+    }
   }
+
   // Checkboxes bootstrap fix
   .radio input[type="radio"], .radio-inline input[type="radio"], .checkbox input[type="checkbox"], .checkbox-inline input[type="checkbox"] {
     margin-left: 0;
     position: static;
   }
-  // Slider input wrapper
-  .slider-input-wrapper {
-    display: flex;
-    width: 100%;
-    height: 40px;
-    .slider {
-      flex: 0 1 80%;
-    }
-    input {
-      flex: 0 1 20%;
-    }
-  }
+
   .form-text,
   .fieldset-wrapper,
-  .slider,
   .select-wrapper {
-    float: left;
     max-width: 100%;
-    width: 400px;
+    width: 100%;
   }
+
   .fieldset-wrapper {
     padding: 0;
   }
+
   .form-text,
   .form-textarea,
   .form-file {
+    background: var(--dxt-admin-surface);
     border: none;
     box-shadow: none;
-    border: 1px solid $text;
+    padding: 14px 16px;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+      background: var(--dxt-admin-surface);
+      box-shadow: 0 0 0 2px var(--dxt-admin-accent);
+      outline: none;
+    }
   }
+
+  // Monospace font for code input fields (custom CSS/JS and CSS selectors)
+  #edit-custom-css-site,
+  #edit-custom-javascript-site,
+  input[name="body_font_face_selector"],
+  input[name="headings_font_face_selector"],
+  input[name="nav_font_face_selector"],
+  input[name="sitename_font_face_selector"],
+  input[name="blockquote_font_face_selector"] {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace !important;
+  }
+
   .description,
   .help-block {
-    float: left;
-    clear: both;
+    color: var(--dxt-admin-text-muted);
+    font-size: 13px !important;
+    margin-top: 6px;
   }
-  // BOOTSTRAP SLIDER
-  .slider + input {
-    display: block !important;
-    width: 120px;
-    border: none;
-    background: transparent;
-    font-size: 15px;
-    position: relative;
-    bottom: 20px;
-    margin-left: 15px;
-    margin-top: 8px;
-    padding: 0;
-    height: 40px;
-  }
-  .slider-track {
-    height: 5px;
-    background: #dadfe7;
-    box-shadow: none;
-  }
-  .slider-selection {
-    box-shadow: none;
-    background: $primary;
-  }
-  .slider {
-    position: relative;
-    display: block;
-  }
-  .slider-handle {
-    background: white;
-    box-shadow: 0px 1px 2px rgba(16,24,40,.09), 0px 1px 3px rgba(16,24,40,.15);
-    width: 20px;
-    height: 20px;
-    margin-top: -3px;
-    cursor: pointer;
-  }
+
   h2 {
     margin-bottom: 0;
     margin-top: 0;
   }
+
+  // Hide all form headers, then show subsequent ones (for base theme separator)
   .form-header {
-    border-bottom: 1px solid $text;
-    display: block;
-    width: 100%;
-    margin-bottom: 0;
-    padding: 20px;
-    font-size: 20px;
-    img {
-      width: 40px;
-      margin-right: 10px;
-    }
+    display: none;
   }
+
+  .form-header ~ .form-header {
+    border-top: 1px solid var(--dxt-admin-border);
+    display: block;
+    margin-top: 24px;
+    padding-top: 24px;
+    text-align: center;
+  }
+
   .vertical-tabs {
     display: table;
-    position: relative;
-    width: 100%;    
     margin: 0;
+    position: relative;
+    width: 100%;
 
     .vertical-tabs__menu {
-      
-      color: $text;
-      float: none;
-      display: table-cell;
-      vertical-align: top;
+      background: transparent;
+      border: none;
       content: ' ';
-      width: 200px;
+      display: table-cell;
+      float: none;
+      height: 100%;
+      left: 0;
+      margin: 0;
+      overflow: visible;
+      padding: 16px;
       position: relative;
       top: 0;
-      left: 0;
-      height: 100%;
-      padding-top: 30px;      
-      margin: 0;
-      border: none;
+      vertical-align: top;
+      width: 160px;
+
       .vertical-tabs__menu-item {
-        border: none;
         background: transparent;
+        border: none;
+        border-radius: 24px;
+        margin-bottom: 4px;
+
         a {
-          border: none;
           background: transparent;
-          padding: 10px 15px;
-          margin-bottom: 3px;
-          &:hover,
-          &:active {
-            border: none;
-            color: $primary !important;
-            background: $highlight !important;
+          border: none;
+          border-radius: 24px;
+          color: var(--dxt-admin-text-muted);
+          display: block;
+          margin-bottom: 0;
+          outline: none;
+          padding: 10px 16px;
+          transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+          strong,
+          span {
+            font-size: 13px !important;
+          }
+
+          &:hover {
+            background: var(--dxt-admin-tab-hover);
+            color: var(--dxt-admin-text);
+            text-decoration: none;
+          }
+
+          &:focus {
             outline: none;
             text-decoration: none;
           }
-          &:focus {
-            text-decoration: none;
+
+          &:focus-visible {
+            background: var(--dxt-admin-tab-hover);
+            box-shadow: 0 0 0 2px var(--dxt-admin-accent);
           }
-          &:hover .vertical-tabs__menu-item-title,
-          &:focus .vertical-tabs__menu-item-title,
-          &:active .vertical-tabs__menu-item-title {
-            text-decoration: none;
+
+          &:active {
+            background: var(--dxt-admin-tab-active);
+            color: var(--dxt-admin-text);
           }
+
           .vertical-tabs__menu-item-title {
-              font-weight: normal;
+            font-weight: normal;
           }
         }
       }
+
       .is-selected {
+        background-color: var(--dxt-admin-surface);
+        border-radius: 24px;
+
         a {
-          color: white;
-          background: $highlight;
-          border: none;
-          &:hover,
-          &:focus {
-            color: $primary !important;
-            background: $highlight !important;
+          color: var(--dxt-admin-text);
+
+          &:hover {
+            background: transparent;
           }
+
+          &:focus-visible {
+            background: transparent;
+            box-shadow: 0 0 0 2px var(--dxt-admin-accent);
+          }
+
+          &:active {
+            background: transparent;
+          }
+
           .vertical-tabs__menu-item-title {
-            color: $primary;
+            font-weight: 600;
+            text-decoration: none;
           }
         }
-        .summary {
-          color: $textLight;
-        }
-      }
-      .summary {
-        color: $textLight;
       }
     }
+
     .vertical-tabs__panes {
-      padding: 0 15px 15px 0;
+      padding: 0 16px 16px 8px;
+
       .details-wrapper {
-        padding: 15px;
+        padding: 16px;
       }
     }
 
   }
 
   .form-select {
-    width: 250px;
+    appearance: none;
+    background-color: var(--dxt-admin-surface);
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%238e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
+    background-position: right 14px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    border: none;
+    cursor: pointer;
+    max-width: 100%;
+    padding: 14px 44px 14px 16px;
+    transition: box-shadow 0.2s ease;
+    width: auto;
+
+    &:focus {
+      box-shadow: 0 0 0 2px var(--dxt-admin-accent);
+      outline: none;
+    }
+
+    &:hover {
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%231c1c1e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
+    }
   }
 
   .form-composite {
-    display: flex;
-    flex-direction: inherit;
+    display: block;
+
     .form-checkboxes input {
       display: block;
     }
+
     input {
       display: none;
     }
+
     label {
-      width: auto;
-      font-size: 15px;
+      margin-bottom: 8px;
+      width: 100%;
     }
-    // .form-radios {
-      // label.option,
-      input ~ label.option,
-      input ~ span {
-        font-weight: 300;
-        margin: 0;
-        line-height: 24px;
-        width: auto;
+
+    // DXPR Custom Radio styling - Modern rounded card style
+    .form-radios {
+      background: var(--dxt-admin-surface);
+      border: none;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .js-form-type-radio {
+      align-items: center;
+      background: var(--dxt-admin-surface);
+      border-bottom: 1px solid var(--dxt-admin-bg);
+      display: flex;
+      height: 60px;
+      justify-content: space-between;
+      margin: 0;
+      padding: 0 20px;
+      position: relative;
+      transition: background-color 0.15s ease;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      // Hover state
+      &:hover {
+        background: var(--dxt-admin-bg);
+
+        label.option {
+          color: var(--dxt-admin-text);
+        }
+      }
+
+      // Focus state
+      &:focus-within {
+        box-shadow: inset 0 0 0 2px var(--dxt-admin-accent);
+        outline: none;
+        z-index: 1;
+      }
+
+      input[type="radio"] {
+        height: 1px;
+        opacity: 0;
+        position: absolute;
+        width: 1px;
+
+        // Focus visible on input
+        &:focus-visible ~ label.option {
+          outline: none;
+        }
+      }
+
+      label.option {
+        align-items: center;
+        color: var(--dxt-admin-text);
         cursor: pointer;
+        display: flex;
+        flex: 1;
+        font-weight: 400;
+        height: 100%;
+        justify-content: space-between;
+        line-height: 1;
+        margin: 0;
+        padding: 0;
+        width: 100%;
 
-        &:before {
-          content: '__';
-          color: $primary;
-          opacity: 0.3;
-          font-size: 18px;
-          display: inline-block;
-          width: 25px;
-          font-weight: normal;
+        &::before {
+          display: none;
+        }
+
+        &::after {
+          color: var(--dxt-admin-accent);
+          content: '';
+          flex-shrink: 0;
+          font-weight: 600;
+          height: 24px;
+          margin-left: 12px;
+          width: 24px;
         }
       }
 
-      input:checked ~ label.option,
-      input:checked ~ span {
+      // Selected state
+      &:has(input[type="radio"]:checked) {
+        background: var(--dxt-admin-selected-bg);
+
+        &:hover {
+          background: var(--dxt-admin-selected-bg-hover);
+
+          label.option {
+            color: var(--dxt-admin-text);
+          }
+        }
+
+        label.option::after {
+          // Checkmark SVG as background
+          background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23314dd0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
+          background-position: center;
+          background-repeat: no-repeat;
+          background-size: 18px 18px;
+          content: '';
+        }
+      }
+
+      // Disabled state
+      &:has(input[type="radio"]:disabled) {
+        background: var(--dxt-admin-surface-alt);
+        cursor: not-allowed;
+        pointer-events: none;
+
+        label.option {
+          color: var(--dxt-admin-text-disabled);
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    // Legacy styling for non-radio form-composite elements
+    input ~ label.option,
+    input ~ span {
+      cursor: pointer;
+      display: block;
+      font-weight: 400;
+      line-height: 22px;
+      margin: 0;
+      padding: 12px 0;
+      width: 100%;
+
+      &:last-of-type {
+        border-bottom: none;
+      }
+
+      &::before {
+        color: var(--dxt-admin-text-muted);
+        content: '';
+        display: inline-block;
+        font-size: 19px !important;
         font-weight: normal;
-        font-style: italic;
-
-        &:before {
-          content: '✓';
-          opacity: 1;
-          color: $primary;
-          font-size: 24px;
-        }
+        margin-right: 12px;
+        width: 22px;
       }
-    // }
+    }
+
+    input:checked ~ label.option,
+    input:checked ~ span {
+      color: var(--dxt-admin-text);
+      font-style: normal;
+      font-weight: 400;
+
+      &::before {
+        color: var(--dxt-admin-accent);
+        content: '✓';
+        font-size: 19px !important;
+        font-weight: 600;
+      }
+    }
   }
+
   .form-type-checkboxes {
     > label {
-      font-weight: bold;
+      font-weight: 600;
     }
   }
+
   .farbtastic {
-    z-index: 10;
+    flex-shrink: 0;
+    transform: scale(0.7);
+    transform-origin: top left;
   }
+
   .color-form {
-    max-width: 740px;
+    display: flex;
+    max-width: 100%;
+
     .form-item {
-      height: auto;
+      border-bottom: none;
+      margin: 0 0 16px;
+      padding: 0;
     }
+
+    .details-wrapper {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+    }
+
     .form-text {
-      padding: 3px;
-      width: 250px;
+      padding: 10px 12px;
+      width: 100%;
     }
+
     .select-wrapper {
-      width: 250px;
+      margin-bottom: 12px;
+      width: 100%;
+
       .form-select {
-        float: none;
-        width: 250px;
+        width: 100%;
       }
     }
+
     .form-item-scheme {
-      height: 3.2em;
-      margin-right: 160px;
+      margin-bottom: 16px;
+      width: 100%;
     }
+
     h2 {
       visibility: hidden;
     }
+
     .color-preview {
       visibility: hidden;
     }
   }
-  .form-item {
-    padding-left: 0;
-    background-color: unset;
-  }
+
   .form-item.form-type-vertical-tabs {
+    border-bottom: none;
     margin-top: 0;
+    padding: 0;
   }
+
   .color-placeholder {
-    position: absolute;
-    right: 3px;
+    position: fixed;
+    right: 60px;
+    top: calc(var(--drupal-displace-offset-top, 0px) + 80px);
+    z-index: 10;
   }
+
+  // Leave space for fixed color wheel
+  .color-palette-wrapper {
+    max-width: calc(100% - 230px);
+  }
+
   .color-palette {
-    margin-top: 2em;
+    flex: 1;
+    margin-top: 16px;
+
     label {
-      line-height: 42px;
-      margin: 0;
+      color: var(--dxt-admin-text-muted);
+      font-weight: 500;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      text-transform: capitalize;
+      width: 100%;
     }
+
     .form-item {
+      border-bottom: none;
+      margin-bottom: 20px;
       padding: 0;
-      margin: 0 0 2px 0;
-      width: auto;
-      min-height: 0;
     }
+
     .item-selected {
       background: none;
+
       input {
-        font-style: italic;
+        font-style: normal;
+        font-weight: 600;
       }
     }
+
     .lock {
-      left: -18px;
-      top: -2em;
+      left: auto;
+      margin-left: 8px;
+      position: relative;
+      top: auto;
     }
+
     .form-text {
-      padding: 5px;
+      color: inherit;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace !important;
+      font-weight: 500;
+      padding: 16px;
+      text-shadow: 0 1px 2px var(--dxt-admin-color-shadow-20);
+      transition: background-color 0.35s ease, box-shadow 0.2s ease, transform 0.15s ease;
+      width: 100%;
+
+      &.active {
+        box-shadow: 0 0 0 3px var(--dxt-admin-accent), 0 4px 12px var(--dxt-admin-color-shadow-15);
+        transform: scale(1.02);
+      }
+
+      &:hover:not(.active) {
+        box-shadow: 0 2px 8px var(--dxt-admin-color-shadow-10);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+
+        &.active {
+          transform: none;
+        }
+      }
+
+      // Rainbow border flash when AI updates color
+      &.dxt-admin-ai-updated {
+        border: 3px solid;
+        border-image: linear-gradient(90deg, var(--dxt-rainbow-color-1), var(--dxt-rainbow-color-2), var(--dxt-rainbow-color-3)) 1;
+        padding: 13px; // Compensate for 3px border (16px - 3px)
+      }
     }
   }
+
+  // Rainbow border animation - reusable AI styling
+  // Colors match DXPR Builder branding
+  --dxt-rainbow-color-1: #94C8EF;
+  --dxt-rainbow-color-2: #F97ED0;
+  --dxt-rainbow-color-3: #715EFF;
+
+  @keyframes dxt-rainbow-border {
+    0% { border-image: linear-gradient(90deg, var(--dxt-rainbow-color-1), var(--dxt-rainbow-color-2), var(--dxt-rainbow-color-3)) 1; }
+    25% { border-image: linear-gradient(90deg, var(--dxt-rainbow-color-3), var(--dxt-rainbow-color-1), var(--dxt-rainbow-color-2)) 1; }
+    50% { border-image: linear-gradient(90deg, var(--dxt-rainbow-color-2), var(--dxt-rainbow-color-3), var(--dxt-rainbow-color-1)) 1; }
+    75% { border-image: linear-gradient(90deg, var(--dxt-rainbow-color-1), var(--dxt-rainbow-color-2), var(--dxt-rainbow-color-3)) 1; }
+    100% { border-image: linear-gradient(90deg, var(--dxt-rainbow-color-1), var(--dxt-rainbow-color-2), var(--dxt-rainbow-color-3)) 1; }
+  }
+
+  // AI Palette Generator
+  .ai-palette-generator {
+    margin-bottom: 20px;
+
+    #ai-palette-prompt {
+      animation: dxt-rainbow-border 20s linear infinite;
+      border: 3px solid;
+      min-height: 100px;
+      padding: 12px;
+      resize: vertical;
+
+      &::placeholder {
+        color: var(--dxt-admin-text-muted);
+      }
+    }
+
+    .form-item {
+      margin: 0;
+      padding: 0;
+    }
+
+    .form-item label {
+      display: none;
+    }
+
+    .ai-generate-btn {
+      box-sizing: border-box;
+      margin: 4px 0 0;
+      padding: 14px 16px;
+      width: 100%;
+
+      &.is-loading {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
+      &.is-success {
+        background: #22c55e !important;
+      }
+    }
+
+    .ai-palette-error {
+      background: #fef2f2;
+      border-left: 3px solid #dc2626;
+      color: #991b1b;
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+    }
+  }
+
+  // AI Font Generator
+  .ai-font-generator {
+    margin-bottom: 24px;
+    padding: 0 16px;
+
+    #ai-font-prompt {
+      animation: dxt-rainbow-border 20s linear infinite;
+      border: 3px solid;
+      min-height: 60px;
+      padding: 12px;
+      resize: vertical;
+      width: 100%;
+
+      &::placeholder {
+        color: var(--dxt-admin-text-muted);
+      }
+    }
+
+    .form-item {
+      margin: 0;
+      padding: 0;
+    }
+
+    .form-item label {
+      display: none;
+    }
+
+    .ai-generate-btn {
+      box-sizing: border-box;
+      margin: 4px 0 0;
+      padding: 14px 16px;
+      width: 100%;
+
+      &.is-loading {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
+      &.is-success {
+        background: #22c55e !important;
+      }
+    }
+
+    .ai-font-error {
+      background: #fef2f2;
+      border-left: 3px solid #dc2626;
+      color: #991b1b;
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+    }
+  }
+
+  // AI updated animation for font selects - runs until class removed
+  #edit-fonts .form-select.dxt-admin-ai-updated {
+    animation: dxt-rainbow-border 0.5s linear infinite;
+    border: 3px solid transparent;
+  }
+
   .font-preview {
     font-size: 30px;
     padding: 10px 0;
+
+    // Override global font-family !important with CSS variable
+    &,
+    & * {
+      font-family: var(--preview-font) !important;
+    }
+
     p {
       margin: 10px 0;
     }
+
     .font-test {
       font-size: 16px;
     }
+
     .font-test-accents {
       font-size: 16px;
     }
+
     .font-test-small {
       font-size: 13px;
     }
   }
+
   #edit-fonts {
     .form-item:not(.form-wrapper) {
-      float: left;
-      clear: none;
-      padding-right: 10px;
-      width: 40%;
-      height: 70px;
-      &.form-type-textfield {
-        width: 60%;
-      }
+      margin-bottom: 0;
+      width: 100%;
+
       .form-select {
-        height: 50px;
+        height: 44px;
+        width: 100%;
       }
+
       .form-text,
       label {
         width: 100%;
       }
-      .form-wrapper {
-        clear: both;
+
+      label {
+        margin-bottom: 6px;
       }
     }
+
+    // Group font select + CSS selector pairs closer together
+    // CSS selector fields - tighter spacing with font select above
+    .form-item-body-font-face-selector,
+    .form-item-headings-font-face-selector,
+    .form-item-nav-font-face-selector,
+    .form-item-sitename-font-face-selector,
+    .form-item-blockquote-font-face-selector {
+      margin-bottom: 24px; // Space after each pair
+      padding-top: 4px; // Tighter connection to font select above
+
+      label {
+        color: var(--dxt-admin-text-muted);
+        font-size: 13px !important;
+        font-weight: 500;
+      }
+    }
+
+    // Font select fields - minimal bottom spacing
+    .form-item-body-font-face,
+    .form-item-headings-font-face,
+    .form-item-nav-font-face,
+    .form-item-sitename-font-face,
+    .form-item-blockquote-font-face {
+      padding-bottom: 0;
+    }
   }
+
   #edit-typography {
     .form-item:not(.form-wrapper) {
-      float: left;
-      clear: none;
-      width: 33%;
-      padding-top: 0;
       margin-bottom: 0;
+      width: 100%;
+
       label {
+        margin-bottom: 6px;
         width: 100%;
       }
     }
-    .form-text {
-      width: 27%;
+
+    .form-text:not([name="divider_color_custom"]) {
+      width: 100%;
     }
-    .slider {
-      width: 73%;
-    }
+
     .form-item-scale-factor {
-      width: 66%;
+      width: 100%;
     }
+
     .form-item-divider-color,
     .form-item-divider-color-custom {
-      clear: both;
+      width: 100%;
     }
   }
+
   #edit-block {
-    .slider,
     .form-type-select,
     .form-text {
-      width: 80%;
-    }
-    .slider + input {
-      width: 20%;
+      width: 100%;
     }
   }
-  .block-design-wrapper {
-    // background: white;
-  }
+
   .block-design-settings {
-    width: 50%;
-    float:left;
-    padding: 60px;
-    padding-right: 0
+    margin-bottom: 20px;
+    width: 100%;
   }
+
   .block-preview {
-    width:50%;
-    float:left;
-    padding: 60px;
+    margin-top: 20px;
+    width: 100%;
   }
+
   .form-item[class$="invoke"] .form-text {
     max-width: none;
   }
+
   .fonts-previews p {
-    margin: 0 0 20px 0;
+    margin: 0 0 20px;
   }
+
   #edit-import-export {
     label {
       width: 300px;
     }
   }
+
   .dxpr-theme-settings-export {
-    width: 100%;
     height: 400px;
+
     // overflow: auto;
     white-space: pre;
+    width: 100%;
   }
+
   .js-form-type-checkbox {
-  position: relative;
-  input[type=checkbox] {
-      position: absolute;
-      z-index: 10;
-      left: 200px;
-      top: 0;
-      margin: 0;
-      width: 54px;
-      height: 27px;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 0;
+    position: relative;
+
+    // Custom toggle switch - 70x40px square design
+    input[type="checkbox"] {
+      --bs-form-check-bg-image: none !important;
+
+      appearance: none !important;
+      background-color: var(--dxt-admin-toggle-off) !important;
+      background-image: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
       cursor: pointer;
-      appearance: auto;
-      // Can't add the switcher div with #suffix and #prefix for some reason
-      // So just using checkboxes again
-      // opacity: 0;
-      // appearance: none;
-      &:checked + .switcher {
-        background: $primary;
-        &:after {
-          left: calc(100% - 3px);
-          transform: translateX(-100%);
+      flex-shrink: 0;
+      height: 40px !important;
+      margin: 0 !important;
+      order: -1;
+      outline: none !important;
+      position: relative;
+      transition: background-color 0.2s ease;
+      width: 70px !important;
+
+      // Hide any checkmark from ::before
+      &::before {
+        display: none !important;
+      }
+
+      // Toggle thumb - 34x34px square white thumb
+      &::after {
+        background: var(--dxt-admin-surface) !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        content: '' !important;
+        display: block !important;
+        height: 34px !important;
+        left: 3px !important;
+        outline: none !important;
+        position: absolute !important;
+        top: 3px !important;
+        transition: left 0.2s ease;
+        width: 34px !important;
+      }
+
+      // Hover state
+      &:hover {
+        background-color: var(--dxt-admin-toggle-off-hover) !important;
+      }
+
+      // Focus state
+      &:focus {
+        box-shadow: none !important;
+        outline: 2px solid var(--dxt-admin-accent) !important;
+        outline-offset: 2px !important;
+      }
+
+      // Checked (active) state - accent background, thumb moves right
+      &:checked {
+        background-color: var(--dxt-admin-accent) !important;
+
+        &::after {
+          left: 33px !important;
+        }
+
+        &:hover {
+          background-color: var(--dxt-admin-accent-hover) !important;
         }
       }
-    &:focus {
-      box-shadow: unset;
+
+      // Disabled state
+      &:disabled {
+        background-color: var(--dxt-admin-surface-alt) !important;
+        cursor: not-allowed;
+
+        &::after {
+          background-color: var(--dxt-admin-text-muted) !important;
+        }
+
+        &:checked {
+          background-color: var(--dxt-admin-surface-alt) !important;
+        }
+      }
     }
-    }
-    .switcher {
-      cursor: pointer;
-      text-indent: -9999px;
-      position: absolute;
-      left: 200px;
-      top: 0;
+
+    label {
+      flex: 1;
+      font-size: 19px !important;
+      line-height: 1.4;
       margin: 0;
-      padding: 0;
-      width: 54px;
-      height: 27px;
-      border-radius: 20px;
-      background: #888;
-      display: block;
-      &:after {
-        content: '';
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        width: 21px;
-        height: 21px;
-        background: #fff;
-        border-radius: 50%;
-        transition: 0.3s;
+    }
+
+    .description {
+      color: var(--dxt-admin-text-muted);
+      flex-basis: 100%;
+      font-size: 13px !important;
+      line-height: 1.4;
+      margin-top: 6px;
+      padding-left: 80px;
+    }
+
+    .switcher {
+      display: none; // Hide custom switcher, use native checkbox
+    }
+  }
+
+  // Traditional square checkbox styling for .form-checkboxes
+  .core-theme-settings,
+  .form-checkboxes {
+    .js-form-type-checkbox {
+      margin-bottom: 0;
+      padding: 8px 0;
+
+      input[type="checkbox"] {
+        appearance: none !important;
+        background-color: transparent !important;
+        border: 2px solid var(--dxt-admin-color-neutral-400) !important;
+        border-radius: 0 !important;
+        cursor: pointer;
+        flex-shrink: 0;
+        float: left !important;
+        height: 24px !important;
+        margin: 0 12px 0 0 !important;
+        position: static;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+        width: 24px !important;
+
+        // Hide toggle thumb
+        &::after {
+          display: none !important;
+        }
+
+        // Hover state - darker border
+        &:hover {
+          border-color: var(--dxt-admin-color-neutral-700) !important;
+        }
+
+        // Focus state - blue border
+        &:focus {
+          border-color: var(--dxt-admin-accent) !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+
+        // Checked state - blue fill with checkmark
+        &:checked {
+          background-color: var(--dxt-admin-accent) !important;
+          background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>') !important;
+          background-position: center !important;
+          background-repeat: no-repeat !important;
+          background-size: 16px 16px !important;
+          border-color: var(--dxt-admin-accent) !important;
+
+          &:hover {
+            background-color: var(--dxt-admin-accent-hover) !important;
+            border-color: var(--dxt-admin-accent-hover) !important;
+          }
+        }
+
+        // Disabled state - light gray
+        &:disabled {
+          background-color: var(--dxt-admin-color-neutral-200) !important;
+          border-color: var(--dxt-admin-color-neutral-300) !important;
+          cursor: not-allowed;
+
+          &:checked {
+            background-color: var(--dxt-admin-color-neutral-300) !important;
+            border-color: var(--dxt-admin-color-neutral-300) !important;
+          }
+        }
+      }
+
+      label {
+        padding-right: 0;
+      }
+
+      // Hide legacy checkmark pseudo-element (needs high specificity to override .form-composite)
+      input ~ label.option::before,
+      input:checked ~ label.option::before {
+        content: none !important;
+        display: none !important;
+      }
+    }
+  }
+
+  // Slider component styling
+  .dxb-slider-wrapper {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+
+    .dxb-slider-track {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    // Slider input
+    .dxb-slider {
+      height: 7px;
+      width: 100% !important;
+
+      // Track styling
+      &::-webkit-slider-runnable-track {
+        background-image: linear-gradient(var(--dxt-admin-accent), var(--dxt-admin-accent)), linear-gradient(var(--dxt-admin-border), var(--dxt-admin-border));
+        background-position: left center;
+        background-repeat: no-repeat;
+        background-size: var(--value-percent) 7px, 100% 7px;
+        height: 7px;
+      }
+
+      &::-moz-range-track {
+        background-image: linear-gradient(var(--dxt-admin-accent), var(--dxt-admin-accent)), linear-gradient(var(--dxt-admin-border), var(--dxt-admin-border));
+        background-position: left center;
+        background-repeat: no-repeat;
+        background-size: var(--value-percent) 7px, 100% 7px;
+        height: 7px;
+      }
+
+      // Thumb styling - square design
+      &::-webkit-slider-thumb {
+        background: var(--dxt-admin-surface);
+        border: 1px solid var(--dxt-admin-border);
+        border-radius: 0;
+        box-shadow: none;
+        cursor: pointer;
+        height: 32px;
+        margin-top: -13px;
+        transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        width: 32px;
+      }
+
+      &::-moz-range-thumb {
+        background: var(--dxt-admin-surface);
+        border: 1px solid var(--dxt-admin-border);
+        border-radius: 0;
+        box-shadow: none;
+        cursor: pointer;
+        height: 32px;
+        transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        width: 32px;
+      }
+
+      // Hover state
+      &:hover::-webkit-slider-thumb {
+        background: var(--dxt-admin-accent);
+        border-color: var(--dxt-admin-accent);
+        transform: none;
+      }
+
+      &:hover::-moz-range-thumb {
+        background: var(--dxt-admin-accent);
+        border-color: var(--dxt-admin-accent);
+        transform: none;
+      }
+
+      // Focus state
+      &:focus::-webkit-slider-thumb {
+        background: var(--dxt-admin-surface);
+        border-color: var(--dxt-admin-accent);
+        box-shadow: 0 0 0 3px var(--dxt-admin-focus-ring);
+        transform: none;
+      }
+
+      &:focus::-moz-range-thumb {
+        background: var(--dxt-admin-surface);
+        border-color: var(--dxt-admin-accent);
+        box-shadow: 0 0 0 3px var(--dxt-admin-focus-ring);
+        transform: none;
+      }
+
+      // Active state
+      &:active::-webkit-slider-thumb {
+        background: var(--dxt-admin-accent);
+        border-color: var(--dxt-admin-accent);
+        box-shadow: 0 0 0 3px var(--dxt-admin-focus-ring);
+      }
+
+      &:active::-moz-range-thumb {
+        background: var(--dxt-admin-accent);
+        border-color: var(--dxt-admin-accent);
+        box-shadow: 0 0 0 3px var(--dxt-admin-focus-ring);
+      }
+
+      // Disabled state
+      &:disabled {
+        opacity: 0.5;
+        pointer-events: none;
+
+        &::-webkit-slider-runnable-track {
+          background-image: linear-gradient(var(--dxt-admin-border), var(--dxt-admin-border)), linear-gradient(var(--dxt-admin-border), var(--dxt-admin-border));
+        }
+
+        &::-moz-range-track {
+          background-image: linear-gradient(var(--dxt-admin-border), var(--dxt-admin-border)), linear-gradient(var(--dxt-admin-border), var(--dxt-admin-border));
+        }
+
+        &::-webkit-slider-thumb {
+          background: var(--dxt-admin-surface-alt);
+          border-color: var(--dxt-admin-border);
+        }
+
+        &::-moz-range-thumb {
+          background: var(--dxt-admin-surface-alt);
+          border-color: var(--dxt-admin-border);
+        }
+      }
+    }
+
+    // Value input field - same size as toggle (70x40)
+    .dxb-slider-value {
+      background: var(--dxt-admin-surface);
+      border: 1px solid var(--dxt-admin-border);
+      border-radius: 0;
+      box-shadow: none;
+      height: 40px;
+      margin-inline-start: 0;
+      padding: 8px 4px;
+      text-align: center;
+      width: 70px;
+
+      &:focus {
+        border-color: var(--dxt-admin-accent);
+        box-shadow: 0 0 0 3px var(--dxt-admin-focus-ring);
+        outline: none;
       }
     }
   }
 }
 
+.dxpr-body-wrapper {
+  margin-right: var(--dxt-admin-sidebar-width) !important;
+}
+
 .type-preview {
-  // background: #fefffe;
-  // color: #555555;
   clear: both;
+
   .type-container {
     padding: 40px 80px;
+  }
+}
+
+// Fix sticky footer causing sidebar scroll issues
+html.html--dxpr-theme-sticky-footer:has(#system-theme-settings) {
+  height: auto !important;
+}
+
+// Account for admin toolbar when scrolling to styleguide sections
+.bd-cheatsheet section[id] {
+  scroll-margin-top: var(--drupal-displace-offset-top, 0);
+}
+
+// Content-visibility for performance: render off-screen sections lazily
+.bd-cheatsheet article {
+  contain: layout style paint;
+  contain-intrinsic-size: auto 500px;
+  content-visibility: auto;
+}
+
+// Skeleton loader styles for styleguide loading state
+.dxpr-styleguide-skeleton {
+  padding: 40px;
+
+  @keyframes skeleton-shimmer {
+    0% {
+      background-position: -200px 0;
+    }
+
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
+
+  // Base shimmer effect mixin
+  %skeleton-shimmer {
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    background: linear-gradient(90deg, #e5e5ea 0%, #f2f2f7 50%, #e5e5ea 100%);
+    background-size: 200px 100%;
+    border-radius: 4px;
+  }
+
+  .skeleton-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .skeleton-row {
+    display: flex;
+    gap: 24px;
+  }
+
+  .skeleton-col {
+    flex: 1;
+  }
+
+  // Typography headings with size variants
+  .skeleton-heading {
+    @extend %skeleton-shimmer;
+
+    margin-bottom: 12px;
+    width: 70%;
+
+    &.lg {
+      height: 40px;
+    }
+
+    &.md {
+      height: 32px;
+    }
+
+    &.sm {
+      height: 24px;
+    }
+
+    &.xs {
+      height: 20px;
+    }
+  }
+
+  .skeleton-text {
+    @extend %skeleton-shimmer;
+
+    animation-delay: 0.1s;
+    height: 16px;
+    margin-top: 8px;
+    width: 90%;
+  }
+
+  // Buttons row
+  .skeleton-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .skeleton-button {
+    @extend %skeleton-shimmer;
+
+    animation-delay: 0.15s;
+    border-radius: 4px;
+    height: 38px;
+    width: 80px;
+  }
+
+  // Color columns placeholder
+  .skeleton-colors {
+    @extend %skeleton-shimmer;
+
+    animation-delay: 0.2s;
+    border-radius: 0;
+    height: 48px;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+
+  // Input field placeholder
+  .skeleton-input {
+    @extend %skeleton-shimmer;
+
+    animation-delay: 0.25s;
+    height: 60px;
+    width: 100%;
+  }
+
+  // Cards row
+  .skeleton-cards {
+    display: flex;
+    gap: 16px;
+
+    &.three .skeleton-card {
+      flex: 1;
+    }
+
+    &.two .skeleton-card {
+      flex: 1;
+      max-width: 50%;
+    }
+  }
+
+  .skeleton-card {
+    @extend %skeleton-shimmer;
+
+    animation-delay: 0.3s;
+    border-radius: 8px;
+    height: 180px;
   }
 }

@@ -20,7 +20,6 @@ module:
   cancel_button: 0
   ckeditor5: 0
   coffee: 0
-  color: 0
   color_field: 0
   conditional_fields: 0
   config: 0
@@ -128,6 +127,8 @@ module:
   token: 0
   toolbar: 0
   ultimate_cron: 0
+  update: 0
+  upgrade_status: 0
   user: 0
   verf: 0
   viewfield: 0

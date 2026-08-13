@@ -1,44 +1,87 @@
-/**
- * @file
- * A JavaScript file that styles the page with bootstrap classes.
- *
- * @see sass/styles.scss for more info
- */
-(function ($, Drupal, once) {
+(function (Drupal, once) {
   Drupal.behaviors.fullScreenSearch = {
     attach(context, settings) {
-      function clearSearchForm() {
-        $searchForm.toggleClass("invisible"),
-          $("body").toggleClass("body--full-screen-search"),
-          setTimeout(() => {
-            $searchFormInput.val("");
-          }, 350);
+      const searchButton = document.querySelector(".full-screen-search-button");
+      const searchForm = document.querySelector(".full-screen-search-form");
+      const searchFormInput = searchForm.querySelector(".search-query");
+      const searchStatus = document.querySelector("#search-status");
+
+      // Move search form to body to escape parent stacking context
+      // This ensures it appears above all other elements (sidebar, toolbar)
+      if (searchForm && !searchForm.dataset.movedToBody) {
+        document.body.appendChild(searchForm);
+        searchForm.dataset.movedToBody = "true";
       }
-      const $searchButton = $(".full-screen-search-button");
-      var $searchForm = $(".full-screen-search-form");
-      var $searchFormInput = $searchForm.find(".search-query");
-      const escapeCode = 27;
-      $(once("search-button", $searchButton)).on(
-        "touchstart click",
-        (event) => {
-          event.preventDefault(),
-            $searchForm.toggleClass("invisible"),
-            $("body").toggleClass("body--full-screen-search"),
-            $searchFormInput.focus();
+
+      function clearSearchForm() {
+        searchForm.classList.toggle("invisible");
+        document.body.classList.toggle("body--full-screen-search");
+
+        // Update ARIA states for accessibility
+        const isVisible = !searchForm.classList.contains("invisible");
+        searchButton.setAttribute("aria-expanded", isVisible.toString());
+        searchForm.setAttribute("aria-hidden", (!isVisible).toString());
+
+        // Announce state change to screen readers
+        if (searchStatus) {
+          searchStatus.textContent = isVisible
+            ? "Search opened"
+            : "Search closed";
         }
-      ),
-        $(once("search-form", $searchForm)).on(
-          "touchstart click",
-          ($searchButton) => {
-            $($searchButton.target).hasClass("search-query") ||
-              clearSearchForm();
-          }
-        ),
-        $(document).keydown((event) => {
-          event.which === escapeCode &&
-            !$searchForm.hasClass("invisible") &&
-            clearSearchForm();
-        });
+
+        setTimeout(() => {
+          searchFormInput.value = "";
+        }, 350);
+      }
+
+      function handleSearchButtonClick(event) {
+        event.preventDefault();
+        searchForm.classList.toggle("invisible");
+        document.body.classList.toggle("body--full-screen-search");
+
+        // Update ARIA states for accessibility
+        const isVisible = !searchForm.classList.contains("invisible");
+        searchButton.setAttribute("aria-expanded", isVisible.toString());
+        searchForm.setAttribute("aria-hidden", (!isVisible).toString());
+
+        // Announce state change to screen readers
+        if (searchStatus) {
+          searchStatus.textContent = isVisible
+            ? "Search opened"
+            : "Search closed";
+        }
+
+        searchFormInput.focus();
+      }
+
+      function handleSearchFormClick(ele) {
+        if (!ele.target.classList.contains("search-query")) {
+          clearSearchForm();
+        }
+      }
+
+      // Handle the search button click or touchstart
+      if (searchButton && once("search-button", searchButton).length) {
+        searchButton.addEventListener("touchstart", handleSearchButtonClick);
+        searchButton.addEventListener("click", handleSearchButtonClick);
+      }
+
+      // Handle the search form click or touchstart
+      if (searchForm && once("search-form", searchForm).length) {
+        searchForm.addEventListener("touchstart", handleSearchFormClick);
+        searchForm.addEventListener("click", handleSearchFormClick);
+      }
+
+      // Handle the escape key to close the search form
+      document.addEventListener("keydown", (event) => {
+        if (
+          event.key === "Escape" && // Check if Escape key is pressed
+          !searchForm.classList.contains("invisible") // Ensure the form is visible
+        ) {
+          clearSearchForm(); // Call the function to clear the form
+          searchButton.focus(); // Return focus to the search button
+        }
+      });
     },
   };
-})(jQuery, Drupal, once);
+})(Drupal, once);

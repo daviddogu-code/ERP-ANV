@@ -1,3 +1,4 @@
+.claude 
 .idea
 deploy.sh
 node_modules
@@ -15,6 +16,11 @@ Thumbs.db
 
 .build-done
 out
+stylelint-results.json
 
 .npm.installed
 .env
+CLAUDE.md
+
+/vendor/classie*
+/vendor/modernizr*

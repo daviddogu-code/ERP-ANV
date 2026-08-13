@@ -1,0 +1,39 @@
+services:
+  dxpr_theme_helper.drush.config_commands:
+    class: Drupal\dxpr_theme_helper\Commands\DxprThemeConfigCommands
+    arguments:
+      - '@config.factory'
+      - '@extension.list.theme'
+      - '@?Drupal\Core\Extension\ThemeSettingsProvider'
+    tags:
+      - { name: drush.command }
+
+  dxpr_theme_helper.drush.ai_commands:
+    class: Drupal\dxpr_theme_helper\Commands\DxprThemeAiCommands
+    arguments:
+      - '@dxpr_theme_helper.ai_palette_generator'
+      - '@dxpr_theme_helper.ai_font_generator'
+      - '@config.factory'
+      - '@extension.list.theme'
+    tags:
+      - { name: drush.command }
+
+  dxpr_theme_helper.drush.page_commands:
+    class: Drupal\dxpr_theme_helper\Commands\DxprThemePageCommands
+    arguments:
+      - '@entity_type.manager'
+      - '@entity_field.manager'
+    tags:
+      - { name: drush.command }
+
+  dxpr_theme_helper.drush.subtheme_commands:
+    class: Drupal\dxpr_theme_helper\Commands\DxprThemeSubthemeCommands
+    tags:
+      - { name: drush.command }
+
+  dxpr_theme_helper.drush.setup_commands:
+    class: Drupal\dxpr_theme_helper\Commands\DxprThemeSetupCommands
+    arguments:
+      - '@extension.list.module'
+    tags:
+      - { name: drush.command }

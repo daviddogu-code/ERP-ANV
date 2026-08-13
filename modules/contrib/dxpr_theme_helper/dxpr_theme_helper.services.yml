@@ -9,3 +9,17 @@ services:
       - '@database'
       - '@config.factory'
       - '@language_manager'
+
+  dxpr_theme_helper.ai_palette_generator:
+    class: Drupal\dxpr_theme_helper\AiPaletteGenerator
+    arguments:
+      - '@?ai.provider'
+      - '@?ai.prompt_json_decode'
+      - '@extension.list.theme'
+
+  dxpr_theme_helper.ai_font_generator:
+    class: Drupal\dxpr_theme_helper\AiFontGenerator
+    arguments:
+      - '@?ai.provider'
+      - '@?ai.prompt_json_decode'
+      - '@extension.list.theme'

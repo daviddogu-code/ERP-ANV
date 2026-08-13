@@ -12,7 +12,7 @@
         "Theme"
     ],
     "support": {
-        "documentation": "https:/.dxpr.com/hc",
+        "documentation": "https://dxpr.com/hc",
         "issues": "https://dxpr.com/hc/tickets"
     },
     "authors": [
@@ -21,5 +21,11 @@
             "homepage": "https://dxpr.com",
             "role": "Maintainer"
         }
-    ]
+    ],
+    "suggest": {
+        "drupal/ai": "^1"
+    },
+    "require-dev": {
+        "drush/drush": "*"
+    }
 }

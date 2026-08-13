@@ -455,6 +455,7 @@ actions:
       value: '[entity:field_tec_price:value]'
       eca_data: '[entity:field_tec_quantity:value]'
       eca_token_name: lineitemTotal
+      skip_on_nan: false
     successors:
       -
         id: Activity_1nf5hlm
@@ -570,6 +571,7 @@ actions:
       value: '[entity:field_tec_quantity:value]'
       eca_data: '[itemDropped:field_tec_quantity:value]'
       eca_token_name: quantityCalculated
+      skip_on_nan: false
     successors:
       -
         id: Activity_0o8g0cp
@@ -664,6 +666,7 @@ actions:
       value: '[entity:field_tec_quantity:value]'
       eca_data: '[bomitemLoaded:field_tec_quantity:value]'
       eca_token_name: itemquantityCalculated
+      skip_on_nan: false
     successors:
       -
         id: Activity_0x71aue

@@ -6,7 +6,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Theme\ThemeNegotiatorInterface;
 
 /**
- * Forces theme settings forms to use the Theme that is being configured
+ * Forces theme settings forms to use the Theme that is being configured.
  */
 class DxprThemeSettingsThemeNegotiator implements ThemeNegotiatorInterface {
 

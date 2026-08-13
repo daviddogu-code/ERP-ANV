@@ -1,0 +1,164 @@
+// DXPR Theme Navigation Colors
+// Fallbacks are defined here instead of in variables.scss to allow
+// context-specific defaults (e.g., "Colored text" hover style uses primary color).
+@import "../includes/variables";
+
+#navbar.dxpr-theme-header--top .navbar-container {
+  background-color: var(--dxt-setting-navbar-background, transparent);
+  color: var(--dxt-setting-navbar-text-color, var(--dxt-color-headertext));
+}
+
+.body--dxpr-theme-nav-desktop #navbar.dxpr-theme-header--top {
+  .block {
+    background-color: var(--dxt-setting-header-block-background, inherit);
+  }
+
+  .block,
+  .block a,
+  .block .btn-link {
+    color: var(--dxt-setting-header-block-text-color, inherit);
+  }
+
+  // Prevent header block text colour from leaking into contextual links UI
+  .block .contextual,
+  .block .contextual a {
+    color: initial;
+  }
+
+  .nav {
+    background-color: var(--dxt-setting-menu-background, transparent);
+
+    // span.nav-link used for dropdown toggles
+    .active > a,
+    .active > span.nav-link,
+    a:hover,
+    a:focus,
+    a.is-active,
+    span.nav-link:hover,
+    span.nav-link:focus {
+      background-color: var(--dxt-setting-menu-hover-background);
+      color: var(--dxt-setting-menu-hover-text-color);
+    }
+
+    a.dropdown-item {
+      &:hover,
+      &:focus {
+        background-color: var(--dxt-setting-menu-hover-background);
+        color: var(--dxt-setting-menu-hover-text-color);
+      }
+    }
+  }
+
+  .nav,
+  .nav a,
+  .nav span {
+    color: var(--dxt-setting-menu-text-color, var(--dxt-color-headertext));
+  }
+
+  .dropdown-menu {
+    background-color: var(--dxt-setting-dropdown-background, var(--dxt-color-header));
+
+    a,
+    button {
+      &:hover,
+      &:focus {
+        background-color: var(--dxt-setting-dropdown-hover-background);
+        color: var(--dxt-setting-dropdown-hover-text-color);
+      }
+    }
+  }
+
+  .dropdown,
+  .dropdown-menu a,
+  .dropdown-menu button {
+    color: var(--dxt-setting-dropdown-text-color, var(--dxt-color-headertext));
+  }
+}
+
+// Opacity hover effect
+.body--dxpr-theme-nav-desktop #navbar.dxpr-theme-header--hover-opacity .nav {
+  .active > a,
+  .active > span.nav-link,
+  a:hover,
+  a:focus,
+  a.is-active,
+  span.nav-link:hover,
+  span.nav-link:focus {
+    opacity: 0.8;
+  }
+}
+
+// Colored text hover effect - use primary color as default
+.body--dxpr-theme-nav-desktop #navbar.dxpr-theme-header--hover-text .nav {
+  .active > a,
+  .active > span.nav-link,
+  a:hover,
+  a:focus,
+  a.is-active,
+  span.nav-link:hover,
+  span.nav-link:focus {
+    color: var(--dxt-setting-menu-hover-text-color, var(--dxt-color-base));
+  }
+}
+
+// Colored background hover effect - use primary color as default
+.body--dxpr-theme-nav-desktop #navbar.dxpr-theme-header--hover-background .nav {
+  .active > a,
+  .active > span.nav-link,
+  a:hover,
+  a:focus,
+  a.is-active,
+  span.nav-link:hover,
+  span.nav-link:focus {
+    background-color: var(--dxt-setting-menu-hover-background, var(--dxt-color-base));
+  }
+}
+
+// Mobile menu
+.body--dxpr-theme-nav-mobile .dxpr-theme-header .dxpr-theme-main-menu {
+  background: var(--dxt-setting-mobile-menu-background, var(--dxt-color-headerside));
+  color: var(--dxt-setting-mobile-menu-text-color, var(--dxt-color-headersidetext));
+
+  a,
+  span.nav-link {
+    color: var(--dxt-setting-mobile-menu-text-color, var(--dxt-color-headersidetext)) !important;
+  }
+
+  .nav-link {
+    &:hover,
+    &:focus {
+      background-color: var(--dxt-setting-mobile-menu-hover-background, transparent);
+      color: var(--dxt-setting-mobile-menu-hover-text-color, var(--dxt-color-base));
+    }
+  }
+
+  ul.nav,
+  ul.navbar-nav {
+    background-color: var(--dxt-setting-mobile-menu-background, var(--dxt-color-headerside)) !important;
+  }
+
+  ul.dropdown-menu {
+    background-color: var(--dxt-setting-mobile-menu-background, var(--dxt-color-headerside)) !important;
+
+    .dropdown-item,
+    .bs-dropdown-item-wrapper > .dropdown-item {
+      background-color: var(--dxt-setting-mobile-menu-background, var(--dxt-color-headerside)) !important;
+      color: var(--dxt-setting-mobile-menu-text-color, var(--dxt-color-headersidetext)) !important;
+
+      &:hover,
+      &:focus {
+        background-color: var(--dxt-setting-mobile-menu-hover-background, transparent) !important;
+        color: var(--dxt-setting-mobile-menu-hover-text-color, var(--dxt-color-base)) !important;
+      }
+    }
+  }
+
+  .nav > li > a,
+  .nav > li > span.nav-link {
+    &:hover,
+    &:focus {
+      background-color: var(--dxt-setting-mobile-menu-hover-background, transparent);
+      color: var(--dxt-setting-mobile-menu-hover-text-color, var(--dxt-color-base));
+    }
+  }
+}

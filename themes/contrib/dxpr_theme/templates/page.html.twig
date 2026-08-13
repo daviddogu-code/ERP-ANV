@@ -57,6 +57,12 @@
  * @see html.html.twig
  */
 #}
+{%- macro hasContent(region) -%}
+  {%- set keep_tags = '<drupal-render-placeholder><form><embed><hr><iframe><img><input><link><object><script><source><style><video>' -%}
+  {%- set content = region|render|replace({"\n": "", "\r": "", "\t": ""})|striptags(keep_tags)|trim -%}
+  {{- content ? 'TRUE' -}}
+{%- endmacro -%}
+
 {% if not node.field_dth_page_layout.getString() and theme.settings.boxed_layout
   or node.field_dth_page_layout.getString() == 'boxed' %}
 <div class="dxpr-theme-boxed-container">
@@ -83,32 +89,22 @@
 {# Navbar #}
 {% if page.navigation or page.navigation_collapsible %}
   {% block navbar %}
-    {% if theme.settings.header_position %}
-      {%
-        set navbar_classes = [
-          'navbar dxpr-theme-header dxpr-theme-header--top',
-          theme.settings.navbar_position ? 'navbar-is-' ~ theme.settings.navbar_position,
-        theme.settings.header_side_align,
-        ]
-      %}
-    {% else %}
-      {%
-        set navbar_classes = [
-          'navbar dxpr-theme-header clearfix',
-          theme.settings.header_position ? 'dxpr-theme-header--side' : 'dxpr-theme-header--top',
-          theme.settings.navbar_position ? 'navbar-is-' ~ theme.settings.navbar_position,
-          theme.settings.header_top_layout ? 'dxpr-theme-header--' ~ theme.settings.header_top_layout|clean_class,
-          theme.settings.header_style ? 'dxpr-theme-header--' ~ theme.settings.header_style|clean_class,
-          theme.settings.menu_hover ? 'dxpr-theme-header--hover-' ~ theme.settings.menu_hover|clean_class,
-          theme.settings.header_top_fixed and theme.settings.header_top_sticky ? 'dxpr-theme-header--sticky',
-          theme.settings.header_top_fixed and not theme.settings.header_top_sticky ? 'dxpr-theme-header--fixed',
-        ]
-      %}
-    {% endif %}
-    {% set mark_menu = theme.settings.mark_menu_with_children ? 'dxpr-theme-menu--has-children' : '' %}
+    {%
+      set navbar_classes = [
+        'navbar dxpr-theme-header clearfix',
+        'dxpr-theme-header--top',
+        theme.settings.navbar_position ? 'navbar-is-' ~ theme.settings.navbar_position,
+        theme.settings.header_mobile_fixed ? 'header-mobile-fixed',
+        theme.settings.header_top_layout ? 'dxpr-theme-header--' ~ theme.settings.header_top_layout|clean_class,
+        theme.settings.header_style ? 'dxpr-theme-header--' ~ theme.settings.header_style|clean_class,
+        theme.settings.menu_hover ? 'dxpr-theme-header--hover-' ~ theme.settings.menu_hover|clean_class,
+        theme.settings.header_top_fixed and theme.settings.header_top_sticky ? 'dxpr-theme-header--sticky',
+        theme.settings.header_top_fixed and not theme.settings.header_top_sticky ? 'dxpr-theme-header--fixed',
+      ]
+    %}
     {% set navbar_attributes = navbar_attributes.removeClass('container').addClass(navbar_classes) %}
     {% if theme.settings.header_top_fixed and theme.settings.header_top_sticky %}
-      {% set navbar_attributes = navbar_attributes.setAttribute('data-spy', 'affix').setAttribute('data-offset-top', theme.settings.header_top_height_sticky_offset) %}
+      {% set navbar_attributes = navbar_attributes.setAttribute('data-spy', 'affix').setAttribute('data-affix-offset-top', theme.settings.header_top_height_sticky_offset) %}
     {% endif %}
     {% set hamburger_menu = theme.settings.hamburger_menu ? theme.settings.hamburger_menu : 'three-dash' %}
 
@@ -116,23 +112,34 @@
       {% set container = theme.settings.full_width_containers.cnt_header_nav ? 'dxpr-theme-fluid' : 'container' %}
       <div class="{{ container }} navbar-container">
         {% if not theme.settings.full_width_containers.cnt_header_nav%}
-          <div class="row container-row"><div class="col-sm-12 container-col">
+          <div class="row container-row"><div class="col-sm-12 container-col navbar-header-wrapper">
         {% endif %}
         <div class="navbar-header">
           {{ page.navigation }}
           {# .btn-navbar is used as the toggle for collapsed navbar content #}
           {% if page.navigation_collapsible %}
-            <a id="dxpr-theme-menu-toggle" href="#" class="{{ hamburger_menu }}"><span></span><div class="screenreader-text visually-hidden">Toggle menu</div></a>
+            <div class="wrap-toggle">
+              <button id="dxpr-theme-menu-toggle"
+                type="button"
+                class="navbar-toggler collapsed {{ hamburger_menu }}"
+                data-bs-target="#dxpr-theme-main-menu"
+                data-bs-toggle="collapse"
+                aria-controls="dxpr-theme-main-menu"
+                aria-expanded="false"
+                aria-label="{{ 'Toggle navigation menu'|t }}">
+                <span class="navbar-toggler-icon"></span><span class="screenreader-text visually-hidden">{{ 'Toggle menu'|t }}</span>
+              </button>
+            </div>
           {% endif %}
         </div>
 
         {# Navigation (collapsible) #}
         {% if page.navigation_collapsible %}
-            <nav role="navigation" id="dxpr-theme-main-menu" class="dxpr-theme-main-menu {{ mark_menu }}">
+            <nav role="navigation" id="dxpr-theme-main-menu" class="navbar-expand-lg dxpr-theme-main-menu collapse">
             {{ page.navigation_collapsible }}
             </nav>
         {% endif %}
-        {% if not theme.settings.full_width_containers.cnt_header_nav%}
+        {% if not theme.settings.full_width_containers.cnt_header_nav %}
           </div></div>
         {% endif %}
       </div>
@@ -185,17 +192,20 @@
 
 {# Main #}
 {% block main %}
+  {% set has_sidebar_first  = _self.hasContent(page.sidebar_first) %}
+  {% set has_sidebar_second = _self.hasContent(page.sidebar_second) %}
   {% set container = theme.settings.full_width_containers.cnt_content
   or node.field_dth_main_content_width.getString() == 'dxpr-theme-util-full-width-content'
   or node and attribute(theme.settings.full_width_content_types, node.getType)
-  and not page.sidebar_first|render|striptags|trim
-  and not page.sidebar_second|render|striptags|trim ? '' : 'container' %}
+  and not has_sidebar_first
+  and not has_sidebar_second ? '' : 'container' %}
+
   <div role="main" class="main-container {{ container }} js-quickedit-main-content clearfix">
     {% if container != '' %}
     <div class="row">
     {% endif %}
       {# Sidebar First #}
-      {% if page.sidebar_first|render|striptags|trim %}
+      {% if has_sidebar_first %}
         {% block sidebar_first %}
           <aside class="col-sm-3" role="complementary">
             {{ page.sidebar_first }}
@@ -207,20 +217,20 @@
       {% if not node.field_dth_main_content_width.getString() %}
         {%
           set content_classes = [
-            page.sidebar_first|render|striptags|trim and page.sidebar_second|render|striptags|trim ? 'col-sm-6',
-            page.sidebar_first|render|striptags|trim and page.sidebar_second|render|striptags|trim is empty ? 'col-sm-9',
-            page.sidebar_second|render|striptags|trim and page.sidebar_first|render|striptags|trim is empty ? 'col-sm-9',
-            container != '' and page.sidebar_first|render|striptags|trim is empty and page.sidebar_second|render|striptags|trim is empty ? 'col-sm-12'
+            has_sidebar_first and has_sidebar_second ? 'col-sm-6',
+            has_sidebar_first and not has_sidebar_second ? 'col-sm-9',
+            has_sidebar_second and not has_sidebar_first ? 'col-sm-9',
+            container != '' and not has_sidebar_first and not has_sidebar_second ? 'col-sm-12'
           ]
         %}
       {% else %}
         {% set col = node.field_dth_main_content_width.getString() %}
         {%
           set content_classes = [
-            col == 'dxpr-theme-util-content-center-4-col' ? 'col-md-4 col-md-offset-4',
-            col == 'dxpr-theme-util-content-center-6-col' ? 'col-md-6 col-md-offset-3',
-            col == 'dxpr-theme-util-content-center-8-col' ? 'col-md-8 col-md-offset-2',
-            col == 'dxpr-theme-util-content-center-10-col' ? 'col-md-10 col-md-offset-1',
+            col == 'dxpr-theme-util-content-center-4-col' ? 'col-md-4 offset-md-4',
+            col == 'dxpr-theme-util-content-center-6-col' ? 'col-md-6 offset-md-3',
+            col == 'dxpr-theme-util-content-center-8-col' ? 'col-md-8 offset-md-2',
+            col == 'dxpr-theme-util-content-center-10-col' ? 'col-md-10 offset-md-1',
           ]
         %}
       {% endif %}
@@ -249,7 +259,7 @@
       </section>
 
       {# Sidebar Second #}
-      {% if page.sidebar_second|render|striptags|trim %}
+      {% if has_sidebar_second %}
         {% block sidebar_second %}
           <aside class="col-sm-3" role="complementary">
             {{ page.sidebar_second }}

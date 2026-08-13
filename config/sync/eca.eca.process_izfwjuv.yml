@@ -141,6 +141,7 @@ actions:
       value: '[mutationLoaded:field_tec_quantity:value]'
       eca_data: '[entity:field_tec_stock_level:value]'
       eca_token_name: stocklevelNew
+      skip_on_nan: false
     successors:
       -
         id: Activity_175gvpo

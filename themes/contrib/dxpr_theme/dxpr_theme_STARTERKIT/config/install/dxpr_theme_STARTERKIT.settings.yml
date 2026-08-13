@@ -32,7 +32,7 @@ boxed_layout: 1
 sticky_footer: 1
 boxed_layout_boxbg: '#ffffff'
 box_max_width: '1580'
-layout_max_width: '1280'
+layout_max_width: '1320'
 gutter_horizontal: '30'
 gutter_vertical: '30'
 gutter_container: '60'
@@ -62,9 +62,9 @@ h4_mobile_font_size: '24'
 body_font_face: '0Source+Sans+Pro:'
 body_font_face_selector: body
 headings_font_face: '0Source+Sans+Pro:300'
-headings_font_face_selector: 'h1,h2,h3,h4,h5,h6,label,.field--label,.page-title, .html .tp-caption'
+headings_font_face_selector: 'h1,.h1,h2,.h2,h3,.h3,h4,.h4,h5,.h5,h6,.h6,.display-1,.display-2,.display-3,.display-4,.display-5,.display-6,label,.field--label,.page-title'
 nav_font_face: '0Source+Sans+Pro:'
-nav_font_face_selector: 'nav,nav ul li,nav a'
+nav_font_face_selector: '.dxpr-theme-header .nav'
 sitename_font_face: '0Source+Sans+Pro:300'
 sitename_font_face_selector: '.site-name, .navbar-brand'
 blockquote_font_face: '0Source+Sans+Pro:300italic'
@@ -105,7 +105,6 @@ page_title_image_position: center_center
 background_image_style: cover
 background_image_position: center_center
 background_image_attachment: fixed
-header_position: 0
 header_top_layout: '0'
 header_style: normal
 header_top_bg_opacity: '1'
@@ -138,12 +137,10 @@ dropdown_hover_background: ''
 dropdown_hover_background_custom: ''
 dropdown_hover_text_color: ''
 dropdown_hover_text_color_custom: ''
-header_side_align: left
-header_side_direction: left
-header_side_width: '300'
 hamburger_menu: 'three-dash'
 hamburger_animation: 'cross'
 menu_type: uppercase
+menu_link_spacing: '10'
 menu_hover: opacity
 menu_border_position: bottom
 menu_border_animate: drop
@@ -210,5 +207,4 @@ hidden_regions:
 popover_placement: top
 tooltip_placement: 'auto top'
 modal_enabled: 0
-modal_jquery_ui_bridge: 0
 cdn_provider: ''

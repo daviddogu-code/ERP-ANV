@@ -3,42 +3,81 @@ name: Review
 on: [pull_request]
 
 env:
-  TARGET_DRUPAL_CORE_VERSION: 8
+  TARGET_DRUPAL_CORE_VERSION: 11
 
 jobs:
 
   drupal-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-4
     timeout-minutes: 60
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v6
 
     - name: Lint Drupal
       run: |
         TARGET_DRUPAL_CORE_VERSION=$TARGET_DRUPAL_CORE_VERSION docker compose run --rm drupal-lint
 
   eslint:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-4
     timeout-minutes: 60
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
 
     - name: Lint with eslint
       run: |
         REPORT_ENABLED=true docker compose run --rm eslint
 
     - name: Archive eslint html report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       if: always()
       with:
         name: eslint-report
         path: out/eslint-report.html
 
+  stylelint:
+    runs-on: ubicloud-standard-4
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Lint with stylelint
+        run: |
+          REPORT_ENABLED=true docker compose run --rm stylelint
+      - name: Archive stylelint html report
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: stylelint-report
+          path: out/stylelint-report.html
+
+  schema-check:
+    runs-on: ubicloud-standard-4
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Generate settings schema
+      run: node scripts/generate-settings-schema.js
+
+    - name: Verify schema is up-to-date
+      run: |
+        if ! git diff -I '"generated":' --quiet data/settings-schema.json; then
+          echo "ERROR: data/settings-schema.json is out of date."
+          echo "Run 'node scripts/generate-settings-schema.js' and commit the result."
+          git diff -I '"generated":' data/settings-schema.json
+          exit 1
+        fi
+
   # review by commenting on code (experimental)
   # eslint-review:
-  #   runs-on: ubuntu-latest
+  #   runs-on: ubicloud-standard-4
   #   steps:
-  #   - uses: actions/checkout@v2
+  #   - uses: actions/checkout@v6
 
   #   - name: Comment on file changes with eslint check
   #     uses: reviewdog/action-eslint@v1.2.0
