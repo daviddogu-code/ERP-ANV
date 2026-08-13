@@ -9,17 +9,25 @@
 sites/*/settings*.php
 sites/*/services*.yml
 
-# User-generated content / private files.
+# User-generated content / private files. `private_`, with the trailing
+# underscore, was a stray copy in the docroot that these patterns did not cover.
 sites/*/files
 sites/*/private
+/private_/
 
 # Multi-site test environment.
 sites/simpletest
 
 # Database dumps and backup artefacts. Backups live outside the project, in
 # c:\laragon\backups, and must never reach the remote.
+#
+# Watch the suffix: backup_migrate names its dumps `*.mysql.gz`, which does NOT
+# match `*.sql.gz`. That gap is how a full February 2024 dump ended up committed
+# in 9cbcff83 (found and removed on 14 August 2026).
 *.sql
 *.sql.gz
+*.mysql
+*.mysql.gz
 *.zip
 /backups/
 

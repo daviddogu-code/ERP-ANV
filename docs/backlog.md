@@ -722,11 +722,20 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   los `.info.yml` de `tec_brands` y `tec_crm`. Solo se leen al instalar un módulo, y esos dos
   están desinstalados y además marcados para borrar (ver "Dos carpetas de más" en el apartado 8),
   así que hoy no hacen nada. La configuración activa tiene **cero** referencias, comprobado.
-- **Limpiar carpetas sobrantes** dentro del proyecto:
-  `config/sync.pre-restore-20260810023747` (1.248 archivos) y
-  `modules/custom.pre-restore-20260810023746` (134 archivos), restos de una restauración del
-  10 de agosto que ya está superada por las copias del 12. Están excluidas del repositorio,
-  así que no llegan a GitHub, pero sí ocupan sitio y confunden las búsquedas.
+- **Ciento once megas de volcados de 2024 dentro de la carpeta privada.** En
+  `sites/default/private/backup_migrate` hay **178 volcados de la base de datos** de febrero a mayo
+  de 2024, de la época del programador anterior: 111 MB de los 173 MB que ocupa toda la carpeta
+  privada, o sea dos tercios. Están congelados desde el 5 de mayo de 2024, cuando el programador de
+  `backup_migrate` dejó de dispararse porque el cron está parado. Desde el navegador **no** son
+  accesibles, eso está comprobado, así que no es un problema de seguridad; el problema es que esa
+  carpeta entra en las copias de seguridad y por tanto **cada copia arrastra esos 111 MB** y los
+  sube a Drive. Falta decidir qué se hace: sacarlos del proyecto a `c:\laragon\backups`, quedarse
+  con uno o dos representativos, o borrarlos. Son la base de datos de la empresa en 2024, con sus
+  usuarios y sus claves cifradas, así que decida quien decida, esos ficheros no deben salir del
+  ordenador.
+- **Quedan cuatro ficheros en `tec/backups`** (0,4 MB): una copia de la vista `tec_products` del 11
+  de agosto y tres registros de la limpieza de pedidos de venta. Está excluida del repositorio y
+  Apache le devuelve 403 a los `.yml`, así que no molesta a nadie; se deja como está.
 - **Borrar `c:\laragon\backups\nested-git-20260812`** dentro de unas semanas, cuando esté
   claro que la conversión de los módulos no dio problemas.
 - **Borrar `c:\laragon\backups\git-history-20260812`** (119 MB, el historial de Git anterior
@@ -748,6 +757,83 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-14 — Las carpetas sobrantes, y un volcado de la base de datos que se descargaba sin contraseña
+
+Lo que iba a ser un borrado de dos minutos ha destapado tres cosas, una de ellas de seguridad.
+
+**Las dos carpetas de la restauración, fuera.** `config/sync.pre-restore-20260810023747` y
+`modules/custom.pre-restore-20260810023746`: 1.382 ficheros, 6,7 MB. Antes de borrarlas se han
+comprimido enteras en `C:\laragon\backups\restos-pre-restore-20260810.zip`, 1,2 MB, verificando que
+dentro están los 1.382 ficheros. Se ha archivado en vez de borrar por lo que salió al compararlas
+con lo actual, que es el motivo de no fiarse de la nota que decía "restos ya superados".
+
+**Había siete ficheros que no existían en ningún otro sitio.** No eran basura: eran una función
+entera del inventario. Un selector propio de materiales para el escandallo —el plugin
+`tec_inventory:bom_material`, su controlador, su JavaScript, su enrutado y sus servicios— más un
+`menu-accent.css`. Nunca estuvieron en Git: el primer commit del repositorio, del 9 de agosto, se
+llama precisamente *"Baseline snapshot before tec_inventory redesign"* y no los contiene, así que
+eran trabajo empezado esa noche durante el rediseño y la restauración del 10 de agosto se lo llevó.
+Comprobado que su desaparición no dejó nada roto: **ni la configuración activa ni el código actual
+mencionan ese plugin**, o sea que ningún campo está pidiendo un manejador que ya no existe. La idea
+sí merece recordarse, porque el vocabulario de materiales tiene 869 términos y aquello era
+justamente un autocompletado con lista de etiquetas ligera en caché y filtrado local en JSON.
+
+**De los 62 objetos de configuración que solo estaban en la carpeta antigua, ninguno hacía falta.**
+Dieciséis son ocho procesos ECA, y los ocho están **desactivados** y son clones —con `(clone)` en el
+nombre— de dos automatizaciones que siguen vivas. El resto son restos de módulos ya desinstalados:
+`comment`, `color`, `ds_extras`, `features`, `file_mdm`, `shield`, `pace`, y tres campos
+`ai_interpolator_status` del interpolador de IA.
+
+**El riesgo que nadie había visto.** La carpeta estaba *dentro* de `modules/`, y Drupal rastrea ese
+directorio de forma recursiva buscando ficheros `.info.yml`. Es decir: había **dos copias de cinco
+módulos con el mismo nombre**, y cuál gana depende del orden de rastreo. Se comprobó antes de borrar,
+preguntándole a Drupal de qué ruta carga cada uno, y por suerte cargaba los actuales
+(`modules/custom/...`). Pero era suerte, no diseño. Ese es el argumento de verdad para no dejar
+copias de módulos dentro de `modules/`, por encima del sitio que ocupan.
+
+**Y lo de seguridad: un volcado completo de la base de datos de febrero de 2024, descargable sin
+credenciales.** En la raíz del sitio había una carpeta `private_` —con guión bajo al final, señal de
+que alguien la "desactivó" renombrándola— y dentro
+`backup_migrate/backup-2024-02-22T13-06-08.mysql.gz`. Esa carpeta **no** es el camino privado
+configurado: el de verdad es `sites/default/private`. Y no tenía `.htaccess`. Pedirla por el
+navegador devolvía **HTTP 200 y 660 KB**, es decir la base de datos entera, con su tabla de usuarios,
+sin pedir nada. El detalle de por qué pasaba desapercibido: el `.htaccess` de la raíz de Drupal
+bloquea una lista de extensiones en la que está `.yml` —de ahí el 403 al pedir un fichero de
+`backups/`— pero **`.gz` no está en esa lista**.
+
+Lo primero fue mirar si eso había viajado al servidor público, que es donde importaría de verdad:
+`tec.actafight.com` devuelve **404** en las tres rutas probadas, así que la exposición por web era
+solo local. El volcado se ha movido a `C:\laragon\backups\volcado-antiguo-2024-02-22\` —moverlo y no
+borrarlo, porque es el retrato más antiguo que queda de la base de datos— y la carpeta `private_` se
+ha borrado. Ahora la URL da 404. De paso se ha verificado que la carpeta privada de verdad sí está
+cerrada: trae `Require all denied` y pedir un fichero real de dentro devuelve 403.
+
+**Pero el volcado estaba dentro del repositorio, y eso no lo esperaba nadie.** Al borrar la carpeta,
+Git marcó los dos ficheros como eliminados, o sea que estaban siendo seguidos. Entró en
+`9cbcff83`, el **primer commit** del repositorio, y seguía en HEAD. El motivo es de una línea:
+`.gitignore` excluye `sites/*/private`, que es la carpeta privada de verdad, pero nadie escribió
+nada de `private_` con guión bajo. Así que 660 KB con la base de datos de febrero de 2024 se
+subieron a GitHub el 12 de agosto, en el mismo repositorio privado.
+
+Antes de decidir qué hacer con eso se ha mirado qué contiene de verdad, porque había una pregunta
+incómoda: la purga del historial del 12 de agosto quitó la clave de OpenAI de los objetos de Git,
+pero si la clave hubiera estado en la base de datos, este volcado la habría vuelto a meter.
+**Descomprimido y rastreado, el resultado es limpio**: 6,4 MB, 161 tablas, y cero coincidencias con
+la forma de una clave de OpenAI, de Google, de AWS o de GitHub, ni claves privadas SSH o RSA. Hubo
+un susto de dos coincidencias `AIza...` que resultaron ser un `default_config_hash` de Drupal:
+`Select-String` **no distingue mayúsculas si no se le pide**, y estaba encontrando `aiZa` en
+minúscula. Con `-CaseSensitive`, cero. De datos personales hay poco: una sola sentencia `INSERT` en
+`users_field_data` y nueve líneas con correos.
+
+Los dos ficheros se han quitado del repositorio y se han añadido reglas a `.gitignore` para que
+ningún volcado vuelva a colarse por la puerta del nombre. Lo que queda por decidir es si merece la
+pena reescribir el historial otra vez para borrarlo de `9cbcff83`; la recomendación es **no**,
+porque el repositorio es privado, dentro no hay ningún secreto y una reescritura obliga a un
+`push --force` que ya se sufrió una vez.
+
+**Comprobado después de todo.** Git limpio, sin un solo cambio, porque las dos carpetas estaban
+excluidas del repositorio. Caché reconstruida y prueba de humo: **38 páginas, 0 con problemas**.
 
 ### 2026-08-14 — Las 505 emergencias falsas del registro, y `upgrade_status` fuera
 
