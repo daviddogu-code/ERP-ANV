@@ -1,9 +1,12 @@
 Andrii
+befs
+bmin
 Canil
 Chimpanzé
 Datepicker
 datepicker
 datepickers
+datetimepicker
 doco
 Etroid
 Fritsch
@@ -14,6 +17,7 @@ jkopel
 Keereman
 Keran
 Kopel
+leongersen
 mikeker
 mkeereman
 Mustgrave
@@ -31,3 +35,4 @@ Uviéu
 Valdiciego
 Valdés
 Validatable
+Veri

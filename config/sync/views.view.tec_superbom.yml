@@ -2318,6 +2318,9 @@ display:
               secondary_label: 'Advanced options'
               secondary_open: false
               reset_button_always_show: true
+              autosubmit_textfield_minimum_length: 3
+              autosubmit_breakpoint: ''
+              auto_submit_sort_only: false
             filter:
               field_tec_order_status_value:
                 plugin_id: bef
@@ -2329,6 +2332,11 @@ display:
                   collapsible: false
                   collapsible_disable_automatic_open: false
                   is_secondary: false
+                  hide_label: false
+                  field_classes: ''
+                  open_by_default: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                 select_all_none: false
                 select_all_none_nested: false
                 display_inline: false
@@ -2336,6 +2344,12 @@ display:
                 options_show_only_used_filtered: false
                 options_hide_when_empty: false
                 options_show_items_count: 0
+                scrollable: false
+                scrollable_height: 300
+                soft_limit: 0
+                soft_limit_label_less: 'Show less'
+                soft_limit_label_more: 'Show more'
+                soft_limit_include_children: false
               field_tec_customer_target_id_verf:
                 plugin_id: bef_select2
                 advanced:
@@ -2346,6 +2360,11 @@ display:
                   collapsible: false
                   collapsible_disable_automatic_open: false
                   is_secondary: false
+                  hide_label: false
+                  field_classes: ''
+                  open_by_default: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
               field_tec_order_target_id_verf:
                 plugin_id: bef_select2
                 advanced:
@@ -2356,6 +2375,11 @@ display:
                   collapsible: false
                   collapsible_disable_automatic_open: false
                   is_secondary: false
+                  hide_label: false
+                  field_classes: ''
+                  open_by_default: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
               field_tec_vendor_target_id_verf:
                 plugin_id: bef_select2
                 advanced:
@@ -2366,6 +2390,11 @@ display:
                   collapsible: false
                   collapsible_disable_automatic_open: false
                   is_secondary: false
+                  hide_label: false
+                  field_classes: ''
+                  open_by_default: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
       access:
         type: perm
         options:

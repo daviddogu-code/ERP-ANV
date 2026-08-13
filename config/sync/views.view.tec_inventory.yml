@@ -2628,6 +2628,9 @@ display:
               secondary_label: 'Advanced options'
               secondary_open: false
               reset_button_always_show: true
+              autosubmit_textfield_minimum_length: 3
+              autosubmit_breakpoint: ''
+              auto_submit_sort_only: false
             filter:
               combine:
                 plugin_id: default
@@ -2636,6 +2639,11 @@ display:
                   collapsible: false
                   collapsible_disable_automatic_open: false
                   is_secondary: false
+                  hide_label: false
+                  field_classes: ''
+                  open_by_default: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
                 options_show_only_used: false
                 options_show_only_used_filtered: false
                 options_hide_when_empty: false
@@ -2651,6 +2659,11 @@ display:
                   collapsible: false
                   collapsible_disable_automatic_open: false
                   is_secondary: false
+                  hide_label: false
+                  field_classes: ''
+                  open_by_default: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
               field_tec_vendor_target_id_verf:
                 plugin_id: bef_select2
                 advanced:
@@ -2662,6 +2675,11 @@ display:
                   collapsible: false
                   collapsible_disable_automatic_open: false
                   is_secondary: false
+                  hide_label: false
+                  field_classes: ''
+                  open_by_default: false
+                  sort_options_method: alphabetical_asc
+                  sort_options_natural: true
       cache:
         type: none
         options: {  }
@@ -4893,10 +4911,10 @@ display:
       redirect_path: /i
       export_method: standard
       export_batch_size: 1000
-      store_in_public_file_directory: false
       custom_redirect_path: true
       redirect_to_display: none
       include_query_params: true
+      export_filesystem: private
     cache_metadata:
       max-age: -1
       contexts:

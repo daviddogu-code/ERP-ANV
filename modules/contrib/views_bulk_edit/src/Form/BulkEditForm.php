@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -20,6 +21,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class BulkEditForm extends ConfirmFormBase {
 
   use BulkEditFormTrait;
+  use StringTranslationTrait;
 
   /**
    * Private temp store factory.
@@ -116,18 +118,30 @@ class BulkEditForm extends ConfirmFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
+    $total_count = 0;
+
     $this->submitConfigurationForm($form, $form_state);
-
     foreach ($this->getBulkEditEntityData() as $entity_type_id => $bundle_entities) {
-      foreach ($bundle_entities as $bundle => $entities) {
-
+      foreach ($bundle_entities as $bundle => $entities_with_langcode) {
         $entities = $this->entityTypeManager->getStorage($entity_type_id)
-          ->loadMultiple(array_keys($entities));
+          ->loadMultiple(array_keys($entities_with_langcode));
         foreach ($entities as $entity) {
-          $this->execute($entity);
+          // Load the correct languages.
+          $langcodes = $entities_with_langcode[$entity->id()];
+          foreach ($langcodes as $langcode) {
+            if ($entity->hasTranslation($langcode)) {
+              $entity = $entity->getTranslation($langcode);
+            }
+            $this->execute($entity);
+            $total_count++;
+          }
         }
       }
     }
+
+    $this->messenger()->addStatus($this->formatPlural($total_count, $this->t('Successfully modified %total_count entity.'), $this->t('Successfully modified %total_count entities.'), [
+      '%total_count' => $total_count,
+    ]));
 
     $this->clearBulkEditEntityData();
   }
