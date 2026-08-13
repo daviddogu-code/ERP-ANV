@@ -3,20 +3,23 @@
 namespace Drupal\tamper\Plugin\Tamper;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\tamper\Attribute\Tamper;
 use Drupal\tamper\Exception\TamperException;
-use Drupal\tamper\TamperableItemInterface;
+use Drupal\tamper\ItemUsage;
 use Drupal\tamper\TamperBase;
+use Drupal\tamper\TamperableItemInterface;
 
 /**
  * Plugin implementation of the Sprintf plugin.
- *
- * @Tamper(
- *   id = "sprintf",
- *   label = @Translation("Format string"),
- *   description = @Translation("Format string"),
- *   category = "Text"
- * )
  */
+#[Tamper(
+  id: 'sprintf',
+  label: new TranslatableMarkup('Format string'),
+  description: new TranslatableMarkup('Format string'),
+  category: new TranslatableMarkup('Text'),
+  itemUsage: ItemUsage::IGNORED,
+)]
 class Sprintf extends TamperBase {
 
   const SETTING_TEXT_FORMAT = 'format';
@@ -60,7 +63,12 @@ class Sprintf extends TamperBase {
   /**
    * {@inheritdoc}
    */
-  public function tamper($data, TamperableItemInterface $item = NULL) {
+  public function tamper($data, ?TamperableItemInterface $item = NULL) {
+    // Don't process empty or null values.
+    if (is_null($data) || $data === '') {
+      return $data;
+    }
+
     if (!is_string($data) && !is_numeric($data)) {
       throw new TamperException('Input should be a string or numeric.');
     }

@@ -2,6 +2,21 @@ tamper.*:
   type: mapping
   label: 'Tamper plugin'
 
+tamper.absolute_url:
+  mapping:
+    base_url_source:
+      type: string
+      label: 'Source'
+
+tamper.aggregate:
+  mapping:
+    function:
+      type: string
+      label: 'Method of how to process multiple values into a single value'
+    count:
+      type: string
+      label: 'Count mode'
+
 tamper.convert_case:
   mapping:
     operation:
@@ -39,6 +54,12 @@ tamper.url_decode:
       type: string
       label: 'Decode method'
 
+tamper.dateoffset:
+  mapping:
+    date_offset:
+      type: string
+      label: 'Date offset'
+
 tamper.default_value:
   mapping:
     default_value:
@@ -53,6 +74,21 @@ tamper.encode:
     mode:
       type: string
       label: 'Serialization mode'
+
+tamper.entity_finder:
+  mapping:
+    entity_type:
+      type: string
+      label: 'Entity type'
+    bundle:
+      type: string
+      label: 'Bundle'
+    field:
+      type: string
+      label: 'Field'
+    column:
+      type: string
+      label: 'Column'
 
 tamper.explode:
   mapping:
@@ -117,6 +153,12 @@ tamper.find_replace_regex:
 
 tamper.hash:
   mapping:
+    data_to_hash:
+      type: string
+      label: 'Data to hash'
+    only_if_empty:
+      type: boolean
+      label: 'Only if empty'
     override:
       type: boolean
       label: 'Override set value'
@@ -132,6 +174,12 @@ tamper.keyword_filter:
     words:
       type: string
       label: 'Words or phrases to filter on'
+    words_list:
+      type: sequence
+      label: 'Word list'
+      sequence:
+        type: string
+        label: 'Word'
     word_boundaries:
       type: boolean
       label: 'Respect word boundaries'
@@ -144,18 +192,6 @@ tamper.keyword_filter:
     invert:
       type: boolean
       label: 'Invert filter'
-    word_list:
-      type: sequence
-      label: 'Word list'
-      sequence:
-        type: string
-        label: 'Word'
-    regex:
-      type: boolean
-      label: 'Use regex'
-    function:
-      type: string
-      label: 'Keyword filtering function'
 
 tamper.math:
   mapping:
@@ -168,6 +204,9 @@ tamper.math:
     value:
       type: float
       label: 'Value'
+    skip_on_nan:
+      type: boolean
+      label: 'Skip calculation when the data is not numeric'
 
 tamper.number_format:
   mapping:
@@ -223,6 +262,21 @@ tamper.strip_tags:
       type: string
       label: 'Allowed tags'
 
+tamper.strtotime:
+  mapping:
+    date_format:
+      type: string
+      label: 'Custom date format'
+    fallback:
+      type: boolean
+      label: 'Fallback to strtotime() if the date could not be parsed.'
+
+tamper.timeoffset:
+  mapping:
+    timezone:
+      type: string
+      label: 'Timezone offset'
+
 tamper.trim:
   mapping:
     character:
@@ -250,8 +304,21 @@ tamper.truncate_text:
       type: boolean
       label: 'Truncate on a word boundary'
 
+tamper.twig:
+  mapping:
+    template:
+      type: string
+      label: 'Twig template'
+
 tamper.url_encode:
   mapping:
     method:
       type: string
       label: 'Encode method'
+
+tamper.word_count:
+  mapping:
+    limit:
+      type: integer
+      label: 'Limit'
+      nullable: true

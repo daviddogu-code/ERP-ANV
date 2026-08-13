@@ -3,20 +3,23 @@
 namespace Drupal\tamper\Plugin\Tamper;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\tamper\Attribute\Tamper;
 use Drupal\tamper\Exception\TamperException;
-use Drupal\tamper\TamperableItemInterface;
+use Drupal\tamper\ItemUsage;
 use Drupal\tamper\TamperBase;
+use Drupal\tamper\TamperableItemInterface;
 
 /**
  * Plugin implementation of the find_replace plugin.
- *
- * @Tamper(
- *   id = "find_replace",
- *   label = @Translation("Find replace"),
- *   description = @Translation("Find and replace text"),
- *   category = "Text"
- * )
  */
+#[Tamper(
+  id: 'find_replace',
+  label: new TranslatableMarkup('Find replace'),
+  description: new TranslatableMarkup('Find and replace text'),
+  category: new TranslatableMarkup('Text'),
+  itemUsage: ItemUsage::IGNORED,
+)]
 class FindReplace extends TamperBase {
 
   const SETTING_FIND = 'find';
@@ -95,7 +98,12 @@ class FindReplace extends TamperBase {
   /**
    * {@inheritdoc}
    */
-  public function tamper($data, TamperableItemInterface $item = NULL) {
+  public function tamper($data, ?TamperableItemInterface $item = NULL) {
+    // Don't process empty or null values.
+    if (is_null($data) || $data === '') {
+      return $data;
+    }
+
     if (!is_string($data) && !is_numeric($data)) {
       throw new TamperException('Input should be a string or numeric.');
     }
@@ -146,7 +154,7 @@ class FindReplace extends TamperBase {
   protected function getRegexPattern() {
     $regex = $this->getSetting(self::SETTING_WHOLE) ?
       '/^' . preg_quote($this->getSetting(self::SETTING_FIND), '/') . '$/u' :
-      '/\b' . preg_quote($this->getSetting(self::SETTING_FIND), '/') . '\b/u';;
+      '/\b' . preg_quote($this->getSetting(self::SETTING_FIND), '/') . '\b/u';
 
     if (!$this->getSetting(self::SETTING_CASE_SENSITIVE)) {
       $regex .= 'i';

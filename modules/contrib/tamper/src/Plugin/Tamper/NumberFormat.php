@@ -3,20 +3,23 @@
 namespace Drupal\tamper\Plugin\Tamper;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\tamper\Attribute\Tamper;
 use Drupal\tamper\Exception\TamperException;
-use Drupal\tamper\TamperableItemInterface;
+use Drupal\tamper\ItemUsage;
 use Drupal\tamper\TamperBase;
+use Drupal\tamper\TamperableItemInterface;
 
 /**
  * Plugin implementation for number format.
- *
- * @Tamper(
- *   id = "number_format",
- *   label = @Translation("Format a number"),
- *   description = @Translation("Format a number."),
- *   category = "Number"
- * )
  */
+#[Tamper(
+  id: 'number_format',
+  label: new TranslatableMarkup('Format a number'),
+  description: new TranslatableMarkup('Format a number.'),
+  category: new TranslatableMarkup('Number'),
+  itemUsage: ItemUsage::IGNORED,
+)]
 class NumberFormat extends TamperBase {
 
   const SETTING_DECIMALS = 'decimals';
@@ -77,7 +80,12 @@ class NumberFormat extends TamperBase {
   /**
    * {@inheritdoc}
    */
-  public function tamper($data, TamperableItemInterface $item = NULL) {
+  public function tamper($data, ?TamperableItemInterface $item = NULL) {
+    // Don't process empty or null values.
+    if (is_null($data) || $data === '') {
+      return $data;
+    }
+
     if (!is_numeric($data)) {
       throw new TamperException('Input should be numeric.');
     }

@@ -2,11 +2,10 @@
 
 namespace Drupal\tamper;
 
-use Drupal\tamper\TamperableItemInterface;
-
 /**
  * Defines a single tamper item class.
  */
+#[\AllowDynamicProperties]
 class TamperItem implements TamperableItemInterface {
 
   /**
@@ -20,7 +19,7 @@ class TamperItem implements TamperableItemInterface {
    * {@inheritdoc}
    */
   public function getSourceProperty($property) {
-    return isset($this->$property) ? $this->$property : NULL;
+    return $this->$property ?? NULL;
   }
 
   /**

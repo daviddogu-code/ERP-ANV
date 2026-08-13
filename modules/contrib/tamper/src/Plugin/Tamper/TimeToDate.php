@@ -3,20 +3,23 @@
 namespace Drupal\tamper\Plugin\Tamper;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\tamper\Attribute\Tamper;
 use Drupal\tamper\Exception\TamperException;
-use Drupal\tamper\TamperableItemInterface;
+use Drupal\tamper\ItemUsage;
 use Drupal\tamper\TamperBase;
+use Drupal\tamper\TamperableItemInterface;
 
 /**
  * Plugin implementation of the TimetoDate plugin.
- *
- * @Tamper(
- *   id = "timetodate",
- *   label = @Translation("Unix timestamp to Date"),
- *   description = @Translation("Unix timestamp to Date"),
- *   category = "Date/time"
- * )
  */
+#[Tamper(
+  id: 'timetodate',
+  label: new TranslatableMarkup('Unix timestamp to Date'),
+  description: new TranslatableMarkup('Unix timestamp to Date'),
+  category: new TranslatableMarkup('Date/time'),
+  itemUsage: ItemUsage::IGNORED,
+)]
 class TimeToDate extends TamperBase {
 
   const SETTING_DATE_FORMAT = 'date_format';
@@ -57,7 +60,12 @@ class TimeToDate extends TamperBase {
   /**
    * {@inheritdoc}
    */
-  public function tamper($data, TamperableItemInterface $item = NULL) {
+  public function tamper($data, ?TamperableItemInterface $item = NULL) {
+    // Don't process empty or null values.
+    if (is_null($data) || $data === '') {
+      return $data;
+    }
+
     if (!is_numeric($data)) {
       throw new TamperException('Input should be numeric.');
     }

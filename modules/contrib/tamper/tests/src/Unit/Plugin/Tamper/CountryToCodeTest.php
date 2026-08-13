@@ -24,7 +24,10 @@ class CountryToCodeTest extends TamperPluginTestBase {
    * {@inheritdoc}
    */
   protected function instantiatePlugin() {
-    return new CountryToCode([], 'country_to_code', [], $this->getMockSourceDefinition());
+    $config = [
+      'source_definition' => $this->getMockSourceDefinition(),
+    ];
+    return new CountryToCode($config, 'country_to_code', [], $this->countryManagerMock);
   }
 
   /**
@@ -35,15 +38,13 @@ class CountryToCodeTest extends TamperPluginTestBase {
     $this->countryManagerMock = $this->createMock(CountryManagerInterface::class);
     $this->countryManagerMock->expects($this->any())
       ->method('getList')
-      ->will($this->returnValue([
+      ->willReturn([
         'AG' => 'Antigua and Barbuda',
         'CA' => 'Canada',
         'US' => 'United States of America',
-      ]));
+      ]);
 
     parent::setUp();
-
-    $this->plugin->setCountryManager($this->countryManagerMock);
   }
 
   /**

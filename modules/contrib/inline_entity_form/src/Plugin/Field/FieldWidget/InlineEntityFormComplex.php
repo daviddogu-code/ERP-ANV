@@ -16,6 +16,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\inline_entity_form\TranslationHelper;
+use Drupal\rat\v1\RenderArray;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -306,12 +307,13 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
     ]);
     $entities_count = count($entities);
 
-    // Determine if there are multiple existing entities that could be referenced.
+    // Determine if there are multiple existing entities that could be
+    // referenced.
     $selection_settings = $this->getFieldSetting('handler_settings') ? $this->getFieldSetting('handler_settings') : [];
     $options = [
-        'target_type' => $this->getFieldSetting('target_type'),
-        'handler' => $this->getFieldSetting('handler'),
-      ] + $selection_settings;
+      'target_type' => $this->getFieldSetting('target_type'),
+      'handler' => $this->getFieldSetting('handler'),
+    ] + $selection_settings;
 
     // Prepare information about which operations may be available to the user.
     $settings = $this->getSettings();
@@ -320,12 +322,16 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
     $allow_new = $settings['allow_new'] && $this->canAddNew();
 
     if (!$allow_new && $allow_existing) {
-      // Only count referencable entities if existing entities are allowed
-      // to be referenced otherwise we set the variable to false.
+      // Only count referenceable entities if existing entities are allowed to
+      // be referenced, otherwise we set the variable to false.
       /** @var \Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface $handler */
       $handler = $this->selectionManager->getInstance($options);
-      $have_multiple_existing_entities = count($handler->getReferenceableEntities(NULL, 'CONTAINS', 2)) > 1;
-    } else {
+      // getReferenceableEntities() groups results by bundle, so flatten before
+      // counting — otherwise a single bundle with many entities counts as 1.
+      $reference_items = $handler->getReferenceableEntities(NULL, 'CONTAINS', 2);
+      $have_multiple_existing_entities = array_sum(array_map('count', $reference_items)) > 1;
+    }
+    else {
       $have_multiple_existing_entities = FALSE;
     }
 
@@ -494,7 +500,7 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
         // If an entity may be removed, show the "Remove" button.
         if ($may_remove) {
           // The default removal operation is unlink and the access check for
-          // deleting happens inside the controller buildRemoveForm() method
+          // deleting happens inside the controller buildRemoveForm() method.
           $row['actions']['ief_entity_remove'] = [
             '#type' => 'submit',
             '#value' => $this->t('Remove'),
@@ -507,6 +513,7 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
             '#submit' => ['inline_entity_form_open_row_form'],
             '#ief_row_delta' => $key,
             '#ief_row_form' => 'remove',
+            // It's OK to set #access when creating the whole element.
             '#access' => !$element['#translating'],
           ];
         }
@@ -518,7 +525,8 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
     if ($element['#translating']) {
       if (empty($entities)) {
         // There are no entities available for translation, hide the widget.
-        $element['#access'] = FALSE;
+        // Safely restrict access. Entity cacheability already set.
+        RenderArray::alter($element)->restrictAccess(FALSE, NULL);
       }
       return $element;
     }
@@ -724,8 +732,10 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
     if (empty($values) && !empty($widget_state['form'])) {
       if ($widget_state['form'] == 'add') {
         $element = NestedArray::getValue($form, [$field_name, 'widget', 'form']);
-        $entity = $element['inline_entity_form']['#entity'];
-        $values[] = ['entity' => $entity];
+        if ($element && isset($element['inline_entity_form']['#entity'])) {
+          $entity = $element['inline_entity_form']['#entity'];
+          $values[] = ['entity' => $entity];
+        }
       }
       elseif ($widget_state['form'] == 'ief_add_existing') {
         $parent = NestedArray::getValue($form, [$field_name, 'widget', 'form']);
@@ -879,10 +889,12 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
   public static function hideCancel(array $element) {
     // @todo Name both buttons the same and simplify this logic.
     if (isset($element['actions']['ief_add_cancel'])) {
-      $element['actions']['ief_add_cancel']['#access'] = FALSE;
+      // Safely restrict access.
+      RenderArray::alter($element['actions']['ief_add_cancel'])->restrictAccess(FALSE, NULL);
     }
     elseif (isset($element['actions']['ief_reference_cancel'])) {
-      $element['actions']['ief_reference_cancel']['#access'] = FALSE;
+      // Safely restrict access.
+      RenderArray::alter($element['actions']['ief_reference_cancel'])->restrictAccess(FALSE, NULL);
     }
 
     return $element;
@@ -1004,7 +1016,8 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
 
     $widget_state = $form_state->get(['inline_entity_form', $element['#ief_id']]);
 
-    // The entity hasn't been saved yet, or is being deleted, so remove the reference.
+    // The entity hasn't been saved yet, or is being deleted, so remove the
+    // reference.
     unset($widget_state['entities'][$delta]);
 
     // If the entity has been saved, delete it if either the widget is set to
@@ -1012,7 +1025,10 @@ class InlineEntityFormComplex extends InlineEntityFormBase implements ContainerF
     // has decided to delete.
     if ($entity_id) {
       $removed_reference = $remove_button['#removed_reference'];
-      if ($removed_reference === self::REMOVED_DELETE || ($removed_reference === self::REMOVED_OPTIONAL && $form_values['delete'] === 1)) {
+      if (
+        ($removed_reference === self::REMOVED_OPTIONAL && !empty($form_values[self::REMOVED_DELETE]))
+        || $removed_reference === self::REMOVED_DELETE
+      ) {
         $widget_state['delete'][] = $entity;
       }
     }

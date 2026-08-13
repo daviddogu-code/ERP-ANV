@@ -3,22 +3,25 @@
 namespace Drupal\tamper\Plugin\Tamper;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\tamper\Attribute\Tamper;
 use Drupal\tamper\Exception\TamperException;
-use Drupal\tamper\TamperableItemInterface;
+use Drupal\tamper\ItemUsage;
 use Drupal\tamper\TamperBase;
+use Drupal\tamper\TamperableItemInterface;
 
 /**
  * Plugin implementation for trimming text.
  *
  * Removes text and whitespace from the beginning, middle or both sides of text.
- *
- * @Tamper(
- *   id = "trim",
- *   label = @Translation("Characters to trim"),
- *   description = @Translation("Characters to trim."),
- *   category = "Text"
- * )
  */
+#[Tamper(
+  id: 'trim',
+  label: new TranslatableMarkup('Characters to trim'),
+  description: new TranslatableMarkup('Characters to trim.'),
+  category: new TranslatableMarkup('Text'),
+  itemUsage: ItemUsage::IGNORED,
+)]
 class Trim extends TamperBase {
 
   const SETTING_CHARACTER = 'character';
@@ -82,7 +85,7 @@ class Trim extends TamperBase {
   /**
    * {@inheritdoc}
    */
-  public function tamper($data, TamperableItemInterface $item = NULL) {
+  public function tamper($data, ?TamperableItemInterface $item = NULL) {
     // Don't process empty or null values.
     if (is_null($data) || $data === '') {
       return $data;

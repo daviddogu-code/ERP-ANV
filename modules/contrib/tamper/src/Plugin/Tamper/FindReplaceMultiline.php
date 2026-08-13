@@ -3,20 +3,23 @@
 namespace Drupal\tamper\Plugin\Tamper;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\tamper\Attribute\Tamper;
 use Drupal\tamper\Exception\TamperException;
-use Drupal\tamper\TamperableItemInterface;
+use Drupal\tamper\ItemUsage;
 use Drupal\tamper\TamperBase;
+use Drupal\tamper\TamperableItemInterface;
 
 /**
  * A plugin for performing a multiline search/replace.
- *
- * @Tamper(
- *   id = "find_replace_multiline",
- *   label = @Translation("Find replace (multiline)"),
- *   description = @Translation("Find and replace text, with multiple search/replacement patterns defined together."),
- *   category = "Text"
- * )
  */
+#[Tamper(
+  id: 'find_replace_multiline',
+  label: new TranslatableMarkup('Find replace (multiline)'),
+  description: new TranslatableMarkup('Find and replace text, with multiple search/replacement patterns defined together.'),
+  category: new TranslatableMarkup('Text'),
+  itemUsage: ItemUsage::IGNORED,
+)]
 class FindReplaceMultiline extends TamperBase {
 
   const SETTING_FIND_REPLACE = 'find_replace';
@@ -125,7 +128,13 @@ class FindReplaceMultiline extends TamperBase {
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
-    $lines = explode("\n", $form_state->getValue(self::SETTING_FIND_REPLACE));
+    $find_replace = $form_state->getValue(self::SETTING_FIND_REPLACE);
+
+    // Make sure that carriage returns are removed.
+    $find_replace = str_replace("\r", '', $find_replace);
+
+    // Now convert to an array.
+    $lines = explode("\n", $find_replace);
 
     // Remove empty lines.
     foreach ($lines as $index => $line) {
@@ -148,7 +157,12 @@ class FindReplaceMultiline extends TamperBase {
   /**
    * {@inheritdoc}
    */
-  public function tamper($data, TamperableItemInterface $item = NULL) {
+  public function tamper($data, ?TamperableItemInterface $item = NULL) {
+    // Don't process empty or null values.
+    if (is_null($data) || $data === '') {
+      return $data;
+    }
+
     if (!is_string($data)) {
       throw new TamperException('Input should be a string.');
     }

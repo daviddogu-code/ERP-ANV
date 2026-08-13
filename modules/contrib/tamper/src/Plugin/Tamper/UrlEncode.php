@@ -3,20 +3,23 @@
 namespace Drupal\tamper\Plugin\Tamper;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\tamper\Attribute\Tamper;
 use Drupal\tamper\Exception\TamperException;
-use Drupal\tamper\TamperableItemInterface;
+use Drupal\tamper\ItemUsage;
 use Drupal\tamper\TamperBase;
+use Drupal\tamper\TamperableItemInterface;
 
 /**
  * Plugin implementation for url encode.
- *
- * @Tamper(
- *   id = "url_encode",
- *   label = @Translation("URL Encode"),
- *   description = @Translation("Run values through the <a href='http://us3.php.net/urlencode'>urlencode()</a> function."),
- *   category = "Text"
- * )
  */
+#[Tamper(
+  id: 'url_encode',
+  label: new TranslatableMarkup('URL Encode'),
+  description: new TranslatableMarkup('Run values through the <a href="http://us3.php.net/urlencode">urlencode()</a> function.'),
+  category: new TranslatableMarkup('Text'),
+  itemUsage: ItemUsage::IGNORED,
+)]
 class UrlEncode extends TamperBase {
 
   const SETTING_METHOD = 'method';
@@ -69,7 +72,12 @@ class UrlEncode extends TamperBase {
   /**
    * {@inheritdoc}
    */
-  public function tamper($data, TamperableItemInterface $item = NULL) {
+  public function tamper($data, ?TamperableItemInterface $item = NULL) {
+    // Don't process empty or null values.
+    if (is_null($data) || $data === '') {
+      return $data;
+    }
+
     if (!is_string($data)) {
       throw new TamperException('Input should be a string.');
     }

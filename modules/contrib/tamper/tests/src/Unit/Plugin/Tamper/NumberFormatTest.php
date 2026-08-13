@@ -20,7 +20,7 @@ class NumberFormatTest extends TamperPluginTestBase {
   }
 
   /**
-   * Test zero decimal and thousands seperator with string.
+   * Test zero decimal and thousands separator with string.
    */
   public function testNumberFormatDefault() {
     $config = [
@@ -50,7 +50,7 @@ class NumberFormatTest extends TamperPluginTestBase {
   }
 
   /**
-   * Test zero decimal and thousands seperator with number.
+   * Test zero decimal and thousands separator with number.
    */
   public function testNumberFormatDefaultWithNumber() {
     $config = [
@@ -76,7 +76,6 @@ class NumberFormatTest extends TamperPluginTestBase {
     $plugin = new NumberFormat($config, 'number_format', [], $this->getMockSourceDefinition());
 
     $this->assertEquals('1 234,57', $plugin->tamper(1234.5678));
-
   }
 
 }

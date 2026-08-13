@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\inline_entity_form\FunctionalJavascript;
 
 /**
@@ -66,7 +68,7 @@ class ComplexWidgetRevisionsTest extends InlineEntityFormTestBase {
   /**
    * Data provider for ::testRevisionsAtDepth.
    */
-  public function revisionsAtDepthDataProvider(): array {
+  public static function revisionsAtDepthDataProvider(): array {
     return [
       [FALSE],
       [TRUE],

@@ -2,6 +2,7 @@
 
 namespace Drupal\tamper;
 
+use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Plugin\Factory\DefaultFactory;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -29,7 +30,8 @@ class TamperManager extends DefaultPluginManager implements TamperManagerInterfa
       $namespaces,
       $module_handler,
       'Drupal\tamper\TamperInterface',
-      'Drupal\tamper\Annotation\Tamper'
+      'Drupal\tamper\Attribute\Tamper',
+      'Drupal\tamper\Annotation\Tamper',
     );
     $this->alterInfo('tamper_info');
     $this->setCacheBackend($cache_backend, 'tamper_info_plugins');
@@ -53,6 +55,42 @@ class TamperManager extends DefaultPluginManager implements TamperManagerInterfa
   /**
    * {@inheritdoc}
    */
+  public function processDefinition(&$definition, $plugin_id) {
+    parent::processDefinition($definition, $plugin_id);
+
+    if (!array_key_exists('itemUsage', $definition)) {
+      $definition['itemUsage'] = NULL;
+    }
+
+    // Validate the itemUsage value.
+    $this->validateItemUsageValue($definition['itemUsage'], $plugin_id);
+  }
+
+  /**
+   * Validates if the provided value is a known itemUsage type.
+   *
+   * @param mixed $value
+   *   The value to check.
+   * @param string $plugin_id
+   *   The ID of the plugin for which the value gets checked.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   *   In case the value is not correct.
+   */
+  protected function validateItemUsageValue($value, string $plugin_id) {
+    if ($value !== NULL && !in_array($value, ItemUsage::cases(), TRUE)) {
+      throw new PluginException(sprintf(
+        'Plugin "%s" has invalid itemUsage "%s". Allowed: %s.',
+        $plugin_id,
+        is_scalar($value) ? $value : gettype($value),
+        implode(', ', ItemUsage::cases())
+      ));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCategories() {
     // Fetch all categories from definitions and remove duplicates.
     $categories = array_unique(array_values(array_map(function ($definition) {
@@ -65,8 +103,8 @@ class TamperManager extends DefaultPluginManager implements TamperManagerInterfa
   /**
    * {@inheritdoc}
    */
-  public function getGroupedDefinitions(array $definitions = NULL) {
-    $definitions = $this->getSortedDefinitions(isset($definitions) ? $definitions : $this->getDefinitions());
+  public function getGroupedDefinitions(?array $definitions = NULL) {
+    $definitions = $this->getSortedDefinitions($definitions ?? $this->getDefinitions());
     $grouped_definitions = [];
     foreach ($definitions as $id => $definition) {
       $grouped_definitions[(string) $definition['category']][$id] = $definition;
@@ -80,9 +118,9 @@ class TamperManager extends DefaultPluginManager implements TamperManagerInterfa
    * @return \Drupal\tamper\TamperInterface[]
    *   List of tamper plugins.
    */
-  public function getSortedDefinitions(array $definitions = NULL) {
+  public function getSortedDefinitions(?array $definitions = NULL) {
     // Sort the plugins first by category, then by label.
-    $definitions = isset($definitions) ? $definitions : $this->getDefinitions();
+    $definitions = $definitions ?? $this->getDefinitions();
     uasort($definitions, function ($a, $b) {
       if ($a['category'] != $b['category']) {
         return strnatcasecmp($a['category'], $b['category']);

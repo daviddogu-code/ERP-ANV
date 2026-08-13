@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\inline_entity_form\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
@@ -7,6 +9,8 @@ use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\TestFileCreationTrait;
 use Drupal\user\Entity\Role;
+
+// cspell:ignore Bojan WSOD
 
 /**
  * IEF complex field widget tests.
@@ -701,7 +705,7 @@ class ComplexWidgetTest extends InlineEntityFormTestBase {
       'title' => 'Some title',
       'multi' => array_values($referenceNodes),
     ]);
-    /** @var NodeInterface $node */
+    /** @var \Drupal\node\Entity\NodeInterface $node */
     $parent_node = $this->drupalGetNodeByTitle('Some title');
 
     // Edit the parent node.
@@ -720,6 +724,9 @@ class ComplexWidgetTest extends InlineEntityFormTestBase {
     $user_role->revokePermission('delete any ief_reference_type content');
     $user_role->save();
 
+    // Reloading page post updating permission to ensure session is updated.
+    $this->drupalGet('node/' . $parent_node->id() . '/edit');
+
     // Without delete permission, the checkbox to delete the entity when
     // removing the reference should not be visible.
     $delete_checkbox_xpath = $this->getXpathForNthInputByLabelText('Delete this node from the system.', 1);
@@ -731,7 +738,9 @@ class ComplexWidgetTest extends InlineEntityFormTestBase {
     // user and reload the page.
     $user_role->grantPermission('delete any ief_reference_type content');
     $user_role->save();
-    $this->getSession()->reload();
+
+    // Reloading page post updating permission to ensure session is updated.
+    $this->drupalGet('node/' . $parent_node->id() . '/edit');
 
     // Delete the reference to the first entity, but keep it in the system.
     $assert_session->elementExists('xpath', '(//input[@value="Remove"])[1]')->press();
@@ -757,6 +766,10 @@ class ComplexWidgetTest extends InlineEntityFormTestBase {
     // reload the page.
     $user_role->revokePermission('delete any ief_reference_type content');
     $user_role->save();
+
+    // Reloading page post updating permission to ensure session is updated.
+    $this->drupalGet('node/' . $parent_node->id() . '/edit');
+
     $this->updateSetting('removed_reference', 'keep');
     $this->drupalGet('node/' . $parent_node->id() . '/edit');
     $assert_session->pageTextNotContains($title1);
@@ -794,7 +807,9 @@ class ComplexWidgetTest extends InlineEntityFormTestBase {
     // user and reload the page.
     $user_role->grantPermission('delete any ief_reference_type content');
     $user_role->save();
-    $this->getSession()->reload();
+
+    // Reloading page post updating permission to ensure session is updated.
+    $this->drupalGet('node/' . $parent_node->id() . '/edit');
 
     // Now unreference the fourth entity and check if it disappeared.
     $assert_session->elementsCount('css', 'tr.ief-row-entity', 2);
@@ -834,6 +849,42 @@ class ComplexWidgetTest extends InlineEntityFormTestBase {
     $this->assertTrue($this->drupalGetNodeByTitle($title3) instanceof NodeInterface, 'Third inline entity still exists.');
     $this->assertTrue(empty($this->drupalGetNodeByTitle($title4)), 'Fourth inline entity was deleted from the site.');
     $this->assertTrue($this->drupalGetNodeByTitle($title5) instanceof NodeInterface, "Fifth inline entity still exists.");
+  }
+
+  /**
+   * Tests the Remove button on a required single-bundle field.
+   *
+   * With one entity referenced and other referenceable entities available, the
+   * Remove button must still appear so the reference can be replaced.
+   *
+   * Regression test for #3469864: getReferenceableEntities() groups results by
+   * bundle, so a naive count of the outer array reports 1 for a single-bundle
+   * field no matter how many entities that bundle contains, which incorrectly
+   * suppressed the Remove button on required fields.
+   */
+  public function testRemoveButtonWithSingleBundleMultipleEntities() {
+    $assert_session = $this->assertSession();
+
+    // Only allow selecting existing entities — this is the branch that
+    // consults getReferenceableEntities() to decide whether the last
+    // reference on a required field can be replaced.
+    $this->updateSetting('allow_new', FALSE);
+    $this->updateSetting('allow_existing', TRUE);
+
+    // Create multiple referenceable entities in the one target bundle.
+    $referenceNodes = $this->createReferenceContent(3);
+
+    // Reference exactly one of them on the parent node, so entities_count == 1
+    // and the Remove button depends on $have_multiple_existing_entities.
+    $parent_node = $this->drupalCreateNode([
+      'type' => 'ief_test_complex',
+      'title' => 'Single ref parent',
+      'multi' => [reset($referenceNodes)],
+    ]);
+
+    $this->drupalGet('node/' . $parent_node->id() . '/edit');
+    $assert_session->elementsCount('css', 'tr.ief-row-entity', 1);
+    $assert_session->elementExists('xpath', '(//input[@value="Remove"])[1]');
   }
 
   /**
@@ -1211,7 +1262,7 @@ class ComplexWidgetTest extends InlineEntityFormTestBase {
   /**
    * Data provider: FALSE, TRUE.
    */
-  public function simpleFalseTrueDataProvider() {
+  public static function simpleFalseTrueDataProvider() {
     return [
       [FALSE],
       [TRUE],

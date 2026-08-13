@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\tamper\Kernel;
 
-use Drupal\entity_test\Entity\EntityTestBundle;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\entity_test\Entity\EntityTestBundle;
 use Drupal\tamper\SourceDefinition;
 use Drupal\tamper\TamperInterface;
 use Drupal\tamper\TamperPluginCollection;
@@ -20,7 +20,7 @@ class TamperConfigSchemaTest extends KernelTestBase {
    *
    * @var array
    */
-  protected static $modules = ['entity_test', 'tamper', 'tamper_test'];
+  protected static $modules = ['entity_test', 'tamper', 'tamper_test', 'user'];
 
   /**
    * The config entity to add third party settings to.

@@ -2,23 +2,26 @@
 
 namespace Drupal\tamper\Plugin\Tamper;
 
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Locale\CountryManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\tamper\Attribute\Tamper;
 use Drupal\tamper\Exception\TamperException;
-use Drupal\tamper\TamperableItemInterface;
+use Drupal\tamper\ItemUsage;
 use Drupal\tamper\TamperBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\tamper\TamperableItemInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Plugin implementation for converting country to ISO code.
- *
- * @Tamper(
- *   id = "country_to_code",
- *   label = @Translation("Country to ISO code"),
- *   description = @Translation("Converts this field from a country name string to the two character ISO 3166-1 alpha-2 code."),
- *   category = "Text"
- * )
  */
-class CountryToCode extends TamperBase implements ContainerFactoryPluginInterface {
+#[Tamper(
+  id: 'country_to_code',
+  label: new TranslatableMarkup('Country to ISO code'),
+  description: new TranslatableMarkup('Converts this field from a country name string to the two character ISO 3166-1 alpha-2 code.'),
+  category: new TranslatableMarkup('Text'),
+  itemUsage: ItemUsage::IGNORED,
+)]
+class CountryToCode extends TamperBase {
 
   /**
    * Holds the CountryManager object so we can grab the country list.
@@ -28,9 +31,37 @@ class CountryToCode extends TamperBase implements ContainerFactoryPluginInterfac
   protected $countryManager;
 
   /**
+   * Constructs a CountryToCode plugin.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Locale\CountryManagerInterface $country_manager
+   *   The country manager used to grab the country list.
+   */
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    #[Autowire(service: 'country_manager')]
+    CountryManagerInterface $country_manager,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->countryManager = $country_manager;
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function tamper($data, TamperableItemInterface $item = NULL) {
+  public function tamper($data, ?TamperableItemInterface $item = NULL) {
+    // Don't process empty or null values.
+    if (is_null($data) || $data === '') {
+      return $data;
+    }
+
     if (!is_string($data)) {
       throw new TamperException('Input should be a string.');
     }
@@ -62,15 +93,6 @@ class CountryToCode extends TamperBase implements ContainerFactoryPluginInterfac
     else {
       throw new TamperException('Could not find country name ' . $country . ' in list of countries.');
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = new static($configuration, $plugin_id, $plugin_definition, $configuration['source_definition']);
-    $instance->setCountryManager($container->get('country_manager'));
-    return $instance;
   }
 
   /**

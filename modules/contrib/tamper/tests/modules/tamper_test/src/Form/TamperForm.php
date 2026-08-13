@@ -65,6 +65,8 @@ class TamperForm extends FormBase {
       'bar' => 'Bar',
       'baz' => 'Baz',
       'quxxie' => 'Qux',
+      // A source with an unconventional name.
+      'a"b_c' => 'Unconventional',
     ]);
     $this->pluginCollection = new TamperPluginCollection($tamper_manager, $source_definition, []);
   }
@@ -72,7 +74,7 @@ class TamperForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, EntityTestBundle $entity_test_bundle = NULL, string $tamper_plugin_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?EntityTestBundle $entity_test_bundle = NULL, ?string $tamper_plugin_id = NULL) {
     $this->entity = $entity_test_bundle;
 
     // Instantiate plugin or get existing one.

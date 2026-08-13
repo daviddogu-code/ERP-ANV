@@ -40,7 +40,7 @@ class SkipOnEmptyTest extends TamperPluginTestBase {
   /**
    * Data provider for ::testWithEmptyValue().
    */
-  public function dataProviderEmptyValues() {
+  public static function dataProviderEmptyValues() {
     return [
       // Empty string.
       [''],
@@ -53,6 +53,22 @@ class SkipOnEmptyTest extends TamperPluginTestBase {
       // Integer.
       [0],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function testWithNullValue() {
+    $this->expectException(SkipTamperDataException::class);
+    $this->plugin->tamper(NULL);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function testWithEmptyString() {
+    $this->expectException(SkipTamperDataException::class);
+    $this->plugin->tamper(NULL);
   }
 
 }
