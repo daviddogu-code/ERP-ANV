@@ -24,12 +24,35 @@ por error algo que estaba puesto a propósito.
 
 ## 1. Ahora mismo
 
-- **Llevar al servidor el salto a Drupal 10.6.15 y la reconciliación de módulos.** Hecho en local
-  el 13 de agosto; el servidor sigue en 10.2.4 con los 82 avisos de seguridad. Es lo más urgente
-  de la lista. Antes de desplegar hay que leerse los cuatro tropiezos del apartado de Hecho,
-  porque los tres primeros volverán a salir allí: Composer plantándose en
-  `vendor/symfony/css-selector`, `drush updatedb` sin funcionar y las versiones de esquema que no
-  se guardan.
+- **Llevar al servidor el salto a Drupal 11.4.5.** Hecho en local el 13 de agosto; el servidor
+  sigue en **10.2.4 con los 82 avisos de seguridad**. Es lo más urgente de la lista.
+
+  **La máquina ya sirve, no hay que tocarla.** Se montó a propósito con PHP 8.3 y MySQL 8.4 sobre
+  Ubuntu 24.04 para que coincidiera con Laragon, y resulta que eso es exactamente lo que pide
+  Drupal 11. La decisión de "aburrirse a propósito" se acaba de pagar sola.
+
+  **Propuesta: reemplazar la base de datos entera con la de local**, en vez de actualizar la del
+  servidor paso a paso. Local es la copia maestra, allí no hay datos reales, y así el servidor
+  queda idéntico a lo que se probó. Lo único que se pierde es la cuenta de Lukpla, que se vuelve
+  a crear en dos minutos. Aun así, antes hay que pasar `drush config:status` **en el servidor** y
+  contar los procesos de ECA, que deben ser 36.
+
+  De los tres tropiezos que aquí se anotaron como "volverán a salir allí", **dos eran de
+  Windows** y no se repetirán en Linux: que `drush updatedb` no se reconociera y que las
+  versiones de esquema no se guardaran. El tercero sí volverá, porque el servidor tiene su propio
+  `vendor` construido desde git y `core-vendor-hardening` lo ensucia: es el *"Source directory
+  has uncommitted changes"*. El arreglo ya está probado en local, borrar `vendor` entero y
+  `composer install`, que además lo reinstala todo desde archivo y cierra esa clase de problema
+  para siempre.
+
+  **Y una que no viaja por git.** `settings.php` está en `.gitignore`, y con razón, así que **el
+  apagado de `rebuild_access` del 13 de agosto no llega al servidor con el `git pull`**. Como el
+  `settings.php` de allí se escribió a mano y es probable que se copiara del de local, hay que
+  **comprobar a mano si `rebuild_access` está en `TRUE` en el servidor**. Si lo está, ahora mismo
+  cualquiera puede entrar a `https://erp.anvfightgear.com/core/rebuild.php` y vaciar las cachés
+  del sitio sin ninguna credencial. Lo mismo vale para cualquier otro ajuste de `settings.php`:
+  ese fichero se mantiene a mano en cada sitio, y por eso conviene revisarlo entero al desplegar,
+  no solo esta línea.
 
   Y dos comprobaciones nuevas, ahora que el `lock` manda de verdad. **Pasar
   `scripts/comparar-con-original.php` en el servidor antes de desplegar**: si allí hay algún
@@ -38,15 +61,21 @@ por error algo que estaba puesto a propósito.
   que descubre lo mismo pero en los módulos anclados a un commit, que es donde se nos escondió
   el fallo crítico de ECA.
 
-  Sobre ese fallo: el servidor corre el mismo ECA 1.1.7 que corríamos aquí, así que **también
-  está expuesto al CSRF crítico de `SA-CONTRIB-2025-031`**, con `eca_ui` activado. Es un motivo
-  más para que el despliegue no espere.
-- **Decidir hasta dónde se sigue con las fases 3 y 4.** Lo que queda es ECA de la rama 1 a la 2
-  —que ya no urge, ver el punto 4 del apartado 8— y los temas, que son la parte cara. El resto de
-  módulos ya está al día.
+  Sobre ese fallo: el servidor sigue con **ECA 1.1.7 y `eca_ui` activado**, o sea **expuesto al
+  CSRF crítico de `SA-CONTRIB-2025-031`**. Aquí ya no, porque ECA subió a la 2.1.22, pero allí sí,
+  y allí es donde está la máquina abierta a internet. Es el motivo más fuerte para que el
+  despliegue no espere: de todo lo que hay en este backlog, es lo único que empeora solo con el
+  paso del tiempo.
+- **Un cabo suelto de dos minutos, mejor antes de desplegar: desinstalar `upgrade_status`.** Ya
+  cumplió su función. Mientras siga puesto, `config/sync` arrastra dos exclusiones permanentes
+  —`update.settings` y `upgrade_status.settings`— y la cuenta de módulos de la comprobación se
+  queda turbia, con ese "más update y upgrade_status de diagnóstico" pegado detrás.
+- ~~**Decidir hasta dónde se sigue con las fases 3 y 4.**~~ Decidido y hecho el 13 de agosto: se
+  fue hasta el final. ECA a la 2.1.22, los temas al día y el núcleo en Drupal 11.4.5.
 
-~~**Confirmar en Git el trabajo del 12 y el 13 de agosto.**~~ Hecho el 13 de agosto en tres
-commits: la limpieza de módulos, la red de seguridad de la Fase 0 y el saneado de Composer.
+~~**Confirmar en Git el trabajo del 12 y el 13 de agosto.**~~ Hecho el 13 de agosto en cinco
+commits, **subidos a GitHub esa misma noche**: la limpieza de módulos, la red de seguridad de la
+Fase 0, el saneado de Composer, la preparación del último tramo y el salto a Drupal 11.
 
 El ERP ya está publicado en `https://erp.anvfightgear.com` desde el 12 de agosto.
 
