@@ -518,12 +518,43 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   que anclar el commit era lo único que reproducía exactamente lo que corre. Funciona y es
   reproducible, pero **no reciben avisos de seguridad**, que es justo el agujero por el que se
   nos coló el fallo crítico de ECA durante dieciséis meses. Hay que sacarlos de ahí:
-  - **`eck` a la 2.1.0**, que es estable. Es el que más pesa: todas las entidades del ERP
-    (clientes, pedidos, productos, líneas, inventario) son de ECK, así que merece su propia
-    ronda con pruebas a conciencia.
+  - **`eck` a la 2.1.0**, que es estable. Estudiado a fondo el 13 de agosto; el resumen está
+    debajo. **Es obligatorio para Drupal 11**: lo que corremos declara `^9.4 || ^10` y la 2.1.0
+    declara `^11`. Merece su propia ronda porque todas las entidades del ERP son de ECK, pero el
+    cambio es más pequeño de lo que aparenta.
   - **`conditional_fields` a la 4.0.0-alpha6**, que está a un paso del commit anclado.
   - **`ultimate_cron` a la 8.x-2.0-beta1** (noviembre de 2024, cinco meses por delante de lo que
     corremos). Va junto con la tarea de programar el cron, que sigue pendiente.
+
+  **El salto de `eck`, estudiado.** De lo que corremos (un commit de febrero de 2024) a la 2.1.0
+  (marzo de 2026) hay 22 commits. A primera vista asusta —32.777 líneas borradas— pero casi
+  todas son de "dejar de soportar Drupal 7": el código de migración y un fichero de pruebas de
+  29.251 líneas. **El cambio real son 34 ficheros, 640 líneas nuevas y 436 quitadas.**
+
+  - **Una sola actualización de base de datos**, `eck_update_8007`, que añade una clave
+    `standalone_url` a cada tipo de entidad con valor verdadero, es decir manteniendo lo que hay:
+    los pedidos seguirán teniendo su dirección propia del tipo `/tec_order/348`.
+  - **La interfaz pasa a exigir que las entidades sean publicables y fechables.** Suena a
+    problema porque `tec_line_item` no tiene campo de estado ni de autor y `tec_app_link` no
+    tiene fechas, pero está contemplado: todos los métodos comprueban antes si el campo existe, y
+    `isPublished()` devuelve verdadero cuando no lo hay, que es lo correcto para una línea de
+    pedido.
+  - **Las claves de entidad pasan a asignarse según los campos que tenga cada tipo.** Hasta ahora
+    a todos se les ponía `label` y `published` aunque no tuvieran título ni estado. Es el arreglo
+    de un fallo, pero cambia la definición de la entidad, así que **habrá que pasar las
+    actualizaciones de definición** después de instalar y mirar con lupa `tec_line_item`, que es
+    el tipo al que le desaparece la clave `published`.
+  - **Cambia cómo se dibujan las entidades**, de un gancho a una clase dedicada. No nos afecta:
+    no tenemos plantillas propias de ECK ni nadie engancha ese gancho.
+  - **Nuestro código no menciona ni una clase de ECK**, comprobado en todos los módulos
+    personalizados. El riesgo de integración es cero por nuestra parte.
+  - De propina vienen arreglos que aquí no hemos sufrido pero podríamos: nombres de paquete que
+    empiezan por número, tipos llamados `block` o `custom`, y la limpieza de cachés de plugins
+    cuando se crea o modifica un tipo de entidad.
+
+  Plan cuando toque: copia de la base de datos, subir el módulo, `eck_update_8007`, las
+  actualizaciones de definición de entidad, y después las 35 comprobaciones y las quince páginas.
+  Vigilar en concreto la pantalla de líneas de pedido y la de inventario.
 - **Quince carpetas de módulos apagados siguen ocupando sitio en `modules/contrib`**, ninguna
   gestionada por Composer: `base_field_override_ui`, `bootstrap4_modal`, `currency`,
   `entity_browser_enhanced`, `entity_reference_modal`, `field_validation`, `integer_to_decimal`,
