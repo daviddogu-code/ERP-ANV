@@ -83,7 +83,7 @@ class UITest extends FunctionalTestBase {
     $this->drupalGet(Url::fromRoute('eck.entity_type.list'));
     $this->assertSession()->responseNotContains($noEntitiesYetText);
     foreach (['Add content', 'Content list'] as $option) {
-      $this->assertSession()->linkNotExists($this->t($option), $this->t('No %option option is shown when there are no bundles.', ['%option' => $this->t($option)]));
+      $this->assertSession()->linkNotExists($option, $this->t('No %option option is shown when there are no bundles.', ['%option' => $option]));
     }
     $this->assertSession()->linkExists($this->t('Add bundle'));
     $this->assertSession()->linkExists($this->t('Bundle list'));
@@ -178,7 +178,10 @@ class UITest extends FunctionalTestBase {
     $type = $this->createEntityType();
     $bundle = $this->createEntityBundle($type['id']);
 
-    $this->drupalGet(Url::fromRoute('eck.entity.add', ['eck_entity_type' => $type['id'], 'eck_entity_bundle' => $bundle['type']]));
+    $this->drupalGet(Url::fromRoute('eck.entity.add', [
+      'eck_entity_type' => $type['id'],
+      'eck_entity_bundle' => $bundle['type'],
+    ]));
     $this->assertSession()->responseContains('core/themes/starterkit_theme');
 
     // Install an administration theme and enable "Use the administration theme
@@ -191,7 +194,10 @@ class UITest extends FunctionalTestBase {
     $this->drupalGet('admin/appearance');
     $this->submitForm($edit, 'Save configuration');
 
-    $this->drupalGet(Url::fromRoute('eck.entity.add', ['eck_entity_type' => $type['id'], 'eck_entity_bundle' => $bundle['type']]));
+    $this->drupalGet(Url::fromRoute('eck.entity.add', [
+      'eck_entity_type' => $type['id'],
+      'eck_entity_bundle' => $bundle['type'],
+    ]));
     $this->assertSession()->responseContains('core/themes/claro');
   }
 

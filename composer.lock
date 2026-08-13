@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "906f31a638f95e9ed4d4206cf70a32eb",
+    "content-hash": "b08e7478f89d178cfb89306cd8379402",
     "packages": [
         {
             "name": "andileco/eval-math",
@@ -3617,26 +3617,29 @@
         },
         {
             "name": "drupal/eck",
-            "version": "dev-2.x",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/eck.git",
-                "reference": "14bc5488c88c6c93bd129d7ece82df25c9528cdc"
+                "reference": "2.1.0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/eck-2.1.0.zip",
+                "reference": "2.1.0",
+                "shasum": "0ba56e3844114624b48cb31bd0027447c6a39e64"
             },
             "require": {
                 "drupal/core": "^9.4 || ^10 || ^11"
             },
             "type": "drupal-module",
             "extra": {
-                "branch-alias": {
-                    "dev-2.x": "2.x-dev"
-                },
                 "drupal": {
-                    "version": "2.1.0-beta2+1-dev",
-                    "datestamp": "1773783560",
+                    "version": "2.1.0",
+                    "datestamp": "1773924025",
                     "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Dev releases are not covered by Drupal security advisories."
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
                     }
                 }
             },
@@ -14986,7 +14989,6 @@
     "stability-flags": {
         "drupal/conditional_fields": 20,
         "drupal/context": 5,
-        "drupal/eck": 20,
         "drupal/feeds": 10,
         "drupal/gin": 5,
         "drupal/gin_toolbar": 5,

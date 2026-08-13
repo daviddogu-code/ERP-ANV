@@ -89,13 +89,13 @@ display:
           sort_desc_label: Desc
       access:
         type: none
-        options: {  }
+        options: {}
       cache:
         type: tag
-        options: {  }
-      empty: {  }
-      sorts: {  }
-      arguments: {  }
+        options: {}
+      empty: {}
+      sorts: {}
+      arguments: {}
       filters:
         type:
           id: type
@@ -108,7 +108,7 @@ display:
             test_bundle: test_bundle
           expose:
             operator_limit_selection: false
-            operator_list: {  }
+            operator_list: {}
       style:
         type: table
       row:
@@ -120,26 +120,26 @@ display:
           disable_sql_rewrite: false
           distinct: false
           replica: false
-          query_tags: {  }
-      relationships: {  }
-      header: {  }
-      footer: {  }
-      display_extenders: {  }
+          query_tags: {}
+      relationships: {}
+      header: {}
+      footer: {}
+      display_extenders: {}
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_interface'
-      tags: {  }
+      tags: {}
   page_1:
     id: page_1
     display_title: Page
     display_plugin: page
     position: 1
     display_options:
-      display_extenders: {  }
+      display_extenders: {}
       path: eck-test/views/field-label
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_interface'
-      tags: {  }
+      tags: {}

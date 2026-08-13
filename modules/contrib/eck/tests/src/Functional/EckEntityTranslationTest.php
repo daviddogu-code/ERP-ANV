@@ -60,7 +60,7 @@ class EckEntityTranslationTest extends FunctionalTestBase {
 
     // Add one more language.
     $this->drupalGet('admin/config/regional/language/add');
-    $this->submitForm(['predefined_langcode' => 'uk'], t('Add language'));
+    $this->submitForm(['predefined_langcode' => 'uk'], 'Add language');
 
     // Enable content translation on newly created entity type.
     $this->drupalGet('admin/config/regional/content-language');
@@ -109,7 +109,7 @@ class EckEntityTranslationTest extends FunctionalTestBase {
 
     // Verify page title of translation edit.
     $this->drupalGet("uk/$entity_type/{$entity->id()}/edit");
-    $this->assertSession()->responseContains( '<em>Edit translatable</em> ECK Entity translation [<em class="placeholder">Ukrainian</em> translation]');
+    $this->assertSession()->responseContains('<em>Edit translatable</em> ECK Entity translation [<em class="placeholder">Ukrainian</em> translation]');
 
     // Verify page titles for entity types without title field.
     $entity2 = $this->createEntity('no_title', [
@@ -120,7 +120,7 @@ class EckEntityTranslationTest extends FunctionalTestBase {
     $this->getSession()->getPage()->pressButton('Save');
 
     $this->drupalGet("uk/no_title/{$entity2->id()}/edit");
-    $this->assertSession()->responseContains( '<em>Edit no_title</em>  [<em class="placeholder">Ukrainian</em> translation]');
+    $this->assertSession()->responseContains('<em>Edit no_title</em>  [<em class="placeholder">Ukrainian</em> translation]');
   }
 
   /**
@@ -140,7 +140,7 @@ class EckEntityTranslationTest extends FunctionalTestBase {
 
     // Remove newly created translation.
     $this->drupalGet("uk/$entity_type/{$entity->id()}/edit");
-    $this->getSession()->getPage()->pressButton('Delete translation');
+    $this->getSession()->getPage()->clickLink('Delete translation');
 
     $this->assertSession()->pageTextContains('Are you sure you want to delete the Ukrainian translation of the translatable ECK Entity translation?');
     $this->getSession()->getPage()->pressButton('Delete Ukrainian translation');
