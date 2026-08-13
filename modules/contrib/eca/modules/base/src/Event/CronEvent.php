@@ -42,6 +42,13 @@ class CronEvent extends Event implements ConditionalApplianceInterface {
   protected LoggerChannelInterface $logger;
 
   /**
+   * List of timestamps keyed by state ID.
+   *
+   * @var int[]
+   */
+  private static array $lastRun = [];
+
+  /**
    * Constructs a new CronEvent object.
    *
    * @param \Drupal\eca\EcaState $state
@@ -102,7 +109,11 @@ class CronEvent extends Event implements ConditionalApplianceInterface {
    */
   protected function isDue(string $id, string $frequency): bool {
     $currentTime = $this->state->getCurrentTimestamp();
-    $lastRun = $this->state->getTimestamp('cron-' . $id);
+    $key = 'cron-' . $id;
+    if (!isset(self::$lastRun[$key])) {
+      self::$lastRun[$key] = $this->state->getTimestamp($key);
+    }
+    $lastRun = self::$lastRun[$key];
 
     // Cron's maximum granularity is on minute level. Therefore we round the
     // current time to the last passed minute. That way we avoid accidental

@@ -18,6 +18,8 @@ use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -599,7 +601,9 @@ class ContentExecutionChainTest extends KernelTestBase {
     }, -1000);
 
     // Fake a response event that executes the added listener.
-    $response_event = new ResponseEvent(\Drupal::service('http_kernel'), Request::createFromGlobals(), HttpKernelInterface::MASTER_REQUEST, new Response());
+    $request = Request::createFromGlobals();
+    $request->setSession(new Session(new MockArraySessionStorage()));
+    $response_event = new ResponseEvent(\Drupal::service('http_kernel'), $request, HttpKernelInterface::MASTER_REQUEST, new Response());
     $event_dispatcher->dispatch($response_event, KernelEvents::RESPONSE);
 
     $this->assertTrue($response instanceof RedirectResponse);

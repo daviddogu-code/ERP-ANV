@@ -4,9 +4,7 @@ services:
     class: Drupal\Core\Cache\MemoryCache\MemoryCache
   eca.state:
     class: Drupal\eca\EcaState
-    arguments: ['@keyvalue', '@cache.bootstrap', '@lock', '@datetime.time']
-    tags:
-      - { name: needs_destruction }
+    arguments: ['@keyvalue', '@datetime.time']
   eca.processor:
     class: Drupal\eca\Processor
     arguments: ['@entity_type.manager', '@logger.channel.eca', '@event_dispatcher', '%eca.max_recursion_level%']

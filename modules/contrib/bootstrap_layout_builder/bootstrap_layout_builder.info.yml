@@ -6,3 +6,8 @@ configure: bootstrap_layout_builder.settings
 package: 'Layout Builder'
 dependencies:
   - bootstrap_styles:bootstrap_styles
+
+# Information added by Drupal.org packaging script on 2023-07-27
+version: '2.1.2'
+project: 'bootstrap_layout_builder'
+datestamp: 1690460412

@@ -64,13 +64,13 @@ abstract class ListRemoveBase extends ListOperationBase {
 
       case 'value':
         $value = $this->getValueToRemove();
+        if ($value instanceof TypedDataInterface) {
+          $value = $value->getValue();
+        }
         if ($list instanceof DataTransferObject) {
           $item = $list->remove($value);
         }
         elseif ($values = $list->getValue()) {
-          if ($value instanceof TypedDataInterface) {
-            $value = $value->getValue();
-          }
           $index = array_search($value, $values, TRUE);
           if ($index !== FALSE) {
             $item = $values[$index];

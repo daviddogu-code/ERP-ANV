@@ -172,10 +172,8 @@ abstract class RenderElementActionBase extends RenderActionBase {
       '#weight' => -30,
     ];
     $form['token_name'] = [
-      '#type' => 'machine_name',
-      '#machine_name' => [
-        'exists' => [$this, 'alwaysFalse'],
-      ],
+      '#type' => 'textfield',
+      '#maxlength' => 1024,
       '#title' => $this->t('Token name'),
       '#description' => $this->t('Optionally define a token name of this render element. It will be made available under that token name for later usage.'),
       '#default_value' => $this->configuration['token_name'],

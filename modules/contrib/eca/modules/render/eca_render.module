@@ -327,6 +327,10 @@ function _eca_render_trigger_extra_field(array &$build, EntityInterface $entity,
       $render_build = &$event->getRenderArray();
     }
     $build[$name] = $render_build;
+    if (!empty($build[$name]) && ($display_type === 'form') && !isset($build[$name]['#type'])) {
+      // Wrap as container so that the extra field can be grouped.
+      $build[$name]['#type'] = 'container';
+    }
     if (!isset($build['#weight']) && isset($options['weight'])) {
       $build['#weight'] = $options['weight'];
     }

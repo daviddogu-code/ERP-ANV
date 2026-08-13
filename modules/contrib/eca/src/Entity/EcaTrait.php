@@ -302,4 +302,22 @@ trait EcaTrait {
     return $this->request;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function __wakeup(): void {
+    // Need to manually load the action plugin manager, since it is an instance
+    // provided by the decorator of that service, not by the service container.
+    // @see https://www.drupal.org/project/eca/issues/3507815
+    if (property_exists($this, '_serviceIds') && isset($this->_serviceIds['actionPluginManager'])) {
+      unset($this->_serviceIds['actionPluginManager']);
+      $this->actionPluginManager();
+    }
+    $parent_class = get_parent_class($this);
+    if ($parent_class && method_exists($parent_class, '__wakeup')) {
+      // @phpstan-ignore-next-line
+      parent::__wakeup();
+    }
+  }
+
 }

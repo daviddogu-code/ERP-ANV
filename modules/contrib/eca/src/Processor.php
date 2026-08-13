@@ -165,20 +165,27 @@ class Processor {
 
           // Now that we have any required context, we may execute the logic.
           $this->logger->info('Start %eventlabel (%eventid) from ECA %ecalabel (%ecaid) for event %event.', $context);
-          $this->executeSuccessors($eca, $ecaEvent, $event, $context);
-          // At this point, no nested triggering of events happened or was
-          // prevented by something else. Therefore remove the last added
-          // item from the history stack as it's not needed anymore.
-          array_pop($this->executionHistory);
+          try {
+            $this->executeSuccessors($eca, $ecaEvent, $event, $context);
+          }
+          catch (\Exception $ex) {
+            throw $ex;
+          }
+          finally {
+            // At this point, no nested triggering of events happened or was
+            // prevented by something else. Therefore remove the last added
+            // item from the history stack as it's not needed anymore.
+            array_pop($this->executionHistory);
 
-          $this->eventDispatcher->dispatch(new AfterInitialExecutionEvent($eca, $ecaEvent, $event, $event_name, $before_event->getPrestate(NULL)), EcaEvents::AFTER_INITIAL_EXECUTION);
+            $this->eventDispatcher->dispatch(new AfterInitialExecutionEvent($eca, $ecaEvent, $event, $event_name, $before_event->getPrestate(NULL)), EcaEvents::AFTER_INITIAL_EXECUTION);
 
-          if ($is_root_execution) {
-            // Forget what we've done here. We only take care for nested
-            // triggering of events regarding possible infinite recursion.
-            // By resetting the array, all root-level executions will not know
-            // anything from each other.
-            $this->executionHistory = [];
+            if ($is_root_execution) {
+              // Forget what we've done here. We only take care for nested
+              // triggering of events regarding possible infinite recursion.
+              // By resetting the array, all root-level executions will not know
+              // anything from each other.
+              $this->executionHistory = [];
+            }
           }
         }
       }

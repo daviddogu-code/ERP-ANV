@@ -24,6 +24,9 @@ $rutas = [
   '/admin/modules',
   '/admin/reports/status',
   '/admin/config/development/performance',
+  // La pantalla de ECA lista los 36 automatismos del ERP y es la que mas se
+  // resiente de cualquier cambio en ese modulo, asi que conviene mirarla.
+  '/admin/config/workflow/eca',
 ];
 
 $cuenta = \Drupal\user\Entity\User::load(1);

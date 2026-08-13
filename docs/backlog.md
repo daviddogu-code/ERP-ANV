@@ -441,13 +441,16 @@ plantilla, y un parámetro que PHP 8.4 quiere ver escrito como `?FieldItemListIn
 
 ### `minimum-stability: dev`
 
-Sigue puesto en `composer.json`, y no es teórico: quedan **siete** paquetes sobre ramas de
-desarrollo en lugar de versiones publicadas —ECA, `eck`, `bpmn_io`, `mimemail`,
-`conditional_fields`, `bootstrap_layout_builder` y `ultimate_cron`—, tres menos que en la
-auditoría original. La instalación **sí es reproducible**, porque el `lock` guarda el commit
-exacto de cada rama; lo que falta es que esos paquetes tengan avisos de seguridad y una versión
-que alguien haya bendecido. Cuando toque, hay que pasarlo a `stable` y marcar la excepción solo
-en los que de verdad no tengan versión estable.
+Sigue puesto en `composer.json`, pero ya casi no hace falta: quedan **tres** paquetes anclados a
+un commit —`eck`, `conditional_fields` y `ultimate_cron`—, frente a los diez de la auditoría
+original. Cuando esos tres pasen a versión publicada (ver "Deuda técnica"), se puede poner
+`stable` y cerrar el asunto.
+
+Y conviene recordar por qué importa, ahora que lo hemos pagado: el 13 de agosto, al ponerle a
+ECA su número de versión, apareció un fallo **crítico** de seguridad que llevaba dieciséis meses
+sin salir en ningún informe. No porque nadie mirara, sino porque un módulo sin versión no se
+puede cruzar con la lista de avisos. Una rama de desarrollo no es solo código sin bendecir: es
+código fuera del radar.
 
 ### Dos carpetas de más
 
@@ -498,14 +501,17 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   antes de simular. Si se usa, hay que deshacer el cambio a mano, no con `git checkout` del
   fichero, porque eso también borra el trabajo sin confirmar que haya en él. Costó hora y media
   el 13 de agosto.
-- **Diez módulos siguen colgando de ramas de desarrollo**, entre ellos ECA, `eck`, `bpmn_io`,
-  `mimemail`, `conditional_fields`, `bootstrap_layout_builder` y `ultimate_cron`. El `lock`
-  guarda el commit exacto, así que la instalación *sí* es reproducible, pero no hay avisos de
-  seguridad para una rama y nadie garantiza que lo que hay ahí compile mañana. Además, cuando un
-  paquete de rama no tiene descarga preparada, Composer lo **clona**, y eso deja un repositorio
-  Git anidado dentro del proyecto y los ficheros con finales de línea de Windows. Pasó con
-  `quicktabs` el 13 de agosto y se resolvió subiéndolo a una versión publicada. Conviene revisar
-  uno a uno si alguno ya tiene versión estable a la que saltar.
+- **Quedan tres módulos anclados a un commit en vez de a una versión publicada**: `eck`,
+  `conditional_fields` y `ultimate_cron`. Los tres están a medio camino entre dos versiones, así
+  que anclar el commit era lo único que reproducía exactamente lo que corre. Funciona y es
+  reproducible, pero **no reciben avisos de seguridad**, que es justo el agujero por el que se
+  nos coló el fallo crítico de ECA durante dieciséis meses. Hay que sacarlos de ahí:
+  - **`eck` a la 2.1.0**, que es estable. Es el que más pesa: todas las entidades del ERP
+    (clientes, pedidos, productos, líneas, inventario) son de ECK, así que merece su propia
+    ronda con pruebas a conciencia.
+  - **`conditional_fields` a la 4.0.0-alpha6**, que está a un paso del commit anclado.
+  - **`ultimate_cron` a la 8.x-2.0-beta1** (noviembre de 2024, cinco meses por delante de lo que
+    corremos). Va junto con la tarea de programar el cron, que sigue pendiente.
 - **Quince carpetas de módulos apagados siguen ocupando sitio en `modules/contrib`**, ninguna
   gestionada por Composer: `base_field_override_ui`, `bootstrap4_modal`, `currency`,
   `entity_browser_enhanced`, `entity_reference_modal`, `field_validation`, `integer_to_decimal`,
@@ -566,6 +572,65 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-13 — La prueba del clon destapa un fallo crítico de seguridad que llevaba dieciséis meses escondido
+
+La prueba que nunca se había hecho: clonar el repositorio en una carpeta aparte, lanzar
+`composer install` desde cero y comparar el resultado con el sitio real. Sirve para saber si lo
+que hay en Git basta para levantar el ERP, que es exactamente lo que hace el servidor al
+desplegar.
+
+**Lo primero, la buena noticia.** Los **siete grupos de parches se aplicaron solos**, sin tocar
+nada. Los tres rescatados esa misma mañana incluidos. La red que montamos funciona.
+
+**Lo segundo, el fallo.** Comparando las dos copias aparecieron 44 ficheros distintos, todos en
+módulos que colgaban de una rama de desarrollo en vez de una versión publicada. La causa: para
+esos paquetes el `lock` apuntaba a un commit y en el disco había otro más nuevo que nadie
+apuntó. En ECA, que es el motor de los 36 automatismos del ERP, la diferencia eran **catorce
+meses**: el disco tenía la 1.1.7 y el `lock` un commit de febrero de 2024. Un `composer install`
+en el servidor habría retrasado el motor del ERP sin avisar.
+
+El inventario decía "cero descuadres" y no mentía. Los paquetes de rama no llevan número de
+versión en su `.info.yml`, así que era el único punto ciego que le quedaba. Se cubrió con dos
+guiones nuevos: `scripts/version-de-rama.php`, que compara la carpeta contra cada versión
+publicada, y `scripts/commit-de-rama.php`, que recorre el historial hasta dar con el commit
+exacto. Los dos usan el repositorio Git que Composer deja al clonar, así que no hace falta
+descargar nada.
+
+**Lo tercero, y es lo importante de verdad.** Al ponerle a ECA su número de versión real,
+Composer pudo por fin cruzarlo con la lista de avisos de seguridad, y saltó uno que hasta
+entonces era invisible: **`SA-CONTRIB-2025-031`, falsificación de peticiones entre sitios,
+calificado de crítico**, de abril de 2025. Afecta a todo lo anterior a la 1.1.12. Corríamos la
+1.1.7. Y la vía del ataque es el submódulo `eca_ui`, que en este sitio **está activado**.
+
+Llevábamos dieciséis meses expuestos y no aparecía en ningún informe, precisamente porque el
+módulo no tenía versión. Ese es el argumento de fondo contra las ramas de desarrollo, y aquí
+está medido: no es que sean inestables, es que **te dejan fuera del sistema de avisos**.
+
+Se subió ECA de la 1.1.7 a la **1.1.13**, última de la rama: once commits, 16 ficheros, todo
+arreglos dentro de la misma rama menor. Además del fallo de seguridad se lleva por delante dos
+problemas de cron que estaban sin diagnosticar aquí ("Multiple cron events not firing
+consistently" y un error del evento de cron), un fallo fatal al importar configuración y varias
+correcciones de acciones de lista. La pantalla de ECA carga con sus 36 procesos y las 35
+comprobaciones pasan.
+
+**Cómo quedan las siete ramas.** Cinco pasan a versión publicada, con el código idéntico al que
+ya corría —lo único que cambia es que ahora traen su `LICENSE.txt`, que drupal.org añade al
+empaquetar—: ECA a la 1.1.13, `bpmn_io` a la 1.1.4, `bootstrap_layout_builder` a la 2.1.2 y
+`mimemail` a la 1.0.0-alpha6. Las otras dos, `eck` y `conditional_fields`, están a medio camino
+entre dos versiones publicadas, así que se anclan a su commit exacto; igual que `ultimate_cron`,
+donde además el `lock` estaba desfasado. Anclar el commit no da avisos de seguridad, pero sí
+garantiza que una instalación desde cero reproduzca lo que corre hoy.
+
+Efecto secundario agradecido: de siete repositorios Git anidados que dejaba la instalación
+limpia se pasa a uno. Los paquetes con versión se bajan empaquetados; solo los anclados por
+commit se clonan.
+
+**Dos cosas menores que salieron por el camino.** `feeds_tamper` y `editablefields` estaban en
+disco como copias de repositorio en vez de versiones empaquetadas; el código es el mismo salvo
+tres métodos de `editablefields` que no llama nadie. Y `drupal/address`, que sí tenía versión
+fijada, arrastraba un clon de 0,7 MB de una instalación vieja; reinstalado, ya es un paquete
+normal.
 
 ### 2026-08-13 — Disco y `composer.lock` por fin dicen lo mismo, y aparecen tres parches que nadie había apuntado
 

@@ -3,10 +3,8 @@
 namespace Drupal\Tests\eca\Unit;
 
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
-use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\eca\EcaState;
 
 /**
@@ -34,20 +32,6 @@ class EcaStateTest extends EcaUnitTestBase {
   protected KeyValueStoreInterface $keyValueStore;
 
   /**
-   * The cache backend that should be used.
-   *
-   * @var \Drupal\Core\Cache\CacheBackendInterface
-   */
-  protected CacheBackendInterface $cache;
-
-  /**
-   * The lock backend that should be used.
-   *
-   * @var \Drupal\Core\Lock\LockBackendInterface
-   */
-  protected LockBackendInterface $lock;
-
-  /**
    * Time service.
    *
    * @var \Drupal\Component\Datetime\TimeInterface
@@ -61,8 +45,6 @@ class EcaStateTest extends EcaUnitTestBase {
     parent::setUp();
     $this->keyValueFactory = $this->createMock(KeyValueFactoryInterface::class);
     $this->keyValueStore = $this->createMock(KeyValueStoreInterface::class);
-    $this->cache = $this->createMock(CacheBackendInterface::class);
-    $this->lock = $this->createMock(LockBackendInterface::class);
     $this->time = $this->createMock(TimeInterface::class);
   }
 
@@ -84,7 +66,7 @@ class EcaStateTest extends EcaUnitTestBase {
     $this->time->expects($this->exactly(3))->method('getCurrentTime')
       ->willReturn($currentTimestamp);
 
-    $ecaState = new EcaState($this->keyValueFactory, $this->cache, $this->lock, $this->time);
+    $ecaState = new EcaState($this->keyValueFactory, $this->time);
     $this->assertEquals($currentTimestamp, $ecaState->getCurrentTimestamp());
     $this->assertTrue($ecaState->hasTimestampExpired(self::TEST_KEY, 3599));
     $this->assertFalse($ecaState->hasTimestampExpired(self::TEST_KEY, 3600));
@@ -96,7 +78,7 @@ class EcaStateTest extends EcaUnitTestBase {
    * @throws \ReflectionException
    */
   public function testTimestampKey(): void {
-    $ecaState = new EcaState($this->keyValueFactory, $this->cache, $this->lock, $this->time);
+    $ecaState = new EcaState($this->keyValueFactory, $this->time);
     $result = $this->getPrivateMethod(EcaState::class, 'timestampKey')
       ->invokeArgs($ecaState, [self::TEST_KEY]);
 
@@ -113,7 +95,7 @@ class EcaStateTest extends EcaUnitTestBase {
       ->willReturn($currentTimestamp);
     $this->keyValueFactory->expects($this->once())->method('get')
       ->with('eca')->willReturn($this->keyValueStore);
-    $ecaState = new EcaState($this->keyValueFactory, $this->cache, $this->lock, $this->time);
+    $ecaState = new EcaState($this->keyValueFactory, $this->time);
     $ecaState->setTimestamp(self::TEST_KEY);
     $this->assertEquals($currentTimestamp, $ecaState->getTimestamp(self::TEST_KEY));
   }

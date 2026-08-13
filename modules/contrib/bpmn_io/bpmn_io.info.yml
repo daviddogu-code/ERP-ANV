@@ -5,3 +5,8 @@ core_version_requirement: ^9 || ^10
 package: ECA
 dependencies:
   - eca:eca_modeller_bpmn
+
+# Information added by Drupal.org packaging script on 2024-05-18
+version: '1.1.4'
+project: 'bpmn_io'
+datestamp: 1716032396
