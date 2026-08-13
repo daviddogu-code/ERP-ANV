@@ -29,13 +29,6 @@ class FloodControlSettingsFormTest extends BrowserTestBase {
   protected $adminUser;
 
   /**
-   * A regular user.
-   *
-   * @var \Drupal\user\Entity\User
-   */
-  protected $webUser;
-
-  /**
    * The module installer.
    *
    * @var \Drupal\Core\Extension\ModuleInstallerInterface
@@ -48,34 +41,9 @@ class FloodControlSettingsFormTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->webUser = $this->createUser();
-
-    $this->adminUser = $this->drupalCreateUser([]);
-    $this->adminUser->addRole($this->createAdminRole('admin', 'admin'));
-    $this->adminUser->save();
+    $this->adminUser = $this->drupalCreateUser(['administer flood unblock']);
 
     $this->moduleInstaller = $this->container->get('module_installer');
-  }
-
-  /**
-   * Test access to the settings form.
-   */
-  public function testSettingsFormAccess() {
-    // Anonymous users are not allowed to access the settings form.
-    $this->drupalGet('/admin/config/people/flood-control');
-    $this->assertSession()->statusCodeEquals(403);
-
-    // Logged in users without the 'administer site configuration' permission
-    // are are not allowed to access the settings form.
-    $this->drupalLogin($this->webUser);
-    $this->drupalGet('/admin/config/people/flood-control');
-    $this->assertSession()->statusCodeEquals(403);
-
-    // Users with the 'administer site configuration' permission can access the
-    // settings form.
-    $this->drupalLogin($this->adminUser);
-    $this->drupalGet('/admin/config/people/flood-control');
-    $this->assertSession()->statusCodeEquals(200);
   }
 
   /**
@@ -98,6 +66,7 @@ class FloodControlSettingsFormTest extends BrowserTestBase {
       'user_limit' => 10,
       'user_window' => 60,
     ], 'Save configuration');
+    $this->assertSession()->statusCodeEquals(200);
 
     // Check that the success message is shown.
     $this->assertSession()->pageTextContains('The configuration options have been saved.');
@@ -109,8 +78,9 @@ class FloodControlSettingsFormTest extends BrowserTestBase {
     $this->assertEquals(10, $user_flood->get('user_limit'));
     $this->assertEquals(60, $user_flood->get('user_window'));
 
-    // Enable the contact module.
-    $this->moduleInstaller->install(['contact']);
+    // Enable the contact module and confirm that it installed correctly.
+    $installed = $this->moduleInstaller->install(['contact']);
+    $this->assertTrue($installed);
 
     // Go to the settings form.
     $this->drupalGet('/admin/config/people/flood-control');
@@ -125,14 +95,14 @@ class FloodControlSettingsFormTest extends BrowserTestBase {
       'contact_threshold_limit' => 125,
       'contact_threshold_window' => 1800,
     ], 'Save configuration');
+    $this->assertSession()->statusCodeEquals(200);
 
     // Check that the success message is shown.
     $this->assertSession()->pageTextContains('The configuration options have been saved.');
 
-    // Check that the configured values are correctly saved in the config.
-    $user_flood = $this->config('contact.settings');
-    $this->assertEquals(125, $user_flood->get('flood.limit'));
-    $this->assertEquals(1800, $user_flood->get('flood.interval'));
+    // Check that the correct values are displayed in the form.
+    $this->assertSession()->fieldValueEquals('contact_threshold_limit', 125);
+    $this->assertSession()->fieldValueEquals('contact_threshold_window', 1800);
   }
 
 }

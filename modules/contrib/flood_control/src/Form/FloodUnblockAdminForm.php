@@ -2,7 +2,6 @@
 
 namespace Drupal\flood_control\Form;
 
-use Drupal\Core\Database\Connection;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -10,18 +9,12 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\flood_control\FloodUnblockManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Admin form of Flood Unblock.
  */
 class FloodUnblockAdminForm extends FormBase {
-
-  /**
-   * The Database Connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $database;
 
   /**
    * The FloodUnblockManager service.
@@ -52,23 +45,30 @@ class FloodUnblockAdminForm extends FormBase {
   protected $currentUser;
 
   /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
    * FloodUnblockAdminForm constructor.
    *
    * @param \Drupal\flood_control\FloodUnblockManagerInterface $floodUnblockManager
    *   The FloodUnblockManager service.
-   * @param \Drupal\Core\Database\Connection $database
-   *   The database connection.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The date formatter service.
    * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
    *   The current user service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
    */
-  public function __construct(FloodUnblockManagerInterface $floodUnblockManager, Connection $database, DateFormatterInterface $date_formatter, AccountProxyInterface $currentUser) {
+  public function __construct(FloodUnblockManagerInterface $floodUnblockManager, DateFormatterInterface $date_formatter, AccountProxyInterface $currentUser, RequestStack $request_stack) {
     $this->floodUnblockManager = $floodUnblockManager;
-    $this->database = $database;
     $this->dateFormatter = $date_formatter;
     $this->userFloodConfig = $this->configFactory()->get('user.flood');
     $this->currentUser = $currentUser;
+    $this->requestStack = $request_stack;
   }
 
   /**
@@ -77,9 +77,9 @@ class FloodUnblockAdminForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('flood_control.flood_unblock_manager'),
-      $container->get('database'),
       $container->get('date.formatter'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('request_stack')
     );
   }
 
@@ -94,14 +94,19 @@ class FloodUnblockAdminForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // Fetches the limit from the form.
-    $limit = \Drupal::request()->query->get('limit') ?? 33;
 
-    // Fetches the identifier from the form.
-    $identifier = \Drupal::request()->query->get('identifier') ?? '';
+    $request = $this->requestStack->getCurrentRequest();
+    // Fetches the limit from the query string of the request.
+    $limit = $request->query->get('limit') ?? 33;
 
-    // Fetches the blocked status from the form.
-    $blocked = \Drupal::request()->query->get('blocked') ?? FALSE;
+    // Fetches the identifier from the query string of the request.
+    $identifier = $request->query->get('identifier') ?? '';
+
+    // Fetches the event from the query string of the request.
+    $event = $request->query->get('event') ?? '';
+
+    // Fetches the blocked status from the query string of the request.
+    $blocked = $request->query->get('blocked') ?? FALSE;
 
     // Set default markup.
     $top_markup = $this->t("List of IP addresses and user ID's that are recorded in Drupal's flood after multiple failed login attempts. You can remove separate entries.");
@@ -118,39 +123,49 @@ class FloodUnblockAdminForm extends FormBase {
     ];
 
     // Provides table filters.
-    $form['filter'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Filter'),
-      '#open' => FALSE,
-      'limit' => [
-        '#type' => 'number',
-        '#title' => $this->t('Amount'),
-        '#description' => $this->t("Number of lines shown in table."),
-        '#size' => 5,
-        '#min' => 1,
-        '#steps' => 10,
-        '#default_value' => $limit,
-      ],
-      'identifier' => [
-        '#type' => 'textfield',
-        '#title' => $this->t('Identifier'),
-        '#default_value' => $identifier,
-        '#size' => 20,
-        '#description' => $this->t('(Part of) identifier: IP address or UID'),
-        '#maxlength' => 256,
-      ],
-      'blocked' => [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Only blocked'),
-        '#description' => $this->t('Show only the blocked requests'),
-        '#default_value' => $blocked,
-      ],
-      'submit' => [
-        '#type' => 'submit',
-        '#value' => $this->t('Filter'),
-        '#submit' => ['::applyFilters'],
-      ],
-    ];
+    if ($this->floodUnblockManager->canFilter()) {
+      $form['filter'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Filter'),
+        '#open' => FALSE,
+        'limit' => [
+          '#type' => 'number',
+          '#title' => $this->t('Amount'),
+          '#description' => $this->t("Number of lines shown in table."),
+          '#size' => 5,
+          '#min' => 1,
+          '#steps' => 10,
+          '#default_value' => $limit,
+        ],
+        'identifier' => [
+          '#type' => 'textfield',
+          '#title' => $this->t('Identifier'),
+          '#default_value' => $identifier,
+          '#size' => 20,
+          '#description' => $this->t('(Part of) identifier: IP address or UID'),
+          '#maxlength' => 256,
+        ],
+        'event' => [
+          '#type' => 'textfield',
+          '#title' => $this->t('Event'),
+          '#default_value' => $event,
+          '#size' => 20,
+          '#description' => $this->t('(Part of) event'),
+          '#maxlength' => 256,
+        ],
+        'blocked' => [
+          '#type' => 'checkbox',
+          '#title' => $this->t('Only blocked'),
+          '#description' => $this->t('Show only the blocked requests'),
+          '#default_value' => $blocked,
+        ],
+        'submit' => [
+          '#type' => 'submit',
+          '#value' => $this->t('Filter'),
+          '#submit' => ['::applyFilters'],
+        ],
+      ];
+    }
 
     // Provides header for tableselect element.
     $header = [
@@ -179,25 +194,14 @@ class FloodUnblockAdminForm extends FormBase {
 
     $options = [];
 
-    // Fetches items from flood table.
-    if ($this->database->schema()->tableExists('flood')) {
-      $query = $this->database->select('flood', 'f')
-        ->extend('Drupal\Core\Database\Query\TableSortExtender')
-        ->orderByHeader($header);
-      $query->fields('f');
-      if ($identifier) {
-        $query->condition('identifier', "%" . $this->database->escapeLike($identifier) . "%", 'LIKE');
-      }
-      $pager = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender')
-        ->limit($limit);
-      $execute = $pager->execute();
-      $results = $execute->fetchAll();
-      $results_identifiers = array_column($results, 'identifier', 'fid');
+    // Fetches data for the table.
+    $entries = $this->floodUnblockManager->getEntries($limit, $identifier, $event, $header);
 
+    if (!empty($entries)) {
       // Fetches user names or location string for identifiers.
-      $identifiers = $this->floodUnblockManager->fetchIdentifiers(array_unique($results_identifiers));
+      $identifiers = $this->floodUnblockManager->fetchIdentifiers(array_unique($entries['result_identifiers']));
 
-      foreach ($results as $result) {
+      foreach ($entries['results'] as $result) {
 
         // Gets status of identifier.
         $is_blocked = $this->floodUnblockManager->isBlocked($result->identifier, $result->event);
@@ -224,15 +228,23 @@ class FloodUnblockAdminForm extends FormBase {
           ];
         }
       }
+      // Provides the tableselect element.
+      $form['table'] = [
+        '#type' => 'tableselect',
+        '#header' => $header,
+        '#options' => $options,
+        '#empty' => $this->t('There are no failed logins at this time.'),
+      ];
     }
+    else {
+      $form['table'] = [
+        '#type' => 'tableselect',
+        '#header' => $header,
+        '#options' => $options,
+        '#empty' => $this->t("There is no table found named 'flood'."),
+      ];
 
-    // Provides the tableselect element.
-    $form['table'] = [
-      '#type' => 'tableselect',
-      '#header' => $header,
-      '#options' => $options,
-      '#empty' => $this->t('There are no failed logins at this time.'),
-    ];
+    }
 
     $form['actions'] = ['#type' => 'actions'];
 
@@ -276,7 +288,7 @@ class FloodUnblockAdminForm extends FormBase {
    *
    * @param array $form
    *   The current form.
-   * @param FormStateInterface $form_state
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    */
   public function applyFilters(array &$form, FormStateInterface $form_state) {
@@ -286,6 +298,7 @@ class FloodUnblockAdminForm extends FormBase {
         [
           'limit' => $field["limit"],
           'identifier' => $field["identifier"],
+          'event' => $field["event"],
           'blocked' => $field['blocked'],
         ]
       );

@@ -2,7 +2,7 @@
 
 namespace Drupal\flood_control\Commands;
 
-use Drupal\flood_control\FloodUnblockManager;
+use Drupal\flood_control\FloodUnblockManagerInterface;
 use Drush\Commands\DrushCommands;
 
 /**
@@ -13,17 +13,17 @@ class FloodUnblockCommands extends DrushCommands {
   /**
    * The FloodUnblockManager service.
    *
-   * @var \Drupal\flood_control\FloodUnblockManager
+   * @var \Drupal\flood_control\FloodUnblockManagerInterface
    */
   private $manager;
 
   /**
    * FloodUnblockCommands constructor.
    *
-   * @param \Drupal\flood_control\FloodUnblockManager $manager
+   * @param \Drupal\flood_control\FloodUnblockManagerInterface $manager
    *   The FloodUnblockManager service.
    */
-  public function __construct(FloodUnblockManager $manager) {
+  public function __construct(FloodUnblockManagerInterface $manager) {
     $this->manager = $manager;
   }
 
@@ -40,6 +40,10 @@ class FloodUnblockCommands extends DrushCommands {
     $events = $this->manager->getEvents();
     foreach ($events as $key => $event) {
       $fids = $this->manager->getEventIds($key, $ip);
+      if (empty($fids)) {
+        $this->output()->writeln("No flood entries found for event {$key} and IP address {$ip}");
+        continue;
+      }
       foreach ($fids as $fid) {
         $this->manager->floodUnblockClearEvent($fid);
       }
@@ -57,6 +61,11 @@ class FloodUnblockCommands extends DrushCommands {
     $events = $this->manager->getEvents();
     foreach ($events as $key => $event) {
       $fids = $this->manager->getEventIds($key);
+      if (empty($fids)) {
+        $label = $event['label'];
+        $this->output()->writeln("No flood entries found for {$label} events");
+        continue;
+      }
       foreach ($fids as $fid) {
         $this->manager->floodUnblockClearEvent($fid);
       }

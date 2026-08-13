@@ -2,10 +2,10 @@
 
 namespace Drupal\flag\ActionLink;
 
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\flag\FlagInterface;
-use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Component\Plugin\ConfigurableInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\flag\FlagInterface;
 
 /**
  * Provides an interface for link type plugins.
@@ -19,11 +19,13 @@ interface ActionLinkTypePluginInterface extends PluginFormInterface, Configurabl
    *   The flag entity.
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The flaggable entity.
+   * @param string|null $view_mode
+   *   The flaggable entity view mode.
    *
    * @return array
    *   The render array.
    */
-  public function getAsFlagLink(FlagInterface $flag, EntityInterface $entity);
+  public function getAsFlagLink(FlagInterface $flag, EntityInterface $entity, ?string $view_mode = 'default'): array;
 
   /**
    * Get the action link as a Link object.
@@ -32,10 +34,27 @@ interface ActionLinkTypePluginInterface extends PluginFormInterface, Configurabl
    *   The flag entity.
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The flaggable entity.
+   * @param string|null $view_mode
+   *   The flaggable entity view mode.
    *
    * @return \Drupal\Core\Link
    *   The action Link.
    */
-  public function getAsLink(FlagInterface $flag, EntityInterface $entity);
+  public function getAsLink(FlagInterface $flag, EntityInterface $entity, ?string $view_mode = NULL);
+
+  /**
+   * Get the action link as an URL object.
+   *
+   * @param \Drupal\flag\FlagInterface $flag
+   *   The flag entity.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The flaggable entity.
+   * @param string|null $view_mode
+   *   The flaggable entity view mode.
+   *
+   * @return \Drupal\Core\Url
+   *   The action URL.
+   */
+  public function getAsUrl(FlagInterface $flag, EntityInterface $entity, ?string $view_mode = NULL);
 
 }

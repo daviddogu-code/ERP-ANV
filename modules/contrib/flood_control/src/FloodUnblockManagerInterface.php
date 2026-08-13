@@ -8,16 +8,24 @@ namespace Drupal\flood_control;
 interface FloodUnblockManagerInterface {
 
   /**
+   * Unblockmanager capability of table filtering.
+   *
+   * @return bool
+   *   Return TRUE if manager is capable of filtering.
+   */
+  public function canFilter();
+
+  /**
    * Gets the user link or location string for an identifier.
    *
-   * @param string $results
+   * @param array $results
    *   An array containing the identifiers from the flood table.
    *
    * @return array
    *   List of identifiers, keyed by the original identifier, containing
    *   user link or location string or just the unchanged identifier.
    */
-  public function fetchIdentifiers($results);
+  public function fetchIdentifiers(array $results);
 
   /**
    * Removes rows from flood table.
@@ -83,5 +91,22 @@ interface FloodUnblockManagerInterface {
    *   List of event IDs.
    */
   public function getEventIds($event, $identifier = NULL);
+
+  /**
+   * Fetches items from the Flood table.
+   *
+   * @param int $limit
+   *   Number of items to fetch.
+   * @param string $identifier
+   *   IP address or user ID to filter items by.
+   * @param string $event
+   *   Event to filter items by.
+   * @param array $header
+   *   Table header array used for sorting.
+   *
+   * @return array
+   *   List of items and list of identifiers (ip address / user IDs).
+   */
+  public function getEntries($limit, $identifier, $event, $header);
 
 }

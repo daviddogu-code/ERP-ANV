@@ -25,4 +25,6 @@ flag.link_ajax:
       css/flag-link-ajax.css: {}
   dependencies:
     - core/drupal
+    - core/drupal.dialog.ajax
     - core/drupal.ajax
+    - core/drupal.announce

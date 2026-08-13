@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -19,6 +21,9 @@ class FlagPermissionsTest extends BrowserTestBase {
    */
   protected $defaultTheme = 'stark';
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['flag', 'node', 'user'];
 
   /**
@@ -123,6 +128,7 @@ class FlagPermissionsTest extends BrowserTestBase {
     $assert_session->statusCodeEquals(200);
     $assert_session->linkNotExists($this->flag->getShortText('flag'));
     $assert_session->linkNotExists($this->flag->getShortText('unflag'));
+    $assert_session->elementTextEquals('css', 'div.action-unflag span', $this->flag->getUnflagDeniedText());
 
     // Check an unprivileged authenticated user.
     $this->drupalLogin($this->authUser);

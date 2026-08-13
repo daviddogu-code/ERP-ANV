@@ -21,20 +21,6 @@ class FloodControlBasicTest extends BrowserTestBase {
   ];
 
   /**
-   * A user with authenticated permissions.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected $user;
-
-  /**
-   * A user with admin permissions.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected $adminUser;
-
-  /**
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
@@ -46,11 +32,8 @@ class FloodControlBasicTest extends BrowserTestBase {
     parent::setUp();
 
     $this->config('system.site')->set('page.front', '/test-page')->save();
-    $this->user = $this->drupalCreateUser([]);
-    $this->adminUser = $this->drupalCreateUser([]);
-    $this->adminUser->addRole($this->createAdminRole('admin', 'admin'));
-    $this->adminUser->save();
-    $this->drupalLogin($this->adminUser);
+
+    $this->drupalLogin($this->rootUser);
   }
 
   /**

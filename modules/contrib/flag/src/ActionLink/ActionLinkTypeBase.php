@@ -4,12 +4,12 @@ namespace Drupal\flag\ActionLink;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Link;
-use Drupal\Core\Routing\RedirectDestinationTrait;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\flag\FlagInterface;
@@ -74,7 +74,7 @@ abstract class ActionLinkTypeBase extends PluginBase implements ActionLinkTypePl
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The flaggable entity.
    *
-   * @return Url
+   * @return \Drupal\Core\Url
    *   The Url object for this plugin's flag/unflag route.
    */
   abstract protected function getUrl($action, FlagInterface $flag, EntityInterface $entity);
@@ -82,37 +82,44 @@ abstract class ActionLinkTypeBase extends PluginBase implements ActionLinkTypePl
   /**
    * {@inheritdoc}
    */
-  public function getAsLink(FlagInterface $flag, EntityInterface $entity) {
-    $action = $this->getAction($flag, $entity);
-    $url = $this->getUrl($action, $flag, $entity);
-    $url->setOption('query', ['destination' => $this->getDestination()]);
-    $title = $flag->getShortText($action);
+  public function getAsLink(FlagInterface $flag, EntityInterface $entity, ?string $view_mode = NULL) {
+    // Trigger deprecation, if the $view_mode wasn't provided.:
+    // @see original issue: https://www.drupal.org/project/flag/issues/3049155
+    // @see change record: https://www.drupal.org/node/3458551.
+    if ($view_mode === NULL) {
+      $deprecation_message = 'Not providing the "$view_mode" parameter is deprecated in flag:8.x-4.0-beta4 and will throw an error from flag:8.x-4.0. See https://www.drupal.org/node/3458551.';
+      @trigger_error($deprecation_message, E_USER_DEPRECATED);
+    }
 
-    return Link::fromTextAndUrl($title, $url);
+    $action = $this->getAction($flag, $entity);
+    $title = $flag->getShortText($action);
+    return Link::fromTextAndUrl($title, $this->getAsUrl($flag, $entity, $view_mode));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getAsFlagLink(FlagInterface $flag, EntityInterface $entity) {
+  public function getAsFlagLink(FlagInterface $flag, EntityInterface $entity, ?string $view_mode = 'default'): array {
     $action = $this->getAction($flag, $entity);
     $access = $flag->actionAccess($action, $this->currentUser, $entity);
 
+    // Trigger deprecation, if the $view_mode wasn't provided.:
+    // @see original issue: https://www.drupal.org/project/flag/issues/3049155
+    // @see change record: https://www.drupal.org/node/3458551.
+    if ($view_mode === NULL) {
+      $deprecation_message = 'Not providing the "$view_mode" parameter is deprecated in flag:8.x-4.0-beta4 and will throw an error from flag:8.x-4.0. See https://www.drupal.org/node/3458551.';
+      @trigger_error($deprecation_message, E_USER_DEPRECATED);
+    }
+    $render = [
+      '#theme' => 'flag',
+      '#flag' => $flag,
+      '#flaggable' => $entity,
+      '#view_mode' => $view_mode,
+      '#action' => $action,
+      '#access' => $access->isAllowed(),
+    ];
     if ($access->isAllowed()) {
-      $url = $this->getUrl($action, $flag, $entity);
-      $url->setRouteParameter('destination', $this->getDestination());
-      $render = [
-        '#theme' => 'flag',
-        '#flag' => $flag,
-        '#flaggable' => $entity,
-        '#action' => $action,
-        '#access' => $access->isAllowed(),
-        // Use render array for title to allow limited markup in the link text.
-        '#title' => ['#markup' => $flag->getShortText($action)],
-        '#attributes' => [
-          'title' => $flag->getLongText($action),
-        ],
-      ];
+      $url = $this->getAsUrl($flag, $entity, $view_mode);
       // Build the URL. It is important that bubbleable metadata is explicitly
       // collected and applied to the render array, as it might be rendered on
       // its own, for example in an ajax response. Specifically, this is
@@ -121,6 +128,14 @@ abstract class ActionLinkTypeBase extends PluginBase implements ActionLinkTypePl
       $rendered_url->applyTo($render);
 
       $render['#attributes']['href'] = $rendered_url->getGeneratedUrl();
+
+      // Use render array for title to allow limited markup in the link text.
+      $render['#title'] = ['#markup' => $flag->getShortText($action)];
+      $render['#attributes']['title'] = $flag->getLongText($action);
+    }
+    elseif (!$this->currentUser->isAnonymous() && $flag->isFlagged($entity, $this->currentUser)) {
+      $render['#access'] = !$access->isAllowed();
+      $render['#unflag_denied_text'] = $flag->getUnflagDeniedText();
     }
     else {
       $render = [];
@@ -134,14 +149,18 @@ abstract class ActionLinkTypeBase extends PluginBase implements ActionLinkTypePl
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getAsUrl(FlagInterface $flag, EntityInterface $entity, ?string $view_mode = NULL) {
+    $action = $this->getAction($flag, $entity);
+    $url = $this->getUrl($action, $flag, $entity);
+    $url->setRouteParameter('view_mode', $view_mode);
+    $url->setOption('query', ['destination' => $this->getDestination()]);
+    return $url;
+  }
+
+  /**
    * Helper method to get the next flag action the user can take.
-   *
-   * @param string $action
-   *   The action, flag or unflag.
-   * @param \Drupal\flag\FlagInterface $flag
-   *   The flag entity.
-   *
-   * @return string
    */
   protected function getAction(FlagInterface $flag, EntityInterface $entity) {
     return $flag->isFlagged($entity) ? 'unflag' : 'flag';

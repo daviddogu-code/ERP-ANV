@@ -6,12 +6,14 @@
  */
 
 use Drupal\user\Entity\Role;
+use Drupal\user\RoleInterface;
 
 /**
  * Assign newly added permissions to the appropriate roles.
  */
 function flood_control_update_9201() {
-  $roles = user_role_names(FALSE, 'access flood unblock');
+  $names = array_filter(Role::loadMultiple(), fn(RoleInterface $role) => $role->hasPermission('access flood unblock'));
+  $roles = array_map(fn(RoleInterface $role) => $role->label(), $names);
   foreach ($roles as $roleKey => $roleName) {
     user_role_grant_permissions($roleKey, [
       'administer flood unblock',
@@ -46,7 +48,7 @@ function flood_control_update_9202() {
 }
 
 /**
- * Add the default value for the IP Whitelist to the settings config.
+ * Add the default value for the IP Allowlist to the settings config.
  */
 function flood_control_update_9203() {
   $config = \Drupal::configFactory()->getEditable('flood_control.settings');

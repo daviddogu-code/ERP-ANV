@@ -3,17 +3,20 @@
 namespace Drupal\flood_control\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\flood_control\FloodWhiteList;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Administration settings form.
  */
 class FloodControlSettingsForm extends ConfigFormBase {
+
 
   /**
    * The date formatter interface.
@@ -32,8 +35,13 @@ class FloodControlSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, DateFormatterInterface $dateFormatter, ModuleHandlerInterface $module_handler) {
-    parent::__construct($config_factory);
+  public function __construct(
+    ConfigFactoryInterface $configFactory,
+    TypedConfigManagerInterface $typedConfigManager,
+    DateFormatterInterface $dateFormatter,
+    ModuleHandlerInterface $module_handler,
+  ) {
+    parent::__construct($configFactory, $typedConfigManager);
     $this->dateFormatter = $dateFormatter;
     $this->moduleHandler = $module_handler;
   }
@@ -44,8 +52,9 @@ class FloodControlSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('date.formatter'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
     );
   }
 
@@ -91,7 +100,7 @@ class FloodControlSettingsForm extends ConfigFormBase {
       '#title' => $this->t('IP login limit'),
       '#options' => array_combine($counterOptions, $counterOptions),
       '#default_value' => $flood_settings['ip_limit'],
-      '#description' => $this->t('The allowed number of failed login attempts from one IP address within the allowed time window.'),
+      '#description' => $this->t('The allowed number of failed login attempts from one IP address permitted within the "IP time window".'),
     ];
 
     $form['login']['ip_window'] = [
@@ -109,7 +118,7 @@ class FloodControlSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Username login limit'),
       '#options' => array_combine($counterOptions, $counterOptions),
       '#default_value' => $flood_settings['user_limit'],
-      '#description' => $this->t('The allowed number of failed login attempts with one username within the allowed time window.'),
+      '#description' => $this->t('The allowed number of failed login attempts with one username permitted within the "username login time window".'),
     ];
     $form['login']['user_window'] = [
       '#type' => 'select',
@@ -128,7 +137,7 @@ class FloodControlSettingsForm extends ConfigFormBase {
     ];
     $form['flood_control']['ip_white_list'] = [
       '#type' => 'textarea',
-      '#title' => $this->t('IP whitelist'),
+      '#title' => $this->t('Allowed IPs'),
       '#default_value' => $flood_control_config->get('ip_white_list') ?? '',
       '#description' => $this->t('Enter the IP addresses or IP address ranges that will have unrestricted access. <br />Enter one per single line IP-address in format XXX.XXX.XXX.XXX, or IP-address range in format XXX.XXX.XXX.YYY-XXX.XXX.XXX.ZZZ.'),
     ];
@@ -170,12 +179,12 @@ class FloodControlSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // Validating whitelisted ip addresses.
-    $whitelistIps = flood_control_get_whitelist_ips($form_state->getValue('ip_white_list'));
+    // Validating allowed listed ip addresses.
+    $allowedListIps = FloodWhiteList::getAllowedlistIps($form_state->getValue('ip_white_list'));
 
     // Checking single ip addresses.
-    if (!empty($whitelistIps['addresses'])) {
-      foreach ($whitelistIps['addresses'] as $ipAddress) {
+    if (!empty($allowedListIps['addresses'])) {
+      foreach ($allowedListIps['addresses'] as $ipAddress) {
         if (!filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_RES_RANGE)) {
           $form_state->setErrorByName('ip_white_list', $this->t('IP address %ip_address is not valid.', ['%ip_address' => $ipAddress]));
         }
@@ -183,16 +192,22 @@ class FloodControlSettingsForm extends ConfigFormBase {
     }
 
     // Checking ip ranges.
-    if (!empty($whitelistIps['ranges'])) {
-      foreach ($whitelistIps['ranges'] as $ipRange) {
+    if (!empty($allowedListIps['ranges'])) {
+      foreach ($allowedListIps['ranges'] as $ipRange) {
         [$ipLower, $ipUpper] = explode('-', $ipRange, 2);
 
         if (!filter_var($ipLower, FILTER_VALIDATE_IP, FILTER_FLAG_NO_RES_RANGE)) {
-          $form_state->setErrorByName('ip_white_list', $this->t('Lower IP address %ip_address in range %ip_range is not valid.', ['%ip_address' => $ipLower, '%ip_range' => $ipRange]));
+          $form_state->setErrorByName('ip_white_list', $this->t('Lower IP address %ip_address in range %ip_range is not valid.', [
+            '%ip_address' => $ipLower,
+            '%ip_range' => $ipRange,
+          ]));
         }
 
         if (!filter_var($ipUpper, FILTER_VALIDATE_IP, FILTER_FLAG_NO_RES_RANGE)) {
-          $form_state->setErrorByName('ip_white_list', $this->t('Upper IP address %ip_address in range %ip_range is not valid.', ['%ip_address' => $ipUpper, '%ip_range' => $ipRange]));
+          $form_state->setErrorByName('ip_white_list', $this->t('Upper IP address %ip_address in range %ip_range is not valid.', [
+            '%ip_address' => $ipUpper,
+            '%ip_range' => $ipRange,
+          ]));
         }
 
         $ipLowerDec = (float) sprintf("%u", ip2long($ipLower));

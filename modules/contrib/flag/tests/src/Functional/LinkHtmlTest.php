@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Xss;
 
 /**
@@ -15,7 +16,7 @@ class LinkHtmlTest extends FlagTestBase {
   /**
    * The flag object.
    *
-   * @var FlagInterface
+   * @var \Drupal\flag\FlagInterface
    */
   protected $flag;
 
@@ -54,10 +55,9 @@ class LinkHtmlTest extends FlagTestBase {
   public function doFlagNode() {
     $node = $this->drupalCreateNode(['type' => $this->nodeType]);
     $node_id = $node->id();
-    $flag_id = $this->flag->id();
 
     // Grant the flag permissions to the authenticated role, so that both
-    // users have the same roles and share the render cache. ???? TODO
+    // users have the same roles and share the render cache. ???? TODO.
     $this->grantFlagPermissions($this->flag);
 
     // Create and login a new user.
@@ -69,12 +69,12 @@ class LinkHtmlTest extends FlagTestBase {
     // Find the marked-up flag short text in the raw HTML.
     $this->assertSession()->responseContains(Xss::filterAdmin($this->flag->getShortText('flag')));
     // Xss::filter() is used to strip all HTML tags from the short text
-    // because clickLink() looks for text as it appears in the brower, and that
+    // because clickLink() looks for text as it appears in the browser, and that
     // does not include the unescaped HTML tags. Note that the stripped tags
     // could either be at the ends (we added the italics tags above) OR they
     // could be in the middle as a result of a randomly-generated valid tag
     // in the flag text.
-    $this->clickLink(Html::decodeEntities(Xss::filter($this->flag->getShortText('flag'))));
+    $this->getSession()->getPage()->find('css', '.flag a')->click();
 
     // Check that the node is flagged.
     $this->drupalGet('node/' . $node_id);
@@ -82,7 +82,7 @@ class LinkHtmlTest extends FlagTestBase {
 
     // Unflag the node.
     $this->drupalGet('node/' . $node_id);
-    $this->clickLink(Html::decodeEntities(Xss::filter($this->flag->getShortText('unflag'))));
+    $this->getSession()->getPage()->find('css', '.flag a')->click();
 
     // Check that the node is no longer flagged.
     $this->drupalGet('node/' . $node_id);
