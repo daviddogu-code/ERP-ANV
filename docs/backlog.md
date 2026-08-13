@@ -352,10 +352,20 @@ Se hizo sobre Windows y por HTTP, así que esto sigue sin verificar: HTTPS, la p
 del cron, el envío de correo, los permisos de las carpetas de archivos y el ajuste de
 `opcache`.
 
-## 8. Subir a Drupal 11
+## 8. Subir a Drupal 11 — HECHO el 13 de agosto de 2026
 
-Auditado el 13 de agosto por cuatro revisiones en paralelo. El sitio corre **Drupal 10.2.4, que
-ya no tiene soporte**.
+**El ERP corre en Drupal 11.4.5 con cero avisos de seguridad.** Empezó el día en la 10.2.4 con
+ochenta y dos. El relato completo, paso por paso, está en el apartado de Hecho.
+
+Lo que queda abierto de este apartado son dos cosas menores, al final: `minimum-stability` y las
+dos carpetas de módulos apagados. Lo demás se deja escrito tal como estaba porque el plan se
+cumplió casi entero y sirve para entender por qué se hizo en ese orden; donde la realidad se
+desvió, está anotado en cursiva.
+
+---
+
+Auditado el 13 de agosto por cuatro revisiones en paralelo. El sitio corría **Drupal 10.2.4, que
+ya no tenía soporte**.
 
 Ese mismo día, un diagnóstico con las herramientas de Composer añadió dos datos que cambian la
 urgencia. El primero: `composer audit` encuentra **82 avisos de seguridad conocidos en 10
@@ -461,10 +471,15 @@ plantilla, y un parámetro que PHP 8.4 quiere ver escrito como `?FieldItemListIn
 
 ### `minimum-stability: dev`
 
-Sigue puesto en `composer.json`, pero ya casi no hace falta: quedan **tres** paquetes anclados a
-un commit —`eck`, `conditional_fields` y `ultimate_cron`—, frente a los diez de la auditoría
-original. Cuando esos tres pasen a versión publicada (ver "Deuda técnica"), se puede poner
-`stable` y cerrar el asunto.
+**Pendiente de decidir.** Sigue puesto en `composer.json`, y ya no hay ningún paquete anclado a
+un commit: los tres que quedaban —`eck`, `conditional_fields` y `ultimate_cron`— pasaron a
+versión publicada el 13 de agosto.
+
+Lo que impide ponerlo en `stable` sin pensar es que hay paquetes pedidos expresamente en fase
+beta o alfa: `feeds` en `^3.0@beta`, `phone_number` en `^2.0@alpha`, `feeds_tamper` en la
+`2.0.0-rc1`, `scan_code` en `^1.0@beta` y `pwa` en la `2.1.0-beta7`. Esos llevan la marca en su
+propia restricción, así que en teoría seguirían resolviendo con `stable`, pero conviene probarlo
+con `--dry-run` antes de tocarlo, no darlo por hecho.
 
 Y conviene recordar por qué importa, ahora que lo hemos pagado: el 13 de agosto, al ponerle a
 ECA su número de versión, apareció un fallo **crítico** de seguridad que llevaba dieciséis meses
@@ -481,6 +496,40 @@ tiempo. Se pueden borrar del repositorio.
 ## 9. Deuda técnica
 
 Nada de esto corre prisa, pero conviene que esté escrito para que no se descubra por sorpresa.
+
+- **`tec_gui`: un tipo de entidad abandonado que deja el informe de estado en rojo.** Encontrado
+  el 13 de agosto al subir a Drupal 11, al revisar los requisitos del sitio. Es un tipo de
+  entidad de ECK, "GUI", con **cero** contenidos, pero con sus doce tablas creadas en la base y
+  un campo suyo, `field_tec_gui_product`, colgado de las líneas de pedido de venta. Ese campo
+  tiene **20 filas que apuntan a productos GUI que no existen**.
+
+  Drupal avisa con un error de que la definición está descuadrada: el registro interno de "qué
+  hay instalado" no coincide con lo que dice la configuración. No rompe nada —el ERP pasa las 35
+  comprobaciones y las 33 páginas cargan— pero mantiene dos errores en rojo permanentes en el
+  informe de estado, y eso hace que un error de verdad pase desapercibido el día que aparezca.
+
+  **No lo causó la subida a la 11**, ya venía de antes; encaja con la experimentación del
+  programador anterior. Arreglarlo es decidir entre dos caminos: borrar el invento entero (el
+  tipo de entidad, el campo, las tablas y las 20 referencias muertas), que es lo limpio, o
+  simplemente anotar la definición en el registro para que deje de avisar, que es lo barato.
+  Antes de elegir hay que mirar qué hacen esas 20 líneas y si alguien las usa.
+  Diagnóstico: `drush scr scripts/que-esta-descuadrado.php`.
+
+- **Un tipo de importación huérfano: `tec_products_csv_importer`.** Encontrado el 13 de agosto
+  al revisar Feeds. Hay **dos importaciones creadas** que lo usan, "Primo products" con 28
+  elementos y "Trust products" con 92, pero **el tipo ya no existe en la configuración**: solo
+  quedan definidos `tec_bom_items_importer` y `tec_inventory_csv_importer`. Dos importaciones
+  apuntando al vacío.
+
+  Esto es directamente relevante para la tarea de **arreglar el importador** del apartado 3: hay
+  que averiguar si el importador de productos se borró a propósito, si se renombró, o si se
+  perdió en alguna importación de configuración. Y decidir si esas dos importaciones se
+  recuperan o se borran.
+  Diagnóstico: `drush scr scripts/quien-usa-feeds.php`.
+
+- **Trece tablas `tmp_b44c2b*` en la base de datos.** Ocupan poco, 0,8 MB, y son copias de las
+  tablas de `tec_gui`. Restos de alguna operación de copia o de Backup and Migrate que no
+  limpió. Se pueden borrar, pero conviene hacerlo a la vez que se decida qué pasa con `tec_gui`.
 
 - **Borrar un material en uso avería en silencio las líneas que lo usan.** Descubierto el 13 de
   agosto durante la prueba funcional. Cuando una línea de pedido tiene en su escandallo un
@@ -601,6 +650,30 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   Pendiente de decidir: montar un *hook* de Cursor del tipo `afterFileEdit` que detecte el
   UTF-16 y lo convierta solo. No arregla el fallo, pero lo vuelve indoloro y protege del caso
   grave, que es un `.php` mal guardado tumbando el ERP sin motivo aparente.
+
+  **Cuidado con la conversión, que tiene trampa.** El 13 de agosto se convirtieron tres parches
+  con esto, y no sirvió de nada:
+
+  ```powershell
+  $t = [System.IO.File]::ReadAllText($f)                       # MAL
+  [System.IO.File]::WriteAllText($f, $t, $utf8SinBom)
+  ```
+
+  El fichero sale sin marca de orden de bytes, así que `ReadAllText` supone UTF-8, lee los ceros
+  intercalados como caracteres nulos válidos y los vuelve a escribir igual. El fichero queda
+  byte por byte idéntico y la conversión parece haber funcionado. Hay que decirle de qué
+  codificación viene:
+
+  ```powershell
+  $b = [System.IO.File]::ReadAllBytes($f)
+  if ($b.Length -gt 1 -and $b[1] -eq 0) {                      # segundo byte cero: es UTF-16
+    $t = [System.Text.Encoding]::Unicode.GetString($b) -replace "`r`n", "`n"
+    [System.IO.File]::WriteAllText($f, $t, (New-Object System.Text.UTF8Encoding $false))
+  }
+  ```
+
+  La forma de comprobar que de verdad se convirtió es mirar el tamaño: tiene que bajar
+  aproximadamente a la mitad.
 - **Referencias muertas a la IA en nuestros propios módulos.** El código de los módulos de IA ya
   no está en el disco —`ai_interpolator` y `ai_interpolator_openai` se los llevó la subida del
   núcleo, y `ai` y `ai_interpolator_eca` se borraron a mano el 13 de agosto, 908 ficheros—, y
@@ -629,6 +702,86 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-13 — El ERP corre en Drupal 11.4.5, y los ochenta y dos avisos de seguridad se quedan en cero
+
+El sitio empezó el día en **Drupal 10.2.4 con 82 avisos de seguridad**. Pasó por la 10.6.15, que
+los dejó en 2, y terminó en la **11.4.5 con ninguno**. Dos años y medio de parches sin aplicar,
+puestos al día.
+
+**El orden importó.** No se saltó del 10 al 11 de golpe. Primero se subieron los módulos
+contribuidos uno a uno sobre Drupal 10, en tandas, comprobando después de cada una. Cuando llegó
+el momento del núcleo, solo quedaban dos extensiones que rechazaran la 11, y las dos eran del
+tema de administración. Eso convirtió el salto grande en un trámite.
+
+**La herramienta que lo hizo posible.** A mitad de camino se escribió
+`scripts/quien-bloquea-la-11.php`, que hace extensión por extensión la misma pregunta que hará
+el núcleo al arrancar: ¿tu `core_version_requirement` acepta la 11.4? No pregunta a drupal.org,
+no interpreta informes: reproduce la comprobación real. Dio tres bloqueos exactos donde antes
+había una nube de sesenta módulos "por mirar". De los tres, uno se resolvió actualizando
+(`feeds_tamper` a la `2.0.0-rc1`) y los otros dos tenían que ir con el núcleo.
+
+**Lo que costó más de lo previsto fueron tres cosas que no estaban en el plan:**
+
+El paquete `drupal/color` seguía exigido en `composer.json` aunque el módulo lo había
+desinstalado `dxpr_theme` dos pasos antes. Pide `^9.4 || ^10`, así que bloqueaba la subida él
+solo, y no aparecía en ninguna lista de módulos porque ya no era un módulo: era solo una línea
+en un fichero.
+
+Los parches de etiqueta no bastaban. Para `editablefields`, `simple_popup_views` y
+`pdf_serialization` se habían escrito parches que amplían su `core_version_requirement` a
+`^10 || ^11`. Eso es lo que lee **Drupal** al arrancar, y funciona. Pero **Composer** no lee el
+`.info.yml`, lee el `composer.json` del paquete, y ahí seguían pidiendo la 10. Los parches se
+aplican *después* de resolver dependencias, así que llegan tarde por definición. La solución es
+`mglaman/composer-drupal-lenient`, un complemento que existe justo para esto: se le da una lista
+de paquetes y relaja su restricción de núcleo al resolver.
+
+Treinta y ocho paquetes de `vendor` estaban instalados desde git en vez de desde archivo.
+`core-vendor-hardening` les borra los tests y la documentación, así que git los veía sucios y
+Composer se negaba a tocarlos: *"Source directory has uncommitted changes"*. Se rehizo `vendor`
+entero desde archivo. Tardó seis minutos y se llevó por delante toda esa clase de problema.
+
+**Lo que entró con el núcleo:** Gin 5.0.15 y `gin_toolbar` 3.0.3, que piden `^11.2` y por eso no
+se podían poner antes. Drush 13.7.6, porque el 12 no vale para la 11. Symfony 7.
+
+**Un fallo de seguridad apagado de camino.** `rebuild_access` estaba en `TRUE` en `settings.php`
+desde hacía mucho. Eso permite entrar a `/core/rebuild.php` **sin ninguna credencial** y vaciar
+las cachés del sitio entero. En local es menor; en el servidor no lo sería. Queda comentado y
+explicado.
+
+**Una actualización que se reintentaba en bucle.** `dxpr_theme_helper` tiene una actualización,
+la 8003, que hace dos cosas: encender `media_library_form_element` y migrar dos imágenes de
+fondo del tema a entidades de medios. La segunda parte pide un servicio que no existe hasta
+Drupal 11.3, así que reventaba, dejaba la versión de esquema en 8002 y volvía a intentarlo en
+cada actualización. Se cerró a mano tras comprobar que las dos rutas de origen estaban vacías:
+no había ninguna imagen que migrar. El script (`scripts/cerrar-8003.php`) lo vuelve a comprobar
+y se niega a cerrar nada si alguna tuviera valor.
+
+**Una herramienta que mentía, corregida.** Un script propio dijo que `feeds_tamper` no tenía
+ninguna transformación configurada, y estuvo a punto de desinstalarse. Estaba mal: miraba en la
+raíz de la configuración del tipo de importación, y Feeds Tamper las guarda bajo
+`third_party_settings`. Sí había una, y es la que construye el título de las líneas de escandallo
+al importar. Se corrigió el script antes de seguir, porque una herramienta de diagnóstico que da
+un falso negativo es peor que no tener ninguna.
+
+**La copia de seguridad, por fin hecha herramienta.** Hasta hoy se hacía a mano cada vez.
+`scripts/copia-de-seguridad.ps1` guarda las cinco piezas —base de datos, árbol del proyecto,
+núcleo y `vendor`, ficheros subidos, e historia de git— y **comprueba al terminar** que las
+cinco existen y pesan lo que deberían. Esa comprobación ya sirvió: el primer intento creó solo
+la base de datos porque el `tar` de Git for Windows lee `C:\algo` como si `C` fuese un servidor
+remoto, y el script lo cazó en vez de dejar una copia inútil con buena pinta. La historia de git
+va aparte y se guarda aunque haya un GitHub detrás, porque hay 27 commits sin subir y mientras
+tanto el único sitio donde existen es este disco.
+
+**Comprobado en la 11:** 35 de 35 en la comprobación funcional, 33 páginas cargan sin un solo
+fallo, los trece parches puestos, ninguna actualización de base pendiente, cero avisos de
+seguridad. La configuración exportada se puso al día: 41 elementos actualizados y 2 borrados que
+la 11 ya no usa. De los tres requisitos en rojo quedan dos, y ninguno es de la subida: el HTTPS,
+normal en local, y el descuadre de `tec_gui`, que ya venía de antes y está en Deuda técnica.
+
+Un detalle curioso: los tres falsos errores de ECA que ensuciaban el registro en cada
+comprobación —los *"Running: TEC Inventory: Calculation data"* que aparecían con nivel de
+emergencia— **han desaparecido** en la 11.
 
 ### 2026-08-13 — Paso 1 hacia Drupal 11: ECA salta de la rama 1 a la 2 sin despeinarse, y de paso cae el último aviso de seguridad
 
