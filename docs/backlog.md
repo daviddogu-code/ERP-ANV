@@ -722,17 +722,6 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   los `.info.yml` de `tec_brands` y `tec_crm`. Solo se leen al instalar un módulo, y esos dos
   están desinstalados y además marcados para borrar (ver "Dos carpetas de más" en el apartado 8),
   así que hoy no hacen nada. La configuración activa tiene **cero** referencias, comprobado.
-- **Ciento once megas de volcados de 2024 dentro de la carpeta privada.** En
-  `sites/default/private/backup_migrate` hay **178 volcados de la base de datos** de febrero a mayo
-  de 2024, de la época del programador anterior: 111 MB de los 173 MB que ocupa toda la carpeta
-  privada, o sea dos tercios. Están congelados desde el 5 de mayo de 2024, cuando el programador de
-  `backup_migrate` dejó de dispararse porque el cron está parado. Desde el navegador **no** son
-  accesibles, eso está comprobado, así que no es un problema de seguridad; el problema es que esa
-  carpeta entra en las copias de seguridad y por tanto **cada copia arrastra esos 111 MB** y los
-  sube a Drive. Falta decidir qué se hace: sacarlos del proyecto a `c:\laragon\backups`, quedarse
-  con uno o dos representativos, o borrarlos. Son la base de datos de la empresa en 2024, con sus
-  usuarios y sus claves cifradas, así que decida quien decida, esos ficheros no deben salir del
-  ordenador.
 - **Quedan cuatro ficheros en `tec/backups`** (0,4 MB): una copia de la vista `tec_products` del 11
   de agosto y tres registros de la limpieza de pedidos de venta. Está excluida del repositorio y
   Apache le devuelve 403 a los `.yml`, así que no molesta a nadie; se deja como está.
@@ -831,6 +820,17 @@ ningún volcado vuelva a colarse por la puerta del nombre. Lo que queda por deci
 pena reescribir el historial otra vez para borrarlo de `9cbcff83`; la recomendación es **no**,
 porque el repositorio es privado, dentro no hay ningún secreto y una reescritura obliga a un
 `push --force` que ya se sufrió una vez.
+
+**Y de camino aparecieron 111 MB más, estos sí bien guardados.** En
+`sites/default/private/backup_migrate` había **178 volcados** de la base de datos, de febrero a mayo
+de 2024, congelados desde que el cron dejó de disparar el programador de `backup_migrate`. Eran dos
+tercios de los 173 MB de la carpeta privada. Del navegador no se accedían —comprobado—, así que no
+eran un riesgo; el problema era que esa carpeta entra en las copias de seguridad, y cada copia subía
+esos 111 MB a Drive. Se han movido a `C:\laragon\backups\volcados-2024-backup-migrate\`. Antes se
+comprobó lo que había que comprobar: **cero** de esos ficheros están registrados en `file_managed`,
+así que mover no deja referencias muertas. La carpeta de destino se ha dejado en su sitio y vacía,
+porque el programador diario sigue **activo** en la configuración y volverá a escribir ahí en cuanto
+se arregle el cron. La carpeta privada pasa de 172,9 MB a **61,6 MB**.
 
 **Comprobado después de todo.** Git limpio, sin un solo cambio, porque las dos carpetas estaban
 excluidas del repositorio. Caché reconstruida y prueba de humo: **38 páginas, 0 con problemas**.
