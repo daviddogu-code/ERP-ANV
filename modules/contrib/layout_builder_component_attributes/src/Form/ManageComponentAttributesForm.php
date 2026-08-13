@@ -2,7 +2,6 @@
 
 namespace Drupal\layout_builder_component_attributes\Form;
 
-use CssLint\Linter;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\AjaxFormHelperTrait;
 use Drupal\Core\Config\ConfigFactory;
@@ -105,14 +104,7 @@ class ManageComponentAttributesForm extends FormBase {
    * @return array
    *   The form array.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL, $delta = NULL, $uuid = NULL) {
-    $parameters = array_slice(func_get_args(), 2);
-    foreach ($parameters as $parameter) {
-      if (is_null($parameter)) {
-        throw new \InvalidArgumentException('ManageComponentAttributesForm requires all parameters.');
-      }
-    }
-
+  public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL, ?int $delta = NULL, ?string $uuid = NULL) {
     $config = $this->configFactory->get('layout_builder_component_attributes.settings')->get();
 
     // Determine which categories, if any, are empty (i.e. no
@@ -299,14 +291,6 @@ class ManageComponentAttributesForm extends FormBase {
             $form_state->setError($form[$element]['class'], $this->t('Classes must be valid CSS classes'));
             break;
           }
-        }
-      }
-
-      if (isset($values[$element]['style'])) {
-        $cssLinter = new Linter();
-        $style_validity = $cssLinter->lintString('.selector {' . $values[$element]['style'] . '}');
-        if (!$style_validity) {
-          $form_state->setError($form[$element]['style'], $this->t('Inline styles must be valid CSS'));
         }
       }
 

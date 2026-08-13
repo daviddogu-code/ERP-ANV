@@ -36,16 +36,12 @@ This mode has the following requirements:
 
 - Drupal 8.8.4+
 - *Layout Builder* (included in Drupal core)
-- *Php CSS Lint* (https://github.com/neilime/php-css-lint)
-  - Installed with Composer or Ludwig.
 
 # INSTALLATION
 
 - Install as you would normally install a contributed Drupal module. Visit
   https://www.drupal.org/node/1897420 for further information.
 - It is recommended to install this module with Composer.
-- This module also supports Ludwig (a Composer alternative) for dependencies.
-  See [Ludwig](https://www.drupal.org/project/ludwig)] for more information.
 
 # CONFIGURATION
 

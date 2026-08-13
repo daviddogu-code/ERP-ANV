@@ -9,7 +9,6 @@
     },
     "license": "GPL-2.0+",
     "require": {
-        "drupal/core": "^9.0|^10.0",
-        "neilime/php-css-lint": "^2.0|^3.0"
+        "drupal/core": "^10.0|^11.0"
     }
 }

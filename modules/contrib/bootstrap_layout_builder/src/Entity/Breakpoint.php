@@ -121,6 +121,9 @@ class Breakpoint extends ConfigEntityBase implements BreakpointInterface {
    * {@inheritdoc}
    */
   public function getClassByPosition($key, $strucutre_id) {
+    if (!$strucutre_id) {
+      return;
+    }
     $strucutre = substr($strucutre_id, strlen('blb_col_'));
     $strucutre = explode('_', $strucutre);
     // Full width case.

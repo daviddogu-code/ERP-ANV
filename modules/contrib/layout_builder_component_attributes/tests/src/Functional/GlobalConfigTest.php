@@ -25,6 +25,20 @@ class GlobalConfigTest extends BrowserTestBase {
   ];
 
   /**
+   * The test administrative user.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected $adminUser;
+
+  /**
+   * The test non-administrative user.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected $authUser;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() : void {

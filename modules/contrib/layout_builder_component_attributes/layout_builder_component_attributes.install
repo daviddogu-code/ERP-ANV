@@ -10,21 +10,6 @@ use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 
 /**
- * Implements hook_requirements().
- */
-function layout_builder_component_attributes_requirements($phase) {
-  $requirements = [];
-
-  if (!class_exists('CssLint\Linter')) {
-    $requirements['lbca_php_css_lint']['title'] = t('Layout Builder Component Attributes');
-    $requirements['lbca_php_css_lint']['description'] = t('The neilime/php-css-lint library is required. See README.md.');
-    $requirements['lbca_php_css_lint']['severity'] = REQUIREMENT_ERROR;
-  }
-
-  return $requirements;
-}
-
-/**
  * Implements hook_uninstall().
  */
 function layout_builder_component_attributes_uninstall() {
@@ -73,6 +58,7 @@ function layout_builder_component_attributes_uninstall() {
       ->execute();
 
     // Load entities.
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $entity_storage */
     $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
     $entities = $entity_storage->loadMultiple($entity_ids);
 
@@ -109,10 +95,9 @@ function layout_builder_component_attributes_uninstall() {
 function _layout_builder_component_attributes_uninstall_process_entity_or_revision(FieldableEntityInterface $entity) {
   // Loop through each section and component.
   if ($entity->hasField(OverridesSectionStorage::FIELD_NAME)) {
-    /** @var \Drupal\layout_builder\Field\LayoutSectionItemList $layout_field */
+    /** @var \Drupal\layout_builder\Field\LayoutSectionItemList|false $layout_field */
     $layout_field = $entity->get(OverridesSectionStorage::FIELD_NAME);
-    if (!empty($layout_field)) {
-      $sections = $layout_field->getSections();
+    if ($sections = $layout_field->getSections()) {
       foreach ($sections as $section) {
         $components = $section->getComponents();
         foreach ($components as $component) {
