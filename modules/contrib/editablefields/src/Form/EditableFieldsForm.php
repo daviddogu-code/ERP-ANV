@@ -94,36 +94,6 @@ class EditableFieldsForm extends FormBase implements BaseFormIdInterface {
   }
 
   /**
-   * Get the entity being edited.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The entity.
-   */
-  public function getEntity() {
-    return $this->entity;
-  }
-
-  /**
-   * Get the machine name of the field being edited.
-   *
-   * @return string
-   *   The field name.
-   */
-  public function getFieldName() {
-    return $this->field_name;
-  }
-
-  /**
-   * Get the form mode used to render the widget.
-   *
-   * @return string
-   *   The form mode.
-   */
-  public function getFormMode() {
-    return $this->form_mode;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
