@@ -62,7 +62,8 @@ class UltimateCronQueueTest extends CronQueueTest {
       ->execute();
 
     // Has to be manually called for Ultimate Cron.
-    system_cron();
+    $job = CronJob::load('system_cron');
+    $job->run();
 
     $this->cron->run();
     $this->assertEquals(2, \Drupal::state()->get('cron_queue_test_exception'));

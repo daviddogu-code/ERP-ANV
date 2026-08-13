@@ -44,19 +44,19 @@ class CronJobInstallTest extends BrowserTestBase {
     // Check default modules
     \Drupal::service('module_installer')->install(array('field'));
     $this->drupalGet('admin/config/system/cron/jobs');
-    $this->assertSession()->pageTextContains('Purges deleted Field API data');
+    $this->assertSession()->pageTextContains('Purge deleted Field API data');
     $this->assertSession()->pageTextContains('Cleanup (caches, batch, flood, temp-files, etc.)');
-    $this->assertSession()->pageTextNotContains('Deletes temporary files');
+    $this->assertSession()->pageTextNotContains('Delete temporary files');
 
     // Install new module.
     \Drupal::service('module_installer')->install(array('file'));
     $this->drupalGet('admin/config/system/cron/jobs');
-    $this->assertSession()->pageTextContains('Deletes temporary files');
+    $this->assertSession()->pageTextContains('Delete temporary files');
 
     // Uninstall new module.
     \Drupal::service('module_installer')->uninstall(array('file'));
     $this->drupalGet('admin/config/system/cron/jobs');
-    $this->assertSession()->pageTextNotContains('Deletes temporary files');
+    $this->assertSession()->pageTextNotContains('Delete temporary files');
   }
 
   /**

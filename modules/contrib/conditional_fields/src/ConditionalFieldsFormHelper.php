@@ -3,13 +3,14 @@
 namespace Drupal\conditional_fields;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\Core\Language\LanguageManager;
 use Drupal\Core\Render\ElementInfoManager;
-use Drupal\Core\Entity\EntityFormInterface;
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Helper to interact with forms.
@@ -28,7 +29,7 @@ class ConditionalFieldsFormHelper {
    *
    * @var \Drupal\Core\Form\FormStateInterface
    */
-  public $form_state;
+  public $formState;
 
   /**
    * Array of effects for being applied to the conditional fields in this form.
@@ -59,6 +60,13 @@ class ConditionalFieldsFormHelper {
   protected $entityDisplayRepository;
 
   /**
+   * The LanguageManager service.
+   *
+   * @var \Drupal\Core\Language\LanguageManager
+   */
+  protected $languageManager;
+
+  /**
    * ConditionalFieldsFormHelper constructor.
    *
    * @param \Drupal\Core\Render\ElementInfoManager $element_info
@@ -67,11 +75,14 @@ class ConditionalFieldsFormHelper {
    *   A manager for conditional fields handlers.
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
    *   The entity display repository.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    */
-  public function __construct(ElementInfoManager $element_info, ConditionalFieldsHandlersManager $type, EntityDisplayRepositoryInterface $entity_display_repository) {
+  public function __construct(ElementInfoManager $element_info, ConditionalFieldsHandlersManager $type, EntityDisplayRepositoryInterface $entity_display_repository, LanguageManager $language_manager) {
     $this->elementInfo = $element_info;
     $this->type = $type;
     $this->entityDisplayRepository = $entity_display_repository;
+    $this->languageManager = $language_manager;
   }
 
   /**
@@ -91,7 +102,7 @@ class ConditionalFieldsFormHelper {
    */
   public function afterBuild(array $form, FormStateInterface &$form_state) {
     $this->form = $form;
-    $this->form_state = $form_state;
+    $this->formState = $form_state;
 
     if ($this->hasConditionalFields()) {
       $this->processDependentFields()
@@ -100,6 +111,16 @@ class ConditionalFieldsFormHelper {
     }
 
     return $this->form;
+  }
+
+  /**
+   * Returns the "base name" for a field id.
+   *
+   * Returns $name until the last subform appears to relate field ids
+   * from paragraphs on the #conditional_fields array.
+   */
+  private static function getBaseName($name) {
+    return implode('subform', array_slice(explode('subform', $name), 0, -1)) . 'subform-';
   }
 
   /**
@@ -117,10 +138,20 @@ class ConditionalFieldsFormHelper {
       }
       $dependees = $dependent_info['dependees'];
 
-      $dependent_location = array_merge([], [$dependent]);
+      $dependent_location = ($dependent_info['is_from_paragraph'] ?? FALSE) ?
+        $dependent_info['array_parents'] :
+        array_merge([], [$dependent]);
+
       $dependent_form_field = NestedArray::getValue($this->form, $dependent_location);
 
-      $states = $this->processDependeeFields($dependees, $dependent_form_field, $dependent_location, $states);
+      if ($dependent_info['is_from_paragraph'] ?? FALSE) {
+        $base_name = $this->getBaseName($dependent);
+      }
+      else {
+        $base_name = '';
+      }
+
+      $states = $this->processDependeeFields($dependees, $dependent_form_field, $dependent_location, $states, $base_name ?? '');
 
       if (empty($states)) {
         continue;
@@ -131,20 +162,49 @@ class ConditionalFieldsFormHelper {
       // radio button), and there is a checkbox or radio button deeper in the
       // array, we actually need to use the (deeper) checkbox or radio button
       // because it is not possible to set a checked state on a container.
-      if (count(array_intersect(['checked', '!checked'], array_keys($states))) > 0
-        && $dependent_form_field['#type'] === 'container'
-        && isset($dependent_form_field['widget']['value']['#type'])
-        && in_array($dependent_form_field['widget']['value']['#type'], ['checkbox', 'radio'])
+      if (count(array_intersect([
+        'checked',
+        '!checked',
+      ], array_keys($states))) > 0
+          && $dependent_form_field['#type'] === 'container'
+          && isset($dependent_form_field['widget']['value']['#type'])
+          && in_array($dependent_form_field['widget']['value']['#type'], [
+            'checkbox',
+            'radio',
+          ])
       ) {
-        $dependent_location = array_merge($dependent_location, ['widget', 'value']);
+        $dependent_location = array_merge($dependent_location, [
+          'widget',
+          'value',
+        ]);
         $dependent_form_field = $dependent_form_field['widget']['value'];
       }
 
       // Save the modified field back into the form.
       NestedArray::setValue($this->form, $dependent_location, $dependent_form_field);
 
+      $states_location = $dependent_location;
+      while ($states_location && end($states_location) != 'subform') {
+        $last_field = array_pop($states_location);
+      }
+
+      if (end($states_location) == 'subform' && isset($last_field)) {
+        $states_location[] = $last_field;
+      }
+      else {
+        $states_location = $dependent_location;
+      }
+
+      $states_location = array_merge($states_location, ['#states']);
+
+      // Merge states in case there are previous states defined.
+      $new_states = array_merge(
+        NestedArray::getValue($this->form, $states_location) ?? [],
+        $this->mapStates($states)
+      );
+
       // Add the #states property to the dependent field.
-      NestedArray::setValue($this->form, array_merge($dependent_location, ['#states']), $this->mapStates($states));
+      NestedArray::setValue($this->form, $states_location, $new_states);
     }
 
     return $this;
@@ -153,10 +213,14 @@ class ConditionalFieldsFormHelper {
   /**
    * Determine and register dependee field effects.
    */
-  public function processDependeeFields($dependees, &$dependent_form_field = [], $dependent_location = [], $states = []) {
+  public function processDependeeFields($dependees, &$dependent_form_field = [], $dependent_location = [], $states = [], $base_name = '') {
     // Cycle the dependant's dependees.
     foreach ($dependees as $dependency) {
       $dependee = $dependency['dependee'];
+
+      if ($base_name) {
+        $dependee = $base_name . HTML::getId($dependee);
+      }
 
       if (empty($this->form['#conditional_fields'][$dependee])) {
         continue;
@@ -171,9 +235,9 @@ class ConditionalFieldsFormHelper {
       }
 
       if (isset($this->form[$dependee]['#attributes'])
-        && $this->form[$dependee]['#attributes']['class'][0] == 'field--type-list-string'
-        && isset($this->form[$dependee]['widget']['#type'])
-        && $this->form[$dependee]['widget']['#type'] == 'checkboxes') {
+          && $this->form[$dependee]['#attributes']['class'][0] == 'field--type-list-string'
+          && isset($this->form[$dependee]['widget']['#type'])
+          && $this->form[$dependee]['widget']['#type'] == 'checkboxes') {
         array_pop($dependee_info['parents']);
       }
 
@@ -240,7 +304,7 @@ class ConditionalFieldsFormHelper {
     $this->form['#validate'][] = [self::class, 'formValidate'];
     // Initialize validation information every time the form is rendered to
     // avoid stale data after a failed submission.
-    $this->form_state->setValue('conditional_fields_untriggered_dependents', []);
+    $this->formState->setValue('conditional_fields_untriggered_dependents', []);
 
     return $this;
   }
@@ -262,16 +326,46 @@ class ConditionalFieldsFormHelper {
    */
   protected function getState($dependee, array $dependee_form_field, array $options) {
     /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
-    $form_display = $this->form_state->getFormObject()->getFormDisplay($this->form_state);
+    $form_display = $this->formState->getFormObject()
+      ->getFormDisplay($this->formState);
     $state = [];
 
     if ($options['condition'] != 'value') {
       // Conditions different than "value" are always evaluated against TRUE.
       $state = [$options['state'] => [$options['selector'] => [$options['condition'] => TRUE]]];
     }
-    else {
+    elseif (isset($dependee_form_field['#name'])) {
       $widget_id = '';
-      $field_name = explode('[', $dependee_form_field['#name']);
+
+      // If the name has a subform in it, we should get information on its
+      // parent element to find out if it is a paragraph.
+      if (strpos($dependee_form_field['#name'], '[subform]') !== FALSE) {
+        $subform_exploded = explode('[subform][', $dependee_form_field['#name']);
+        $first_field = \explode('[', $subform_exploded[0])[0];
+        $field_name = explode('][', end($subform_exploded));
+        $storage = \Drupal::service('entity_type.manager')
+          ->getStorage('entity_form_display');
+        $parent_widget_parents = $dependee_form_field['#array_parents'];
+
+        while ($parent_widget_parents && end($parent_widget_parents) !== 'subform') {
+          array_pop($parent_widget_parents);
+        }
+        array_pop($parent_widget_parents);
+        $parent_info = NestedArray::getValue($this->formState->getCompleteForm(), $parent_widget_parents);
+      }
+
+      // For paragraphs we must change the form display.
+      if (isset($parent_info['#paragraph_type'])) {
+        $form_settings = $form_display->getComponent($first_field)['settings'];
+        $form_display_mode = $form_settings['form_display_mode'];
+        $paragraph_type = $parent_info['#paragraph_type'];
+        $form_display = $storage->load("paragraph.$paragraph_type.$form_display_mode");
+        $dependee = $field_name[0];
+      }
+      else {
+        $field_name = explode('[', $dependee_form_field['#name']);
+      }
+
       $dependee_form_state = isset($dependee_form_field['#field_parents'], $field_name[0], $this->form_state) ? WidgetBase::getWidgetState($dependee_form_field['#field_parents'], $field_name[0], $this->form_state) : NULL;
       $dependee_form_field['#original_name'] = $field_name[0];
       $dependee_display = $form_display->getComponent($dependee);
@@ -281,10 +375,11 @@ class ConditionalFieldsFormHelper {
 
       // If inline entity form is used, pass the form mode for getFormDisplay
       // and get the widget ID from field.
-      if ($widget_id === '' && isset($dependee_form_field['#field_parents']) && in_array('inline_entity_form', $dependee_form_field['#field_parents'])){
+      if ($widget_id === '' && isset($dependee_form_field['#field_parents']) && in_array('inline_entity_form', $dependee_form_field['#field_parents'])) {
         $ief = $form_display->getComponent($dependee_form_field['#field_parents'][0]);
 
-        // Inject type and bundle for ECK-based entities. This should probably be fixed in ECK itself.
+        // Inject type and bundle for ECK-based entities. This should probably
+        // be fixed in ECK itself.
         if (isset($this->form["#entity"])) {
           $entity = $this->form["#entity"];
           $dependee_form_field['#entity_type'] = $entity->getEntityTypeId();
@@ -340,7 +435,7 @@ class ConditionalFieldsFormHelper {
     if (empty($this->form['#conditional_fields'])) {
       return FALSE;
     }
-    if (!method_exists($this->form_state->getFormObject(), 'getFormDisplay')) {
+    if (!method_exists($this->formState->getFormObject(), 'getFormDisplay')) {
       return FALSE;
     }
     return TRUE;
@@ -357,8 +452,8 @@ class ConditionalFieldsFormHelper {
     }
     else {
       // Replace the language placeholder in the selector with current language.
-      $current_language = \Drupal::languageManager()->getCurrentLanguage()->getId();
-      $language = isset($dependee_form_field['#language']) ? $dependee_form_field['#language'] : $current_language;
+      $current_language = $this->languageManager->getCurrentLanguage()->getId();
+      $language = $dependee_form_field['#language'] ?? $current_language;
       $selector = str_replace('%lang', $language, $options_selector);
     }
     return $selector;
@@ -437,13 +532,23 @@ class ConditionalFieldsFormHelper {
       $form = NestedArray::getValue($form, $inline_entity_form_parents['element_parents']);
     }
 
-    $entity_type_id = $form_state->getFormObject()->getEntity()->getEntityTypeId();
+    /** @var \Drupal\Core\Entity\ContentEntityFormInterface $entity_form */
+    $entity_form = $form_state->getFormObject();
+    $entity_type_id = $entity_form->getEntity()->getEntityTypeId();
     if ($inline_entity_form_parents) {
       $ief_element = self::fieldRemoveInlineEntityFormParents($element, $inline_entity_form_parents);
       $dependent = $form['#conditional_fields'][reset($ief_element['#array_parents'])];
     }
     else {
-      $dependent = $form['#conditional_fields'][reset($element['#array_parents'])];
+      $dependent = $form['#conditional_fields'][reset($element['#array_parents'])] ?? FALSE;
+      $conditional_field_key = conditional_fields_get_simpler_id($element['#id']);
+      $element['#type'] !== 'container' && $dependent = $dependent ?: $form['#conditional_fields'][$conditional_field_key];
+
+      // @todo if there are not dependents, something might be wrong,
+      // however, this also avoids potential fatal errors.
+      if (!$dependent) {
+        return;
+      }
     }
 
     // Check if this field's dependencies were triggered.
@@ -467,24 +572,57 @@ class ConditionalFieldsFormHelper {
               unset($input_state['add_more']);
             }
             $input_state = (is_null($input_state)) ? [] : $input_state;
-            if (isset($dependent['field_parents'][0])) {
-              $field = FieldStorageConfig::loadByName($entity_type_id, $dependent['field_parents'][0]);
+            // Get the containing subform in the parents array.
+            $subform_key = \array_search('subform', array_reverse($dependent['array_parents'], TRUE), TRUE);
+            $field = NULL;
+            if ($subform_key !== FALSE) {
+              $subform_array = NestedArray::getValue($form, array_slice($dependent['array_parents'], 0, $subform_key + 1));
+              $entity_type = $subform_array['#entity_type'];
+              $field_name = $dependent['array_parents'][$subform_key + 1];
+              $field = FieldStorageConfig::loadByName($entity_type, $field_name);
             }
             else {
-              $field = NULL;
-            }
-            if (empty($input_state)) {
-              if (isset($element['widget']['#title'])) {
-                $title = $element['widget']['#title'];
+              if (isset($dependent['field_parents'][0])) {
+                $field = FieldStorageConfig::loadByName($entity_type_id, $dependent['field_parents'][0]);
               }
-              elseif (isset($dependent['field_parents'][0])) {
-                $title = $dependent['field_parents'][0];
-              }
-              elseif ($field) {
-                $title = $field->getName();
+              else {
+                $field = NULL;
               }
 
-              $form_state->setError($element, t('%name is required.', ['%name' => $title]));
+              if (empty($input_state)) {
+                if (isset($element['widget']['#title'])) {
+                  $title = $element['widget']['#title'];
+                }
+                elseif (isset($dependent['field_parents'][0])) {
+                  $title = $subform_key === FALSE ? $dependent['field_parents'][0] : $field_name;
+                }
+                elseif ($field) {
+                  $title = $field->getName();
+                }
+                else {
+                  $title = t('Missing title');
+                }
+
+                // Gets the deepest element to set the error.
+                $element_to_set_error =
+                  $element['widget'][0]['value'] ??
+                  $element['widget'][0] ??
+                  $element['widget'] ??
+                  $element;
+
+                if (isset($element_to_set_error['#title'])) {
+                  $title = $element_to_set_error['#title'];
+                }
+
+                if ($element_to_set_error['#access'] ?? TRUE) {
+                  if ($element_to_set_error['#type'] == 'hidden') {
+                    $element_to_set_error = NestedArray::getValue($form, array_slice($element_to_set_error['#array_parents'], 0, -1));
+                    $title = $element_to_set_error['#title'];
+                  }
+
+                  $form_state->setError($element_to_set_error, t('%name is required.', ['%name' => $title]));
+                }
+              }
             }
           }
         }
@@ -508,6 +646,10 @@ class ConditionalFieldsFormHelper {
       $form_state_addition['reset'] = FALSE;
     }
 
+    // Store dependent to remove validation errors previously set.
+    // See: ConditionalFieldsFormHelper::formValidate().
+    $form_state_addition['dependent'] = $dependent;
+
     // Tag validation errors previously set on this field for removal in
     // ConditionalFieldsFormHelper::formValidate().
     $errors = $form_state->getErrors();
@@ -530,10 +672,10 @@ class ConditionalFieldsFormHelper {
       return;
     }
 
-    $fiel_state_values_count = count($form_state->getValue('conditional_fields_untriggered_dependents'));
+    $field_state_values_count = count($form_state->getValue('conditional_fields_untriggered_dependents'));
     $form_state->setValue([
       'conditional_fields_untriggered_dependents',
-      $fiel_state_values_count,
+      $field_state_values_count,
     ], $form_state_addition);
   }
 
@@ -548,24 +690,38 @@ class ConditionalFieldsFormHelper {
    *   The state of the form to evaluate dependencies on.
    * @param bool $grouping
    *   TRUE to evaluate grouping; FALSE otherwise.
+   * @param array $inline_entity_form_parents
+   *   Paths of the inline_entity_form, the result of the function
+   *   findInlineEntityFormParentsForElement().
    *
    * @return array|bool
    *   Evaluated dependencies array.
    */
   protected static function evaluateDependencies(array $dependent, array $form, FormStateInterface $form_state, $grouping = TRUE, $inline_entity_form_parents = NULL) {
-    $dependencies = $form['#conditional_fields'][reset($dependent['field_parents'])]['dependees'];
+    if ($dependent['is_from_paragraph']) {
+      $dependencies = $form['#conditional_fields'][$dependent['index']]['dependees'];
+      $base_name = self::getBaseName($dependent['index']);
+    }
+    else {
+      $dependencies = $form['#conditional_fields'][reset($dependent['field_parents'])]['dependees'];
+    }
     $evaluated_dependees = [];
 
     foreach ($dependencies as $dependency) {
       // Extract field values from submitted values.
       $dependee = $dependency['dependee'];
+      $dependee_key = $dependee;
+
+      if (isset($base_name)) {
+        $dependee_key = $base_name . HTML::getId($dependee);
+      }
 
       // Skip any misconfigured conditions.
-      if (empty($form['#conditional_fields'][$dependee]['parents'])) {
+      if (empty($form['#conditional_fields'][$dependee_key]['parents'])) {
         continue;
       }
 
-      $dependee_parents = $form['#conditional_fields'][$dependee]['parents'];
+      $dependee_parents = $form['#conditional_fields'][$dependee_key]['parents'];
 
       // We have the parents of the field, but depending on the entity type and
       // the widget type, they may include additional elements that are actually
@@ -573,10 +729,23 @@ class ConditionalFieldsFormHelper {
       // structure and use the parents only up to that depth.
       $dependee_parents_keys = array_flip($dependee_parents);
       $dependee_parent = NestedArray::getValue($form, array_slice($dependee_parents, 0, $dependee_parents_keys[$dependee]));
-      $values = self::formFieldGetValues($dependee_parent[$dependee], $form_state, $inline_entity_form_parents);
-      if (isset($values['value']) && is_numeric($values['value'])) {
-        $values = $values['value'];
+
+      if ($inline_entity_form_parents) {
+        $values = self::formFieldGetValues($dependee_parent[$dependee], $form_state, $inline_entity_form_parents);
+        if (isset($values['value']) && is_numeric($values['value'])) {
+          $values = $values['value'];
+        }
       }
+      else {
+        $form_state_values = $form_state->getValues();
+        $dependee_element = NestedArray::getValue($form, $dependee_parents);
+        $values = NestedArray::getValue($form_state_values, $dependee_element['#parents']);
+
+        if (is_array($values) && isset($values[0]['value'])) {
+          $values = $values[0]['value'];
+        }
+      }
+
       // Remove the language key.
       if (isset($dependee_parent[$dependee]['#language'], $values[$dependee_parent[$dependee]['#language']])) {
         $values = $values[$dependee_parent[$dependee]['#language']];
@@ -591,7 +760,7 @@ class ConditionalFieldsFormHelper {
     }
 
     if ($grouping) {
-      return self::evaluateGrouping($evaluated_dependees[reset($dependent['field_parents'])]);
+      return self::evaluateGrouping($evaluated_dependees[reset($dependent['field_parents'])] ?? FALSE);
     }
 
     return $evaluated_dependees;
@@ -631,22 +800,45 @@ class ConditionalFieldsFormHelper {
       return;
     }
 
-    $entity = $form_state->getFormObject()->getEntity();
     $untriggered_dependents_errors = [];
+    $form_state_errors = $form_state->getErrors();
 
-    foreach ($form_state->getValue('conditional_fields_untriggered_dependents') as $field) {
-      $parent = [$field['parents'][0]];
-      $dependent = NestedArray::getValue($form, $parent);
-      if (!$dependent) {
-        continue;
+    // Tag errors from untriggered fields to remove them later.
+    $untriggered_dependents = $form_state->getValue('conditional_fields_untriggered_dependents');
+    foreach ($untriggered_dependents as &$field) {
+      $error_key_arr = NestedArray::getValue($form, $field['parents'])['#parents'] ?? [];
+      $error_key = implode('][', $error_key_arr ?? []);
+      if ($error_key && isset($form_state_errors[$error_key])) {
+        $field['errors'][$error_key] = $form_state_errors[$error_key];
       }
-      $field_values_location = self::formFieldGetValues($dependent, $form_state);
+    }
 
-      $dependent_field_name = reset($dependent['#array_parents']);
+    foreach ($untriggered_dependents as $field) {
+      // When there is a subform, the parent location is different.
+      $subform_location = \array_search('subform', $field['dependent']['array_parents'], TRUE);
+      if ($subform_location !== FALSE) {
+        $dependent = NestedArray::getValue($form, $field['dependent']['array_parents']);
+        $parents = $dependent['#parents'];
+        $field_name = end($parents);
+        $route_to_parent = array_slice($dependent['#parents'], 0, -1);
+        $field_values_location = NestedArray::getValue($form_state->getValues(), $route_to_parent);
+        $dependent_parents = $dependent['#parents'];
+      }
+      else {
+        $parent = [$field['parents'][0]];
+        $dependent = NestedArray::getValue($form, $parent);
+        $field_values_location = self::formFieldGetValues($dependent, $form_state);
+
+        $route_to_parent = array_slice($dependent['#parents'], 0, -1);
+        $field_values_location = NestedArray::getValue($form_state->getValues(), $route_to_parent);
+
+        $dependent_parents = $dependent['#parents'];
+        $field_name = reset($dependent['#array_parents']);
+      }
 
       // If we couldn't find a location for the field's submitted values, let
       // the validation errors pass through to avoid security holes.
-      if (empty($field_values_location)) {
+      if (!isset($field_values_location[$field_name])) {
         if (!empty($field['errors'])) {
           $untriggered_dependents_errors = array_merge($untriggered_dependents_errors, $field['errors']);
         }
@@ -658,13 +850,8 @@ class ConditionalFieldsFormHelper {
       // that the values are located at
       // $form_state['values'][ ... $element['#parents'] ... ], while the
       // documentation of hook_field_widget_form() states that field values are
-      // // $form_state['values'][ ... $element['#field_parents'] ... ].
-      // NestedArray::setValue($form_state['values'], $dependent['#field_parents'], $field_values_location);
-      if (!empty($field['reset'])) {
-        $default = $entity->getFieldDefinition($dependent_field_name)->getDefaultValue($entity);
-        // Save the changed array back in place.
-        $form_state->setValue($dependent_field_name, $default);
-      }
+      // $form_state['values'][ ... $element['#field_parents'] ... ].
+      NestedArray::setValue($form_state->getValues(), $dependent_parents, $field_values_location[$field_name]);
 
       if (!empty($field['errors'])) {
         $untriggered_dependents_errors = array_merge($untriggered_dependents_errors, $field['errors']);
@@ -738,7 +925,9 @@ class ConditionalFieldsFormHelper {
       $dependency_values = $context == 'view' ? $options['value'] : $options['value_form'];
 
       if ($options['condition'] === '!empty') {
-        $values = (isset($values[0]['value'])) ? $values[0]['value'] : $values;
+        if (is_array($values)) {
+          $values = (isset($values[0]['value'])) ? $values[0]['value'] : $values;
+        }
         $values = ($values === '_none') ? '' : $values;
         return (!empty($values)) ? TRUE : FALSE;
       }
@@ -996,7 +1185,8 @@ class ConditionalFieldsFormHelper {
       return FALSE;
     }
 
-    // We need to find last embedded inline_entity_form, but array_search can search only first.
+    // We need to find last embedded inline_entity_form, but array_search can
+    // search only first.
     $inline_entity_form_level = count($element['#array_parents']) - 1 - array_search('inline_entity_form', array_reverse($element['#array_parents']), TRUE);
     $result['element_parents'] = array_slice($element['#array_parents'], 0, $inline_entity_form_level + 1);
 

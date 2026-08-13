@@ -50,7 +50,7 @@ class QueueWorker {
     while (microtime(TRUE) < $end) {
       // Check kill signal.
       if ($job->getSignal('kill')) {
-        \Drupal::logger('ultimate_cron')->warning('Kill signal received for job @job_id', ['@job_id' => $job->id()]);
+        $this->loggerFactory->get('ultimate_cron')->warning('Kill signal received for job @job_id', ['@job_id' => $job->id()]);
         break;
       }
 

@@ -8,7 +8,7 @@ title: 'Default cron handler'
 id: eca_base_cron
 weight: 0
 module: eca_base
-callback: eca_base_cron
+callback: 'eca_base#cron'
 scheduler:
   id: simple
   configuration:

@@ -12,7 +12,7 @@ use Drupal\conditional_fields\ConditionalFieldsInterface;
  *   id = "states_handler_text_textarea_with_summary",
  * )
  */
-class TextAreaFormated extends ConditionalFieldsHandlerBase {
+class TextAreaFormatted extends ConditionalFieldsHandlerBase {
 
   /**
    * {@inheritdoc}

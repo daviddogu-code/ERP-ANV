@@ -8,7 +8,7 @@ title: 'Default cron handler'
 id: feeds_log_cron
 weight: 0
 module: feeds_log
-callback: feeds_log_cron
+callback: 'feeds_log#cron'
 scheduler:
   id: simple
 launcher:

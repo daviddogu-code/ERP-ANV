@@ -2,8 +2,6 @@
 
 namespace Drupal\conditional_fields\Plugin\conditional_fields\handler\extra_contrib;
 
-use Drupal\conditional_fields\ConditionalFieldsHandlerBase;
-use Drupal\conditional_fields\ConditionalFieldsInterface;
 use Drupal\conditional_fields\Plugin\conditional_fields\handler\Select;
 
 /**
