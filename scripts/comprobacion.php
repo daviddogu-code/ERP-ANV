@@ -79,12 +79,13 @@ const REFERENCIA_VARIOS = [
   // una errata del del dueno. Estaba bloqueada desde 2024 y sin nada colgado, pero
   // una llave maestra que no es de nadie conocido no se deja bloqueada, se quita.
   'usuarios' => 6,
-  // Eran 315 hasta el 14 de agosto de 2026. Se borraron las 142 fotos que se
-  // quedaron sin dueno al vaciar los datos de prueba, y con ellas 304 versiones
-  // recortadas: 446 archivos y 57 MB de disco. De los 173 que quedan, 141 no son
-  // fotos -las fuentes del tema y los CSV de las importaciones- y 32 tienen
-  // usos, entre ellos los once iconos de la portada.
-  'ficheros' => 173,
+  // Eran 315 hasta el 14 de agosto de 2026, y se vaciaron en dos pasadas esa
+  // noche. Primero las 142 fotos que se quedaron sin dueno al vaciar los datos de
+  // prueba, con sus 304 versiones recortadas. Despues los 104 CSV y Excel de las
+  // importaciones de ensayo, mas 10 archivos sueltos que ya no tenian ficha. Los
+  // 69 que quedan son 39 fuentes tipograficas, 28 imagenes -entre ellas los once
+  // iconos de la portada y los de la aplicacion movil- y 2 hojas de estilo.
+  'ficheros' => 69,
   // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
   // Super BOM, porque su funcion la hace ya el tablero de stock.
   'nodos' => 11,

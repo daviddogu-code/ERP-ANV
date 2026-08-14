@@ -252,13 +252,26 @@ una mejora; desde el borrado es la puerta de entrada, porque no hay otra manera 
 materiales. Existe (`tec_inventory_csv_importer`) y por él entraron 470 de los de prueba, pero
 está a medio hacer:
 
-- **Rellena 5 de los 56 campos** de un material: nombre, descripción, trazabilidad, unidad de
-  uso y tipo de material. Precios, unidades de compra y de stock, factores de conversión,
-  punto de pedido, plazo de entrega, imagen, SKU y embalaje entran vacíos. De ahí la
-  sensación de que "la información no está bien": no es incorrecta, es que falta.
-- **El proveedor no se enlaza nunca.** El importador sí lee una columna `Suppliers` del CSV,
-  está declarada ahí dentro, pero no está conectada a ningún campo: lee el dato y lo tira. Lo
-  mismo le ocurre a una columna de coste.
+- **Conecta tres campos, no cinco.** Esto se leyó en la configuración el 14 de agosto por la
+  noche, y es peor de lo que decía aquí: `feeds.feed_type.tec_inventory_csv_importer` declara
+  **quince columnas de origen y solo tres llegan a un destino** — nombre, descripción y
+  trazabilidad. Todo lo demás tiene origen y no tiene destino. No es que falle: es que no está
+  enchufado, y por eso los campos entran vacíos.
+- **Y de esas tres, una tampoco funciona.** La trazabilidad lee una columna llamada
+  `Traceable`, y en los ficheros de verdad la columna se llama `Traceability`. Nunca encaja, así
+  que entra vacía en silencio.
+- **Las columnas duplicadas tienen explicación.** Hay orígenes con espacios y con guion bajo
+  para lo mismo: `Material Type` y `Material_type`, `Unit of Use` y `Unit_of_use`. Es la huella
+  de alguien reintentando contra ficheros cuyas cabeceras cambiaron por el camino. Los ficheros
+  reales usan guion bajo, así que **los orígenes con espacios no encajan con nada**.
+- **El proveedor no se enlaza nunca, y hay algo peor.** El origen declarado lee `Suppliers` y en
+  el fichero la columna es `Supplier`, en singular. Pero además, en los dos tramos que se
+  miraron del listado de 857 materias, **la columna de proveedor viene vacía**, igual que
+  `Price ZZ` y `Moq`. Y eso choca de frente con la regla de `docs/material_inventory_naming_matrix.md`,
+  que dice que el proveedor es obligatorio y debe **bloquear la inserción**. Las dos cosas no
+  pueden ser verdad sobre ese fichero: o el proveedor se rellena en el Excel antes de importar,
+  o la obligatoriedad vale para la pantalla y no para la importación. Es una decisión del dueño,
+  no técnica.
 - ~~**Hay dos campos de proveedor y hay que elegir cuál es el bueno.**~~ **Resuelto el 14 de
   agosto, y lo resolvieron los datos.** Al sacar los materiales a CSV antes de borrarlos se
   contó cuántos traían cada campo relleno: `field_tec_vendor` lo tenían **38 materiales** y
@@ -279,6 +292,28 @@ está a medio hacer:
 El trabajo es: mapear los campos que faltan, conectar el proveedor a `field_tec_vendor`, limpiar
 las columnas sobrantes y generar la plantilla de Excel con una columna por dato y los nombres
 exactos que el importador espera.
+
+**El importador de escandallos está peor, y en un punto concreto.** `tec_bom_items_importer` recibe
+ficheros de tres columnas —`ID, Material, Requires`—, uno por producto y talla. Tiene orígenes
+declarados para `Material` y para `Requires` y **ninguno de los dos está conectado**: el nombre del
+material acaba solo dentro del título que se genera con una regla de `feeds_tamper`
+(`[material1]-[parent:imported]`), y **la cantidad se pierde**. O sea que importa escandallos sin
+material y sin cantidad. Trae además dos trampas: `update_non_existent: _delete`, con lo que toda
+fila que falte en el fichero borra su elemento, y la clave única es la columna `ID`, que en los
+ficheros de Primo **venía vacía en todas las filas** — con clave única vacía, las veinticuatro filas
+colapsan sobre un solo elemento. Eso explica los reintentos que había guardados
+(`primo-black-s.csv`, `_1`, `_2`).
+
+**Dos de los tres importadores están huérfanos, y abrirlos revienta.** Las fichas 5 y 6
+—"Primo products" y "Trust products"— son de tipo `tec_products_csv_importer`, **un importador de
+productos cuya configuración ya no existe**. Confirma que sí se intentó importar productos en su día,
+y que se quedó a medias. Consecuencia comprobada el 14 de agosto: la lista de
+`/admin/content/feed` carga bien, pero `/feed/5/edit` lanza una excepción, "The feed type
+tec_products_csv_importer for feed 5 no longer exists". No se pueden ni ejecutar ni guardar: cualquier
+código que las cargue y llame a su tipo se cae, y eso incluye guardarles el origen. **Lo que hay que
+hacer es borrar las dos fichas**, y hay que hacerlo por consulta directa a `feeds_feed` porque la vía
+normal de Drupal pasa por pedir el tipo y lanza antes de llegar. Al hacerlo, el recuento
+`importaciones` del guardián baja de 3 a 1.
 
 ~~**Se arregla antes del borrado, no después.**~~ Se hizo al revés, por decisión del dueño del
 14 de agosto, y el motivo era bueno: así el servidor recibe una base limpia de un solo empujón
@@ -854,6 +889,49 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-14 — Los 104 CSV y Excel de las importaciones de ensayo, fuera, y dos importadores huérfanos al descubierto
+
+Decisión del dueño: los listados de materias primas y los escandallos que se subieron entre marzo de
+2024 y julio de 2025 eran todos ensayos y se borran. Fuera **104 fichas** de hoja de cálculo, 1,9 MB,
+más **10 archivos sueltos** en `private://feeds` que ya no tenían ficha en la base y que nadie se
+había llevado. Quedan **69 ficheros** en todo el ERP: 39 fuentes tipográficas, 28 imágenes y 2 hojas
+de estilo. La carpeta privada, que esta misma noche empezó en 61,6 MB, se queda en **5,1 MB**.
+
+**El script se paró solo la primera vez, y por eso mereció la pena escribirlo así.** Comprueba dos
+cosas antes de borrar y no borra si alguna no sale limpia. La primera fue una falsa alarma mía: cuatro
+ficheros tenían usos registrados a nombre de un dueño de tipo `fetcher` con un UUID, y yo esperaba
+`feeds_feed`. Es correcto y está en `UploadFetcher::deleteFile()`: Feeds no apunta el uso a nombre del
+importador, sino del tipo de complemento que lee el fichero, y el identificador es el UUID del
+importador. La segunda no era falsa alarma, era simplemente inofensiva: dos ficheros aparecían
+escritos dentro de la tabla `batch`, en **lotes de importación abandonados en abril y mayo de 2024**
+que llevan dos años ahí porque el cron nunca ha corrido. No eran enlaces de descarga, era el estado
+serializado de importaciones que nunca terminaron. `system_cron` se los llevará el día que el cron
+arranque.
+
+**El hallazgo de verdad: dos de los tres importadores están huérfanos.** Al ir a quitarles el origen
+para que no apuntaran a un fichero que ya no existe, saltó una excepción: las fichas 5 y 6, "Primo
+products" y "Trust products", son de tipo `tec_products_csv_importer`, **un importador de productos
+cuya configuración ya no existe**. Confirma lo que el dueño recordaba, que se intentó importar
+productos, y que se quedó a medias. La lista de `/admin/content/feed` carga bien, pero `/feed/5/edit`
+revienta. Está apuntado con su arreglo en la sección del importador; no se ha tocado porque borrar
+fichas que nadie pidió no es limpiar, es decidir por otro.
+
+**Y de paso quedó diagnosticado el importador**, que llevaba en el backlog como "hay que
+diagnosticarlo". Los ficheros sirvieron para eso antes de irse: se leyeron por dentro, se comparó lo
+que traen con lo que la configuración espera, y salieron cuatro cosas —tres campos conectados de
+quince, una columna que se llama distinto en el fichero y en el importador, el proveedor que viene
+vacío en el Excel y obligatorio en la especificación, y un importador de escandallos que no conecta
+ni el material ni la cantidad—. Todo eso está escrito arriba, en la sección del importador.
+
+Antes de esto había una copia completa de las dos carpetas de ficheros, hecha una hora antes para el
+borrado de las fotos, así que los 104 están en
+`C:\laragon\backups\ficheros-antes-del-borrado-20260814\private\feeds`. Si algún día hace falta ver
+qué formato exacto tragaba el importador, están ahí: el listado de materias son 857 filas y dieciocho
+columnas.
+
+Después: comprobación **47/47** con el recuento de ficheros en 69, prueba de humo 30 páginas y 0
+problemas.
+
 ### 2026-08-14 — Las 142 fotos sin dueño, fuera, y las cinco imágenes de marca que casi se van con ellas
 
 Al vaciar los datos de prueba se fueron los productos, las marcas, los patrones y los 869
@@ -884,8 +962,8 @@ un 200 por HTTP con su tamaño correcto.
 
 **El reparto de los 315.** Se quedan 32 que tienen usos, entre ellos los once iconos de la portada y
 los iconos de la aplicación móvil. Se quedan **141 que no son fotos**: las fuentes del tema, dos
-hojas de estilo y un montón de CSV y Excel de las importaciones de escandallo de 2024, que son otra
-conversación y no se han tocado. Y se fueron las 142 fotos.
+hojas de estilo y un montón de CSV y Excel de las importaciones de escandallo de 2024. Esos CSV se
+fueron una hora después, en la entrada de arriba. Y se fueron las 142 fotos.
 
 **Las siete fotografías que no eran basura.** Entre las candidatas había fotografía de producto de
 verdad, en alta resolución: los guantes **ACTA Thai Evolution** en azul, rojo, negro y blanco, de
