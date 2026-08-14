@@ -1,0 +1,62 @@
+[
+    {
+        "que": "marca",
+        "tipo": "taxonomy_term",
+        "id": "3282",
+        "nombre": "PRUEBA marca"
+    },
+    {
+        "que": "cliente",
+        "tipo": "tec_crm",
+        "id": "33",
+        "nombre": "PRUEBA cliente"
+    },
+    {
+        "que": "producto",
+        "tipo": "tec_product",
+        "id": "887",
+        "nombre": "PRUEBA Producto"
+    },
+    {
+        "que": "variacion de color",
+        "tipo": "tec_product",
+        "id": "888",
+        "nombre": "Black"
+    },
+    {
+        "que": "talla",
+        "tipo": "tec_product",
+        "id": "889",
+        "nombre": "PRUEBA producto - Black - XXS"
+    },
+    {
+        "que": "segundo material",
+        "tipo": "taxonomy_term",
+        "id": "3283",
+        "nombre": "PRUEBA material"
+    },
+    {
+        "que": "partida de escandallo",
+        "tipo": "tec_inventory",
+        "id": "29700",
+        "nombre": "khun"
+    },
+    {
+        "que": "partida de escandallo",
+        "tipo": "tec_inventory",
+        "id": "29701",
+        "nombre": "PRUEBA material"
+    },
+    {
+        "que": "linea de pedido",
+        "tipo": "tec_line_item",
+        "id": "4217",
+        "nombre": "PRUEBA linea"
+    },
+    {
+        "que": "pedido de venta",
+        "tipo": "tec_order",
+        "id": "760",
+        "nombre": "PRUEBA pedido de venta"
+    }
+]
