@@ -1,0 +1,104 @@
+<?php
+
+/**
+ * @file
+ * Actualizaciones de base de datos del modulo tec_inventory.
+ */
+
+use Drupal\field\Entity\FieldStorageConfig;
+
+/**
+ * Sube Consumption Cost a doce cifras con seis decimales.
+ */
+function tec_inventory_update_11001(): string {
+  $campo = FieldStorageConfig::loadByName('taxonomy_term', 'field_tec_price');
+  if (!$campo) {
+    return 'No existe field_tec_price en los terminos de taxonomia: nada que subir.';
+  }
+  if ((int) $campo->getSetting('scale') === 6 && (int) $campo->getSetting('precision') === 12) {
+    return 'Consumption Cost ya guardaba seis decimales.';
+  }
+
+  $bd = \Drupal::database();
+  $esquema = $bd->schema();
+
+  // Drupal no deja cambiar los decimales de un campo que tiene datos: hay una
+  // marca para saltarselo, column_changes_handled, pero solo sirve para los
+  // campos base. En uno configurable, FieldStorageConfig::preSave() filtra los
+  // ajustes que no conoce antes de mirarla, asi que nunca llega.
+  //
+  // Lo que si esta contemplado es el camino de un campo sin datos: el nucleo
+  // tira las tablas, las vuelve a crear con los decimales nuevos y deja
+  // apuntado el cambio en los tres sitios donde lo lleva. Asi que se aparta el
+  // contenido, se le deja hacer su trabajo y se devuelve el contenido.
+  //
+  // El aparte es una copia en tablas propias, no en memoria: MySQL no sabe
+  // deshacer un DROP TABLE, asi que si algo se rompe por el camino, los precios
+  // tienen que seguir estando en algun sitio.
+  $tablas = [
+    'taxonomy_term__field_tec_price',
+    'taxonomy_term_revision__field_tec_price',
+  ];
+
+  $copias = [];
+  $cuantas = [];
+  foreach ($tablas as $tabla) {
+    if (!$esquema->tableExists($tabla)) {
+      continue;
+    }
+    $copia = $tabla . '_c11001';
+    if ($esquema->tableExists($copia)) {
+      $esquema->dropTable($copia);
+    }
+    $bd->query('CREATE TABLE {' . $copia . '} LIKE {' . $tabla . '}');
+    $bd->query('INSERT INTO {' . $copia . '} SELECT * FROM {' . $tabla . '}');
+    $copias[$tabla] = $copia;
+    $cuantas[$tabla] = (int) $bd->select($copia)->countQuery()->execute()->fetchField();
+  }
+
+  try {
+    foreach (array_keys($copias) as $tabla) {
+      $bd->truncate($tabla)->execute();
+    }
+
+    $ajustes = $campo->getSettings();
+    $ajustes['precision'] = 12;
+    $ajustes['scale'] = 6;
+    $campo->set('settings', $ajustes);
+    $campo->save();
+
+    foreach ($copias as $tabla => $copia) {
+      if (!$esquema->tableExists($tabla)) {
+        throw new \RuntimeException("La tabla $tabla no se ha vuelto a crear.");
+      }
+      // Las columnas se nombran una a una en vez de con un asterisco: la tabla
+      // nueva la ha escrito el nucleo y no hay por que dar por hecho que las
+      // puso en el mismo orden.
+      $columnas = $bd->query('SHOW COLUMNS FROM {' . $copia . '}')->fetchCol();
+      $lista = implode(', ', array_map(fn($columna) => $bd->escapeField($columna), $columnas));
+      $bd->query('INSERT INTO {' . $tabla . '} (' . $lista . ') SELECT ' . $lista . ' FROM {' . $copia . '}');
+
+      $ahora = (int) $bd->select($tabla)->countQuery()->execute()->fetchField();
+      if ($ahora !== $cuantas[$tabla]) {
+        throw new \RuntimeException("En $tabla habia {$cuantas[$tabla]} filas y han vuelto $ahora.");
+      }
+    }
+  }
+  catch (\Throwable $error) {
+    // Las copias se quedan donde estan a proposito: son lo unico que queda de
+    // los precios si el guardado ha dejado las tablas a medias.
+    throw new \RuntimeException(
+      $error->getMessage() . ' Los precios estan a salvo en ' . implode(' y ', $copias)
+      . '; hay que devolverlos a mano antes de volver a intentarlo.',
+      0,
+      $error
+    );
+  }
+
+  foreach ($copias as $copia) {
+    $esquema->dropTable($copia);
+  }
+
+  return 'Consumption Cost pasa a 12 cifras con 6 decimales. Filas devueltas: '
+    . implode(', ', array_map(fn($tabla, $filas) => "$tabla: $filas", array_keys($cuantas), $cuantas)) . '.';
+}

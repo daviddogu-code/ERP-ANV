@@ -86,6 +86,86 @@ function tec_inventory_bom_item_entity_builder($entity_type, FieldableEntityInte
 }
 
 /**
+ * Implements hook_ENTITY_TYPE_presave() for taxonomy_term.
+ *
+ * Derive Inventory Cost and Consumption Cost from the purchase cost and the two
+ * conversion factors. A JavaScript on the material form has been doing this for
+ * years, which means the two figures only ever existed when someone had the form
+ * open in a browser: materials created by code — the importer, ECA duplicates,
+ * scripts — were saved with both empty, and those are the numbers every costing
+ * view divides by. Running at presave covers every path without extra saves or
+ * recursion, the same reason the color variation title moved here.
+ *
+ * The JavaScript stays, but only for what needs a browser: showing the two
+ * figures update while the purchase cost is being typed.
+ */
+function tec_inventory_taxonomy_term_presave(EntityInterface $entity) {
+  if ($entity->bundle() !== 'tec_inventory' || !$entity instanceof FieldableEntityInterface) {
+    return;
+  }
+
+  _tec_inventory_apply_derived_costs($entity);
+}
+
+/**
+ * Divide the purchase cost down through the two conversion factors.
+ */
+function _tec_inventory_apply_derived_costs(FieldableEntityInterface $entity): void {
+  $needed = [
+    'field_tec_cost',
+    'field_tec_units',
+    'field_tec_split_into',
+    'field_tec_price_uos',
+    'field_tec_price',
+  ];
+  foreach ($needed as $name) {
+    if (!$entity->hasField($name)) {
+      return;
+    }
+  }
+
+  $number = function (string $name) use ($entity): ?float {
+    $list = $entity->get($name);
+    if ($list->isEmpty()) {
+      return NULL;
+    }
+    $value = $list->first()->value;
+    return is_numeric($value) ? (float) $value : NULL;
+  };
+
+  $cost = $number('field_tec_cost');
+  $to_inventory = $number('field_tec_units');
+  $to_consumption = $number('field_tec_split_into');
+
+  // A half-filled material has no cost to state. Treating a missing factor as 1
+  // would store the purchase cost as if it were the unit cost, which reads as a
+  // real figure and is wrong by the whole conversion.
+  if (!($cost > 0) || !($to_inventory > 0) || !($to_consumption > 0)) {
+    $entity->set('field_tec_price_uos', NULL);
+    $entity->set('field_tec_price', NULL);
+    return;
+  }
+
+  $per_inventory_unit = $cost / $to_inventory;
+
+  // The consumption cost divides the unrounded figure, not the stored inventory
+  // cost: rounding first and then dividing would multiply that rounding by the
+  // second factor, which is where the real money is.
+  $entity->set('field_tec_price_uos', round($per_inventory_unit, _tec_inventory_field_scale($entity, 'field_tec_price_uos')));
+  $entity->set('field_tec_price', round($per_inventory_unit / $to_consumption, _tec_inventory_field_scale($entity, 'field_tec_price')));
+}
+
+/**
+ * How many decimals a decimal field can actually store.
+ */
+function _tec_inventory_field_scale(FieldableEntityInterface $entity, string $name): int {
+  return (int) $entity->get($name)
+    ->getFieldDefinition()
+    ->getFieldStorageDefinition()
+    ->getSetting('scale');
+}
+
+/**
  * Copy a parseable formula/decimal from quantity_input into quantity.
  */
 function _tec_inventory_apply_quantity_formula(FieldableEntityInterface $entity) {

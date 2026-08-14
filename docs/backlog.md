@@ -620,6 +620,79 @@ y dejarlos heredar, que es lo que hacían de verdad. Ahora se guardan sin un sol
 Merece la pena por lo mismo que la comprobación: un aviso que salta siempre enseña a no mirar los
 avisos.
 
+#### Los dos costes derivados pasan al servidor, y el de consumo a seis decimales
+
+Hasta ahora Inventory Cost y Consumption Cost los calculaba un JavaScript del formulario del material.
+Funcionaba, pero solo existía **si había un navegador con el formulario abierto**: todo material creado
+por código —el importador que viene, un duplicado de ECA, un guion— se guardaba con los dos vacíos. Y
+son los dos números por los que dividen todas las vistas de coste. Se vio al crear el material de
+prueba por código en la fase 2: los dos en blanco.
+
+**Ahora los calcula el servidor**, en `tec_inventory_taxonomy_term_presave()`. Se eligió un gancho y no
+ECA por una razón que ya estaba escrita en ese mismo fichero, en el comentario del título de las
+variaciones de color: `presave` cubre todos los caminos —formulario, formularios embebidos, duplicados
+de ECA y guiones— sin guardados extra ni recursión. Y la recursión es exactamente lo que obligó a pasar
+`fpvka81` a `presave` la noche anterior. El JavaScript se queda, pero solo para lo que necesita un
+navegador: que los dos números se muevan mientras se teclea el coste de compra.
+
+**Y el campo de consumo pasa a 12 cifras con 6 decimales**, porque con dos ya estaba en el límite: el
+material de prueba guarda 0,02 y uno un poco más barato daría 0,008, que se guardaba como 0,01, un 25%
+de error en todos los escandallos.
+
+##### La puerta que Drupal deja para esto no sirve para campos configurables
+
+Drupal no deja cambiar los decimales de un campo que ya tiene datos, y tiene una marca para saltárselo,
+`column_changes_handled`. No sirve aquí: `FieldStorageConfig::preSave()`, en la línea 331, **filtra los
+ajustes que no conoce antes de que nadie mire la marca**. Se probó, la columna cambió y el guardado de la
+configuración no pasó, dejando la base diciendo 12,6 y la configuración diciendo 10,2. Esa marca es para
+campos base, no para estos.
+
+Lo que sí está contemplado es el camino de un campo **sin datos**: el núcleo tira las tablas, las vuelve
+a crear con los decimales nuevos y deja apuntado el cambio. Que no es un sitio, son **tres**:
+`field.storage.…`, `entity.storage_schema.sql` y `entity.definitions.installed`, y este último sí guarda
+copia de los campos configurables, contra lo que cabría suponer. Escribir los tres a mano es pedir una
+inconsistencia, así que se aparta el contenido, se le deja hacer su trabajo y se devuelve el contenido.
+
+El aparte son **tablas de copia, no memoria**: MySQL no sabe deshacer un `DROP TABLE`, así que si algo se
+rompe por el camino los precios tienen que seguir estando en algún sitio. La actualización cuenta las
+filas antes y después, y si no cuadran **deja las copias donde están** y lo dice. Vive en
+`tec_inventory.install`, así que en producción entra por el despliegue como cualquier otra actualización.
+Comprobado: los cuatro sitios dicen 12,6, ninguna tabla de copia se quedó atrás y el precio sobrevivió.
+
+##### El step que Drupal escribe como 1.0E-6
+
+El JavaScript saca los decimales del atributo `step`, que es donde Drupal apunta lo que aguanta la
+columna, para no quedarse escribiendo dos cuando la columna admite seis el día que alguien cambie la
+escala. La primera versión los contaba como caracteres detrás del punto y daba **cuatro**: para seis
+decimales Drupal escribe `step="1.0E-6"`. Lo cazó la propia comprobación al imprimirlo. Hay que leerlo
+como número.
+
+##### Y lo que de verdad se estaba perdiendo: la vista redondeaba antes de multiplicar
+
+Guardar seis decimales no sirve de nada si la vista los tira antes de usarlos, así que se auditaron las
+**veinte fórmulas** de todas las vistas con `donde-redondean-las-formulas.php`, mirando con cuántos
+decimales se dibuja cada dato del que se alimentan. El módulo de cálculo no lee la base: **lee lo que la
+columna dibuja**.
+
+Y ahí estaba: el total de material, `@field_tec_quantity * @field_tec_price`, leía el coste dibujado con
+dos decimales. O sea que un material a 0,001 entraba en la fórmula como 0,00 y **el ERP decía que la tela
+era gratis**. La fórmula ya redondea su propio resultado a dos decimales con el símbolo del baht, que es
+donde hay que redondear el dinero: al final, no antes de multiplicar.
+
+Arreglado en las dos vistas de cálculo, y sin efecto en pantalla porque esa columna está escondida:
+existe solo para alimentar la fórmula. Demostrado bajando a propósito el coste de compra del material de
+prueba hasta que el de consumo queda en 0,001: el total pasa de los ฿ 0,00 que habría dado antes a
+**฿ 0,08**, que es 75 × 0,001 redondeado. Y el coste vuelve a su sitio al acabar.
+
+Los otros dos sitios donde una fórmula multiplica dinero con dos decimales son `@field_tec_cost`, el
+coste de compra, y ahí está bien: ese se teclea, y con dos decimales es exacto.
+
+**Queda una decisión pequeña, apuntada y no hecha:** Inventory Cost sigue guardando dos decimales. No
+arrastra error a Consumption Cost, porque el cálculo divide el coste de compra por el primer factor y usa
+ese resultado **sin redondear** para el segundo. Lo único que produce es que los dos números de la ficha
+no se reconcilien a mano cuando la primera división no es exacta: 100 entre 3 se ensena como 33,33 y el
+de consumo sale de 33,3333… Si algún día molesta, es la misma actualización con otro campo.
+
 ##### Paso 5: los 23 campos, borrados
 
 Hecho la misma noche, después de la comprobación. **Los 23 campos, sus 23 almacenamientos y sus tablas

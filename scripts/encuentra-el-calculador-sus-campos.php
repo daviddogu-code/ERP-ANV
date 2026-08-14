@@ -57,6 +57,23 @@ echo $clase
   ? "  La clase por la que se engancha esta en el formulario.\n"
   : "  NO esta la clase taxonomy-term-tec-inventory-form: no se engancharia.\n";
 
+// Con cuantos decimales escribe cada casilla calculada. El JavaScript lo saca
+// del atributo step, que es donde Drupal apunta los decimales que aguanta la
+// columna, para no quedarse escribiendo dos cuando la columna admite seis.
+//
+// El step hay que leerlo como numero, no contar los caracteres detras del
+// punto: para seis decimales Drupal escribe 1.0E-6, y contando saldrian cuatro.
+echo "\n  Decimales de las dos casillas calculadas:\n";
+foreach (['edit-field-tec-price-uos-0-value' => 'inventario', 'edit-field-tec-price-0-value' => 'consumo'] as $id => $cual) {
+  if (!preg_match('/id="' . preg_quote($id, '/') . '"[^>]*/', $html, $etiqueta)) {
+    echo "      $cual: no encuentro la casilla\n";
+    continue;
+  }
+  $paso = preg_match('/step="([^"]+)"/', $etiqueta[0], $encontrado) ? (float) $encontrado[1] : 0.0;
+  $decimales = $paso > 0 ? max(0, (int) round(-log10($paso))) : NULL;
+  printf("      %-11s step %-10s o sea %s decimales\n", $cual, $paso > 0 ? $encontrado[1] : '(ninguno)', $decimales ?? 'los que salgan');
+}
+
 // Los campos de Oscar no deberian aparecer por ningun lado.
 $restos = [];
 foreach (['field-tec-price-by-package', 'field-tec-price-uou', 'field-uop-to-uos', 'field-tec-package-units', 'field-tec-uou-split-qty'] as $viejo) {

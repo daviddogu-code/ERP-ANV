@@ -1360,7 +1360,7 @@ display:
           settings:
             thousand_separator: ''
             decimal_separator: .
-            scale: 2
+            scale: 6
             prefix_suffix: false
           group_column: value
           group_columns: {  }

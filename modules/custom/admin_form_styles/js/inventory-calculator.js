@@ -1,6 +1,9 @@
 // modules/custom/admin_form_styles/js/inventory-calculator.js
 // Inventory Cost and Consumption Cost on the material form are derived from
 // the purchase cost and the two conversion factors, and never typed in.
+// tec_inventory_taxonomy_term_presave() does the same arithmetic on save, which
+// is what makes the figures exist for materials created by code. This is only
+// here so the two fields move while the purchase cost is being typed.
 (function (Drupal, once) {
   'use strict';
 
@@ -35,6 +38,23 @@
       purchaseCost.style.backgroundColor = '#fff';
       purchaseCost.style.border = '2px solid #007bff';
 
+      // Each field gets as many decimals as its column can hold. Drupal writes
+      // that into step as a power of ten, so reading it keeps this in step with
+      // the field the day someone changes its scale. It has to be read as a
+      // number and not counted as characters: for six decimals Drupal writes
+      // step="1.0E-6", and counting the digits after the dot gives four.
+      const decimalsOf = (field) => {
+        const step = parseFloat(field.getAttribute('step'));
+        return step > 0 ? Math.max(0, Math.round(-Math.log10(step))) : null;
+      };
+
+      const inventoryDecimals = decimalsOf(inventoryCost);
+      const consumptionDecimals = decimalsOf(consumptionCost);
+
+      // With no step to read, the whole figure goes in and the server rounds it
+      // on save, which is now the one that decides.
+      const show = (value, places) => (places === null ? String(value) : value.toFixed(places));
+
       const calculate = () => {
         const cost = parseFloat(purchaseCost.value);
         const toInventory = parseFloat(purchaseToInventory.value);
@@ -49,9 +69,12 @@
           return;
         }
 
+        // The consumption cost divides the unrounded figure, not what just went
+        // into the inventory cost box: rounding first and then dividing would
+        // multiply that rounding by the second factor.
         const perInventoryUnit = cost / toInventory;
-        inventoryCost.value = perInventoryUnit.toFixed(2);
-        consumptionCost.value = (perInventoryUnit / toConsumption).toFixed(2);
+        inventoryCost.value = show(perInventoryUnit, inventoryDecimals);
+        consumptionCost.value = show(perInventoryUnit / toConsumption, consumptionDecimals);
       };
 
       form.addEventListener('input', calculate);

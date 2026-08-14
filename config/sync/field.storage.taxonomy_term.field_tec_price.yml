@@ -13,8 +13,8 @@ field_name: field_tec_price
 entity_type: taxonomy_term
 type: decimal
 settings:
-  precision: 10
-  scale: 2
+  precision: 12
+  scale: 6
 module: core
 locked: false
 cardinality: 1
