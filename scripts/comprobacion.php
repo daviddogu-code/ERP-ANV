@@ -43,15 +43,22 @@ const REFERENCIA_TIPOS = [
   'tec_production_entry' => ['tec_production_entry'],
 ];
 
-// Las seis entidades de contenido quedaron a cero y tienen que seguir a cero
-// hasta que entren datos de verdad. El dia que entren, estas cifras cambian y
-// vuelven a ser lo que eran: un aviso de que alguien ha borrado algo.
+// Las seis entidades de contenido quedaron a cero el 14 de agosto de 2026, y
+// esa misma noche dejaron de estarlo: hubo que fabricar un juego de pruebas
+// -proveedor, material, producto, color, talla, escandallo, pedido de venta y
+// pedido de compra- para poder comprobar que las vistas de calculo daban bien
+// los numeros despues de sacarles el sistema de unidades de Oscar. Sin datos no
+// hay manera de comprobar una formula.
+//
+// Estas cifras son ese juego de pruebas, y vuelven a cero en cuanto se ejecute
+// `borrar-el-juego-de-pruebas.php`. Si alguien lo borra, hay que devolver estas
+// seis lineas a cero, que es lo que las hace volver a servir de aviso.
 const REFERENCIA_CONTENIDO = [
-  'tec_inventory' => 0,
-  'tec_product' => 0,
-  'tec_line_item' => 0,
-  'tec_order' => 0,
-  'tec_crm' => 0,
+  'tec_inventory' => 4,
+  'tec_product' => 3,
+  'tec_line_item' => 2,
+  'tec_order' => 2,
+  'tec_crm' => 2,
   'tec_production_entry' => 0,
 ];
 
@@ -60,9 +67,12 @@ const REFERENCIA_CONTENIDO = [
 // configuracion aparte: los dos procesos de duplicar producto copian sus
 // campos, y hay que desmontarlos antes. Cuando se retiren, estas dos lineas se
 // van con ellos.
+//
+// Los dos materiales y la marca son del juego de pruebas de la noche del 14 de
+// agosto, igual que las cifras de contenido de mas arriba, y se van con el.
 const REFERENCIA_TAXONOMIA = [
-  'tec_inventory' => 0,
-  'tec_brands' => 0,
+  'tec_inventory' => 2,
+  'tec_brands' => 1,
   'tec_patterns' => 0,
   'tags' => 0,
   'tec_colors' => 32,
@@ -97,8 +107,13 @@ const REFERENCIA_VARIOS = [
   'importaciones' => 3,
   // Eran ocho. El nucleo borro el de Super BOM al borrar su nodo.
   'enlaces_menu' => 7,
-  'procesos_eca' => 36,
-  'procesos_eca_encendidos' => 29,
+  // Eran 36, de los que 29 estaban encendidos, hasta la noche del 14 de agosto
+  // de 2026. Se borraron los cuatro del sistema de unidades opcionales de
+  // Oscar: `process_rxuimsq`, que estaba encendido y aplastaba las unidades de
+  // stock y de uso con la de compra en cada guardado, y sus tres clones
+  // apagados `uix9n5i`, `pehrnr8` e `idtd6ah`.
+  'procesos_eca' => 32,
+  'procesos_eca_encendidos' => 28,
   // Eran 146 hasta el 13 de agosto de 2026. Se quedaron en 145 cuando dxpr_theme
   // 8 trajo los colores del tema a sus propios ajustes y desinstalo `color`, que
   // ya no estaba en el nucleo. Los veintiun ajustes de color siguen ahi y no

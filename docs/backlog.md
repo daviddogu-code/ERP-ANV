@@ -657,6 +657,19 @@ edita del ERP no estaba probado. Añadido: ahora coge la ficha más reciente de 
 Siguen sin probarse dos, las dos del pedido de venta (`o/draft/%` y `o/pf/%/print`), porque no hay un
 pedido de venta con líneas con el que pedirlas. Eran seis, así que se han recuperado cuatro.
 
+##### La comprobación del ERP, recalibrada
+
+Al pasarla al final daba **nueve fallos, y los nueve eran números suyos que este trabajo dejó
+desfasados**: los cuatro procesos de ECA borrados, y siete recuentos de contenido que esperaban cero
+porque se calibraron con la base recién vaciada, antes de que hubiera que fabricar un juego de pruebas
+para poder comprobar las fórmulas. Actualizados los nueve, con su comentario y su fecha, como el resto
+del fichero. Ahora da **47 de 47**.
+
+Importa arreglarlo y no dejarlo: una comprobación que siempre sale en rojo se deja de mirar, y
+entonces no avisa el día que el rojo es de verdad. **Y hay un cabo atado a esto**: las siete cifras de
+contenido son el juego de pruebas, así que el día que se ejecute `borrar-el-juego-de-pruebas.php` hay
+que devolverlas a cero. Está escrito en el propio fichero, al lado de las cifras.
+
 ##### Un cabo cosmético, apuntado y no arreglado
 
 En la vista de resumen de materiales, el display maestro enseña identificadores en vez de etiquetas en
