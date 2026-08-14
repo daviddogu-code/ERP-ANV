@@ -11,7 +11,7 @@ entity_type: taxonomy_term
 bundle: tec_inventory
 label: 'Unit of Packaging (UoPackaging)'
 description: ''
-required: true
+required: false
 translatable: false
 default_value: {  }
 default_value_callback: ''

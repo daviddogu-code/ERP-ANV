@@ -11,7 +11,7 @@ entity_type: taxonomy_term
 bundle: tec_inventory
 label: '1 UoS = UoU'
 description: ''
-required: true
+required: false
 translatable: false
 default_value: {  }
 default_value_callback: ''
