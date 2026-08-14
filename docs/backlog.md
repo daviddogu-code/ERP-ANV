@@ -465,7 +465,9 @@ daño que no da error y se descubre meses después en un coste raro.
 muertas**, así que hoy el total de una línea de pedido de compra es cantidad × coste de compra del
 material, sin conversión ninguna. Es la explicación de la sospecha sobre los costes: si el escandallo
 consume en unidades de uso y se aplica el coste del rollo entero, el coste de producción está
-inflado por el factor de conversión. Para eso existe "Consumption Cost", que tampoco calcula nadie.
+inflado por el factor de conversión. Para eso existe "Consumption Cost", que **sí lo calcula alguien,
+pero solo dentro del navegador**. Ver más abajo, en el paso 5: lo hace un JavaScript del formulario, así
+que el importador va a dejar ese coste vacío.
 
 #### Las cuatro vistas, que es el trabajo de verdad
 
@@ -586,6 +588,82 @@ compra en vez del de la unidad de inventario, que es lo que el factor significa.
 con la unidad de inventario. En la vista de cálculo pasa lo mismo con el símbolo de la unidad de
 consumo. Con el paréntesis ya siempre a la vista, esto conviene arreglarlo pronto: un factor con la
 unidad equivocada al lado no informa, confunde.
+
+##### Paso 5: los 23 campos, borrados
+
+Hecho la misma noche, después de la comprobación. **Los 23 campos, sus 23 almacenamientos y sus tablas
+de datos ya no existen**, y el barrido de configuración da cero por los tres lados: cero manejadores
+de vista, cero definiciones de campo, cero ficheros que los nombren. En la base solo queda
+`taxonomy_term__field_tec_uos`, que es la unidad de inventario buena. Se llevaron por delante los
+valores que había, que eran cinco campos con dato en los dos materiales de prueba: los dos
+interruptores y tres factores de la matriz, todo relleno automático del proceso de ECA que se borró en
+el paso 1.
+
+El orden fue al revés de lo que parece natural, y a propósito. Cuando se borra un campo, Drupal
+recorre la configuración que dependía de él y le pide que se arregle sola; los displays saben hacerlo,
+pero para no depender de eso se quitaron primero todas las dependencias a mano, se comprobó que no
+quedaba ninguna, y solo entonces se borró. **El guion no borra si la comprobación no sale limpia.**
+
+Y así aparecieron dos restos que el paso 4 no había visto, los dos invisibles:
+
+- En el listado de materiales quedaban tres columnas de Óscar en el **orden de las columnas de la
+  tabla**, que es una lista aparte de la lista de campos. No se dibujaban, porque el campo ya no
+  estaba, pero ahí seguían.
+- En el editor de líneas de pedido, una columna tenía escrito `@field_tec_price_by_package` en la
+  casilla de reescribir el resultado, **con la casilla sin marcar**. Views guarda lo último que
+  alguien escribió aunque desactive la reescritura, así que era texto muerto esperando a que alguien
+  volviera a marcar la casilla. Vaciado.
+
+**Un cambio que no era de borrar, pero que había que hacer:** en la ficha del material se veía el
+pedido mínimo de Óscar, `field_tec_purchasing_moq`, que es un desplegable y estaba vacío en los dos
+materiales, y estaba escondido el bueno, `field_tec_moq_quantity`, que es la cantidad y es el que usan
+las vistas. Al llevarse el de Óscar, la ficha se habría quedado sin pedido mínimo, así que el bueno
+ocupa su sitio.
+
+##### El calculador de costes del formulario, y lo que revela
+
+El JavaScript que calcula los dos costes derivados —`field_tec_price_uos` (Inventory Cost) y
+`field_tec_price` (Consumption Cost)— **acertaba de casualidad**. Buscaba el factor de compra a
+inventario probando seis selectores en fila: los tres primeros apuntaban a campos de Óscar, que al
+estar escondidos del formulario no aparecen, y el cuarto era el campo bueno. Funcionaba porque los
+tres primeros fallaban. Ahora apunta directo a los cinco campos que necesita, y de paso se le quitó lo
+que sobraba: los dos campos de precio de Óscar que rellenaba, un temporizador que recalculaba dos
+veces por segundo para siempre —con una limpieza que nunca se ejecutaba, porque escuchaba
+`beforeunload` en el formulario y ese evento solo salta en la ventana— y una docena de mensajes de
+consola. Comprobado que encuentra los cinco campos, porque si un identificador no coincide **se calla
+y no calcula, sin dar error**.
+
+Y aquí está el hallazgo que importa para el importador: **esos dos costes solo se calculan en el
+navegador**. Se ve en los dos materiales de prueba. El que se creó a mano tiene los dos costes puestos,
+80 / 0,40 = 200 y 200 / 10000 = 0,02. El que se creó por código, que es como va a entrar el
+importador, **los tiene vacíos**. O sea que los 857 materiales entrarían sin coste de inventario y sin
+coste de consumo, que son justo los dos números con los que se calcula lo que cuesta producir. La
+decisión de no importarlos era correcta, pero da por hecho un cálculo automático que hoy no existe
+fuera del formulario. **Hay que llevar ese cálculo al servidor**, con ECA o con un `presave`, antes de
+importar. Es la pieza que falta y no es grande: son dos divisiones.
+
+Un detalle a decidir con eso: los dos campos guardan **dos decimales**. Con el material de prueba el
+coste por centímetro sale 0,02, que ya está en el límite. Un material más barato daría 0,008 y se
+guardaría como 0,01, un 25% de error arrastrado a todos los escandallos. Si el coste de consumo va a
+usarse para costear producción, ese campo necesita cuatro decimales.
+
+##### La prueba de humo, ocho pantallas más
+
+Al ir a comprobar la ficha del material salió que **la prueba de humo no miraba ninguna página de
+taxonomía**, y los materiales y las unidades son términos de taxonomía. O sea que el dato que más se
+edita del ERP no estaba probado. Añadido: ahora coge la ficha más reciente de cada vocabulario. Pasó de
+44 pantallas a 52, y las 52 cargan.
+
+Siguen sin probarse dos, las dos del pedido de venta (`o/draft/%` y `o/pf/%/print`), porque no hay un
+pedido de venta con líneas con el que pedirlas. Eran seis, así que se han recuperado cuatro.
+
+##### Un cabo cosmético, apuntado y no arreglado
+
+En la vista de resumen de materiales, el display maestro enseña identificadores en vez de etiquetas en
+la columna de unidad de consumo: pone `2, 706` donde debería poner `Centimeter (cm)`. **No se ve desde
+ninguna pantalla**, porque ni esa vista ni la de cálculo tienen display de página, solo maestro y
+bloque, y los bloques van embebidos. Es cosa de una función de agregación mal puesta en una columna
+que nadie pide. Se deja apuntado y no se toca.
 
 ### Los tres cabos que dejó el borrado
 

@@ -738,14 +738,11 @@ display:
             field_tec_vendor: field_tec_vendor
             name_1: name_1
             field_tec_unit_use: field_tec_unit_use
-            field_tec_package_units: field_tec_package_units
-            field_tec_packaging: field_tec_packaging
             field_tec_units: field_tec_units
             field_tec_unit_symbol: field_tec_unit_symbol
             field_tec_unit_purchase: field_tec_unit_purchase
             views_conditional_field: views_conditional_field
             field_tec_uos: field_tec_uos
-            field_tec_split_inventory: field_tec_split_inventory
             field_tec_split_into: field_tec_split_into
             field_tec_unit_symbol_1: field_tec_unit_symbol_1
             views_conditional_field_2: views_conditional_field_2
@@ -820,20 +817,6 @@ display:
               separator: ''
               empty_column: false
               responsive: ''
-            field_tec_package_units:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_packaging:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
             field_tec_units:
               sortable: false
               default_sort_order: asc
@@ -861,13 +844,6 @@ display:
               empty_column: false
               responsive: ''
             field_tec_uos:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_split_inventory:
               sortable: false
               default_sort_order: asc
               align: ''

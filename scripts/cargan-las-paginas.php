@@ -353,6 +353,28 @@ function fichasDeEjemplo(): array {
       }
     }
   }
+
+  // Los materiales y las unidades son terminos de taxonomia, no entidades del
+  // ERP, asi que se quedaban fuera. Y el material es el dato que mas se edita.
+  $terminos = $gestor->getStorage('taxonomy_term');
+  foreach (array_keys($gestor->getStorage('taxonomy_vocabulary')->loadMultiple()) as $vocabulario) {
+    $ids = $terminos->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('vid', $vocabulario)
+      ->sort('tid', 'DESC')
+      ->range(0, 1)
+      ->execute();
+    if (!$ids) {
+      continue;
+    }
+    try {
+      $rutas[] = $terminos->load(reset($ids))->toUrl()->toString();
+    }
+    catch (\Throwable $e) {
+      // Igual que arriba.
+    }
+  }
+
   return $rutas;
 }
 
