@@ -73,32 +73,16 @@ por error algo que estaba puesto a propósito.
   que descubre lo mismo pero en los módulos anclados a un commit, que es donde se nos escondió
   el fallo crítico de ECA.
 
-  Sobre ese fallo: el servidor sigue con **ECA 1.1.7 y `eca_ui` activado**, o sea **expuesto al
-  CSRF crítico de `SA-CONTRIB-2025-031`**. Aquí ya no, porque ECA subió a la 2.1.22, pero allí sí,
-  y allí es donde está la máquina abierta a internet. Es el motivo más fuerte para que el
-  despliegue no espere: de todo lo que hay en este backlog, es lo único que empeora solo con el
-  paso del tiempo.
+  Sobre ese fallo: el servidor sigue con **ECA 1.1.7**, pero **el agujero ya está tapado** desde el
+  14 de agosto por la tarde, sin desplegar nada: se desinstaló `eca_ui` allí y con ella se fueron las
+  rutas que el CSRF de `SA-CONTRIB-2025-031` necesitaba. Detalle abajo, en Hecho. Sigue siendo el
+  motivo más fuerte para no dejar el despliegue para nunca —la versión vulnerable continúa instalada,
+  solo que sin puerta— pero ya no es una cuenta atrás.
 
-- **Tres clics en el servidor que cierran ese agujero hoy, sin desplegar nada. Los tiene que dar el
-  dueño.** Entrar en `https://erp.anvfightgear.com` como `david`, ir a
-  `/admin/modules/uninstall`, marcar **ECA UI** y confirmar. Drupal pedirá desinstalar también
-  **ECA BPMN**, que depende de ella; hay que aceptar.
-
-  **Está comprobado que no rompe nada** (14 de agosto): los 36 procesos de ECA no dependen de
-  ninguno de los dos módulos —dependen de `eca_content` y `eca_log`— y los 36 diagramas tampoco, así
-  que **ni los automatismos ni los dibujos se pierden**. Lo único que desaparece es la pantalla para
-  editarlos, que en producción no la usa nadie. Y cuando se despliegue, la base de datos de local
-  vuelve a traer `eca_ui` encendido, ya con ECA 2.1.22, que es la versión parcheada.
-
-  Que sigue encendido allí también está comprobado, desde fuera y sin entrar: `/admin/config/workflow/eca`
-  responde 307 a la página de acceso, y una ruta que no existiera daría 404.
-
-  **Por qué no lo puedo hacer yo**, que es lo que se intentó primero: por SSH se entra bien con la
-  llave, pero `drush` allí **no llega a la base de datos**. `settings.php` es `root:www-data` con
-  permisos `640` y el usuario `david` no está en el grupo `www-data`, así que no puede leer las
-  credenciales. `drush status` contesta la versión porque eso lo saca del código, pero cualquier
-  comando que toque datos responde *"Drush was unable to query the database"*. Es la misma pared que
-  el 13 de agosto, y la que hace falta la contraseña de `sudo` para saltar.
+  **Y ojo con una divergencia a propósito**: allí `eca_ui` está desinstalada y aquí encendida. No hay
+  que hacer nada, se resuelve sola en el despliegue, cuando la base de datos de local llegue con
+  `eca_ui` ya sobre ECA 2.1.22, que es la versión parcheada. Está escrito para que dentro de tres
+  semanas no parezca un descuadre.
 - ~~**Un cabo suelto de dos minutos, mejor antes de desplegar: desinstalar `upgrade_status`.**~~
   Hecho el 14 de agosto de 2026. De paso hubo que decidir qué pasaba con `update`, que estaba
   encendido solo porque `upgrade_status` lo arrastra: **se queda, y ahora a propósito**. Es el
@@ -814,6 +798,40 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-14 — El CSRF del servidor, cerrado desde el navegador y sin desplegar
+
+El servidor llevaba desde mayo con **ECA 1.1.7 y `eca_ui` encendida**, o sea con las rutas que
+`SA-CONTRIB-2025-031` necesita: un enlace preparado que, abierto por alguien con sesión de
+administrador, apagaba o borraba un automatismo sin más confirmación. Es el único punto de todo este
+backlog que empeoraba solo con el paso del tiempo, y esperaba al despliegue completo, que es media
+jornada. Ya no: se ha cerrado desinstalando el módulo, en tres rondas de clics, y **la versión
+vulnerable sigue instalada pero sin puerta por la que entrar**.
+
+Comprobado desde fuera, antes y después, sin necesidad de entrar: `/admin/config/workflow/eca`
+respondía **307** a la página de acceso —la ruta existía y Drupal mandaba a identificarse— y ahora
+responde **404**, igual que `/admin/config/workflow/eca/settings`. Y `/user/login` sigue dando 200,
+o sea que el sitio está entero.
+
+**Lo que costó, y que era una idea equivocada mía.** Dije que bastaba marcar ECA UI y aceptar cuando
+Drupal pidiera llevarse también el modelador. Al revés: Drupal **bloquea la casilla** mientras alguien
+dependa del módulo, y no ofrece arrastrar a nadie. La cadena era de tres, y hay que deshacerla de
+abajo arriba, una ronda por módulo: **BPMN.iO for ECA** → **ECA BPMN** (`eca_modeller_bpmn`) → **ECA
+UI**. Cada ronda libera la casilla de la siguiente. Vale la pena recordarlo porque es al contrario de
+lo que hace la lista de módulos al *activar*, donde sí arrastra las dependencias sin preguntar.
+
+**Que no se pierde nada estaba verificado antes de proponerlo**, y se cumplió: los 36 procesos
+dependen de `eca_content` y `eca_log`, y los 36 diagramas del módulo base `eca`, no del modelador,
+así que ni los automatismos dejaron de correr ni los dibujos desaparecieron. Lo único que se ha ido es
+la pantalla para editarlos, que en producción no usa nadie.
+
+**Por qué lo tuvo que hacer el dueño y no yo**, que es la parte reutilizable: por SSH se entra bien
+con la llave, pero **`drush` allí no llega a la base de datos**. `settings.php` es `root:www-data`
+con permisos `640` y el usuario `david` no está en el grupo `www-data`, así que no puede leer las
+credenciales. `drush status` sí contesta la versión, porque eso lo saca del código y engaña; cualquier
+comando que toque datos responde *"Drush was unable to query the database"*. Es la misma pared del 13
+de agosto con `rebuild_access`, y la que hace falta la contraseña de `sudo` para saltar. Mientras no
+esté, **todo lo que toque datos en el servidor se hace por el navegador**, no por SSH.
 
 ### 2026-08-14 — Fuera lo que no usaba nadie: un tipo de entidad, siete vistas, siete campos, catorce tablas y una llave maestra
 
