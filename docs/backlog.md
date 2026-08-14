@@ -140,7 +140,10 @@ El resto de esta lista es el "no publicar sin esto" de la segunda fase, la de lo
 empleados. Casi todo es trabajo técnico y no requiere decisiones del dueño, salvo los tres
 puntos de correo y el de las cuentas.
 
-- **Programar el cron.** Hoy Ultimate Cron reporta once tareas atrasadas.
+- **Programar el cron.** Hoy Ultimate Cron reporta once tareas atrasadas. **Los trece trabajos ya
+  están revisados uno por uno y desarmados los dos peligrosos** (14 de agosto, ver Hecho), así que
+  encenderlo ya no es un salto a ciegas: queda solo poner la llamada del sistema y decidir las dos
+  cosas que siguen abiertas, el idioma tailandés de `locale_cron` y los 315 ficheros huérfanos.
 - **Crear el buzón `erp@anvfightgear.com`** en Google Workspace, como alias que reenvía al
   dueño y no como cuenta de pago nueva. Es la dirección desde la que el ERP manda los
   correos desde el 2026-08-12.
@@ -772,6 +775,77 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-14 — El cron desarmado antes de encenderlo: dos llaves fuera y los trece trabajos revisados
+
+El cron de este sitio **no ha corrido nunca**. Encenderlo está en la lista de "antes de que entren
+los empleados", y hasta hoy eso significaba encender de golpe trece trabajos que nadie había mirado.
+Uno de ellos ya había hecho daño: **`backup_migrate` volcaba la base de datos entera a la carpeta
+privada del proyecto cada noche y guardaba treinta copias**. Es de donde salieron los 178 volcados y
+los 111 MB que hubo que sacar a mano el 12 de agosto. Seguía encendido, esperando.
+
+**Apagado, y por la bandera correcta.** Aquí había una trampa que merece la pena anotar:
+`backup_migrate_cron()` no comprueba nada, ejecuta **todos** los horarios uno detrás de otro
+(`backup_migrate.module:232`). La comprobación está dentro, en `Schedule::run()`, y lo que lee es
+`$this->get('enabled')` (`Schedule.php:93`), **no** el `status` de la ficha de configuración. Son dos
+banderas distintas en el mismo sitio, y apagar la que no es habría dado una sensación de seguridad
+falsa. Se apagó `enabled`, y de paso el trabajo `backup_migrate_cron` de Ultimate Cron, que es la
+misma llave un piso más arriba. Las copias las hace `scripts/copia-de-seguridad.ps1`, que hace más
+—código, ficheros, historial de Git y verificación— y escribe **fuera** del proyecto.
+
+Detalle tranquilizador que se comprobó de paso: ese trabajo tiene `catch_up: 0`, así que no habría
+disparado al encender el cron, sino a las 3 de la mañana siguiente. Se habría descubierto por la
+mañana, con el volcado ya dentro.
+
+**Segunda llave fuera: `eca_base_cron`.** Se despertaba cada quince minutos, 96 veces al día, y
+**ninguno de los 36 procesos de ECA escucha el evento de cron**. Trabajo cero, ruido cien. Se vuelve
+a encender el día que haga falta un automatismo periódico de verdad, por ejemplo el aviso de stock
+bajo.
+
+**Y una que no era un interruptor sino un hueco.** `dblog.settings` **no existía** en la
+configuración activa. No es que el límite estuviera bajo: no estaba. `dblog_cron()` lee ese valor y,
+si no hay nada, `if ($row_limit)` es falso y **no recorta nunca**, o sea que el registro habría
+crecido sin freno. Ahora está escrito y exportado, en **100.000 filas**. Lo de fábrica son mil, que
+en un ERP recién arrancado es media mañana, y el registro de las primeras semanas de uso real es
+justo donde se van a buscar los fallos.
+
+**Lo que dijo la consulta al purgador de campos.** `field_cron` es el único de los trece que borra
+datos, así que antes de dejarlo suelto se preguntó qué tenía en la cola: **dos almacenes y cuatro
+campos**, y todos son restos de lo mismo. `ai_interpolator_status` en `tec_units`, `tec_colors` y
+`tec_bom_item` —los experimentos de IA de Oscar, cuyo módulo se desinstaló el 13 de agosto— y
+`field_tec_edit_product`. Llevan ahí desde que se borraron, porque el cron nunca pasó a recogerlos.
+O sea que `field_cron` no es un riesgo: es el que limpia. Se queda encendido.
+
+Los trece, con la decisión de cada uno:
+
+| Trabajo | Cuándo | Decisión |
+|---|---|---|
+| `backup_migrate_cron` | 3:00 cada día | **apagado**, volcaba la base dentro del proyecto |
+| `eca_base_cron` | cada 15 min | **apagado**, ningún proceso escucha |
+| `field_cron` | cada 3 h | se queda: purga los seis restos de la IA |
+| `file_cron` | 0:00 cada día | se queda, pero **no** toca los 315 huérfanos (ver abajo) |
+| `system_cron` | cada 6 h | se queda: cachés, lotes viejos, control de inundación |
+| `update_cron` | por defecto | se queda: es el que avisa de las alertas de seguridad |
+| `dblog_cron` | por defecto | se queda, ya con límite escrito |
+| `layout_builder_cron` | 0:00 cada día | se queda: borra borradores de diseño olvidados |
+| `locale_cron` | domingos 0:00 | **se queda, pero hay que decidir** (ver abajo) |
+| `ultimate_cron_cron` | 0:00 cada día | se queda: limpia sus propios registros |
+| `node_cron`, `feeds_cron`, `feeds_log_cron` | — | ya estaban apagados, y bien |
+
+**Dos cosas quedan abiertas, las dos a propósito.** `locale_cron` se despierta los domingos a
+descargar traducciones de tailandés para los 146 módulos, porque el idioma `th` está configurado.
+Eso engorda `locales_source` y `locales_target` a lo bestia, y hasta hoy no ha pasado porque el cron
+no corre. Antes de encenderlo hay que decidir si el ERP va a ser multiidioma o no; si no, fuera el
+idioma y fuera `locale`. Y `file_cron` **no** va a borrar los 315 ficheros huérfanos, porque
+`make_unused_managed_files_temporary` está en `false`: esa decisión sigue siendo manual y sigue en la
+lista.
+
+**El guardián.** `comprobacion.php` pasa de 42 a **46 comprobaciones**: los ocho trabajos
+encendidos, que los dos desarmados sigan apagados, que ningún horario de copias esté encendido y que
+el límite del registro siga escrito. No es paranoia: `tec_crm` y `tec_brands` siguen en el disco con
+49 copias viejas de configuración dentro, y un `features:import` despistado puede resucitar
+cualquiera de estas cosas sin decir nada. Comprobación 46/46 y prueba de humo en verde después de
+todo.
 
 ### 2026-08-14 — El ratón ya enseña la pantalla y no el nodo: la portada enlaza por campo, y las redirecciones fuera
 

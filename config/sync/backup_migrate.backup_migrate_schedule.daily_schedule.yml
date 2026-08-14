@@ -6,7 +6,7 @@ _core:
   default_config_hash: B6mQr6j7ZcqZB14S8ytJEXCYzOQ1mcOW9-oWYbtkbJc
 id: daily_schedule
 label: 'Daily Schedule'
-enabled: true
+enabled: false
 keep: 30
 encrypt: false
 encrypt_password: ''

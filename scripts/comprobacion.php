@@ -104,7 +104,19 @@ const REFERENCIA_VARIOS = [
   // que le faltaba a este sitio cuando acumulo ochenta y dos sin que nadie se
   // enterara. Si algun dia se decide apagarlo, esta cifra baja a 145.
   'modulos' => 146,
+  // De los trece trabajos de cron, ocho encendidos. Los cinco apagados estan
+  // apagados a proposito: node_cron y los dos de feeds no hacen falta, y los dos
+  // de CRON_QUE_SIGUE_APAGADO son los que se desarmaron el 14 de agosto.
+  'trabajos_cron_encendidos' => 8,
 ];
+
+// Estos dos no se vuelven a encender sin pensarlo. El de las copias volcaba la
+// base entera a la carpeta privada del proyecto cada noche y guardaba treinta:
+// es lo que dejo 178 volcados y 111 MB dentro del arbol de ficheros, que hubo que
+// sacar a mano. El de ECA se despertaba 96 veces al dia sin que ningun proceso
+// escuchara. El cron no ha corrido nunca aqui, asi que nadie lo habia notado; el
+// dia que se encienda, estas dos lineas son las que avisan si han vuelto.
+const CRON_QUE_SIGUE_APAGADO = ['backup_migrate_cron', 'eca_base_cron'];
 
 // Herramientas de diagnostico que se instalan durante una actualizacion y se
 // quitan al terminar. No cuentan para el total. Vacia desde el 14 de agosto de
@@ -237,6 +249,32 @@ $parche_puesto = file_exists($ief)
   && str_contains(file_get_contents($ief), "'entities']) ?? []");
 comprobar($resultados, 'parche de inline_entity_form', $parche_puesto,
   $parche_puesto ? 'sigue aplicado' : 'HA DESAPARECIDO, lo ha borrado Composer');
+
+// El cron. Se comprueba porque `tec_crm` y `tec_brands` siguen en el disco con 49
+// copias viejas de configuracion dentro, y un `features:import` despistado puede
+// devolver a la vida cosas que se apagaron a mano.
+$trabajos = $etm->getStorage('ultimate_cron_job')->loadMultiple();
+$cronEncendidos = count(array_filter($trabajos, fn($t) => $t->status()));
+comprobar($resultados, 'trabajos de cron encendidos',
+  $cronEncendidos === REFERENCIA_VARIOS['trabajos_cron_encendidos'],
+  "$cronEncendidos de " . count($trabajos) . " (se esperaban " . REFERENCIA_VARIOS['trabajos_cron_encendidos'] . ")");
+
+$revividos = array_filter(CRON_QUE_SIGUE_APAGADO,
+  fn($id) => isset($trabajos[$id]) && $trabajos[$id]->status());
+comprobar($resultados, 'los dos que se desarmaron siguen apagados', !$revividos,
+  $revividos ? 'HAN VUELTO: ' . implode(' y ', $revividos) : implode(' y ', CRON_QUE_SIGUE_APAGADO));
+
+// La bandera que lee Schedule::run() es `enabled`, no el `status` de la ficha.
+$horarios = $etm->getStorage('backup_migrate_schedule')->loadMultiple();
+$horariosVivos = array_filter($horarios, fn($h) => $h->get('enabled'));
+comprobar($resultados, 'ningun horario de copias encendido', !$horariosVivos,
+  $horariosVivos ? 'ENCENDIDO: ' . implode(', ', array_keys($horariosVivos)) : count($horarios) . ' apagado');
+
+// Sin esta cifra, dblog_cron no recorta nada y el registro crece sin freno: el
+// objeto de configuracion no existia, y lo que no existe no vale cero, vale nada.
+$filas = \Drupal::config('dblog.settings')->get('row_limit');
+comprobar($resultados, 'limite del registro puesto', $filas === 100000,
+  $filas === NULL ? 'SIN DEFINIR, el registro crecera sin freno' : "$filas filas");
 
 // -----------------------------------------------------------------------------
 // 3. Los automatismos reaccionan.
