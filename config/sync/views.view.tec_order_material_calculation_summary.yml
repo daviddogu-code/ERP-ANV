@@ -5,24 +5,14 @@ dependencies:
   config:
     - field.storage.taxonomy_term.field_tec_inventory_image
     - field.storage.taxonomy_term.field_tec_material_type
-    - field.storage.taxonomy_term.field_tec_package_units
-    - field.storage.taxonomy_term.field_tec_packaging
-    - field.storage.taxonomy_term.field_tec_price_uou
+    - field.storage.taxonomy_term.field_tec_price
     - field.storage.taxonomy_term.field_tec_split_into
-    - field.storage.taxonomy_term.field_tec_split_inventory
-    - field.storage.taxonomy_term.field_tec_split_unit
     - field.storage.taxonomy_term.field_tec_unit_purchase
     - field.storage.taxonomy_term.field_tec_unit_symbol
     - field.storage.taxonomy_term.field_tec_unit_use
     - field.storage.taxonomy_term.field_tec_units
-    - field.storage.taxonomy_term.field_tec_uop_pu_uou
     - field.storage.taxonomy_term.field_tec_uos
-    - field.storage.taxonomy_term.field_tec_uos_pu_uou
-    - field.storage.taxonomy_term.field_tec_uou_split_qty
-    - field.storage.taxonomy_term.field_tec_uou_uop
-    - field.storage.taxonomy_term.field_tec_uou_uos
     - field.storage.taxonomy_term.field_tec_vendor
-    - field.storage.taxonomy_term.field_uop_to_uos
     - field.storage.tec_inventory.field_tec_production_requires_vf
     - field.storage.tec_inventory.field_tec_quantity
     - field.storage.tec_inventory.field_tec_quantity_input
@@ -37,7 +27,6 @@ dependencies:
     - user
     - viewfield
     - views_aggregator
-    - views_conditional
     - views_simple_math_field
 id: tec_order_material_calculation_summary
 label: 'TEC Order: Material Calculation Summary'
@@ -495,203 +484,6 @@ display:
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
-        field_tec_uou_uos:
-          id: field_tec_uou_uos
-          table: taxonomy_term__field_tec_uou_uos
-          field: field_tec_uou_uos
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 4
-            prefix_suffix: false
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_split_inventory:
-          id: field_tec_split_inventory
-          table: taxonomy_term__field_tec_split_inventory
-          field: field_tec_split_inventory
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'Split inventory'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: boolean
-          settings:
-            format: default
-            format_custom_false: ''
-            format_custom_true: ''
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_uos_pu_uou:
-          id: field_tec_uos_pu_uou
-          table: taxonomy_term__field_tec_uos_pu_uou
-          field: field_tec_uos_pu_uou
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: '1 UoS PU = UoU'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 4
-            prefix_suffix: false
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_uos:
           id: field_tec_uos
           table: taxonomy_term__field_tec_uos
@@ -701,70 +493,7 @@ display:
           admin_label: ''
           plugin_id: field
           label: UoS
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_split_unit:
-          id: field_tec_split_unit
-          table: taxonomy_term__field_tec_split_unit
-          field: field_tec_split_unit
-          relationship: none
-          group_type: group
-          admin_label: 'UoS PU'
-          plugin_id: field
-          label: 'Packaging unit'
-          exclude: true
+          exclude: false
           alter:
             alter_text: false
             text: ''
@@ -881,269 +610,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_package_units:
-          id: field_tec_package_units
-          table: taxonomy_term__field_tec_package_units
-          field: field_tec_package_units
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'Custom UoP'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: boolean
-          settings:
-            format: default
-            format_custom_false: ''
-            format_custom_true: ''
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_uou_uop_pu:
-          id: field_tec_uou_uop_pu
-          table: taxonomy_term__field_tec_uou_uop_pu
-          field: field_tec_uou_uop_pu
-          relationship: none
-          group_type: sum
-          admin_label: ''
-          plugin_id: field
-          label: '1 UoU = UoP packaging units'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 4
-            prefix_suffix: false
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_uop_pu_uou:
-          id: field_tec_uop_pu_uou
-          table: taxonomy_term__field_tec_uop_pu_uou
-          field: field_tec_uop_pu_uou
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: '1 UoP PU = UoU'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 4
-            prefix_suffix: false
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_uou_uop:
-          id: field_tec_uou_uop
-          table: taxonomy_term__field_tec_uou_uop
-          field: field_tec_uou_uop
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: '1 UoU = UoP'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 4
-            prefix_suffix: false
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_unit_purchase:
           id: field_tec_unit_purchase
           table: taxonomy_term__field_tec_unit_purchase
@@ -1153,7 +619,7 @@ display:
           admin_label: ''
           plugin_id: field
           label: UoP
-          exclude: true
+          exclude: false
           alter:
             alter_text: false
             text: ''
@@ -1186,69 +652,6 @@ display:
           element_label_type: ''
           element_label_class: ''
           element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_packaging:
-          id: field_tec_packaging
-          table: taxonomy_term__field_tec_packaging
-          field: field_tec_packaging
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -1399,72 +802,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_price_uou:
-          id: field_tec_price_uou
-          table: taxonomy_term__field_tec_price_uou
-          field: field_tec_price_uou
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 2
-            prefix_suffix: false
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_views_simple_math_field_1:
           id: field_views_simple_math_field_1
           table: views_simple_math_field
@@ -1523,30 +860,14 @@ display:
               name: 0
               view_tec_crm: 0
               field_tec_vendor: 0
-              field_tec_uou_uos: 0
-              field_tec_split_inventory: 0
-              field_tec_uos_pu_uou: 0
               field_tec_uos: 0
-              field_tec_split_unit: 0
               field_tec_quantity_input: 0
-              field_tec_package_units: 0
-              field_tec_uou_uop_pu: 0
-              field_tec_uop_pu_uou: 0
-              field_tec_uou_uop: 0
               field_tec_unit_purchase: 0
-              field_tec_packaging: 0
               tid: 0
               field_tec_material_type: 0
-              field_tec_price_uou: 0
               field_tec_unit_use: 0
               field_views_simple_math_field: 0
-              views_conditional_field_2: 0
-              field_views_simple_math_field_4: 0
-              views_conditional_field_3: 0
               field_views_simple_math_field_2: 0
-              field_views_simple_math_field_3: 0
-              views_conditional_field_1: 0
-              views_conditional_field: 0
               field_views_simple_math_field_5: 0
             formula: '@field_tec_quantity * 1'
           mute_logs: false
@@ -1630,7 +951,7 @@ display:
           admin_label: ''
           plugin_id: field_views_simple_math_field
           label: 'Total required UoS'
-          exclude: true
+          exclude: false
           alter:
             alter_text: false
             text: ''
@@ -1673,7 +994,6 @@ display:
           fieldset_one:
             data_field:
               field_tec_quantity: field_tec_quantity
-              field_tec_uou_uos: field_tec_uou_uos
               field_tec_inventory_image: 0
               field_tec_inventory_image_1: 0
               simple_popup_views_field: 0
@@ -1682,26 +1002,14 @@ display:
               field_tec_vendor: 0
               field_views_simple_math_field_1: 0
               field_tec_unit_use: 0
-              field_tec_split_inventory: 0
-              field_1_uou_uos_pu: 0
-              field_views_simple_math_field_4: 0
-              views_conditional_field_3: 0
               field_tec_uos: 0
-              field_tec_split_unit: 0
-              views_conditional_field_2: 0
               field_tec_quantity_input: 0
-              field_tec_uou_uop_pu: 0
               field_views_simple_math_field_2: 0
-              field_tec_uou_uop: 0
-              field_views_simple_math_field_3: 0
-              views_conditional_field_1: 0
               field_tec_unit_purchase: 0
-              field_tec_package_units: 0
-              field_tec_packaging: 0
-              views_conditional_field: 0
               tid: 0
               field_tec_material_type: 0
-            formula: '@field_tec_quantity * @field_tec_uou_uos'
+              field_tec_split_into: field_tec_split_into
+            formula: '@field_tec_quantity / @field_tec_split_into'
           mute_logs: true
           set_precision: 1
           precision: '2'
@@ -1711,222 +1019,6 @@ display:
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
-        views_conditional_field_2:
-          id: views_conditional_field_2
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: UoS
-          plugin_id: views_conditional_field
-          label: UoS
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          if: field_tec_split_inventory
-          condition: eq
-          equalto: 'On'
-          then: '{{ field_tec_split_unit }}'
-          then_translate: true
-          or: '{{ field_tec_uos }}'
-          or_translate: true
-          strip_tags: false
-          set_precision: false
-          precision: 0
-          decimal: .
-          separator: ','
-          format_plural: false
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: ''
-          suffix: ''
-        field_views_simple_math_field_4:
-          id: field_views_simple_math_field_4
-          table: views_simple_math_field
-          field: field_views_simple_math_field
-          relationship: none
-          group_type: group
-          admin_label: 'Total required UoS PU Math'
-          plugin_id: field_views_simple_math_field
-          label: 'Total required UoS PU'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          fieldset_one:
-            data_field:
-              field_tec_quantity: field_tec_quantity
-              field_tec_uos_pu_uou: field_tec_uos_pu_uou
-              field_tec_inventory_image: 0
-              field_tec_inventory_image_1: 0
-              simple_popup_views_field: 0
-              name: 0
-              view_tec_crm: 0
-              field_tec_vendor: 0
-              field_views_simple_math_field_1: 0
-              field_tec_unit_use: 0
-              field_tec_uou_uos: 0
-              field_tec_split_inventory: 0
-              field_views_simple_math_field: 0
-              field_tec_uou_split_qty: 0
-              views_conditional_field_3: 0
-              field_tec_uos: 0
-              field_tec_split_unit: 0
-              views_conditional_field_2: 0
-              field_tec_package_units: 0
-              field_tec_quantity_input: 0
-              field_tec_uou_uop_pu: 0
-              field_tec_uop_pu_uou: 0
-              field_views_simple_math_field_2: 0
-              field_tec_uou_uop: 0
-              field_views_simple_math_field_3: 0
-              views_conditional_field_1: 0
-              field_tec_unit_purchase: 0
-              field_tec_packaging: 0
-              views_conditional_field: 0
-              tid: 0
-              field_tec_material_type: 0
-              field_tec_price_uou: 0
-              field_views_simple_math_field_5: 0
-            formula: '@field_tec_quantity / @field_tec_uos_pu_uou'
-          mute_logs: true
-          set_precision: 1
-          precision: '2'
-          decimal: .
-          separator: ','
-          format_plural: false
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: ''
-          suffix: ''
-        views_conditional_field_3:
-          id: views_conditional_field_3
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: 'UoS Required Condtion'
-          plugin_id: views_conditional_field
-          label: 'Total required UoS'
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: '{{ field_views_simple_math_field }} EMPTY'
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          if: field_tec_split_inventory
-          condition: eq
-          equalto: 'On'
-          then: '{{ field_views_simple_math_field_4 }}'
-          then_translate: true
-          or: '{{ field_views_simple_math_field }}'
-          or_translate: true
-          strip_tags: false
         field_views_simple_math_field_2:
           id: field_views_simple_math_field_2
           table: views_simple_math_field
@@ -1935,250 +1027,7 @@ display:
           group_type: group
           admin_label: 'Required UoP PU'
           plugin_id: field_views_simple_math_field
-          label: 'Simple Math Field'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          fieldset_one:
-            data_field:
-              field_tec_quantity: field_tec_quantity
-              field_tec_uop_pu_uou: field_tec_uop_pu_uou
-              field_tec_inventory_image: 0
-              field_tec_inventory_image_1: 0
-              simple_popup_views_field: 0
-              name: 0
-              view_tec_crm: 0
-              field_tec_vendor: 0
-              field_views_simple_math_field_1: 0
-              field_tec_unit_use: 0
-              field_tec_uou_uos: 0
-              field_tec_split_inventory: 0
-              field_views_simple_math_field: 0
-              field_1_uou_uos_pu: 0
-              field_views_simple_math_field_4: 0
-              views_conditional_field_3: 0
-              field_tec_uos: 0
-              field_tec_split_unit: 0
-              views_conditional_field_2: 0
-              field_tec_package_units: 0
-              field_tec_quantity_input: 0
-              field_tec_uou_uop_pu: 0
-              field_tec_uou_uop: 0
-              field_views_simple_math_field_3: 0
-              views_conditional_field_1: 0
-              field_tec_unit_purchase: 0
-              field_tec_packaging: 0
-              views_conditional_field: 0
-              tid: 0
-              field_tec_material_type: 0
-              field_tec_price_uou: 0
-              field_views_simple_math_field_5: 0
-              field_tec_uos_pu_uop: 0
-            formula: '@field_tec_quantity / @field_tec_uop_pu_uou'
-          mute_logs: true
-          set_precision: 1
-          precision: '2'
-          decimal: .
-          separator: ','
-          format_plural: false
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: ''
-          suffix: ''
-        field_views_simple_math_field_3:
-          id: field_views_simple_math_field_3
-          table: views_simple_math_field
-          field: field_views_simple_math_field
-          relationship: none
-          group_type: group
-          admin_label: 'Required UoP'
-          plugin_id: field_views_simple_math_field
-          label: 'Simple Math Field'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          fieldset_one:
-            data_field:
-              field_tec_quantity: field_tec_quantity
-              field_tec_uou_uop: field_tec_uou_uop
-              field_tec_inventory_image: 0
-              field_tec_inventory_image_1: 0
-              simple_popup_views_field: 0
-              name: 0
-              view_tec_crm: 0
-              field_tec_vendor: 0
-              field_views_simple_math_field_1: 0
-              field_tec_unit_use: 0
-              field_tec_uou_uos: 0
-              field_tec_split_inventory: 0
-              field_views_simple_math_field: 0
-              field_1_uou_uos_pu: 0
-              field_views_simple_math_field_4: 0
-              views_conditional_field_3: 0
-              field_tec_uos: 0
-              field_tec_split_unit: 0
-              views_conditional_field_2: 0
-              field_tec_package_units: 0
-              field_tec_quantity_input: 0
-              field_tec_uou_uop_pu: 0
-              field_views_simple_math_field_2: 0
-              views_conditional_field_1: 0
-              field_tec_unit_purchase: 0
-              field_tec_packaging: 0
-              views_conditional_field: 0
-              tid: 0
-              field_tec_material_type: 0
-              field_tec_price_uou: 0
-              field_views_simple_math_field_5: 0
-            formula: '@field_tec_uou_uop * @field_tec_quantity'
-          mute_logs: true
-          set_precision: 1
-          precision: '2'
-          decimal: .
-          separator: ','
-          format_plural: false
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: ''
-          suffix: ''
-        views_conditional_field_1:
-          id: views_conditional_field_1
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
           label: 'Total required UoP'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: '{{ field_views_simple_math_field_3 }}'
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          if: field_tec_package_units
-          condition: nem
-          equalto: 'On'
-          then: '{{ field_tec_quantity_input }}'
-          then_translate: true
-          or: '{{ field_tec_quantity_input }}'
-          or_translate: true
-          strip_tags: false
-        views_conditional_field:
-          id: views_conditional_field
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
-          label: UoP
           exclude: false
           alter:
             alter_text: false
@@ -2211,7 +1060,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: false
+          element_label_colon: true
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -2219,14 +1068,36 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          if: field_tec_package_units
-          condition: nem
-          equalto: 'On'
-          then: '{{ field_tec_unit_purchase }}'
-          then_translate: true
-          or: '{{ field_tec_unit_purchase }}'
-          or_translate: true
-          strip_tags: false
+          fieldset_one:
+            data_field:
+              field_tec_quantity: field_tec_quantity
+              field_tec_inventory_image: 0
+              field_tec_inventory_image_1: 0
+              simple_popup_views_field: 0
+              name: 0
+              view_tec_crm: 0
+              field_tec_vendor: 0
+              field_views_simple_math_field_1: 0
+              field_tec_unit_use: 0
+              field_views_simple_math_field: 0
+              field_tec_uos: 0
+              field_tec_quantity_input: 0
+              field_tec_unit_purchase: 0
+              tid: 0
+              field_tec_material_type: 0
+              field_views_simple_math_field_5: 0
+              field_tec_split_into: field_tec_split_into
+              field_tec_units: field_tec_units
+            formula: '@field_tec_quantity / @field_tec_split_into / @field_tec_units'
+          mute_logs: true
+          set_precision: 1
+          precision: '2'
+          decimal: .
+          separator: ','
+          format_plural: false
+          format_plural_string: !!binary MQNAY291bnQ=
+          prefix: ''
+          suffix: ''
         field_views_simple_math_field_5:
           id: field_views_simple_math_field_5
           table: views_simple_math_field
@@ -2279,7 +1150,6 @@ display:
           fieldset_one:
             data_field:
               field_tec_quantity: field_tec_quantity
-              field_tec_price_uou: field_tec_price_uou
               field_tec_inventory_image: 0
               field_tec_inventory_image_1: 0
               simple_popup_views_field: 0
@@ -2288,28 +1158,15 @@ display:
               field_tec_vendor: 0
               field_views_simple_math_field_1: 0
               field_tec_unit_use: 0
-              field_tec_uou_uos: 0
-              field_tec_split_inventory: 0
               field_views_simple_math_field: 0
-              field_1_uou_uos_pu: 0
-              field_views_simple_math_field_4: 0
-              views_conditional_field_3: 0
               field_tec_uos: 0
-              field_tec_split_unit: 0
-              views_conditional_field_2: 0
-              field_tec_package_units: 0
               field_tec_quantity_input: 0
-              field_tec_uou_uop_pu: 0
               field_views_simple_math_field_2: 0
-              field_tec_uou_uop: 0
-              field_views_simple_math_field_3: 0
-              views_conditional_field_1: 0
               field_tec_unit_purchase: 0
-              field_tec_packaging: 0
-              views_conditional_field: 0
               tid: 0
               field_tec_material_type: 0
-            formula: '@field_tec_quantity * @field_tec_price_uou'
+              field_tec_price: field_tec_price
+            formula: '@field_tec_quantity * @field_tec_price'
           mute_logs: true
           set_precision: 1
           precision: '2'
@@ -2319,6 +1176,200 @@ display:
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: '฿ '
           suffix: ''
+        field_tec_split_into:
+          id: field_tec_split_into
+          table: taxonomy_term__field_tec_split_into
+          field: field_tec_split_into
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: ''
+          exclude: true
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: number_integer
+          settings:
+            thousand_separator: ''
+            prefix_suffix: false
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        field_tec_units:
+          id: field_tec_units
+          table: taxonomy_term__field_tec_units
+          field: field_tec_units
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: 'Nr. of units'
+          exclude: true
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: number_integer
+          settings:
+            thousand_separator: ''
+            prefix_suffix: false
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        field_tec_price:
+          id: field_tec_price
+          table: taxonomy_term__field_tec_price
+          field: field_tec_price
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: ''
+          exclude: true
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: number_decimal
+          settings:
+            thousand_separator: ''
+            decimal_separator: .
+            scale: 2
+            prefix_suffix: false
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
       pager:
         type: none
         options:
@@ -2452,35 +1503,16 @@ display:
             field_tec_unit_use: field_tec_unit_use
             field_views_simple_math_field: field_views_simple_math_field
             field_tec_uos: field_tec_uos
-            field_views_simple_math_field_3: field_views_simple_math_field_3
             field_tec_unit_purchase: field_tec_unit_purchase
             view_tec_crm: view_tec_crm
             field_tec_quantity: field_tec_quantity
-            field_tec_split_inventory: field_tec_split_inventory
             field_tec_quantity_input: field_tec_quantity_input
-            field_tec_packaging: field_tec_packaging
             tid: tid
             field_tec_material_type: field_tec_material_type
-            views_conditional_field_1: views_conditional_field_1
-            field_tec_package_units: field_tec_package_units
-            field_tec_split_inventory_1: field_tec_split_inventory_1
             field_tec_split_into: field_tec_split_into
-            views_conditional_field_2: views_conditional_field_2
-            field_tec_unit_symbol_1: field_tec_unit_symbol_1
-            field_tec_split_into_1: field_tec_split_into_1
-            views_conditional_field_4: views_conditional_field_4
             field_tec_units: field_tec_units
             field_views_simple_math_field_2: field_views_simple_math_field_2
-            views_conditional_field_3: views_conditional_field_3
-            field_tec_unit_symbol: field_tec_unit_symbol
-            views_conditional_field: views_conditional_field
-            field_views_simple_math_field_4: field_views_simple_math_field_4
-            field_tec_production_requires_vf: field_tec_production_requires_vf
             field_views_simple_math_field_5: field_views_simple_math_field_5
-            field_tec_quantity_1: field_tec_quantity_1
-            field_tec_quantity_input_1: field_tec_quantity_input_1
-            field_uop_to_uos: field_uop_to_uos
-            field_tec_uou_split_qty: field_tec_uou_split_qty
           default: '-1'
           info:
             field_tec_inventory_image:
@@ -2609,20 +1641,6 @@ display:
               has_aggr_column: false
               aggr_column: views_aggregator_sum
               aggr_par_column: ''
-            field_views_simple_math_field_3:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: true
-              aggr:
-                views_aggregator_sum: views_aggregator_sum
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
             field_tec_unit_purchase:
               sortable: false
               default_sort_order: asc
@@ -2665,38 +1683,10 @@ display:
               has_aggr_column: false
               aggr_column: views_aggregator_sum
               aggr_par_column: ''
-            field_tec_split_inventory:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
             field_tec_quantity_input:
               sortable: true
               default_sort_order: asc
               align: views-align-right
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_tec_packaging:
-              sortable: false
-              default_sort_order: asc
-              align: ''
               separator: ''
               empty_column: false
               responsive: ''
@@ -2733,101 +1723,9 @@ display:
               has_aggr_column: false
               aggr_column: views_aggregator_sum
               aggr_par_column: ''
-            views_conditional_field_1:
-              align: views-align-right
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_tec_package_units:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_tec_split_inventory_1:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
             field_tec_split_into:
               sortable: false
               default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            views_conditional_field_2:
-              align: views-align-right
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_tec_unit_symbol_1:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_tec_split_into_1:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            views_conditional_field_4:
               align: ''
               separator: ''
               empty_column: false
@@ -2867,129 +1765,7 @@ display:
               has_aggr_column: false
               aggr_column: views_aggregator_sum
               aggr_par_column: ''
-            views_conditional_field_3:
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_tec_unit_symbol:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            views_conditional_field:
-              align: views-align-left
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_views_simple_math_field_4:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_tec_production_requires_vf:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
             field_views_simple_math_field_5:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_tec_quantity_1:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: true
-              aggr:
-                views_aggregator_sum: views_aggregator_sum
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_tec_quantity_input_1:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: true
-              aggr:
-                views_aggregator_sum: views_aggregator_sum
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_uop_to_uos:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-              has_aggr: false
-              aggr:
-                views_aggregator_first: views_aggregator_first
-              aggr_par: ''
-              has_aggr_column: false
-              aggr_column: views_aggregator_sum
-              aggr_par_column: ''
-            field_tec_uou_split_qty:
               sortable: false
               default_sort_order: asc
               align: ''
@@ -3115,17 +1891,11 @@ display:
       tags:
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
         - 'config:field.storage.taxonomy_term.field_tec_material_type'
-        - 'config:field.storage.taxonomy_term.field_tec_package_units'
-        - 'config:field.storage.taxonomy_term.field_tec_packaging'
-        - 'config:field.storage.taxonomy_term.field_tec_price_uou'
-        - 'config:field.storage.taxonomy_term.field_tec_split_inventory'
-        - 'config:field.storage.taxonomy_term.field_tec_split_unit'
+        - 'config:field.storage.taxonomy_term.field_tec_price'
+        - 'config:field.storage.taxonomy_term.field_tec_split_into'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
-        - 'config:field.storage.taxonomy_term.field_tec_uop_pu_uou'
+        - 'config:field.storage.taxonomy_term.field_tec_units'
         - 'config:field.storage.taxonomy_term.field_tec_uos'
-        - 'config:field.storage.taxonomy_term.field_tec_uos_pu_uou'
-        - 'config:field.storage.taxonomy_term.field_tec_uou_uop'
-        - 'config:field.storage.taxonomy_term.field_tec_uou_uos'
         - 'config:field.storage.taxonomy_term.field_tec_vendor'
   block_1:
     id: block_1
@@ -3385,6 +2155,59 @@ display:
           separator: ', '
           field_api_classes: false
           convert_spaces: false
+        view_tec_crm:
+          id: view_tec_crm
+          table: tec_crm
+          field: view_tec_crm
+          relationship: field_tec_vendor
+          group_type: group
+          admin_label: ''
+          entity_type: tec_crm
+          plugin_id: entity_link
+          label: ''
+          exclude: true
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          text: view
+          output_url_as_text: true
+          absolute: false
         field_tec_vendor:
           id: field_tec_vendor
           table: taxonomy_term__field_tec_vendor
@@ -3516,26 +2339,13 @@ display:
               field_views_simple_math_field_3: 0
               field_tec_unit_purchase: 0
               view_tec_crm: 0
-              field_tec_split_inventory: 0
-              field_tec_packaging: 0
               tid: 0
               field_tec_material_type: 0
-              views_conditional_field_1: 0
-              field_tec_package_units: 0
-              field_tec_split_inventory_1: 0
-              views_conditional_field_2: 0
               field_tec_unit_symbol_1: 0
-              views_conditional_field_4: 0
               field_tec_units: 0
-              field_views_simple_math_field_2: 0
-              views_conditional_field_3: 0
-              field_tec_unit_symbol: 0
-              views_conditional_field: 0
               field_views_simple_math_field_4: 0
               field_tec_production_requires_vf: 0
               field_views_simple_math_field_5: 0
-              field_uop_to_uos: 0
-              field_tec_uou_split_qty: 0
             formula: '@field_tec_quantity * 1'
           mute_logs: false
           set_precision: 1
@@ -3682,28 +2492,15 @@ display:
               field_views_simple_math_field_3: 0
               field_tec_unit_purchase: 0
               view_tec_crm: 0
-              field_tec_split_inventory: 0
               field_tec_quantity_input: 0
-              field_tec_packaging: 0
               tid: 0
               field_tec_material_type: 0
-              views_conditional_field_1: 0
-              field_tec_package_units: 0
-              field_tec_split_inventory_1: 0
-              views_conditional_field_2: 0
               field_tec_unit_symbol_1: 0
               field_tec_split_into_1: 0
-              views_conditional_field_4: 0
               field_tec_units: 0
-              field_views_simple_math_field_2: 0
-              views_conditional_field_3: 0
-              field_tec_unit_symbol: 0
-              views_conditional_field: 0
               field_views_simple_math_field_4: 0
               field_tec_production_requires_vf: 0
               field_views_simple_math_field_5: 0
-              field_uop_to_uos: 0
-              field_tec_uou_split_qty: 0
             formula: '@field_tec_quantity / @field_tec_split_into'
           mute_logs: true
           set_precision: 1
@@ -3844,27 +2641,14 @@ display:
               field_tec_uos: 0
               field_tec_unit_purchase: 0
               view_tec_crm: 0
-              field_tec_split_inventory: 0
               field_tec_quantity_input: 0
-              field_tec_packaging: 0
               tid: 0
               field_tec_material_type: 0
-              views_conditional_field_1: 0
-              field_tec_package_units: 0
-              field_tec_split_inventory_1: 0
-              views_conditional_field_2: 0
               field_tec_unit_symbol_1: 0
               field_tec_split_into_1: 0
-              views_conditional_field_4: 0
-              field_views_simple_math_field_2: 0
-              views_conditional_field_3: 0
-              field_tec_unit_symbol: 0
-              views_conditional_field: 0
               field_views_simple_math_field_4: 0
               field_tec_production_requires_vf: 0
               field_views_simple_math_field_5: 0
-              field_uop_to_uos: 0
-              field_tec_uou_split_qty: 0
             formula: '@field_tec_quantity / @field_tec_split_into / @field_tec_units'
           mute_logs: true
           set_precision: 1
@@ -3938,59 +2722,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        view_tec_crm:
-          id: view_tec_crm
-          table: tec_crm
-          field: view_tec_crm
-          relationship: field_tec_vendor
-          group_type: group
-          admin_label: ''
-          entity_type: tec_crm
-          plugin_id: entity_link
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          text: view
-          output_url_as_text: true
-          absolute: false
         field_tec_quantity:
           id: field_tec_quantity
           table: tec_inventory__field_tec_quantity
@@ -4064,71 +2795,6 @@ display:
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
-        field_tec_split_inventory:
-          id: field_tec_split_inventory
-          table: taxonomy_term__field_tec_split_inventory
-          field: field_tec_split_inventory
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'Split inventory'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: boolean
-          settings:
-            format: default
-            format_custom_false: ''
-            format_custom_true: ''
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_quantity_input:
           id: field_tec_quantity_input
           table: tec_inventory__field_tec_quantity_input
@@ -4199,69 +2865,6 @@ display:
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
-        field_tec_packaging:
-          id: field_tec_packaging
-          table: taxonomy_term__field_tec_packaging
-          field: field_tec_packaging
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         tid:
           id: tid
           table: taxonomy_term_field_data
@@ -4391,193 +2994,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        views_conditional_field_1:
-          id: views_conditional_field_1
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
-          label: 'Total required UoP'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: '{{ views_conditional_field_2 }} asdds'
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          if: field_tec_package_units
-          condition: eq
-          equalto: 'On'
-          then: '{{ views_conditional_field_3 }}'
-          then_translate: true
-          or: '{{ field_views_simple_math_field_1 }}'
-          or_translate: true
-          strip_tags: false
-        field_tec_package_units:
-          id: field_tec_package_units
-          table: taxonomy_term__field_tec_package_units
-          field: field_tec_package_units
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'Custom UoP'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: boolean
-          settings:
-            format: default
-            format_custom_false: ''
-            format_custom_true: ''
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_split_inventory_1:
-          id: field_tec_split_inventory_1
-          table: taxonomy_term__field_tec_split_inventory
-          field: field_tec_split_inventory
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'Convert inventory'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: boolean
-          settings:
-            format: default
-            format_custom_false: ''
-            format_custom_true: ''
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_split_into:
           id: field_tec_split_into
           table: taxonomy_term__field_tec_split_into
@@ -4642,71 +3058,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        views_conditional_field_2:
-          id: views_conditional_field_2
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
-          label: 'Total required UoS'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          if: field_tec_split_inventory_1
-          condition: eq
-          equalto: 'On'
-          then: '{{ field_views_simple_math_field }}'
-          then_translate: true
-          or: '{{ field_views_simple_math_field_1 }}'
-          or_translate: true
-          strip_tags: false
-          set_precision: false
-          precision: 0
-          decimal: .
-          separator: ','
-          format_plural: false
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: ''
-          suffix: ''
         field_tec_unit_symbol_1:
           id: field_tec_unit_symbol_1
           table: taxonomy_term__field_tec_unit_symbol
@@ -4834,63 +3185,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        views_conditional_field_4:
-          id: views_conditional_field_4
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
-          label: UoS
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          if: field_tec_split_inventory_1
-          condition: eq
-          equalto: 'On'
-          then: '<span>{{ field_tec_uos }}</span><span class="subtle small"> ({{ field_tec_split_into_1 }} {{ field_tec_unit_symbol_1 }})</span>'
-          then_translate: true
-          or: '{{ field_tec_uos }}'
-          or_translate: true
-          strip_tags: false
         field_tec_units:
           id: field_tec_units
           table: taxonomy_term__field_tec_units
@@ -4955,281 +3249,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_views_simple_math_field_2:
-          id: field_views_simple_math_field_2
-          table: views_simple_math_field
-          field: field_views_simple_math_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field_views_simple_math_field
-          label: 'Simple Math Field - UoP Convert ON'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          fieldset_one:
-            data_field:
-              field_tec_quantity: field_tec_quantity
-              field_tec_split_into: field_tec_split_into
-              field_tec_units: field_tec_units
-              field_tec_quantity_1: field_tec_quantity_1
-              field_tec_quantity_input_1: field_tec_quantity_input_1
-              field_tec_uou_split_qty: field_tec_uou_split_qty
-              field_tec_inventory_image: 0
-              field_tec_inventory_image_1: 0
-              simple_popup_views_field: 0
-              name: 0
-              view_tec_crm: 0
-              field_tec_vendor: 0
-              field_tec_split_inventory: 0
-              field_tec_quantity_input: 0
-              field_views_simple_math_field_1: 0
-              field_tec_package_units: 0
-              field_tec_unit_purchase: 0
-              field_tec_packaging: 0
-              tid: 0
-              field_tec_material_type: 0
-              field_tec_unit_use: 0
-              field_tec_split_inventory_1: 0
-              field_views_simple_math_field: 0
-              views_conditional_field_2: 0
-              field_tec_uos: 0
-              field_tec_unit_symbol_1: 0
-              field_tec_split_into_1: 0
-              views_conditional_field_4: 0
-              field_views_simple_math_field_3: 0
-              views_conditional_field_3: 0
-              views_conditional_field_1: 0
-              field_tec_unit_symbol: 0
-              views_conditional_field: 0
-              field_views_simple_math_field_4: 0
-              field_tec_production_requires_vf: 0
-              field_views_simple_math_field_5: 0
-              field_uop_to_uos: 0
-            formula: '@field_tec_quantity / (@field_tec_uou_split_qty * @field_tec_split_into)'
-          mute_logs: true
-          set_precision: 1
-          precision: '4'
-          decimal: .
-          separator: ','
-          format_plural: false
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: ''
-          suffix: ''
-        views_conditional_field_3:
-          id: views_conditional_field_3
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          if: field_tec_split_inventory_1
-          condition: eq
-          equalto: 'On'
-          then: '{{ field_views_simple_math_field_2 }}'
-          then_translate: true
-          or: '{{ field_views_simple_math_field_3 }}'
-          or_translate: true
-          strip_tags: false
-        field_tec_unit_symbol:
-          id: field_tec_unit_symbol
-          table: taxonomy_term__field_tec_unit_symbol
-          field: field_tec_unit_symbol
-          relationship: field_tec_unit_purchase
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: string
-          settings:
-            link_to_entity: false
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        views_conditional_field:
-          id: views_conditional_field
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
-          label: UoP
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          if: field_tec_package_units
-          condition: eq
-          equalto: 'On'
-          then: '<span>{{ field_tec_packaging }}</span><span class="subtle small"> ({{ field_tec_units }} {{ field_tec_unit_symbol }})</span>'
-          then_translate: true
-          or: '{{ field_tec_unit_purchase }}'
-          or_translate: true
-          strip_tags: false
         field_views_simple_math_field_4:
           id: field_views_simple_math_field_4
           table: views_simple_math_field
@@ -5291,30 +3310,18 @@ display:
               name: 0
               view_tec_crm: 0
               field_tec_vendor: 0
-              field_tec_split_inventory: 0
               field_views_simple_math_field_1: 0
-              field_tec_package_units: 0
               field_tec_unit_purchase: 0
-              field_tec_packaging: 0
               tid: 0
               field_tec_material_type: 0
               field_tec_unit_use: 0
-              field_tec_split_inventory_1: 0
               field_tec_split_into: 0
               field_views_simple_math_field: 0
-              views_conditional_field_2: 0
               field_tec_uos: 0
               field_tec_unit_symbol_1: 0
               field_tec_split_into_1: 0
-              views_conditional_field_4: 0
               field_tec_units: 0
-              field_tec_uou_split_qty: 0
-              field_views_simple_math_field_2: 0
               field_views_simple_math_field_3: 0
-              views_conditional_field_3: 0
-              views_conditional_field_1: 0
-              field_tec_unit_symbol: 0
-              views_conditional_field: 0
               field_tec_production_requires_vf: 0
             formula: '@field_tec_quantity_1'
           mute_logs: false
@@ -5447,9 +3454,7 @@ display:
           fieldset_one:
             data_field:
               field_tec_quantity: field_tec_quantity
-              field_tec_split_inventory: field_tec_split_inventory
               field_tec_quantity_input: field_tec_quantity_input
-              field_tec_package_units: field_tec_package_units
               field_tec_quantity_1: field_tec_quantity_1
               field_tec_quantity_input_1: field_tec_quantity_input_1
               field_tec_inventory_image: 0
@@ -5460,26 +3465,16 @@ display:
               field_tec_vendor: 0
               field_views_simple_math_field_1: 0
               field_tec_unit_purchase: 0
-              field_tec_packaging: 0
               tid: 0
               field_tec_material_type: 0
               field_tec_unit_use: 0
-              field_tec_split_inventory_1: 0
               field_tec_split_into: 0
               field_views_simple_math_field: 0
-              views_conditional_field_2: 0
               field_tec_uos: 0
               field_tec_unit_symbol_1: 0
               field_tec_split_into_1: 0
-              views_conditional_field_4: 0
               field_tec_units: 0
-              field_tec_uou_split_qty: 0
-              field_views_simple_math_field_2: 0
               field_views_simple_math_field_3: 0
-              views_conditional_field_3: 0
-              views_conditional_field_1: 0
-              field_tec_unit_symbol: 0
-              views_conditional_field: 0
               field_views_simple_math_field_4: 0
               field_tec_production_requires_vf: 0
             formula: '@field_tec_quantity_input_1 / @field_tec_quantity_1'
@@ -5626,136 +3621,6 @@ display:
           format_plural_string: !!binary MQNAY291bnQ=
           prefix: ''
           suffix: ''
-        field_uop_to_uos:
-          id: field_uop_to_uos
-          table: taxonomy_term__field_uop_to_uos
-          field: field_uop_to_uos
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'UoP to UoS conversion formula'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 2
-            prefix_suffix: true
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_uou_split_qty:
-          id: field_tec_uou_split_qty
-          table: taxonomy_term__field_tec_uou_split_qty
-          field: field_tec_uou_split_qty
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'UoP to UoS conversion formula'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_integer
-          settings:
-            thousand_separator: ''
-            prefix_suffix: true
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
       defaults:
         group_by: false
         fields: false
@@ -5776,18 +3641,13 @@ display:
       tags:
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
         - 'config:field.storage.taxonomy_term.field_tec_material_type'
-        - 'config:field.storage.taxonomy_term.field_tec_package_units'
-        - 'config:field.storage.taxonomy_term.field_tec_packaging'
         - 'config:field.storage.taxonomy_term.field_tec_split_into'
-        - 'config:field.storage.taxonomy_term.field_tec_split_inventory'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
         - 'config:field.storage.taxonomy_term.field_tec_unit_symbol'
         - 'config:field.storage.taxonomy_term.field_tec_unit_use'
         - 'config:field.storage.taxonomy_term.field_tec_units'
         - 'config:field.storage.taxonomy_term.field_tec_uos'
-        - 'config:field.storage.taxonomy_term.field_tec_uou_split_qty'
         - 'config:field.storage.taxonomy_term.field_tec_vendor'
-        - 'config:field.storage.taxonomy_term.field_uop_to_uos'
         - 'config:field.storage.tec_inventory.field_tec_production_requires_vf'
         - 'config:field.storage.tec_inventory.field_tec_quantity'
         - 'config:field.storage.tec_inventory.field_tec_quantity_input'

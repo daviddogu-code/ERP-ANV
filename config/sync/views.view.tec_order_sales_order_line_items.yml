@@ -9,9 +9,6 @@ dependencies:
     - field.storage.taxonomy_term.field_tec_cost
     - field.storage.taxonomy_term.field_tec_inventory_image
     - field.storage.taxonomy_term.field_tec_moq_quantity
-    - field.storage.taxonomy_term.field_tec_package_units
-    - field.storage.taxonomy_term.field_tec_packaging
-    - field.storage.taxonomy_term.field_tec_price_by_package
     - field.storage.taxonomy_term.field_tec_split_into
     - field.storage.taxonomy_term.field_tec_unit_purchase
     - field.storage.taxonomy_term.field_tec_units
@@ -3707,71 +3704,6 @@ display:
     position: 1
     display_options:
       fields:
-        field_tec_package_units:
-          id: field_tec_package_units
-          table: taxonomy_term__field_tec_package_units
-          field: field_tec_package_units
-          relationship: field_tec_inventory
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: boolean
-          settings:
-            format: default
-            format_custom_false: ''
-            format_custom_true: ''
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         id:
           id: id
           table: tec_line_item_field_data
@@ -4211,132 +4143,6 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_packaging:
-          id: field_tec_packaging
-          table: taxonomy_term__field_tec_packaging
-          field: field_tec_packaging
-          relationship: field_tec_inventory
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'Packaging unit'
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        views_conditional_field:
-          id: views_conditional_field
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
           label: Unit
           exclude: false
           alter:
@@ -4370,7 +4176,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: true
+          element_label_colon: false
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -4378,14 +4184,20 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          if: field_tec_package_units
-          condition: eq
-          equalto: 'On'
-          then: '{{ field_tec_packaging }}'
-          then_translate: true
-          or: '{{ field_tec_unit_purchase }}'
-          or_translate: true
-          strip_tags: false
+          click_sort_column: target_id
+          type: entity_reference_label
+          settings:
+            link: false
+          group_column: target_id
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         view_tec_order:
           id: view_tec_order
           table: tec_order
@@ -4687,7 +4499,6 @@ display:
             data_field:
               field_tec_quantity: field_tec_quantity
               field_tec_cost: field_tec_cost
-              field_tec_package_units: 0
               id: 0
               counter: 0
               field_tec_inventory_image: 0
@@ -4695,8 +4506,6 @@ display:
               simple_popup_views_field: 0
               name: 0
               field_tec_unit_purchase: 0
-              field_tec_packaging: 0
-              views_conditional_field: 0
               view_tec_order: 0
               field_tec_vendor: 0
               name_1: 0
@@ -4815,11 +4624,7 @@ display:
             field_tec_inventory_image_1: field_tec_inventory_image_1
             simple_popup_views_field: simple_popup_views_field
             name: name
-            field_tec_material_type: field_tec_material_type
-            field_tec_price: field_tec_price
-            field_tec_line_item_total_number: field_tec_line_item_total_number
             view_tec_order: view_tec_order
-            edit_tec_line_item: edit_tec_line_item
             field_tec_vendor: field_tec_vendor
             name_1: name_1
           default: name_1
@@ -4866,36 +4671,10 @@ display:
               separator: ''
               empty_column: false
               responsive: ''
-            field_tec_material_type:
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_price:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_line_item_total_number:
-              sortable: false
-              default_sort_order: asc
-              align: views-align-right
-              separator: ''
-              empty_column: false
-              responsive: ''
             view_tec_order:
               sortable: false
               default_sort_order: asc
               align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            edit_tec_line_item:
-              sortable: false
-              default_sort_order: asc
-              align: views-align-center
               separator: ''
               empty_column: false
               responsive: ''
@@ -4984,8 +4763,6 @@ display:
       tags:
         - 'config:field.storage.taxonomy_term.field_tec_cost'
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
-        - 'config:field.storage.taxonomy_term.field_tec_package_units'
-        - 'config:field.storage.taxonomy_term.field_tec_packaging'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
         - 'config:field.storage.tec_line_item.field_tec_quantity'
         - 'config:field.storage.tec_order.field_tec_vendor'
@@ -6681,71 +6458,6 @@ display:
     position: 1
     display_options:
       fields:
-        field_tec_package_units:
-          id: field_tec_package_units
-          table: taxonomy_term__field_tec_package_units
-          field: field_tec_package_units
-          relationship: field_tec_inventory
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'Custom UoP'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: boolean
-          settings:
-            format: default
-            format_custom_false: ''
-            format_custom_true: ''
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         counter:
           id: counter
           table: views
@@ -7419,98 +7131,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_views_simple_math_field:
-          id: field_views_simple_math_field
-          table: views_simple_math_field
-          field: field_views_simple_math_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field_views_simple_math_field
-          label: 'Simple Math Field'
-          exclude: true
-          alter:
-            alter_text: false
-            text: '<span class="subtotal" data-price="{{ field_tec_price_by_package }}">₿ 0.00</span>'
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          fieldset_one:
-            data_field:
-              field_tec_package_units: 0
-              counter: 0
-              id: 0
-              form_field_field_tec_quantity: 0
-              field_tec_quantity: 0
-              form_field_field_tec_quantity_1: 0
-              field_tec_inventory_image: 0
-              field_tec_inventory_image_1: 0
-              simple_popup_views_field: 0
-              name: 0
-              description__value: 0
-              field_tec_units: 0
-              field_tec_price: 0
-              field_tec_price_by_package: 0
-              field_tec_cost: 0
-              field_tec_unit_purchase_1: 0
-              field_tec_unit_purchase: 0
-              field_tec_packaging: 0
-              views_conditional_field: 0
-              views_conditional_field_1: 0
-              field_tec_line_item_total_number: 0
-              field_tec_moq_quantity: 0
-              view_tec_order: 0
-              edit_tec_line_item: 0
-              delete_tec_line_item: 0
-              field_tec_vendor: 0
-              field_tec_uos: 0
-              field_views_simple_math_field_1: 0
-              field_tec_split_into: 0
-              field_tec_line_item_total_number_1: 0
-              form_field_field_tec_line_item_total_number: 0
-            formula: '1'
-          mute_logs: false
-          set_precision: 1
-          precision: '2'
-          decimal: .
-          separator: ','
-          format_plural: false
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: '฿ '
-          suffix: ''
         field_tec_price:
           id: field_tec_price
           table: tec_line_item__field_tec_price
@@ -7524,72 +7144,6 @@ display:
           alter:
             alter_text: false
             text: '{{ views_conditional_field }}'
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 2
-            prefix_suffix: true
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_price_by_package:
-          id: field_tec_price_by_package
-          table: taxonomy_term__field_tec_price_by_package
-          field: field_tec_price_by_package
-          relationship: field_tec_inventory
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'Price by package'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
             make_link: false
             path: ''
             absolute: false
@@ -7835,183 +7389,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_packaging:
-          id: field_tec_packaging
-          table: taxonomy_term__field_tec_packaging
-          field: field_tec_packaging
-          relationship: field_tec_inventory
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        views_conditional_field:
-          id: views_conditional_field
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          if: field_tec_package_units
-          condition: eq
-          equalto: 'On'
-          then: '{{ field_views_simple_math_field }}'
-          then_translate: true
-          or: '{{ field_tec_price_1 }}'
-          or_translate: true
-          strip_tags: false
-        views_conditional_field_1:
-          id: views_conditional_field_1
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
-          label: UoP
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          if: field_tec_package_units
-          condition: eq
-          equalto: 'On'
-          then: '{{ field_tec_packaging }}'
-          then_translate: true
-          or: '{{ field_tec_unit_purchase }}'
-          or_translate: true
-          strip_tags: false
         field_tec_line_item_total_number:
           id: field_tec_line_item_total_number
           table: tec_line_item__field_tec_line_item_total_number
@@ -8483,7 +7860,6 @@ display:
               field_tec_quantity: field_tec_quantity
               form_field_field_tec_quantity_1: form_field_field_tec_quantity_1
               field_tec_cost: field_tec_cost
-              field_tec_package_units: 0
               id: 0
               field_tec_inventory_image: 0
               field_tec_inventory_image_1: 0
@@ -8491,14 +7867,9 @@ display:
               name: 0
               description__value: 0
               field_tec_units: 0
-              field_views_simple_math_field: 0
               field_tec_price: 0
-              field_tec_price_by_package: 0
               field_tec_unit_purchase_1: 0
               field_tec_unit_purchase: 0
-              field_tec_packaging: 0
-              views_conditional_field: 0
-              views_conditional_field_1: 0
               field_tec_line_item_total_number: 0
               field_tec_moq_quantity: 0
               view_tec_order: 0
@@ -8843,7 +8214,6 @@ display:
           columns:
             counter: counter
             id: id
-            rendered_entity: rendered_entity
             field_tec_quantity: field_tec_quantity
             field_tec_inventory_image: field_tec_inventory_image
             field_tec_inventory_image_1: field_tec_inventory_image_1
@@ -8870,13 +8240,6 @@ display:
               sortable: false
               default_sort_order: asc
               align: views-align-right
-              separator: ''
-              empty_column: false
-              responsive: ''
-            rendered_entity:
-              sortable: false
-              default_sort_order: asc
-              align: ''
               separator: ''
               empty_column: false
               responsive: ''
@@ -9055,9 +8418,6 @@ display:
         - 'config:field.storage.taxonomy_term.field_tec_cost'
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
         - 'config:field.storage.taxonomy_term.field_tec_moq_quantity'
-        - 'config:field.storage.taxonomy_term.field_tec_package_units'
-        - 'config:field.storage.taxonomy_term.field_tec_packaging'
-        - 'config:field.storage.taxonomy_term.field_tec_price_by_package'
         - 'config:field.storage.taxonomy_term.field_tec_split_into'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
         - 'config:field.storage.taxonomy_term.field_tec_units'
@@ -10749,71 +10109,6 @@ display:
     display_options:
       title: 'Purchase order'
       fields:
-        field_tec_package_units:
-          id: field_tec_package_units
-          table: taxonomy_term__field_tec_package_units
-          field: field_tec_package_units
-          relationship: field_tec_inventory
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'Custom UoP'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: boolean
-          settings:
-            format: default
-            format_custom_false: ''
-            format_custom_true: ''
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         id:
           id: id
           table: tec_line_item_field_data
@@ -11311,69 +10606,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_packaging:
-          id: field_tec_packaging
-          table: taxonomy_term__field_tec_packaging
-          field: field_tec_packaging
-          relationship: field_tec_inventory
-          group_type: group
-          admin_label: 'UoP Packaging unit'
-          plugin_id: field
-          label: 'Packaging unit'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_unit_purchase:
           id: field_tec_unit_purchase
           table: taxonomy_term__field_tec_unit_purchase
@@ -11382,69 +10614,6 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        views_conditional_field:
-          id: views_conditional_field
-          table: views_conditional
-          field: views_conditional_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: views_conditional_field
           label: Unit
           exclude: false
           alter:
@@ -11478,7 +10647,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: true
+          element_label_colon: false
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -11486,14 +10655,20 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          if: field_tec_package_units
-          condition: eq
-          equalto: 'On'
-          then: '{{ field_tec_packaging }}'
-          then_translate: true
-          or: '{{ field_tec_unit_purchase }}'
-          or_translate: true
-          strip_tags: false
+          click_sort_column: target_id
+          type: entity_reference_label
+          settings:
+            link: false
+          group_column: target_id
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         field_tec_line_item_total_number:
           id: field_tec_line_item_total_number
           table: tec_line_item__field_tec_line_item_total_number
@@ -12115,11 +11290,9 @@ display:
             field_tec_inventory_image_1: field_tec_inventory_image_1
             simple_popup_views_field: simple_popup_views_field
             name: name
-            field_tec_material_type: field_tec_material_type
             field_tec_price: field_tec_price
             field_tec_line_item_total_number: field_tec_line_item_total_number
             view_tec_order: view_tec_order
-            edit_tec_line_item: edit_tec_line_item
             field_tec_vendor: field_tec_vendor
             name_1: name_1
           default: name_1
@@ -12166,11 +11339,6 @@ display:
               separator: ''
               empty_column: false
               responsive: ''
-            field_tec_material_type:
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
             field_tec_price:
               sortable: false
               default_sort_order: asc
@@ -12189,13 +11357,6 @@ display:
               sortable: false
               default_sort_order: asc
               align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            edit_tec_line_item:
-              sortable: false
-              default_sort_order: asc
-              align: views-align-center
               separator: ''
               empty_column: false
               responsive: ''
@@ -12296,8 +11457,6 @@ display:
         - user.roles
       tags:
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
-        - 'config:field.storage.taxonomy_term.field_tec_package_units'
-        - 'config:field.storage.taxonomy_term.field_tec_packaging'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
         - 'config:field.storage.tec_line_item.field_tec_line_item_total_number'
         - 'config:field.storage.tec_line_item.field_tec_price'

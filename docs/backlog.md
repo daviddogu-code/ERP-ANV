@@ -510,9 +510,82 @@ Esa parte del desmontaje ya estaba hecha.
    condicionales, y revisar `tec_inventory` y `tec_inventory_elements`.
 5. **Borrar los 22 campos** con sus almacenamientos, cuando ya no los referencie nadie.
 
-**Decisión del dueño del 14 de agosto: apuntar y no ejecutar todavía.** Los pasos 1 y 2 son baratos y
-seguros —la base está vacía, así que no hay datos que estropear— pero se hacen en la misma sesión que
-el importador, no de noche y por separado.
+**Ejecutado el 14 de agosto por la noche**, por decisión del dueño de acabarlo del tirón. Los cuatro
+primeros pasos están hechos y comprobados; queda el quinto. Lo que se aprendió al hacerlo corrige
+tres cosas de lo que está escrito más arriba, y las tres importan:
+
+**Uno: el fallo de los pedidos de compra no era el que se creía.** El registro dio la traza literal,
+`round('10 * 80.00', 2)`, así que sí había una acción escribiendo la multiplicación sin hacer. Pero al
+probarlo salió un segundo fallo que nadie había visto: el cálculo del total multiplicaba la cantidad
+por `field_tec_cost` **de la línea**, y ese campo solo existe en el material. El total salía cero y no
+se guardaba nunca. Lo que se veía en pantalla venía del formulario, no del cálculo. Corregido a
+`[inventoryItem:field_tec_cost:value]`, con el proceso pasado a `presave` para calcular antes de
+guardar en vez de guardar dentro del guardado, con lo que desaparece además el aviso de recursión que
+ECA escribía como error en cada línea.
+
+**Dos: eran cuatro campos obligatorios, no tres.** Faltaba `field_tec_uou_control`. Y la razón de que
+por pantalla no se notara está ahora entendida del todo: Drupal descarta a propósito las violaciones
+de los campos que no muestra, pero Feeds valida la entidad entera.
+
+**Tres: el display que se dibuja de las dos vistas de cálculo ya estaba bien.** Las cuarenta columnas
+atadas a la matriz de pares estaban en el display maestro, que no se dibuja nunca solo, y en
+condicionales **ocultas** del bloque. Las columnas que de verdad ve produccion ya calculaban con
+`cantidad / field_tec_split_into` y `cantidad / field_tec_split_into / field_tec_units`, y ya enseñaban
+el paréntesis con el factor siempre puesto. Así que el paso 3 no fue decidir fórmulas nuevas: fue
+tirar peso muerto y rehacer el maestro a imagen del bloque.
+
+**Tres decisiones del dueño** que ordenaron el paso 4: el paréntesis con el factor se enseña siempre
+(antes dependía de la casilla); los displays maestros se rehacen como el bloque en vez de vaciarlos; y
+el pedido mínimo se queda siempre en unidades de compra.
+
+##### Las dos trampas de Views que hay que conocer para no repetirlas
+
+Ninguna de las dos da error. Las dos dejan la página cargando con un dato menos, que es peor.
+
+**Una columna solo ve el valor de las columnas que van antes que ella.** Las condicionales viejas
+estaban al final de la lista de campos y por eso lo veían todo. Al escribir la rama buena en una
+columna que estaba antes, el paréntesis salía vacío: `Roll ( )`. Se arregla moviendo la columna
+detrás de los campos que lee. Pasó en cinco displays. De paso, la misma comprobación descubrió un
+fallo viejo que no tiene nada que ver: en el resumen de materiales, la columna del proveedor pone un
+enlace a la ficha del contacto con una dirección que trae una columna posterior, así que **el enlace
+del proveedor estaba muerto desde siempre**. Arreglado adelantando la columna oculta, sin tocar el
+orden de lo que se ve.
+
+**Una columna calculada lee el valor de todas las columnas que tenga marcadas, aunque no salgan en la
+fórmula.** Marcar una columna que no existe tumba la página entera con
+`Call to a member function getValue() on null`. Había seis marcas así, y una de ellas rompía el
+pedido de venta. Y al revés: si la fórmula nombra una columna que no está marcada, el módulo deja la
+arroba escrita y la librería de cálculo se queja de carácter ilegal. Las dos direcciones hay que
+cuidarlas.
+
+Los dos guiones que quedan de esto sirven para la próxima vez: `donde-vive-el-sistema-de-oscar.php`
+dice qué configuración nombra cada campo y en calidad de qué, y `sacar-a-oscar-de-las-vistas.php`
+lleva el plan escrito, compara los cabos sueltos de antes y de después, y **no guarda nada si el
+cambio rompe algo**.
+
+##### Lo que se comprobó antes de dar el paso 4 por bueno
+
+- Los 13 displays tocados **dibujados de verdad**, no solo pedidos por su dirección: una página
+  devuelve 200 aunque una columna salga vacía. `dibujar-los-displays-tocados.php`.
+- Los números, a mano: pedido de compra 758, 10 × 80 = 800. Cálculo del pedido 760, 30 piezas × 2,5
+  cm = 75 cm; 75 / 10000 = 0,0075 rollos; 0,0075 / 0,40 = 0,01875 metros; coste 75 × 0,02 = 1,50.
+- Las cuatro piezas del listado de materiales: `meters (0.40 roll)`, `Rolls (10000.00 cm)`,
+  `Centimeter (cm) ฿ 0.02/cm` y, poniéndole un mínimo al material, `5 Meter (m)`.
+- La prueba de humo entera: 44 pantallas, ninguna rota.
+
+**Y una mejora que no se buscaba: las pantallas van mucho más rápido.** Cada columna muerta era una
+unión más en la consulta y un campo más que renderizar. La exportación de materiales a hoja de
+cálculo pasó de 4.650 ms a 100, el PDF de un pedido de compra de 4.660 a 195, el editor de líneas de
+2.754 a 249 y la ficha de un pedido de 1.006 a 247.
+
+**Lo que queda pendiente y no se ha tocado**, para no mezclar: en el listado de materiales la columna
+de unidad de compra enseña `Meter (m) (0.40 m)`, o sea el factor con el símbolo de la propia unidad de
+compra en vez del de la unidad de inventario, que es lo que el factor significa. Debería decir
+`Meter (m) (0.40 roll)`. Es un fallo anterior a este trabajo, está en la reescritura de
+`field_tec_unit_purchase_1`, y para arreglarlo hace falta un campo de símbolo colgado de la relación
+con la unidad de inventario. En la vista de cálculo pasa lo mismo con el símbolo de la unidad de
+consumo. Con el paréntesis ya siempre a la vista, esto conviene arreglarlo pronto: un factor con la
+unidad equivocada al lado no informa, confunde.
 
 ### Los tres cabos que dejó el borrado
 
