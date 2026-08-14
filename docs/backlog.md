@@ -567,19 +567,6 @@ tiempo. Se pueden borrar del repositorio.
 
 Nada de esto corre prisa, pero conviene que esté escrito para que no se descubra por sorpresa.
 
-- **La portada enlaza al nodo, no a la pantalla, y cuatro iconos viven de una redirección.**
-  Puesto el 14 de agosto. La vista de la portada (`views.view.tec_icons_launchpad`) enlaza el
-  título y la imagen **a la ficha del nodo**, que es lo correcto para las ocho portadas que llevan
-  su pantalla dentro en forma de bloque. Pero cuatro pantallas del ERP no son nodos, son rutas del
-  módulo `tec_production` —`/o/queue`, `/production/log`, `/production/report` y `/stock`—, y para
-  esas cuatro el enlace no llevaba a ninguna parte. Hoy funcionan con cuatro redirecciones
-  temporales de `node/11`–`node/14`, que es un apaño honesto pero un apaño.
-
-  El arreglo bueno: **un campo de enlace en el tipo de contenido "Landing page"** y reescribir la
-  salida de la vista para usarlo cuando esté relleno. Media hora. Con eso los iconos apuntarían
-  directamente a su sitio, las cuatro redirecciones se pueden borrar y el ERP deja de tener cuatro
-  nodos que existen solo para pintar un icono.
-
 - **`tec_gui`: un tipo de entidad abandonado que deja el informe de estado en rojo.** Encontrado
   el 13 de agosto al subir a Drupal 11, al revisar los requisitos del sitio. Es un tipo de
   entidad de ECK, "GUI", con **cero** contenidos, pero con sus doce tablas creadas en la base y
@@ -786,6 +773,52 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-14 — El ratón ya enseña la pantalla y no el nodo: la portada enlaza por campo, y las redirecciones fuera
+
+Media hora después de poner las cuatro redirecciones, el dueño vio el precio del apaño: **al pasar
+el ratón por los cuatro iconos nuevos salía `/node/11` en vez del destino**, mientras que en los
+antiguos salía `/p`, `/i`, `/o`. Queja legítima, y con explicación exacta.
+
+**La portada siempre había enlazado al nodo, nunca al destino.** En los siete antiguos el nodo *es*
+la pantalla y tiene alias bonito, así que el ratón enseñaba una ruta bonita por casualidad. Los
+cuatro nuevos son de otra naturaleza —la pantalla es una ruta de `tec_production`, no vive dentro
+del nodo— y esos nodos no tienen alias. Y la redirección salta **en el servidor, después de
+pinchar**: en el HTML ponía `/node/11`, así que el navegador decía la verdad.
+
+**Arreglado como estaba escrito que había que arreglarlo**, el mismo día que se escribió: un campo
+de enlace, `field_tec_target`, en el tipo de contenido *Landing page*. Obligatorio, solo rutas
+internas, sin texto de enlace. Relleno en las once portadas, y la vista de la portada pinta ahora
+el icono y el título como enlace **a ese campo** en lugar de al nodo.
+
+Tres detalles que hacen que funcione, y que la próxima vez ahorran media hora:
+
+- El campo se añade a la vista **primero y excluido**, porque una reescritura de Views solo ve los
+  campos que van **antes** que ella.
+- Su formateador es *"solo la URL, en texto plano"*. Un campo de enlace pintado normal daría un
+  `<a>` en vez de una ruta, y meterlo dentro de un `href` sería un desastre. Con esa opción da
+  `/o/queue` limpio. El núcleo contempla el caso literalmente: *"Tokens might have resolved URL's,
+  as is the case for tokens provided by Link fields"* (`FieldPluginBase::renderAsLink`, línea 1472).
+- Las siete primeras rutas **no se escriben a mano**: el guion las saca del alias real de cada
+  nodo, así que el campo dice lo que dice Drupal y no se desfasa si alguien cambia un alias. Solo
+  las cuatro de código están escritas, porque su ruta la define `tec_production.routing.yml`.
+
+**Y fuera la muleta: las cuatro redirecciones borradas**, de seis a dos. Quedarse con ellas habría
+sido peor que borrarlas: dentro de un año nadie sabría por qué `/node/14` salta a otro sitio.
+Efecto colateral asumido: si alguien entra a `/node/11`–`/node/14` a pelo vuelve a ver la página
+del icono y el número. Ya no hay ningún enlace que lleve ahí.
+
+**Comprobado lo que un humano ve.** Pedido `/start` como usuario 1 y listados los enlaces uno a
+uno: once iconos, los once apuntando a su pantalla, las once rutas existen, y cada uno con sus dos
+enlaces (imagen y título). El formulario de una portada abre con el campo relleno.
+
+**Guardián nuevo en la comprobación del ERP**, porque el fallo anterior duró meses sin que nada se
+quejara: *"las portadas dicen qué pantalla abren"* y *"y esa pantalla existe"*. 42 de 42. Y el
+campo obligatorio impide que nazca una portada sin destino, que era la otra mitad del problema.
+
+Queda en `scripts/destino-de-las-portadas.php` (crea el campo, lo rellena y quita las
+redirecciones; se puede volver a pasar sin miedo) y en `scripts/a-donde-apuntan-los-iconos.php`
+(la comprobación de lo que ve el ratón).
+
 ### 2026-08-14 — Super BOM retirado, y cuatro iconos del home que no llevaban a ninguna parte
 
 Super BOM sobraba: lo que hacía lo hace ya el tablero de stock. Antes de tocarlo había que
@@ -860,6 +893,9 @@ borra, simplemente hay uno más que no usa nadie.
 
 Copia antes de tocar en `C:\laragon\backups\antes-de-retirar-superbom\` (64 MB). Lo que se hizo
 está en `scripts/retirar-superbom.php`, con las razones dentro.
+
+> Aviso para quien lea esto suelto: **las cuatro redirecciones ya no existen**. Duraron media hora.
+> El arreglo bueno llegó el mismo día y está en la entrada de arriba.
 
 ### 2026-08-14 — Diez botones de crear escondidos, y el CRM sin manera de empezar
 

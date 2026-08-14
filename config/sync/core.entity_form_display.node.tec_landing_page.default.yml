@@ -6,11 +6,13 @@ dependencies:
     - field.field.node.tec_landing_page.body
     - field.field.node.tec_landing_page.field_icon_order
     - field.field.node.tec_landing_page.field_tec_icon
+    - field.field.node.tec_landing_page.field_tec_target
     - field.field.node.tec_landing_page.layout_builder__layout
     - image.style.thumbnail
     - node.type.tec_landing_page
   module:
     - image
+    - link
     - path
     - text
 id: node.tec_landing_page.default
@@ -48,6 +50,14 @@ content:
     settings:
       progress_indicator: throbber
       preview_image_style: thumbnail
+    third_party_settings: {  }
+  field_tec_target:
+    type: link_default
+    weight: 4
+    region: content
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
     third_party_settings: {  }
   langcode:
     type: language_select

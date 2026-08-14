@@ -83,10 +83,11 @@ const REFERENCIA_VARIOS = [
   // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
   // Super BOM, porque su funcion la hace ya el tablero de stock.
   'nodos' => 11,
-  // Eran dos. Las cuatro nuevas apuntan node/11 a node/14 a las rutas de
-  // tec_production, que es lo que esos cuatro iconos de la portada tenian que
-  // haber abierto siempre.
-  'redirecciones' => 6,
+  // Fueron seis unas horas: se pusieron cuatro para que los iconos de la cola, el
+  // registro, el informe y el stock llevaran a su pantalla. Vuelven a ser dos
+  // porque el arreglo bueno llego el mismo dia: el enlace sale ahora del campo
+  // field_tec_target de cada portada y va derecho, sin rebote.
+  'redirecciones' => 2,
   'importaciones' => 3,
   // Eran ocho. El nucleo borro el de Super BOM al borrar su nodo.
   'enlaces_menu' => 7,
@@ -177,6 +178,38 @@ foreach ([
   comprobar($resultados, $etiqueta, $n === REFERENCIA_VARIOS[$etiqueta],
     "$n (se esperaban " . REFERENCIA_VARIOS[$etiqueta] . ")");
 }
+
+// Cada portada tiene que decir que pantalla abre, y esa pantalla tiene que
+// existir. Esto se comprueba porque el 14 de agosto se descubrio que cuatro de
+// los catorce iconos del inicio no llevaban a ninguna parte, y llevaban asi meses
+// sin que nada avisara: la prueba de humo pedia las paginas y respondian 200,
+// porque responder 200 no es lo mismo que servir para algo.
+$portadas = $etm->getStorage('node')->loadMultiple(
+  $etm->getStorage('node')->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', 'tec_landing_page')
+    ->execute()
+);
+
+$validador = \Drupal::service('path.validator');
+$sinDestino = [];
+$destinoRoto = [];
+
+foreach ($portadas as $portada) {
+  if (!$portada->hasField('field_tec_target') || $portada->get('field_tec_target')->isEmpty()) {
+    $sinDestino[] = $portada->label();
+    continue;
+  }
+  $ruta = $portada->get('field_tec_target')->first()->getUrl()->toString();
+  if (!$validador->getUrlIfValidWithoutAccessCheck($ruta)) {
+    $destinoRoto[] = $portada->label() . ' -> ' . $ruta;
+  }
+}
+
+comprobar($resultados, 'las portadas dicen que pantalla abren', !$sinDestino,
+  $sinDestino ? 'sin destino: ' . implode(', ', $sinDestino) : count($portadas) . ' de ' . count($portadas));
+comprobar($resultados, 'y esa pantalla existe', !$destinoRoto,
+  $destinoRoto ? implode(', ', $destinoRoto) : 'todas');
 
 // -----------------------------------------------------------------------------
 // 2. Estructura: modulos y automatismos.
