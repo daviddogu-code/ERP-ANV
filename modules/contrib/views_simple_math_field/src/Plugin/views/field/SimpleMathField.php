@@ -343,7 +343,10 @@ class SimpleMathField extends NumericField implements ContainerFactoryPluginInte
         }
       }
       else {
-        $data = $entity->get($field)->getValue()[0]['value'];
+        // An empty field answers an empty array, so reading [0]['value'] off it
+        // leaves two warnings in the log per field and per row. The result is
+        // NULL either way, which is what the calculation already handled.
+        $data = $entity->get($field)->getValue()[0]['value'] ?? NULL;
       }
 
       return $data;

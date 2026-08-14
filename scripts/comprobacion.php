@@ -74,7 +74,11 @@ const REFERENCIA_TAXONOMIA = [
 ];
 
 const REFERENCIA_VARIOS = [
-  'usuarios' => 7,
+  // Eran siete hasta el 14 de agosto de 2026. Se borro `devT`, que tenia rol de
+  // administrador -o sea permisos totales- con un correo en un dominio que parece
+  // una errata del del dueno. Estaba bloqueada desde 2024 y sin nada colgado, pero
+  // una llave maestra que no es de nadie conocido no se deja bloqueada, se quita.
+  'usuarios' => 6,
   // Estos 315 ficheros son en su mayoria imagenes de los productos que se
   // borraron. Drupal no los borra solo: sin la opcion de marcar como temporales
   // los que nadie usa, se quedan ahi para siempre. Cuando se decida que hacer

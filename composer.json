@@ -226,6 +226,9 @@
             },
             "drupal/views_entity_form_field": {
                 "AJAX in the editable table, plus the local state it was installed with": "patches/views_entity_form_field-ajax-and-local-state.patch"
+            },
+            "drupal/views_simple_math_field": {
+                "Stop two PHP warnings per empty field on the order lines screen": "patches/views-simple-math-field-campo-vacio.patch"
             }
         },
         "installer-paths": {

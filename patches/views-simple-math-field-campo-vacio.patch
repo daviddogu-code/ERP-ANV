@@ -1,0 +1,38 @@
+Stop two PHP warnings per empty field, per row, on every order lines screen.
+
+getFieldValue() reads the first value of a field without checking that there is
+one:
+
+  $data = $entity->get($field)->getValue()[0]['value'];
+
+When a line has no quantity yet, getValue() answers an empty array, so [0] is
+undefined and ['value'] is then read off NULL. That is two warnings for every
+empty field of every row:
+
+  Warning: Undefined array key 0 in
+  Drupal\views_simple_math_field\Plugin\views\field\SimpleMathField::getFieldValue()
+  Warning: Trying to access array offset on null
+
+On this site that is fifteen warnings on a single load of the editable order
+lines table, and a new order starts with every quantity empty. Nothing breaks,
+the page answers 200, but the log is where real failures are looked for and this
+buries them.
+
+$data ends up being NULL with or without the fix, so the calculation behaves
+exactly as before. The only thing that changes is the noise.
+
+diff --git a/src/Plugin/views/field/SimpleMathField.php b/src/Plugin/views/field/SimpleMathField.php
+--- a/src/Plugin/views/field/SimpleMathField.php
++++ b/src/Plugin/views/field/SimpleMathField.php
+@@ -343,7 +343,10 @@ protected function getFieldValue(ResultRow $values, $entity, $field) {
+         }
+       }
+       else {
+-        $data = $entity->get($field)->getValue()[0]['value'];
++        // An empty field answers an empty array, so reading [0]['value'] off it
++        // leaves two warnings in the log per field and per row. The result is
++        // NULL either way, which is what the calculation already handled.
++        $data = $entity->get($field)->getValue()[0]['value'] ?? NULL;
+       }
+ 
+       return $data;

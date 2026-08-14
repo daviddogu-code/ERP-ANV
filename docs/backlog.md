@@ -78,6 +78,27 @@ por error algo que estaba puesto a propósito.
   y allí es donde está la máquina abierta a internet. Es el motivo más fuerte para que el
   despliegue no espere: de todo lo que hay en este backlog, es lo único que empeora solo con el
   paso del tiempo.
+
+- **Tres clics en el servidor que cierran ese agujero hoy, sin desplegar nada. Los tiene que dar el
+  dueño.** Entrar en `https://erp.anvfightgear.com` como `david`, ir a
+  `/admin/modules/uninstall`, marcar **ECA UI** y confirmar. Drupal pedirá desinstalar también
+  **ECA BPMN**, que depende de ella; hay que aceptar.
+
+  **Está comprobado que no rompe nada** (14 de agosto): los 36 procesos de ECA no dependen de
+  ninguno de los dos módulos —dependen de `eca_content` y `eca_log`— y los 36 diagramas tampoco, así
+  que **ni los automatismos ni los dibujos se pierden**. Lo único que desaparece es la pantalla para
+  editarlos, que en producción no la usa nadie. Y cuando se despliegue, la base de datos de local
+  vuelve a traer `eca_ui` encendido, ya con ECA 2.1.22, que es la versión parcheada.
+
+  Que sigue encendido allí también está comprobado, desde fuera y sin entrar: `/admin/config/workflow/eca`
+  responde 307 a la página de acceso, y una ruta que no existiera daría 404.
+
+  **Por qué no lo puedo hacer yo**, que es lo que se intentó primero: por SSH se entra bien con la
+  llave, pero `drush` allí **no llega a la base de datos**. `settings.php` es `root:www-data` con
+  permisos `640` y el usuario `david` no está en el grupo `www-data`, así que no puede leer las
+  credenciales. `drush status` contesta la versión porque eso lo saca del código, pero cualquier
+  comando que toque datos responde *"Drush was unable to query the database"*. Es la misma pared que
+  el 13 de agosto, y la que hace falta la contraseña de `sudo` para saltar.
 - ~~**Un cabo suelto de dos minutos, mejor antes de desplegar: desinstalar `upgrade_status`.**~~
   Hecho el 14 de agosto de 2026. De paso hubo que decidir qué pasaba con `update`, que estaba
   encendido solo porque `upgrade_status` lo arrastra: **se queda, y ahora a propósito**. Es el
@@ -165,13 +186,14 @@ puntos de correo y el de las cuentas.
   - ~~**El superusuario (`uid 1`) se llama `drusphere`**~~ — hecho el 12 de agosto. Se
     renombró a `david` y se le puso contraseña nueva. Para liberar ese nombre hubo que
     renombrar antes la cuenta bloqueada `David` (`uid 4`) a `david-antiguo`.
-  - **`devT` (`uid 7`) tiene rol de administrador**, es decir permisos totales, con un correo
-    en un dominio que parece una errata del suyo (`drupshere.com`). Está bloqueada, así que no
-    es urgente, pero es una segunda llave maestra que no es del dueño: lo suyo es borrarla, no
-    dejarla bloqueada.
+  - ~~**`devT` (`uid 7`) tiene rol de administrador**~~ — borrada el 14 de agosto de 2026. Antes se
+    comprobó que no tenía absolutamente nada colgado, ni fichas ni ficheros, así que se fue sin
+    dejar huérfanos. Llevaba sin entrar desde el 8 de junio de 2024.
   - **Cuentas muertas por revisar y probablemente borrar**: `manager`, `executive` (la de
     Oscar, bloqueada el 12 de agosto), `rat` con correo en `actafight.com`, y una llamada
-    `David` que es del dueño pero está bloqueada.
+    `David` que es del dueño pero está bloqueada. Las cuatro siguen ahí, bloqueadas, y ninguna
+    tiene rol de administrador: `manager` y `rat` son *tec_manager*, `executive` y `david-antiguo`
+    son *tec_executive*. O sea que ya no hay ninguna llave maestra suelta.
 
 ### Limpieza de datos y arreglo del importador
 
@@ -274,6 +296,15 @@ medio rellenar, y lo que faltaba era justo lo que el importador no sabe meter.
   se fabrique un pedido con líneas**, lo pida, y lo borre, igual que hace ya la comprobación del
   ERP desde esa misma noche. Mientras no lo haga, el despliegue se verifica con seis pantallas
   menos, y una de ellas es la que ya se rompió una vez.
+
+  **La parte difícil ya está resuelta**, esa misma tarde y de rebote: para poder probar el parche de
+  `views_simple_math_field` hacía falta exactamente eso, un pedido con líneas, y
+  `scripts/probar-el-parche.php` lo fabrica, pide dos de las seis pantallas y lo borra. La receta
+  —material, talla con escandallo, pedido de venta, líneas colgadas del pedido— está escrita y
+  probada. Falta llevarla a `cargan-las-paginas.php` y añadirle un pedido de compra y un cliente con
+  productos, que son las otras tres pantallas: `po/draft/%`, `po/%/print`, `po/%/x/pdf` y
+  `tec_crm/%/reorder`. Ojo con un detalle que salió al mirar la estructura: las líneas de compra son
+  otro subtipo, `tec_po_line_item`, con sus propios campos.
 
   Ese mismo día se le añadió lo que le faltaba por el otro lado: **ahora pide las doce portadas
   del ERP**, que son nodos y no vistas, y por eso no las descubría. De 20 pantallas a 31. El
@@ -588,6 +619,15 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   Antes de elegir hay que mirar qué hacen esas 20 líneas y si alguien las usa.
   Diagnóstico: `drush scr scripts/que-esta-descuadrado.php`.
 
+  **Lo que se averiguó el 14 de agosto, y que hace la primera opción mucho menos barata de lo que
+  parecía**: `field_tec_gui_product` no es un campo cualquiera colgado de las líneas de venta, es un
+  campo **obligatorio** de ese subtipo. Borrar `tec_gui` significa por tanto tocar la definición de
+  las líneas de pedido, que es la pieza más usada del ERP. Y las cincuenta fichas que parecían
+  perdidas no lo estaban del todo: vivían en trece tablas temporales de una actualización a medias,
+  ya tiradas ese mismo día después de comprobar que las tablas de verdad estaban vacías y que Drupal
+  no veía ninguna. O sea que ahora `tec_gui` está limpio de datos, pero **estructuralmente sigue
+  enganchado**, y ahí es donde está el trabajo.
+
 - **Un tipo de importación huérfano: `tec_products_csv_importer`.** Encontrado el 13 de agosto
   al revisar Feeds. Hay **dos importaciones creadas** que lo usan, "Primo products" con 28
   elementos y "Trust products" con 92, pero **el tipo ya no existe en la configuración**: solo
@@ -600,9 +640,10 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   recuperan o se borran.
   Diagnóstico: `drush scr scripts/quien-usa-feeds.php`.
 
-- **Trece tablas `tmp_b44c2b*` en la base de datos.** Ocupan poco, 0,8 MB, y son copias de las
-  tablas de `tec_gui`. Restos de alguna operación de copia o de Backup and Migrate que no
-  limpió. Se pueden borrar, pero conviene hacerlo a la vez que se decida qué pasa con `tec_gui`.
+- ~~**Trece tablas `tmp_b44c2b*` en la base de datos.**~~ Tiradas el 14 de agosto de 2026, y no eran
+  restos de Backup and Migrate como se suponía aquí: eran las tablas de `tec_gui` con cincuenta
+  fichas dentro, aparcadas por una actualización de tipo de entidad que se quedó a medias. Se
+  comprobó antes que las tablas de verdad existen y están vacías y que Drupal no ve ninguna ficha.
 
 - **Borrar un material en uso avería en silencio las líneas que lo usan.** Descubierto el 13 de
   agosto durante la prueba funcional. Cuando una línea de pedido tiene en su escandallo un
@@ -765,16 +806,121 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 - **Mirar las versiones móviles de GitHub y Cursor.** GitHub tiene aplicación de iOS y
   Android, con la que se puede leer y editar este backlog desde el teléfono. Cursor tiene
   agentes en la nube que se lanzan desde el navegador del móvil.
-- **Quince avisos de PHP por cada carga de la pantalla de líneas de pedido.**
-  `views_simple_math_field` hace `$entity->get($campo)->getValue()[0]['value']` sin comprobar que
-  el campo tenga algo, así que cada línea con un campo vacío deja dos avisos en el registro
-  (`SimpleMathField.php:346`). No rompe nada, la página responde 200, pero ensucia el registro y
-  ahí es donde se buscan los fallos de verdad. Salieron a la luz el 13 de agosto, cuando la prueba
-  de humo empezó a ejecutar esa vista de verdad. Se arregla con un parche de una línea.
+- ~~**Quince avisos de PHP por cada carga de la pantalla de líneas de pedido.**~~ Arreglado el 14 de
+  agosto de 2026 con el parche de una línea que se anunciaba, y probado con un pedido fabricado a
+  propósito: la pantalla responde 200 y el registro se queda a cero. Detalle en Hecho, incluidas las
+  dos maneras de escribir un parche que no se aplica.
 
 ---
 
 ## Hecho
+
+### 2026-08-14 — Fuera lo que no usaba nadie: un tipo de entidad, siete vistas, siete campos, catorce tablas y una llave maestra
+
+La auditoría de la mañana señaló nueve candidatos a desaparecer. Se han ido todos, pero lo que
+merece quedar escrito no es la lista, es **cómo se pasó de "parece muerto" a "es muerto"**, porque la
+primera pasada de comprobación estuvo a punto de salvar cosas que no hacía falta salvar y de tirar
+cosas que sí.
+
+**La primera búsqueda mintió, y en las dos direcciones.** Buscaba el identificador de cada vista como
+trozo de texto dentro de la configuración. Resultado: `tec_order_material_calculation` parecía
+tener trece dependencias, y `dev` cuatro. Ninguna era real. Las de la primera eran los nombres de
+otras tres vistas que **empiezan igual** (`..._summary`, `..._terms`), y las de la segunda eran
+palabras que llevan "dev" dentro. La segunda pasada buscó distinto: Drupal guarda la configuración
+serializada, y una cadena serializada lleva su longitud delante, `s:14:"identificador"`. Buscando con
+la longitud exacta solo se encuentra el valor completo, nunca un trozo. **La diferencia entre las dos
+pasadas es la diferencia entre "aparece" y "es"**, y con la primera no se puede decidir nada.
+
+Con la búsqueda buena quedó una sola duda de verdad: siete campos `viewfield` nombraban la vista del
+*Excel Lover*. Se abrió uno y era una **lista blanca de casillas** —el editor puede elegir entre
+estas vistas— con esa casilla **en cero**. Lo que el campo pinta de verdad se guarda aparte, por UUID,
+y ninguno de los siete UUID de las vistas condenadas aparecía en ningún campo. De paso se limpiaron
+esas siete casillas fantasma: si se dejan, el próximo repaso vuelve a encontrarlas y hay que volver a
+investigar lo mismo.
+
+Lo que se ha ido:
+
+- **`tec_app_link`**, un tipo de entidad con seis subtipos para enlaces a redes sociales (Facebook,
+  Instagram, LINE, WhatsApp, X y teléfono). Cero fichas, cero campos apuntando, y ECK se llevó sus
+  dos tablas al borrarlo.
+- **Siete vistas**: `tec_order_material_calculation` y su duplicado, la del *Excel Lover*, las dos
+  del núcleo que nunca se usaron (`archive` y `glossary`), `dev` —sin página ni bloque— y
+  `material_calculation_inventory_based`, cuyo bloque no estaba colocado en ninguna parte. Se
+  llevaron además cuatro traducciones al tailandés que nadie sabía que existían.
+- **Siete almacenes de campo en nodos**: `field_image_browser`, `field_files_over_ajax` y los cinco
+  `field_dth_*` que dejó el tema DXPR. Sin instancias, cero filas y cero en revisiones.
+- **Catorce tablas**: las trece `tmp_b44c2btec_gui*` y una más que apareció por el camino.
+- **La cuenta `devT`**, con rol de administrador y correo en un dominio que parece una errata del
+  del dueño. Bloqueada desde junio de 2024 y sin nada colgado. Una llave maestra que no es de nadie
+  conocido no se deja bloqueada, se quita.
+
+**Las trece tablas temporales no eran basura anónima.** Eran las tablas de `tec_gui` con cincuenta
+fichas dentro, aparcadas por una actualización de tipo de entidad que se quedó a medias hace dos
+años. Se comprobó antes de tirarlas que **las tablas de verdad existen y están vacías**, y que Drupal
+no ve ninguna ficha: o sea que esos cincuenta registros eran invisibles para el ERP desde el día en
+que se quedaron ahí.
+
+**Y un susto que no lo era.** Al borrar los siete almacenes se purgó la cola a mano para no dejarle
+el trabajo al cron, y el contador de pendientes se quedó clavado en dos durante doce vueltas. Parecía
+un atasco. No lo era: **estaba mirando el contador equivocado.** Los pendientes son *definiciones* de
+campo, y una definición no desaparece hasta que se ha vaciado su tabla entera; mientras, las filas
+sí bajaban de doscientas en doscientas sin que se viera. Eran unas 4.650 filas de
+`ai_interpolator_status`, restos de los experimentos de IA. Contando filas en vez de definiciones, la
+cola se vació en cinco vueltas.
+
+Lo que sí quedó al descubierto al vaciarla: **una tabla de campo borrado que ya no pertenecía a
+ninguna cola**, con diez filas de `field_tec_gui_product`. Ningún cron la iba a mirar jamás, porque
+su definición ya se había purgado en su día y la tabla sobrevivió. Se comprobó que las diez fichas a
+las que apuntaba no existen y se tiró. El mismo campo sigue vivo en otro subtipo, con su tabla
+aparte, que no se ha tocado.
+
+**Un hallazgo que cambia el plan de `tec_gui`.** Está en la lista de deuda técnica como "tipo de
+entidad abandonado", y es más que eso: `field_tec_gui_product` es un campo **obligatorio** de las
+líneas de pedido de venta. No se puede retirar `tec_gui` sin tocar antes eso, así que la ficha de
+deuda técnica está mal planteada y hay que rehacerla.
+
+**Las dos carpetas de peso muerto, fuera**: `tec_crm` y `tec_brands`, 51 ficheros y 111 KB, sin una
+sola línea de PHP —solo configuración exportada al estilo *features*—. Y una corrección de lo que se
+escribió esta mañana: **no eran un riesgo**, como dije en el commit del cron. El módulo `features` no
+está instalado y las dos dependen de `ai_interpolator`, que se desinstaló el 13 de agosto, así que
+Drupal se habría negado a activarlas. Eran peso muerto, no una bomba. El guardián del cron sigue
+teniendo sentido, pero por otro motivo: un clic en la interfaz o una base de datos vieja restaurada.
+
+### 2026-08-14 — Quince avisos por carga, callados con un `?? NULL`, y por fin probado con un pedido de verdad
+
+`views_simple_math_field` leía el primer valor de un campo sin comprobar que hubiera alguno:
+`$entity->get($field)->getValue()[0]['value']`. Una línea de pedido sin cantidad devuelve un array
+vacío, así que `[0]` no existe y `['value']` se lee sobre `NULL`: dos avisos por cada campo vacío y
+por cada fila, quince en una sola carga de la tabla de líneas. Y un pedido nuevo empieza con **todas**
+las cantidades vacías. No rompía nada, la página respondía 200, pero el registro es donde se buscan
+los fallos de verdad y eso los enterraba.
+
+El arreglo es `?? NULL` al final de la línea. El valor acaba siendo nulo con parche y sin él, o sea
+que el cálculo se comporta exactamente igual; lo único que cambia es el ruido.
+
+**Lo que costó no fue el arreglo, fue conseguir aplicarlo.** El parche falló dos veces, por dos
+motivos distintos y los dos reutilizables:
+
+- **Estaba en UTF-16.** Es el fallo recurrente del editor en este proyecto, y hasta hoy solo se había
+  cazado en los `.php`. Un `.patch` en UTF-16 no lo lee ni `patch` ni `git apply`, y el mensaje de
+  Composer no dice por qué: solo *"Cannot apply patch"*. **Al escribir un parche hay que comprobar la
+  codificación igual que en los guiones.**
+- **La cabecera del hunk mentía por uno.** Declaraba once líneas nuevas donde había diez, y GNU
+  `patch` respondió *"malformed patch at line 38"*, señalando la última línea de contexto en vez del
+  número mal contado. Se diagnostica en un segundo con `patch --dry-run`, que dice bastante más que
+  Composer.
+
+**Y por fin se ha podido probar de verdad.** Comprobar que un aviso ha dejado de salir no se puede
+hacer leyendo el código: hay que pedir la pantalla. Desde la limpieza no había ningún pedido con el
+que pedirla, así que `scripts/probar-el-parche.php` **se fabrica uno**: material, talla con
+escandallo, pedido de venta y dos líneas, una a propósito **sin cantidad**, que es el caso que
+disparaba los avisos. Después pide `/o/draft/<pedido>` y `/o/pf/<pedido>/print`, mira el registro y lo
+borra todo. Resultado: las dos pantallas responden 200 y el registro se queda **exactamente a cero**.
+
+Eso deja además resuelto lo más difícil del punto pendiente de devolverle a la prueba de humo las
+seis pantallas que perdió: **la receta de qué hay que fabricar ya está escrita y probada** en ese
+guion. Lo que falta es llevarla a `cargan-las-paginas.php` y añadir el pedido de compra y el cliente,
+que son las otras tres pantallas.
 
 ### 2026-08-14 — El cron desarmado antes de encenderlo: dos llaves fuera y los trece trabajos revisados
 

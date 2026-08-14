@@ -1,9 +1,0 @@
-uuid: 53cda4c5-fc62-4d26-a15c-2b36352fb284
-langcode: en
-status: true
-dependencies:
-  config:
-    - eck.eck_entity_type.tec_app_link
-name: Instagram
-type: tec_instagram
-description: 'Instagram contact link'

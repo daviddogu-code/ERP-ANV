@@ -60,7 +60,6 @@ settings:
     tec_gui_bom_item_viewfields: '0'
     tec_inventory_bom_inventory_entity_reference_select: '0'
     tec_order_color_variations_and_line_items: '0'
-    tec_order_create_draft_order_ii_excel_lover_style_eca_model: '0'
     tec_order_material_calculation_terms: '0'
     tec_order_sales_order_line_items: '0'
     tec_orders_orders: '0'
