@@ -80,10 +80,16 @@ const REFERENCIA_VARIOS = [
   // los que nadie usa, se quedan ahi para siempre. Cuando se decida que hacer
   // con ellos, esta cifra baja.
   'ficheros' => 315,
-  'nodos' => 12,
-  'redirecciones' => 2,
+  // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
+  // Super BOM, porque su funcion la hace ya el tablero de stock.
+  'nodos' => 11,
+  // Eran dos. Las cuatro nuevas apuntan node/11 a node/14 a las rutas de
+  // tec_production, que es lo que esos cuatro iconos de la portada tenian que
+  // haber abierto siempre.
+  'redirecciones' => 6,
   'importaciones' => 3,
-  'enlaces_menu' => 8,
+  // Eran ocho. El nucleo borro el de Super BOM al borrar su nodo.
+  'enlaces_menu' => 7,
   'procesos_eca' => 36,
   'procesos_eca_encendidos' => 29,
   // Eran 146 hasta el 13 de agosto de 2026. Se quedaron en 145 cuando dxpr_theme

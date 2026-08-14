@@ -567,6 +567,19 @@ tiempo. Se pueden borrar del repositorio.
 
 Nada de esto corre prisa, pero conviene que esté escrito para que no se descubra por sorpresa.
 
+- **La portada enlaza al nodo, no a la pantalla, y cuatro iconos viven de una redirección.**
+  Puesto el 14 de agosto. La vista de la portada (`views.view.tec_icons_launchpad`) enlaza el
+  título y la imagen **a la ficha del nodo**, que es lo correcto para las ocho portadas que llevan
+  su pantalla dentro en forma de bloque. Pero cuatro pantallas del ERP no son nodos, son rutas del
+  módulo `tec_production` —`/o/queue`, `/production/log`, `/production/report` y `/stock`—, y para
+  esas cuatro el enlace no llevaba a ninguna parte. Hoy funcionan con cuatro redirecciones
+  temporales de `node/11`–`node/14`, que es un apaño honesto pero un apaño.
+
+  El arreglo bueno: **un campo de enlace en el tipo de contenido "Landing page"** y reescribir la
+  salida de la vista para usarlo cuando esté relleno. Media hora. Con eso los iconos apuntarían
+  directamente a su sitio, las cuatro redirecciones se pueden borrar y el ERP deja de tener cuatro
+  nodos que existen solo para pintar un icono.
+
 - **`tec_gui`: un tipo de entidad abandonado que deja el informe de estado en rojo.** Encontrado
   el 13 de agosto al subir a Drupal 11, al revisar los requisitos del sitio. Es un tipo de
   entidad de ECK, "GUI", con **cero** contenidos, pero con sus doce tablas creadas en la base y
@@ -772,6 +785,81 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-14 — Super BOM retirado, y cuatro iconos del home que no llevaban a ninguna parte
+
+Super BOM sobraba: lo que hacía lo hace ya el tablero de stock. Antes de tocarlo había que
+responder a una sola pregunta, quién lo usa, y ahí apareció lo interesante.
+
+**El barrido en busca de referencias tenía un punto ciego, y era justo donde estaba la respuesta.**
+Se buscó *superbom* en las **1.335 columnas de texto de las 447 tablas** de la base y de contenido
+salió limpio. Ese resultado no valía nada: **las portadas del ERP se montan con Layout Builder, y
+ese campo se guarda serializado en una columna binaria**, igual que `config.data`. O sea que el
+único sitio donde podía vivir el enganche era el único que un `LIKE` no mira. Hubo que abrir las
+secciones con la API de Drupal para verlo.
+
+La receta buena, para la próxima retirada —Patrones—: **el mapa de portadas más un `grep` sobre
+`config/sync`**, nunca una búsqueda de texto sobre la base. Queda en
+`scripts/que-hay-en-las-portadas.php`, que dice qué bloques lleva cada portada dentro.
+
+**Lo que había, ya con el mapa delante:**
+
+- **`tec_superbom`** no la usaba nadie. Llevaba muerta quién sabe cuánto.
+- **`tec_superbom_ii`**, bloque `block_1`, tenía una sola referencia: el diseño del **nodo 10**, que
+  es la propia página `/bom`. Nada en ECA, nada en el código propio, ninguna otra vista, ningún
+  otro nodo.
+
+Así que se borró el nodo, y con él se fue su diseño y el bloque. **La entrada de menú la borró el
+núcleo solo**, en `MenuLinkContentHooks::entityPredelete`: siete enlaces donde había ocho. Después
+las dos vistas. El icono desapareció del home igual que desapareció el de Patrones.
+
+**Dos usuarios menos para `simple_popup_views`**, que es uno de los dos módulos sin versión para
+Drupal 11 y vive de un parche nuestro. Las dos vistas de Super BOM lo usaban. Pasa de diez vistas
+a ocho; sigue siendo deuda, pero la superficie mengua. Por el camino se vio una de esas ocho que
+huele a resto: `views.view.duplicate_of_tec_order_material_calculation_terms_copy`, un duplicado
+con nombre de duplicado. Sin comprobar.
+
+**Un resto que se deja a propósito.** En
+`field.field.tec_inventory.tec_bom_item.field_tec_color_swatch_vf.yml` queda una línea
+`tec_superbom: '0'`: es la lista de casillas de "vistas permitidas" de un campo de vista, donde
+figuraba con un cero, o sea **no** permitida. No era dependencia y Drupal no la limpia al borrar la
+vista. Tocar ese campo para quitar una línea inocua es más riesgo que la línea.
+
+**El segundo hallazgo, que salió de la misma consulta: cuatro de los catorce iconos del home no
+llevaban a ninguna parte.** *Orders on Queue*, *Production Log*, *Production Report* y *Stock
+Control* apuntaban a `/node/11`–`/node/14`. Esos cuatro son los únicos nodos **sin diseño propio**,
+así que caían al diseño por defecto del tipo de contenido, que pinta el cuerpo (vacío), el icono
+otra vez y el **número de orden**. Nada más. Las pantallas de verdad no son nodos, son rutas del
+módulo `tec_production`: `/o/queue`, `/production/log`, `/production/report` y `/stock`.
+
+**Y aquí la lección, que es más valiosa que el arreglo.** La entrada de ayer celebraba que la
+prueba de humo por fin pedía las doce portadas y que *"todas responden 200"*, `/node/11` a
+`/node/14` incluidos. Respondían 200 **y eran callejones sin salida**. Un 200 dice que el servidor
+no se ha roto; no dice que la página sirva para algo. Es el mismo tipo de fallo que los botones de
+crear escondidos: parece correcto hasta que pinchas.
+
+Arreglado con **cuatro redirecciones**, que es lo que el sitio ya usa para `/customers` y
+`/products`. Dos decisiones dentro:
+
+- **Son temporales (302), no permanentes.** El arreglo bueno es un campo de enlace en el tipo de
+  contenido y reescribir la salida de la portada. Si esto fuera un 301 se quedaría pegado en el
+  navegador de todos y costaría más quitarlo que ponerlo.
+- **Son contenido, no configuración.** Viven en la base de datos y viajarán al servidor con la
+  base, no con Git. Si algún día se despliega de otra manera, hay que acordarse de ellas.
+
+Comprobado con `curl` de verdad: `/node/11` devuelve `302` con `Location: /o/queue`, `/node/14` con
+`/stock`, y `/bom` ya devuelve `404`. **Ojo con un detalle de la prueba de humo**: ahí esas cuatro
+siguen apareciendo como 200, porque las peticiones internas no pasan por el vigilante de
+redirecciones —solo actúa en la petición principal—. No es un fallo de la prueba, pero hay que
+saberlo para no volverse loco.
+
+Recuentos de la comprobación al día: nodos 12 → **11**, enlaces de menú 8 → **7**, redirecciones
+2 → **6**. Sale 40 de 40, y la prueba de humo 30 páginas sin problemas. El icono del nodo 10
+(fichero 306) se suma a los huérfanos: el total de ficheros sigue en 315 porque Drupal no los
+borra, simplemente hay uno más que no usa nadie.
+
+Copia antes de tocar en `C:\laragon\backups\antes-de-retirar-superbom\` (64 MB). Lo que se hizo
+está en `scripts/retirar-superbom.php`, con las razones dentro.
 
 ### 2026-08-14 — Diez botones de crear escondidos, y el CRM sin manera de empezar
 
