@@ -36,3 +36,5 @@ sites/simpletest
 /modules/custom.pre-restore-*/
 /tmp_*
 /autoload_runtime.php
+# Inventario temporal del juego de pruebas
+scripts/tmp-*.json
