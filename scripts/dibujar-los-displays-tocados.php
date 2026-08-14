@@ -124,6 +124,12 @@ foreach ($aProbar as [$nombre, $display, $argumentos]) {
       echo "  primera fila: " . implode(' | ', array_slice($valores, 0, 14)) . "\n";
     }
   }
+  elseif (str_starts_with($html, "PK\x03\x04") || !mb_check_encoding($html, 'UTF-8')) {
+    // Los displays de exportacion no devuelven HTML, devuelven el fichero. Si a
+    // un XLSX se le quitan las etiquetas salen los bytes crudos y llenan la
+    // pantalla de ruido, con el riesgo de tapar un fallo de verdad.
+    printf("  no es texto: un fichero de %d bytes, y se genera sin petar\n", strlen($html));
+  }
   else {
     // Los bloques sueltos no son tablas: son un trozo de HTML con la unidad y
     // el factor entre parentesis. Se ensena el texto pelado.

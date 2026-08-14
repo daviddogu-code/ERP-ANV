@@ -580,14 +580,45 @@ unión más en la consulta y un campo más que renderizar. La exportación de ma
 cálculo pasó de 4.650 ms a 100, el PDF de un pedido de compra de 4.660 a 195, el editor de líneas de
 2.754 a 249 y la ficha de un pedido de 1.006 a 247.
 
-**Lo que queda pendiente y no se ha tocado**, para no mezclar: en el listado de materiales la columna
-de unidad de compra enseña `Meter (m) (0.40 m)`, o sea el factor con el símbolo de la propia unidad de
-compra en vez del de la unidad de inventario, que es lo que el factor significa. Debería decir
-`Meter (m) (0.40 roll)`. Es un fallo anterior a este trabajo, está en la reescritura de
-`field_tec_unit_purchase_1`, y para arreglarlo hace falta un campo de símbolo colgado de la relación
-con la unidad de inventario. En la vista de cálculo pasa lo mismo con el símbolo de la unidad de
-consumo. Con el paréntesis ya siempre a la vista, esto conviene arreglarlo pronto: un factor con la
-unidad equivocada al lado no informa, confunde.
+**El factor con el símbolo de la unidad equivocada, arreglado.** Se apuntó aquí como pendiente y se
+hizo esa misma noche, después de los campos. Un factor solo significa algo si al lado va la unidad de
+destino, y en dos columnas iba otra: en el listado de materiales, `Meter (m) (0.40 m)`, que se lee "un
+metro son 0,40 metros"; y en la vista de cálculo, `Meter (m) (0.40 cm)`. Las dos tenían que decir
+`(0.40 roll)`.
+
+La causa: para escribir el símbolo de una unidad, la vista necesita una **relación** hasta el término
+de esa unidad, y ninguna de las dos vistas la tenía con la unidad de inventario — sí con la de compra y
+con la de consumo. Así que quien escribió el paréntesis puso el símbolo que tenía a mano. No eligió
+mal: no había ninguno correcto disponible.
+
+El censo se hizo con `que-simbolo-lleva-cada-factor.php`, que recorre todas las vistas, busca las
+reescrituras que juntan un factor con un símbolo, y **mira de qué relación cuelga ese símbolo**, que es
+lo que decide qué unidad sale. Eran **seis paréntesis: cuatro bien y dos mal**, los dos en el display
+que se dibuja. Las cuatro piezas de la ficha del material ya estaban bien, porque ahí cada bloque sí
+tenía la relación buena.
+
+El arreglo, por vista: crear la relación a `field_tec_uos` en el maestro clonando una que ya funciona,
+colgar de ella una columna de símbolo escondida, **moverla delante de la columna que la lee** —la
+trampa del orden, otra vez— y cambiar el token. La relación va en el maestro porque el display que la
+necesita hereda de él; darle lista propia lo dejaría descolgado de los cambios futuros, a cambio de
+ahorrar una unión indexada por término, que al lado de las cuarenta columnas que se quitaron no se
+nota. Comprobado: el censo da seis de seis y la pantalla pone `Meter (m) (0.40 roll)`.
+
+##### Cinco displays con el estilo a medias, y un aviso que llevaba tiempo sonando
+
+Al guardar las vistas volvió a salir `Undefined array key "type"`, y la primera vez fue culpa del
+guion: en PHP basta con **nombrar por referencia una ruta que no existe** para que se cree vacía, así
+que al ir a mirar `style.options` de un display que no tiene estilo propio, se le creaba un `style` sin
+`type`. Corregido leyendo la ruta con `??` en vez de tomar referencia.
+
+Pero al ir a limpiarlo aparecieron **cinco displays así, y tres no eran de este trabajo**: los tres
+bloques de `tec_orders_orders`, que lo arrastran desde el commit `8b8ed384`, el de control de stock y
+separación de estados de pedido. O sea que ese aviso llevaba saliendo en cada guardado de esa vista
+desde entonces. Los cinco decían seguir al maestro, así que la reparación es quitarles el `style` vacío
+y dejarlos heredar, que es lo que hacían de verdad. Ahora se guardan sin un solo aviso.
+
+Merece la pena por lo mismo que la comprobación: un aviso que salta siempre enseña a no mirar los
+avisos.
 
 ##### Paso 5: los 23 campos, borrados
 
