@@ -120,7 +120,11 @@ preparado para cuando se retome:
   se evapora en tres días.
 - **Darle un encargo concreto**, empezando por compras, en vez de un "míralo a ver qué te
   parece".
-- **Confirmar si se maneja en inglés**, que es el idioma en el que está el ERP entero.
+- **Confirmar si se maneja en inglés**, que es el idioma en el que está el ERP entero. Y no es una
+  pregunta de cortesía: el tailandés que hay configurado **no traduce nada del ERP**, solo cuatro
+  palabras del menú de administración de Drupal. Está explicado en el apartado de idiomas de la
+  sección 3. Si ella no se maneja en inglés, es ella misma quien tendría que escribir las
+  traducciones.
 
 ## 2. Esta semana
 
@@ -147,8 +151,10 @@ puntos de correo y el de las cuentas.
 
 - **Programar el cron.** Hoy Ultimate Cron reporta once tareas atrasadas. **Los trece trabajos ya
   están revisados uno por uno y desarmados los dos peligrosos** (14 de agosto, ver Hecho), así que
-  encenderlo ya no es un salto a ciegas: queda solo poner la llamada del sistema y decidir las dos
-  cosas que siguen abiertas, el idioma tailandés de `locale_cron` y los 315 ficheros huérfanos.
+  encenderlo ya no es un salto a ciegas: queda solo poner la llamada del sistema y decidir qué se
+  hace con los 315 ficheros huérfanos. **La otra decisión que figuraba aquí, la del idioma, no
+  existe**: `locale_cron` tiene la comprobación de traducciones puesta en "nunca", así que no
+  descarga nada. Está explicado más abajo, en el apartado de idiomas.
 - **Crear el buzón `erp@anvfightgear.com`** en Google Workspace, como alias que reenvía al
   dueño y no como cuenta de pago nueva. Es la dirección desde la que el ERP manda los
   correos desde el 2026-08-12.
@@ -178,6 +184,57 @@ puntos de correo y el de las cuentas.
     `David` que es del dueño pero está bloqueada. Las cuatro siguen ahí, bloqueadas, y ninguna
     tiene rol de administrador: `manager` y `rat` son *tec_manager*, `executive` y `david-antiguo`
     son *tec_executive*. O sea que ya no hay ninguna llave maestra suelta.
+
+### Los idiomas: qué hay montado, qué no, y por qué no hay nada que decidir todavía
+
+Revisado el 14 de agosto de 2026, porque figuraba como decisión pendiente y estaba mal planteada.
+Los empleados de la fábrica son tailandeses y laosianos y no hablan inglés, así que hace años se
+pensó en una versión en tailandés por si algún día tenían usuario. Esto es lo que quedó de aquello.
+
+**Drupal reparte los idiomas en cuatro módulos, y aquí están dos.** `language`, que permite definir
+idiomas —hay dos, inglés por defecto y tailandés—, y `locale`, que traduce la **interfaz**, o sea los
+textos que traen Drupal y sus módulos. Faltan los dos que harían lo que se tenía en la cabeza:
+
+- **`content_translation` no está**: el contenido **no se puede traducir en absoluto**. Un material,
+  un producto, un cliente o un pedido tienen un solo idioma y no hay dónde poner otro.
+- **`config_translation` no está**: **no existe ninguna pantalla para traducir lo nuestro**. Los
+  títulos de las vistas, las etiquetas de los campos, los botones, los estados de los pedidos: todo
+  eso es configuración, y sin ese módulo no hay ni por dónde empezar a escribir el tailandés.
+
+**Cómo se llegaría al tailandés hoy: solo por la dirección**, `/th/stock` en vez de `/stock`. Es la
+única vía activada (`language.negotiation`, prefijos `en: ''` y `th: th`). Y esto es lo que más
+importa: **la detección por usuario no está activada**, así que aunque se le cree la cuenta a un
+empleado y se le ponga tailandés en el perfil, **entra y ve el ERP en inglés**. Tendría que escribir
+el prefijo a mano o guardarse el enlace.
+
+**Y lo que vería si entrara por ahí es poco y de lo que menos importa.** Al añadir el idioma, Drupal
+se bajó las traducciones publicadas en drupal.org del núcleo y los módulos y las aplicó; de ahí salen
+los 143 ficheros de `config/sync/language/th/`. Están a medias: en la pantalla de contenido salen en
+tailandés "Título", "Tipo de contenido" y "Estado", y siguen en inglés "Author", "Updated",
+"Operations", "Filter" y "Published". **Del ERP no hay traducida ni una palabra**: Stock Control,
+Orders on Queue, Production Log, las cantidades, los estados y los botones de crear los escribimos
+nosotros en inglés y no existen en tailandés en ningún sitio. Lo que está traducido a medias es la
+fontanería de administración, que es justo lo que un operario no va a ver nunca.
+
+Dicho en claro: **meter hoy a un tailandés por `/th/stock` le da la misma pantalla en inglés**, con
+cuatro palabras del menú de administración cambiadas. Conviene no contarlo como "el ERP tiene versión
+en tailandés", porque no la tiene, y quien se lo crea se lleva el chasco el primer día.
+
+**Por eso no hay nada que decidir todavía, y se deja como está.** Lo que hay montado no es una
+versión en tailandés, es el **andamio** para poder hacerla, y el andamio no cuesta nada: el trabajo de
+cron no se dispara —tiene la comprobación en "nunca"— y los 143 ficheros viajan en cada despliegue
+pero no hacen nada mientras nadie escriba `/th/`.
+
+**El día que haga falta, el trabajo de verdad no es técnico.** Se instala `config_translation` y
+**Lukpla misma puede teclear el tailandés** desde el navegador, pantalla por pantalla, sin que haga
+falta tocar código. Y no hay que traducir el ERP entero: si los operarios solo van a usar Stock
+Control y el registro de producción, son unas pocas docenas de etiquetas, medio día de trabajo suyo.
+Necesitaría el permiso de traducir configuración, que hoy no tiene.
+
+**Un aviso que cambia la cuenta si la respuesta fuera que sí**: el tailandés **no le sirve a un
+laosiano**. Son idiomas distintos, con escrituras distintas, y Drupal los trata como dos idiomas
+separados (`th` y `lo`). Si los laosianos de la fábrica no leen tailandés con soltura, harían falta
+tres versiones y no dos, y eso ya no es medio día.
 
 ### Limpieza de datos y arreglo del importador
 
@@ -992,16 +1049,23 @@ Los trece, con la decisión de cada uno:
 | `update_cron` | por defecto | se queda: es el que avisa de las alertas de seguridad |
 | `dblog_cron` | por defecto | se queda, ya con límite escrito |
 | `layout_builder_cron` | 0:00 cada día | se queda: borra borradores de diseño olvidados |
-| `locale_cron` | domingos 0:00 | **se queda, pero hay que decidir** (ver abajo) |
+| `locale_cron` | domingos 0:00 | se queda: no hace nada, y está bien así (ver la corrección) |
 | `ultimate_cron_cron` | 0:00 cada día | se queda: limpia sus propios registros |
 | `node_cron`, `feeds_cron`, `feeds_log_cron` | — | ya estaban apagados, y bien |
 
-**Dos cosas quedan abiertas, las dos a propósito.** `locale_cron` se despierta los domingos a
-descargar traducciones de tailandés para los 146 módulos, porque el idioma `th` está configurado.
-Eso engorda `locales_source` y `locales_target` a lo bestia, y hasta hoy no ha pasado porque el cron
-no corre. Antes de encenderlo hay que decidir si el ERP va a ser multiidioma o no; si no, fuera el
-idioma y fuera `locale`. Y `file_cron` **no** va a borrar los 315 ficheros huérfanos, porque
-`make_unused_managed_files_temporary` está en `false`: esa decisión sigue siendo manual y sigue en la
+**Queda una cosa abierta, no dos**, y esto es una corrección de lo que se escribió aquí esa misma
+tarde. Dije que `locale_cron` se despertaría los domingos a descargar traducciones de tailandés para
+los 146 módulos y a engordar `locales_source` y `locales_target`, y que antes de encender el cron
+había que decidir si el ERP iba a ser multiidioma. **No es verdad, y se comprobó en el código del
+núcleo el 14 de agosto por la noche.** El ajuste "cada cuánto comprobar si hay traducciones nuevas"
+está en **0, que significa nunca** (`locale.settings`, `translation.update_interval_days`), y
+`LocaleCronHooks::cron()` lo consulta antes de mover un dedo: si es cero, el trabajo se despierta y
+se vuelve a dormir sin tocar la red ni la base de datos. O sea que se queda encendido tal cual, sin
+que haya nada que decidir. El detalle de qué hay montado de idiomas y por qué, más abajo en esta
+misma sección.
+
+La que sí queda abierta es la otra: `file_cron` **no** va a borrar los 315 ficheros huérfanos, porque
+`make_unused_managed_files_temporary` está en `false`. Esa decisión sigue siendo manual y sigue en la
 lista.
 
 **El guardián.** `comprobacion.php` pasa de 42 a **46 comprobaciones**: los ocho trabajos
