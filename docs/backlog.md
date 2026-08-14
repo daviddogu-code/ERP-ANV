@@ -293,6 +293,12 @@ El trabajo es: mapear los campos que faltan, conectar el proveedor a `field_tec_
 las columnas sobrantes y generar la plantilla de Excel con una columna por dato y los nombres
 exactos que el importador espera.
 
+**Pero antes que todo eso hay un bloqueo, y cambia el diagnóstico de esta sección.** El importador
+no está a medio hacer: **está bloqueado**. Tal como está hoy la configuración no puede crear ni una
+ficha de material, y no por los campos sin mapear, sino por tres campos obligatorios que ni se ven
+ni se pueden rellenar. El detalle y el porqué están más abajo, en la sección del sistema de unidades
+opcionales de Óscar.
+
 **El importador de escandallos está peor, y en un punto concreto.** `tec_bom_items_importer` recibe
 ficheros de tres columnas —`ID, Material, Requires`—, uno por producto y talla. Tiene orígenes
 declarados para `Material` y para `Requires` y **ninguno de los dos está conectado**: el nombre del
@@ -315,6 +321,22 @@ hacer es borrar las dos fichas**, y hay que hacerlo por consulta directa a `feed
 normal de Drupal pasa por pedir el tipo y lanza antes de llegar. Al hacerlo, el recuento
 `importaciones` del guardián baja de 3 a 1.
 
+**El importador de productos, con sus variaciones y sus tallas: pendiente, y no ahora.** Decisión del
+dueño del 14 de agosto. Lo que sí queda dicho es por dónde **no** hay que ir, porque está en la
+configuración: `field.field.tec_product.tec_size_variation.field_tec_import_bom` es una referencia a
+`tec_bom_items_importer` con `auto_create: true`, o sea **un importador y una subida de fichero por
+cada variación de talla**. Para cincuenta productos con tres colores y cuatro tallas son seiscientos
+importadores y seiscientos CSV a mano. No es que esté roto: es que el diseño no escala, y es la
+misma huella de las fichas 5 y 6 de arriba, el intento que se quedó a medias.
+
+Cuando se retome, la forma correcta es un cargador propio que construya el árbol entero de una
+pasada —producto, variaciones de color, variaciones de talla y escandallo—, con modo de prueba en
+seco antes de escribir, porque son del orden de trescientas fichas por producto y referencias en los
+dos sentidos que hay que dejar cuadradas. Y antes de escribir una línea, comprobar si **duplicar
+producto ya resuelve el caso**: los dos procesos de ECA que duplican (`process_llpx4tp` y
+`process_icpsbgv`) construyen el árbol completo, así que puede que meter un producto patrón a mano y
+duplicarlo salga más barato que un importador.
+
 ~~**Se arregla antes del borrado, no después.**~~ Se hizo al revés, por decisión del dueño del
 14 de agosto, y el motivo era bueno: así el servidor recibe una base limpia de un solo empujón
 en vez de recibir la sucia y limpiarla después. El precio de esa decisión es que ahora mismo el
@@ -335,6 +357,162 @@ materiales, coste 15, plazo de entrega 3, punto de pedido 2, SKU interno ninguno
 campos `placeholder` y `field_tec_importer_item_id` están vacíos del todo, así que sobran. Esto
 confirma lo que se sospechaba y lo cuantifica: el catálogo de prueba no estaba mal, estaba a
 medio rellenar, y lo que faltaba era justo lo que el importador no sabe meter.
+
+### El sistema de unidades opcionales de Óscar: qué queda, y por qué bloquea el importador
+
+Auditoría del 14 de agosto por la noche, pedida por el dueño, con una decisión suya que la ordena
+toda: **todos los materiales tienen tres unidades de medida y dos factores de conversión, sin
+excepciones**. Si una unidad no cambia respecto de la anterior, el factor es 1. La idea de que las
+unidades y los factores son opcionales según unas casillas queda erradicada del ERP. No es una
+mejora sobre el sistema de Óscar: es sustituirlo, porque era una complicación innecesaria.
+
+**Lo que ya está hecho está bien.** Los cinco campos canónicos son obligatorios y llevan los nombres
+nuevos:
+
+| Campo | Etiqueta | |
+| :-- | :-- | :-- |
+| `field_tec_unit_purchase` | Purchase UoM | obligatorio |
+| `field_tec_uos` | Inventory UoM | obligatorio |
+| `field_tec_unit_use` | Consumption UoM | obligatorio |
+| `field_tec_units` | Purchase to Inventory Factor | obligatorio |
+| `field_tec_split_into` | Inventory to Consumption Factor | obligatorio |
+
+Y con ellos son obligatorios, con razón, `field_tec_vendor` (Supplier), `field_tec_cost` (Purchase
+Cost (No VAT)) y `field_tec_material_type`. Ocho obligatorios legítimos. **Fuera del formulario no se
+ha desmontado nada**, y ahí está todo el problema.
+
+#### El hallazgo que bloquea el importador
+
+Cuatro campos del sistema viejo siguen marcados como **obligatorios y escondidos del formulario**, y
+tres de ellos no tienen valor por defecto:
+
+| Campo | Etiqueta | Defecto |
+| :-- | :-- | :-- |
+| `field_tec_packaging` | Unit of Packaging (UoPackaging) | ninguno |
+| `field_tec_uos_uou` | 1 UoS = UoU | ninguno |
+| `field_tec_uou_split_qty` | UoP to UoS conversion formula | ninguno |
+| `field_tec_uou_control` | Unit of use | `same_as_uop` |
+
+Por pantalla esto no se nota, porque el formulario de Drupal descarta las violaciones de los campos
+que no muestra. Pero el importador guarda por código y ahí se valida la ficha entera. Está
+comprobado en el código de Feeds, no es suposición: `EntityProcessorBase::entityValidate()` llama a
+`$entity->validate()` y solo filtra por **tipo** de restricción, con `skip_validation_types` vacío y
+`skip_validation: false` en `tec_inventory_csv_importer`
+(`modules/contrib/feeds/src/Feeds/Processor/EntityProcessorBase.php`, líneas 763-776).
+
+Conclusión: **hoy el importador no puede crear ni un material**, fallaría en esos tres obligatorios
+que no hay manera de rellenar desde ninguna pantalla, más el proveedor. Quitarles el obligatorio son
+tres líneas de configuración y es el paso más barato de todo el desmontaje.
+
+Y de paso explica el valor por defecto de `field_tec_uou_control`, que es `same_as_uop`: es la idea de
+Óscar escrita en la configuración, la unidad de uso igual a la de compra salvo que alguien diga lo
+contrario.
+
+#### Los 22 campos que quedan
+
+Todos escondidos del formulario, todos vivos en la base de datos, todos sobre `taxonomy_term` en el
+vocabulario `tec_inventory`.
+
+**Los cuatro interruptores de opcionalidad**, el corazón del sistema: `field_tec_split_inventory`
+("Convert inventory"), `field_tec_package_units` ("Convert"), `field_tec_stock_unit_check`
+("Custom UoS") y `field_tec_moq_package` ("Set Packaging unit as MoQ").
+
+**La cadena de embalaje**, que es una cuarta unidad de medida paralela a las tres buenas:
+`field_tec_packaging` ("Unit of Packaging"), `field_tec_split_unit` ("Packaging unit"),
+`field_tec_price_by_package` ("Price by package"), `field_tec_purchasing_moq` ("Purchasing MoQ") y
+`field_tec_moq_unit` ("MoQ unit").
+
+**La matriz de conversión por pares**, que es lo que explica por qué esto se le fue de las manos: en
+vez de dos factores, un campo por cada par ordenado de unidades, con las variantes de embalaje
+incluidas. Once campos: `field_tec_uop_uou` ("1 UoP = UoU"), `field_tec_uos_uop` ("1 UoP = UoS"),
+`field_tec_uos_uou` ("1 UoS = UoU"), `field_tec_uou_uop` ("1 UoU = UoP"), `field_tec_uou_uos`
+("1 UoU = UoS"), `field_tec_uop_pu_uou` ("1 UoP PU = UoU"), `field_tec_uou_uop_pu`
+("1 UoU = UoP packaging units"), `field_tec_uos_pu_uop` ("1 UoS PU = UoP"), `field_tec_uos_pu_uou`
+("1 UoS PU = UoU"), `field_1_uou_uos_pu` ("1 UoU = UoS packaging units") y `field_uop_to_uos`
+("UoP to UoS conversion formula"). Con cuatro unidades los pares ordenados son doce; están casi
+todos.
+
+**Y dos duplicados con nombre tramposo**, que conviene mirar antes de borrar por si algo los usa:
+`field_tec_uou_split_qty`, un entero cuya etiqueta es "UoP to UoS conversion formula", o sea un
+duplicado de `field_tec_units`; y `field_tec_uou_control`, el desplegable con el defecto
+`same_as_uop`.
+
+Cuatro más cinco más once más dos, 22 campos con sus 22 almacenamientos.
+
+#### Los cuatro procesos de ECA
+
+**`process_rxuimsq`, "TEC Inventory: Calculation data" — activo**, con su clon `process_uix9n5i`
+apagado. Se dispara en `content_entity:insert` y `:update` de `taxonomy_term tec_inventory`, o sea
+**también cuando guarda el importador**. Lo que hace, con los interruptores vacíos, que es como
+llegan siempre desde que se escondieron del formulario: si `field_tec_split_inventory` no vale 1,
+copia `field_tec_unit_purchase` en `field_tec_unit_use`; y si `field_tec_package_units` no vale 1,
+copia `field_tec_unit_purchase` en `field_tec_uos`. Las dos con `method: set:clear`, o sea
+**sobrescribiendo lo que hubiera**. En claro: **aplasta la unidad de stock y la de uso a la de
+compra, en silencio, en cada guardado**. La rama contraria, cuando la casilla de embalaje sí vale 1,
+pone la unidad de stock desde `field_tec_packaging` y copia `field_tec_units` sobre
+`field_tec_split_into`, mezclando los dos factores.
+
+Esto es lo primero que hay que desmontar, y **antes de importar nada**: si entran los 857 materiales
+con el proceso en pie, entran todos con las tres unidades iguales a la de compra y los factores
+puestos, o sea materiales que dicen comprarse y consumirse en rollos con un factor de 100 dentro. Un
+daño que no da error y se descubre meses después en un coste raro.
+
+**`process_fpvka81`, "TEC Line item: Set PO line item data" — activo**, con dos clones apagados
+(`process_pehrnr8`, `process_idtd6ah`). Ramifica sobre los interruptores del material: si
+`field_tec_split_inventory` vale 1, multiplica el total de la línea por `field_tec_uou_split_qty`; si
+`field_tec_package_units` vale 1, recalcula el precio como coste de línea por `field_tec_units`
+("Custom UoP found" en el registro). Con los interruptores siempre vacíos **las dos ramas están
+muertas**, así que hoy el total de una línea de pedido de compra es cantidad × coste de compra del
+material, sin conversión ninguna. Es la explicación de la sospecha sobre los costes: si el escandallo
+consume en unidades de uso y se aplica el coste del rollo entero, el coste de producción está
+inflado por el factor de conversión. Para eso existe "Consumption Cost", que tampoco calcula nadie.
+
+#### Las cuatro vistas, que es el trabajo de verdad
+
+**`tec_order_material_calculation_terms` y `tec_order_material_calculation_summary`** están
+construidas enteras sobre la matriz. Llevan cuatro fórmulas de `views_simple_math_field` —
+`@field_tec_quantity * @field_tec_uou_uos`, `@field_tec_quantity / @field_tec_uos_pu_uou`,
+`@field_tec_quantity / @field_tec_uop_pu_uou` y `@field_tec_uou_uop * @field_tec_quantity` — y
+campos de `views_conditional` que eligen entre ellas según `field_tec_split_inventory` y
+`field_tec_package_units`. Es la pantalla que traduce lo que se vende en materiales que hacen falta,
+o sea el cálculo que alimenta las compras. No tienen ruta propia: van embebidas.
+
+**`tec_order_sales_order_line_items`** usa `field_tec_package_units`, `field_tec_packaging` y
+`field_tec_price_by_package` con condicionales del tipo "si Convert está On, muestra la unidad de
+embalaje". Y esta sí sirve pantallas vivas: `po/draft/%`, `o/draft/%`, `po/%/print` y `o/pf/%/print`.
+Con los interruptores apagados esas columnas salen por el ramal falso.
+
+**`tec_inventory` y `tec_inventory_elements`** también nombran alguno de los 22, sin haber
+comprobado en qué columna exactamente. Hay que mirarlo antes de borrar campos.
+
+Por eso el orden importa: borrar un campo que una vista referencia deja manejadores roto en pantallas
+que están en uso.
+
+#### El formulario ya está limpio
+
+Las reglas de campos condicionales del material están vacías (`conditional_fields: {  }` en
+`core.entity_form_display.taxonomy_term.tec_inventory.default`). Las únicas que quedan vivas en el
+ERP son las de líneas de pedido, sobre `field_tec_custom_sales_price`, y no tienen que ver con esto.
+Esa parte del desmontaje ya estaba hecha.
+
+#### El orden de desmontaje, en cinco pasos
+
+1. **ECA.** Borrar `process_rxuimsq` y su clon `uix9n5i`. En `fpvka81`, quitar las dos ramas de los
+   interruptores y el multiplicador, y dejar el coste de la línea calculado con los dos factores
+   buenos. Va antes del importador.
+2. **La validación.** Quitar el obligatorio a `field_tec_packaging`, `field_tec_uos_uou` y
+   `field_tec_uou_split_qty`. Tres líneas, y con eso el importador pasa de imposible a posible.
+3. **Las dos vistas de cálculo de material.** Rehacer las fórmulas sobre `field_tec_units` y
+   `field_tec_split_into`. Es la pieza grande y la única que necesita pensar, porque hay que decidir
+   la fórmula única de conversión. **Va después de tener catálogo**: sin materiales ni pedidos no hay
+   manera de comprobar que la fórmula nueva da bien.
+4. **Limpiar `tec_order_sales_order_line_items`** de las tres columnas de embalaje y sus
+   condicionales, y revisar `tec_inventory` y `tec_inventory_elements`.
+5. **Borrar los 22 campos** con sus almacenamientos, cuando ya no los referencie nadie.
+
+**Decisión del dueño del 14 de agosto: apuntar y no ejecutar todavía.** Los pasos 1 y 2 son baratos y
+seguros —la base está vacía, así que no hay datos que estropear— pero se hacen en la misma sesión que
+el importador, no de noche y por separado.
 
 ### Los tres cabos que dejó el borrado
 
