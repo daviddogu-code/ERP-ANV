@@ -149,12 +149,14 @@ El resto de esta lista es el "no publicar sin esto" de la segunda fase, la de lo
 empleados. Casi todo es trabajo técnico y no requiere decisiones del dueño, salvo los tres
 puntos de correo y el de las cuentas.
 
-- **Programar el cron.** Hoy Ultimate Cron reporta once tareas atrasadas. **Los trece trabajos ya
-  están revisados uno por uno y desarmados los dos peligrosos** (14 de agosto, ver Hecho), así que
-  encenderlo ya no es un salto a ciegas: queda solo poner la llamada del sistema y decidir qué se
-  hace con los 315 ficheros huérfanos. **La otra decisión que figuraba aquí, la del idioma, no
-  existe**: `locale_cron` tiene la comprobación de traducciones puesta en "nunca", así que no
-  descarga nada. Está explicado más abajo, en el apartado de idiomas.
+- **Programar el cron.** Hoy Ultimate Cron reporta once tareas atrasadas. **Ya no queda ninguna
+  decisión pendiente: solo poner la llamada del sistema.** Los trece trabajos están revisados uno
+  por uno y desarmados los dos peligrosos (14 de agosto, ver Hecho), y las dos decisiones que
+  figuraban aquí se han caído las dos. La del idioma no existía: `locale_cron` tiene la
+  comprobación de traducciones puesta en "nunca", así que no descarga nada. Y la de los ficheros
+  huérfanos tampoco bloqueaba, porque con `make_unused_managed_files_temporary` en `false`
+  `file_cron` no los tocaba; se han borrado igualmente ese mismo día, por limpieza y no por el
+  cron.
 - **Crear el buzón `erp@anvfightgear.com`** en Google Workspace, como alias que reenvía al
   dueño y no como cuenta de pago nueva. Es la dirección desde la que el ERP manda los
   correos desde el 2026-08-12.
@@ -318,12 +320,8 @@ medio rellenar, y lo que faltaba era justo lo que el importador no sabe meter.
   configuración son dos trabajos distintos, y mezclarlos a las tres de la mañana era la manera
   de no saber después qué había roto qué.
 
-- **Decidir qué se hace con 315 ficheros huérfanos.** Son sobre todo las imágenes de los
-  productos y patrones que se borraron. Drupal no los borra solo: sin activar la opción de
-  marcar como temporales los que nadie usa, se quedan en el disco para siempre y con su ficha
-  en la base de datos. No molestan, pero engordan cada copia de seguridad y viajan al servidor
-  en el despliegue. Antes de borrarlos hay que comprobar cuáles tienen de verdad cero usos, que
-  algunos pueden estar colgando de los doce nodos o de los colores que se quedan.
+- ~~Decidir qué se hace con 315 ficheros huérfanos.~~ **Hecho el 14 de agosto**, y con dos
+  correcciones a lo que decía aquí. Ver la entrada del día en Hecho.
 
 - **Devolverle a la prueba de humo las seis pantallas que ha perdido.** Con la base vacía no hay
   con qué pedirlas, así que se salta `o/draft/%`, `po/draft/%`, `po/%/print`, `o/pf/%/print`,
@@ -856,6 +854,67 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-14 — Las 142 fotos sin dueño, fuera, y las cinco imágenes de marca que casi se van con ellas
+
+Al vaciar los datos de prueba se fueron los productos, las marcas, los patrones y los 869
+materiales, pero no sus fotos: Drupal solo borra un fichero cuando se lo mandas. Quedaron 315 fichas
+de fichero, casi todas huérfanas de golpe. Se han borrado **142 fotos**, y con ellas **304 versiones
+recortadas** que Drupal purga solo al borrar el original: **446 archivos y 57,2 MB** de disco. La
+carpeta privada baja de 61,6 a 7,1 MB y la pública de 25,8 a 23,1. Quedan 173 fichas.
+
+**Lo que casi sale mal, y es el motivo de que esto lleve un reconocimiento delante.** La regla obvia
+—"borra todo lo que no use nadie"— se lleva por delante el logotipo del ERP, el logotipo del panel
+de administración, los dos favicon y la imagen de fondo de la pantalla de entrar. Son cinco, no dos:
+están en `dxpr_theme.settings`, `gin.settings` y `gin_login.settings`. El contador de usos de Drupal
+solo cuenta lo que apunta desde el campo de una ficha; **lo que apunta desde la configuración no lo
+cuenta**, así que para el contador esas cinco no las usa nadie. Gin es el tema de administración, o
+sea que ahí se iba la marca de todas las pantallas internas de golpe.
+
+**Y hay un segundo hallazgo, que además desactiva un miedo que apunté ese mismo día.** Esas cinco
+imágenes **no tienen ficha en la base de datos**: el formulario de ajustes del tema las dejó en la
+raíz de la carpeta pública sin registrarlas en `file_managed`. Consecuencias buenas: ningún borrado
+de fichas puede tocarlas, y `file_cron` tampoco, porque solo borra ficheros gestionados. Yo había
+avisado de que si estuvieran marcadas como "temporales" el cron se las llevaría a las seis horas de
+encenderlo; no es el caso, y no por suerte, sino porque no son suyas. Consecuencia mala: **nadie las
+vigila**. Si alguien borra el archivo, la configuración sigue apuntando ahí y no salta ningún error;
+simplemente desaparece el logotipo. Por eso el guardián tiene ahora una comprobación nueva que las
+lee de la configuración —no de una lista escrita a mano, para que siga valiendo el día que se cambie
+el logotipo— y verifica que el archivo sigue en el disco. Comprobación **47/47**, y las cinco piden
+un 200 por HTTP con su tamaño correcto.
+
+**El reparto de los 315.** Se quedan 32 que tienen usos, entre ellos los once iconos de la portada y
+los iconos de la aplicación móvil. Se quedan **141 que no son fotos**: las fuentes del tema, dos
+hojas de estilo y un montón de CSV y Excel de las importaciones de escandallo de 2024, que son otra
+conversación y no se han tocado. Y se fueron las 142 fotos.
+
+**Las siete fotografías que no eran basura.** Entre las candidatas había fotografía de producto de
+verdad, en alta resolución: los guantes **ACTA Thai Evolution** en azul, rojo, negro y blanco, de
+2,5 a 4,7 MB cada una, más un Trust Squire, dos Joya y el fichero de logotipos de Trust. Eso son 32
+de los 52 MB, y es trabajo que no rehace ningún importador —de hecho el importador de materiales ni
+siquiera sabe meter el campo de imagen—. Están en la copia de seguridad de la carpeta entera, pero
+enterradas entre miles de archivos y con fecha en la ruta, así que antes de borrar se copiaron
+**doce fotografías, 32,5 MB**, a `C:\laragon\backups\fotos-de-producto-anv`. El criterio: lo que
+lleva el nombre de la casa o de una marca de cliente, y toda foto de más de un mega, que a ese
+tamaño ya es una cámara y no una captura de pantalla.
+
+**La red de seguridad.** Antes de tocar nada, copia completa de las dos carpetas de ficheros a
+`C:\laragon\backups\ficheros-antes-del-borrado-20260814`: 3.523 archivos, 87 MB, ninguno fallido. El
+borrado es reversible desde ahí.
+
+**Cómo se decidió qué sobraba.** `scripts/mirar-los-ficheros.php` reparte sin tocar nada, y
+`scripts/borrar-las-fotos-huerfanas.php` vuelve a calcular el reparto en vez de traerse una lista de
+identificadores: si algo cambia entre mirar y borrar, cambia el reparto y no se borra por una lista
+vieja. La comprobación cruzada buscó el nombre de cada candidata en **392 columnas de texto de la
+base, 23,5 millones de caracteres**, por si alguna estaba puesta a mano dentro de un texto o de una
+sección de diseño, donde el contador de usos no llega. Salió una sola coincidencia, y era el propio
+nombre dentro de la tabla de configuración: el fichero 102 se llama `acta-octa-black-white.jpg`
+igual que el logotipo, pero vive en `public://2024-03/` y no en la raíz, o sea que es una copia
+suelta y no el logotipo.
+
+Después: comprobación 47/47, prueba de humo 30 páginas y 0 problemas, `config:status` sin
+diferencias, los once iconos del inicio verificados en el disco con sus recortes, y la pantalla de
+entrar cargando.
+
 ### 2026-08-14 — El CSRF del servidor, cerrado desde el navegador y sin desplegar
 
 El servidor llevaba desde mayo con **ECA 1.1.7 y `eca_ui` encendida**, o sea con las rutas que
@@ -1044,7 +1103,7 @@ Los trece, con la decisión de cada uno:
 | `backup_migrate_cron` | 3:00 cada día | **apagado**, volcaba la base dentro del proyecto |
 | `eca_base_cron` | cada 15 min | **apagado**, ningún proceso escucha |
 | `field_cron` | cada 3 h | se queda: purga los seis restos de la IA |
-| `file_cron` | 0:00 cada día | se queda, pero **no** toca los 315 huérfanos (ver abajo) |
+| `file_cron` | 0:00 cada día | se queda; no tocaba los 315 huérfanos, que se borraron a mano |
 | `system_cron` | cada 6 h | se queda: cachés, lotes viejos, control de inundación |
 | `update_cron` | por defecto | se queda: es el que avisa de las alertas de seguridad |
 | `dblog_cron` | por defecto | se queda, ya con límite escrito |
@@ -1053,8 +1112,8 @@ Los trece, con la decisión de cada uno:
 | `ultimate_cron_cron` | 0:00 cada día | se queda: limpia sus propios registros |
 | `node_cron`, `feeds_cron`, `feeds_log_cron` | — | ya estaban apagados, y bien |
 
-**Queda una cosa abierta, no dos**, y esto es una corrección de lo que se escribió aquí esa misma
-tarde. Dije que `locale_cron` se despertaría los domingos a descargar traducciones de tailandés para
+**No queda ninguna cosa abierta**, y las dos que se apuntaron aquí eran falsas las dos. La primera
+es una corrección de lo que se escribió esa misma tarde. Dije que `locale_cron` se despertaría los domingos a descargar traducciones de tailandés para
 los 146 módulos y a engordar `locales_source` y `locales_target`, y que antes de encender el cron
 había que decidir si el ERP iba a ser multiidioma. **No es verdad, y se comprobó en el código del
 núcleo el 14 de agosto por la noche.** El ajuste "cada cuánto comprobar si hay traducciones nuevas"
@@ -1064,9 +1123,10 @@ se vuelve a dormir sin tocar la red ni la base de datos. O sea que se queda ence
 que haya nada que decidir. El detalle de qué hay montado de idiomas y por qué, más abajo en esta
 misma sección.
 
-La que sí queda abierta es la otra: `file_cron` **no** va a borrar los 315 ficheros huérfanos, porque
-`make_unused_managed_files_temporary` está en `false`. Esa decisión sigue siendo manual y sigue en la
-lista.
+Y la segunda tampoco era una decisión que bloqueara el cron, aunque aquí quedó escrita como si lo
+fuera. `file_cron` no iba a borrar los 315 ficheros huérfanos, precisamente porque
+`make_unused_managed_files_temporary` está en `false`: el cron pasaba de largo por su lado. Se
+borraron esa misma noche, pero por limpieza y no porque el cron lo pidiera.
 
 **El guardián.** `comprobacion.php` pasa de 42 a **46 comprobaciones**: los ocho trabajos
 encendidos, que los dos desarmados sigan apagados, que ningún horario de copias esté encendido y que

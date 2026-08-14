@@ -79,11 +79,12 @@ const REFERENCIA_VARIOS = [
   // una errata del del dueno. Estaba bloqueada desde 2024 y sin nada colgado, pero
   // una llave maestra que no es de nadie conocido no se deja bloqueada, se quita.
   'usuarios' => 6,
-  // Estos 315 ficheros son en su mayoria imagenes de los productos que se
-  // borraron. Drupal no los borra solo: sin la opcion de marcar como temporales
-  // los que nadie usa, se quedan ahi para siempre. Cuando se decida que hacer
-  // con ellos, esta cifra baja.
-  'ficheros' => 315,
+  // Eran 315 hasta el 14 de agosto de 2026. Se borraron las 142 fotos que se
+  // quedaron sin dueno al vaciar los datos de prueba, y con ellas 304 versiones
+  // recortadas: 446 archivos y 57 MB de disco. De los 173 que quedan, 141 no son
+  // fotos -las fuentes del tema y los CSV de las importaciones- y 32 tienen
+  // usos, entre ellos los once iconos de la portada.
+  'ficheros' => 173,
   // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
   // Super BOM, porque su funcion la hace ya el tablero de stock.
   'nodos' => 11,
@@ -226,6 +227,35 @@ comprobar($resultados, 'las portadas dicen que pantalla abren', !$sinDestino,
   $sinDestino ? 'sin destino: ' . implode(', ', $sinDestino) : count($portadas) . ' de ' . count($portadas));
 comprobar($resultados, 'y esa pantalla existe', !$destinoRoto,
   $destinoRoto ? implode(', ', $destinoRoto) : 'todas');
+
+// Las imagenes de marca: los dos logotipos, los dos favicon y el fondo de la
+// pantalla de entrar. Se comprueban porque no tienen ficha en la base de datos
+// -el formulario de ajustes del tema las dejo en el disco sin registrarlas-, y
+// eso las deja fuera de todo lo que Drupal sabe vigilar. La configuracion las
+// nombra, asi que si alguien borra el archivo no salta ningun error: solo
+// desaparecen de la pantalla. Se leen de la configuracion y no de una lista,
+// para que esto siga valiendo el dia que se cambie el logotipo.
+$sistemaFicheros = \Drupal::service('file_system');
+$imagenesDeMarca = [];
+foreach (\Drupal::configFactory()->listAll() as $nombre) {
+  $plano = print_r(\Drupal::config($nombre)->getRawData(), TRUE);
+  if (preg_match_all('#(public|private)://[^\'"\s\]]+#', $plano, $encontrados)) {
+    foreach ($encontrados[0] as $uri) {
+      if (preg_match('/\.(jpe?g|png|gif|webp|ico|svg)$/i', $uri)) {
+        $imagenesDeMarca[$uri] = TRUE;
+      }
+    }
+  }
+}
+$marcaQueFalta = [];
+foreach (array_keys($imagenesDeMarca) as $uri) {
+  $ruta = $sistemaFicheros->realpath($uri);
+  if (!$ruta || !is_file($ruta)) {
+    $marcaQueFalta[] = $uri;
+  }
+}
+comprobar($resultados, 'las imagenes de marca siguen en el disco', !$marcaQueFalta,
+  $marcaQueFalta ? 'FALTAN: ' . implode(', ', $marcaQueFalta) : count($imagenesDeMarca) . ' de ' . count($imagenesDeMarca));
 
 // -----------------------------------------------------------------------------
 // 2. Estructura: modulos y automatismos.
