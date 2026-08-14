@@ -27,7 +27,7 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 $rutas = $extra ?? [];
 if (!$rutas) {
-  $rutas = array_merge(
+  $rutas = array_values(array_unique(array_merge(
     [
       // Lo que usa la fabrica todos los dias.
       '/start',
@@ -43,10 +43,11 @@ if (!$rutas) {
       '/admin/config/workflow/eca',
       '/admin/structure/quicktabs',
     ],
+    paginasDeNavegacion(),
     paginasDeVista(),
     exportaciones(),
     fichasDeEjemplo()
-  );
+  )));
 }
 
 /**
@@ -193,6 +194,40 @@ function conArgumentosReales(string $ruta, string $vistaId, string $displayId, ?
   }
   sinDatos($ruta . '  (' . $vistaId . ')');
   return NULL;
+}
+
+/**
+ * Las portadas del ERP, que son nodos y no vistas.
+ *
+ * Por aqui se entra a todo: contactos, clientes, proveedores, productos,
+ * inventario, colores. Cada una lleva bloques de vista dentro, asi que un
+ * bloque mal configurado solo se ve pidiendo el nodo, y hasta el 14 de agosto
+ * de 2026 esta prueba no pedia ni uno: descubria las vistas por su ruta propia,
+ * y estas no la tienen.
+ *
+ * Ese dia se pago el descuido. Las tres portadas del CRM llevaban meses
+ * escondiendo el boton de crear cuando la lista estaba vacia, y nadie se habia
+ * enterado porque siempre habia datos de prueba dentro. Al vaciar la base se
+ * quedaron sin manera de crear un cliente, y lo encontro el dueno mirando, no
+ * esta prueba.
+ */
+function paginasDeNavegacion(): array {
+  $rutas = [];
+  $almacen = \Drupal::entityTypeManager()->getStorage('node');
+  $ids = $almacen->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('status', 1)
+    ->sort('nid')
+    ->execute();
+  foreach ($almacen->loadMultiple($ids) as $nodo) {
+    try {
+      $rutas[] = $nodo->toUrl()->toString();
+    }
+    catch (\Throwable $e) {
+      // Un nodo sin ruta propia no es un fallo.
+    }
+  }
+  return $rutas;
 }
 
 /**

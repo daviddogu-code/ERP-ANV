@@ -272,6 +272,10 @@ medio rellenar, y lo que faltaba era justo lo que el importador no sabe meter.
   ERP desde esa misma noche. Mientras no lo haga, el despliegue se verifica con seis pantallas
   menos, y una de ellas es la que ya se rompió una vez.
 
+  Ese mismo día se le añadió lo que le faltaba por el otro lado: **ahora pide las doce portadas
+  del ERP**, que son nodos y no vistas, y por eso no las descubría. De 20 pantallas a 31. El
+  motivo está abajo, en Hecho: por ese hueco se colaron diez botones de crear escondidos.
+
 ## 4. Cuando el ERP nuevo ya funcione
 
 - **Dar de baja el servidor de Nueva York.** Ahí está el ahorro grande: 32 dólares al mes.
@@ -768,6 +772,63 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-14 — Diez botones de crear escondidos, y el CRM sin manera de empezar
+
+El dueño entró a mirar el ERP vacío y encontró lo primero que había que encontrar: en Contactos,
+Clientes y Proveedores **no había botón para crear nada**. Sin cliente no hay pedido de venta y
+sin proveedor no hay orden de compra, así que el ERP entero estaba cerrado por ahí.
+
+**Los botones estaban puestos.** Los cuatro, bien escritos, apuntando a las rutas correctas. Lo
+que estaba mal era una casilla: en Views, las zonas de cabecera tienen un *"Display even if view
+has no result"* que **viene apagada por defecto**, y apagada significa que la zona desaparece
+cuando la consulta no trae filas (`AreaPluginBase::isEmpty()`, línea 122 del núcleo). O sea el
+círculo vicioso perfecto: **el botón de crear el primer contacto solo aparecía cuando ya había
+contactos.**
+
+Llevaba así desde siempre y nadie se había enterado, porque con 22 fichas de prueba dentro la
+lista nunca estaba vacía. Lo destapó el borrado de la noche anterior.
+
+**Y no era un botón, eran diez, en siete pantallas.** El barrido de `empty: false` seguido de un
+enlace de crear los saca todos. Los que bloqueaban:
+
+- Las **tres del CRM** (`views.view.tec_crm_customers`): Contactos, Clientes y Proveedores, con
+  sus botones *+ Organization* y *+ Person*.
+- El bloque de **materiales del proveedor** (`views.view.tec_inventory`, "CRM Supplier Inventory
+  block"): al abrir un proveedor nuevo no había manera de añadirle su primer material.
+
+Los que no bloqueaban, y esto es lo interesante: **pedidos, productos y la pantalla principal de
+inventario ya tenían la casilla marcada**. El patrón correcto se conocía y se había aplicado en
+la mitad del ERP. No es un olvido de diseño, es un despiste repetido.
+
+Arreglado lo que bloqueaba, más la pantalla de colores por consistencia. Y se le puso a las tres
+del CRM el texto que faltaba para cuando no hay nada, en inglés: *"Nothing here yet. Use the
+buttons above to add an organization or a person."* Va **una sola vez en el display por defecto**
+y las tres pantallas lo heredan, en lugar de tres textos casi iguales: así se lee bien en las
+tres y hay un solo sitio que mantener.
+
+**Una errata de una letra, en un sitio que no importa.** El botón de añadir color de
+`views.view.tec_colors` apuntaba a `tec_colorss`, con dos eses, o sea un 404. Corregida. Está en
+un display cuya ruta es **`/asas`** —teclado aporreado— que es una pantalla de pruebas que nadie
+usa y que se puede borrar; aparece en la prueba de humo desde el principio y ahí sigue.
+
+**Un efecto secundario que conviene conocer antes de verlo.** Al guardar una vista por primera
+vez bajo Drupal 11, su exportación se normaliza: los `1` y `0` de `sortable`, `sticky`,
+`override` y `empty_column` pasan a ser `true` y `false` de verdad, y alguna clave cambia de
+sitio. Resultado: **un cambio de una palabra produce un diff de sesenta líneas**. No es daño y no
+hay que pelearse con él, pero la primera vez asusta y hace dudar de si se ha tocado algo más.
+
+**Y lo que hay que arreglar de verdad es por qué esto no lo encontró una máquina.** La prueba de
+humo descubre las vistas por su ruta propia, y las portadas del ERP no tienen ruta propia: son
+**nodos** con bloques de vista dentro. Así que llevaba meses sin pedir ni una de las doce
+pantallas por las que se entra a todo. Ahora las pide todas: de 20 pantallas a **31**, y con eso
+entraron `/p`, `/i`, `/o`, `/c`, `/c/customers`, `/c/suppliers`, `/cl`, `/bom` y cuatro nodos que
+no tienen alias (`/node/11` a `/node/14`). Todas responden 200.
+
+Queda un límite honesto: la prueba comprueba que la página responde, **no que el botón esté
+dentro**. Eso se verificó a mano esta vez, pidiendo las tres pantallas como usuario 1 y buscando
+los enlaces en el HTML. Si algún día hace falta automatizarlo, el sitio es la comprobación del
+ERP, no la de humo.
 
 ### 2026-08-14 — El ERP se queda vacío: 7.003 fichas y 892 términos fuera, y el ERP en verde después
 

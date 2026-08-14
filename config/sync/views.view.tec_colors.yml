@@ -515,7 +515,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: text_custom
-          empty: false
+          empty: true
           content: "<div class=\"text-align-right\">\r\n    <div class=\"btn-default\">\r\n        <a href=\"/admin/structure/taxonomy/manage/tec_colors/add?destination=/node/9\">+ Add new color</a>\r\n        </div>\r\n</div>"
           tokenize: false
       display_extenders: {  }
@@ -791,7 +791,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: false
-          content: "<div class=\"text-align-right\">\r\n    <div class=\"btn-default\">\r\n        <a href=\"/admin/structure/taxonomy/manage/tec_colorss/add?destination=/node/9\">+ Add new color</a>\r\n        </div>\r\n</div>"
+          content: "<div class=\"text-align-right\">\r\n    <div class=\"btn-default\">\r\n        <a href=\"/admin/structure/taxonomy/manage/tec_colors/add?destination=/node/9\">+ Add new color</a>\r\n        </div>\r\n</div>"
           tokenize: false
       display_extenders: {  }
       path: asas

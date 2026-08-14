@@ -3745,7 +3745,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: text_custom
-          empty: false
+          empty: true
           content: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\">\r\n<a href=\"/admin/structure/taxonomy/manage/tec_inventory/add/?target_id={{ id }}&destination=/tec_crm/{{ id }}\">Add new material</a>\r\n</div>\r\n</div>"
           tokenize: true
       display_extenders: {  }

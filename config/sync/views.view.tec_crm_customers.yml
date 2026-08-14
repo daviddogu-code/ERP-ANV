@@ -378,6 +378,7 @@ display:
         type: full
         options:
           offset: 0
+          pagination_heading_level: h4
           items_per_page: 100
           total_pages: null
           id: 0
@@ -395,7 +396,6 @@ display:
             offset: false
             offset_label: Offset
           quantity: 9
-          pagination_heading_level: h4
       exposed_form:
         type: basic
         options:
@@ -412,7 +412,18 @@ display:
       cache:
         type: tag
         options: {  }
-      empty: {  }
+      empty:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: text_custom
+          empty: true
+          content: '<div class="text-align-center"><h3 class="subtle">Nothing here yet. Use the buttons above to add an organization or a person.</h3></div>'
+          tokenize: false
       sorts: {  }
       arguments: {  }
       filters:
@@ -433,17 +444,6 @@ display:
           grouping: {  }
           row_class: ''
           default_row_class: true
-          responsive: false
-          bootstrap_styles:
-            bordered: bordered
-            sm: '0'
-            hover: hover
-            striped: striped
-          override: 1
-          sticky: 0
-          caption: ''
-          summary: ''
-          description: ''
           columns:
             title: title
             type: type
@@ -452,58 +452,69 @@ display:
             field_tec_address_locality: field_tec_address_locality
             field_tec_address_country_code: field_tec_address_country_code
             edit_tec_crm: edit_tec_crm
+          default: '-1'
           info:
             title:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             type:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_email:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_phone:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_address_locality:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_address_country_code:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             edit_tec_crm:
-              sortable: 0
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
-          default: '-1'
-          empty_table: 0
+          override: true
+          sticky: false
+          summary: ''
+          empty_table: false
+          caption: ''
+          description: ''
+          responsive: false
+          bootstrap_styles:
+            bordered: bordered
+            sm: '0'
+            hover: hover
+            striped: striped
       row:
         type: fields
       query:
@@ -525,7 +536,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: text_custom
-          empty: false
+          empty: true
           content: '<div class="text-align-right"><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_organization?destination=/node/5">+ Organization</a></strong></div><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_person?destination=/node/5">+ Person</a></strong></div></div>'
           tokenize: false
       footer: {  }
@@ -641,7 +652,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: text_custom
-          empty: false
+          empty: true
           content: '<div class="text-align-right"><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_organization?tipo=customer&destination=/node/6">+ Organization</a></strong></div><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_person?tipo=customer&destination=/node/6">+ Person</a></strong></div></div>'
           tokenize: false
       display_extenders: {  }
@@ -739,7 +750,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: text_custom
-          empty: false
+          empty: true
           content: '<div class="text-align-right"><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_organization?tipo=supplier&destination=/node/7">+ Organization</a></strong></div><div class="btn-default"><strong><a href="/admin/content/tec_crm/add/tec_contact_person?tipo=supplier&destination=/node/7">+ Person</a></strong></div></div>'
           tokenize: false
       display_extenders: {  }
