@@ -440,19 +440,41 @@ class PurchaseListForm extends FormBase {
   }
 
   /**
-   * The next purchase order number, in the format the ERP already uses.
+   * The next purchase order number: the ERP's "YY-N" shape, but unique.
    *
-   * process_kryibry numbers them "[year]-[how many purchase orders there are]",
-   * counting the new one, which is where 26-1 came from. Same rule here so both
-   * ways of creating an order keep one single series.
+   * The older flow (process_kryibry) builds the same shape from a Views count
+   * that is scoped to the supplier and to published orders, and that excludes
+   * the order being created. That count repeats: two suppliers reach their
+   * third order and both orders are called the same, and two drafts in a row
+   * for one supplier are called the same too. So the shape is copied here, but
+   * not the count.
+   *
+   * N is how many purchase orders this year already carry, plus one, and then
+   * bumped until the title is actually free. The bump is what makes it safe:
+   * deleted orders leave gaps, the older flow leaves repeats, and a number that
+   * two orders share is not a number.
    */
   protected function nextOrderNumber(): string {
-    $count = (int) $this->entityTypeManager->getStorage('tec_order')->getQuery()
+    $storage = $this->entityTypeManager->getStorage('tec_order');
+    $year = $this->dateFormatter->format(time(), 'custom', 'y');
+
+    $number = 1 + (int) $storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('type', 'tec_purchase_order')
+      ->condition('title', $year . '-', 'STARTS_WITH')
       ->count()
       ->execute();
-    return $this->dateFormatter->format(time(), 'custom', 'y') . '-' . ($count + 1);
+
+    while ($storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('type', 'tec_purchase_order')
+      ->condition('title', $year . '-' . $number)
+      ->count()
+      ->execute()) {
+      $number++;
+    }
+
+    return $year . '-' . $number;
   }
 
   /**

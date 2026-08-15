@@ -1032,11 +1032,16 @@ Sin prisa y sin orden fijo entre ellas.
      have no reorder point" con la lista de los que nadie vigila. Rellenar el punto de pedido de
      los 38 materiales del servidor es lo único que separa esta pantalla de ser útil, y es
      trabajo del dueño: cuánto aguantar de cada material no lo puede decidir un script.
-  2. **La numeración de pedidos de compra se rompe al cambiar de año.** `process_kryibry` los
-     titula año-cuenta *de todos los pedidos que existen*, no de los del año, que es de donde
-     salió `26-1`. En enero de 2027, con un pedido de 2026 en la base, el primero será `27-2`.
-     El botón nuevo sigue esa misma regla a propósito, para no abrir una segunda serie; el
-     arreglo, cuando se haga, hay que hacerlo en los dos sitios.
+  2. **La numeración del flujo viejo repite números.** `process_kryibry` titula el pedido
+     año-cuenta, pero la cuenta sale de una vista (`tec_order_eca_count_orders`, pantalla
+     `po_count`) que está acotada **al proveedor** y **a los pedidos publicados**, y que además
+     no cuenta el que se está creando, porque nace sin publicar. O sea tres repeticiones a la
+     vez: dos proveedores llegan a su tercer pedido y los dos pedidos se llaman igual; dos
+     borradores seguidos del mismo proveedor se llaman igual; y el primer borrador de un
+     proveedor sin pedidos publicados sale como `26-0`. El botón nuevo copia el formato pero no
+     la cuenta: cuenta los pedidos del año y sube el número hasta que esté libre de verdad, así
+     que el suyo no lo tiene otro. Arreglar el flujo viejo es cambiar esa vista; mientras no se
+     haga, los números que reparte no identifican un pedido.
   3. **Los dos caminos discrepan en el precio de la línea.** El flujo viejo `process_kryibry`
      copia en el precio el `field_tec_price` del material, que es el **coste de consumo**,
      mientras que el total lo calcula `process_fpvka81` con el `field_tec_cost`, que es el
@@ -1053,6 +1058,16 @@ Sin prisa y sin orden fijo entre ellas.
   5. **El aviso de envío gratuito se queda fuera**, decisión del dueño del 15 de agosto. No
      existe ningún campo de umbral en el proveedor; el día que se quiera, es un campo nuevo en
      `tec_crm.tec_contact_organization` y un aviso por grupo en la pantalla.
+
+  Y uno más que salió al revisar el modelo y **ya está arreglado**: el campo de líneas de la
+  cabecera del pedido de compra, `field_tec_line_items`, declaraba que aceptaba líneas de
+  **venta** (`tec_sales_order_line_item`), mientras que todos los pedidos de compra que existen
+  llevan líneas de compra (`tec_po_line_item`). O sea que cada pedido de compra del ERP
+  incumplía su propia definición desde el principio. No lo cantó nadie porque guardar por
+  código no valida, y el flujo viejo guarda por código; se habría visto al editar un pedido por
+  el formulario de administración, donde el buscador de líneas solo habría ofrecido líneas de
+  venta. Corregido el 15 de agosto, y la prueba de la lista de compra pasa desde entonces
+  `validate()` sobre el pedido que crea, que es lo que delata esta clase de fallo.
 
   Dos avisos para el despliegue: el permiso nuevo es `access tec purchase list` y lo tienen
   Manager y Executive, **no el supervisor de planta**, porque crear un pedido de compra

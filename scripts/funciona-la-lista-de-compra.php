@@ -204,6 +204,26 @@ $mirar(
   (bool) preg_match('/^\d{2}-\d+$/', (string) $pedido->label()),
   (string) $pedido->label()
 );
+// El flujo viejo de ECA saca el numero de un conteo por proveedor y solo de
+// publicados, que repite: dos proveedores llegan a su tercer pedido y los dos
+// se llaman igual. Aqui se exige que el numero sea de uno solo.
+$repetidos = (int) $gestor->getStorage('tec_order')->getQuery()
+  ->accessCheck(FALSE)
+  ->condition('type', 'tec_purchase_order')
+  ->condition('title', (string) $pedido->label())
+  ->count()
+  ->execute();
+$mirar('el numero no lo tiene otro pedido', $repetidos === 1, $repetidos . ' pedidos con ese numero');
+
+// Guarda de la declaracion de los campos. El campo de lineas del pedido de
+// compra declaraba durante meses que aceptaba lineas de venta, asi que todos
+// los pedidos de compra incumplian su propia definicion: guardar por codigo no
+// valida, y por eso no lo canto nadie.
+$quejas = $pedido->validate();
+$mirar('el pedido pasa la validacion de Drupal', count($quejas) === 0, count($quejas) . ' quejas');
+foreach ($quejas as $queja) {
+  printf("         %s: %s\n", $queja->getPropertyPath(), strip_tags((string) $queja->getMessage()));
+}
 $proveedor = $pedido->get('field_tec_vendor')->entity;
 $mirar('lleva proveedor', $proveedor !== NULL, $proveedor ? $proveedor->label() : '');
 $mirar(

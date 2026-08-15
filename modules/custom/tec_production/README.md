@@ -180,9 +180,12 @@ capacity parameters.
 - **No total across suppliers**, on purpose: each supplier bills in its own
   currency (`field_tec_purchase_currency`, shown next to its total).
 - **Create purchase order**, one button per supplier, writes a
-  `tec_purchase_order` titled `YY-N` — same series and format as the older
-  flag-driven ECA `process_kryibry`, so there is only one numbering — with
-  owner = current user, status = the field default `open`, and one
+  `tec_purchase_order` titled `YY-N` — the shape the ERP already uses, but not
+  the older flow's count: `process_kryibry` counts published orders *of that
+  supplier* and excludes the one being created, so its numbers repeat across
+  suppliers and across consecutive drafts. Here N counts this year's orders and
+  is bumped until the title is free. Plus owner = current user, status = the
+  field default `open`, and one
   `tec_po_line_item` per ticked row carrying material, quantity (UoP) and
   price = `field_tec_cost`. The price has to be written even though the line
   total is computed from the material cost: the presave ECA `process_fpvka81`
