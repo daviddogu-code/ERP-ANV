@@ -11,7 +11,7 @@ id: taxonomy_term.tec_inventory.field_tec_stock_level
 field_name: field_tec_stock_level
 entity_type: taxonomy_term
 bundle: tec_inventory
-label: 'Stock level'
+label: 'Stock level (UoS)'
 description: ''
 required: false
 translatable: false

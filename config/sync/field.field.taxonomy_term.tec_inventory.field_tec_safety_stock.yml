@@ -9,7 +9,7 @@ id: taxonomy_term.tec_inventory.field_tec_safety_stock
 field_name: field_tec_safety_stock
 entity_type: taxonomy_term
 bundle: tec_inventory
-label: 'Safety Stock Qty'
+label: 'Safety Stock Qty (UoS)'
 description: ''
 required: false
 translatable: true
