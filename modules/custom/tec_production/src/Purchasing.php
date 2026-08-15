@@ -92,22 +92,24 @@ final class Purchasing {
   }
 
   /**
-   * Quantity still to come per material, in purchase units.
+   * What is still to come per material, broken down by purchase order.
    *
-   * Until 15 August 2026 this returned the quantity ordered, which was the same
-   * number until the day a delivery arrived -- and there was no way to record
-   * that a delivery had arrived, so it stayed the same number forever.
+   * The breakdown exists so the stock board can offer the order itself: seeing
+   * that 10 are coming is only half the answer when what you want to do next is
+   * say that they arrived.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param int[] $tids
    *   Material term ids to look up.
    *
-   * @return float[]
-   *   Quantity outstanding keyed by material term id. Materials with nothing
-   *   coming are absent, not zero.
+   * @return array
+   *   Keyed by material term id, then by order id, each entry holding the order
+   *   entity under 'order' and its outstanding purchase units under 'quantity'.
+   *   Materials with nothing coming are absent, and so are orders and lines
+   *   with nothing outstanding.
    */
-  public static function onOrder(EntityTypeManagerInterface $entityTypeManager, array $tids): array {
+  public static function incoming(EntityTypeManagerInterface $entityTypeManager, array $tids): array {
     $map = [];
     if (!$tids) {
       return $map;
@@ -141,7 +143,36 @@ final class Purchasing {
         continue;
       }
       $tid = (int) $line->get('field_tec_inventory')->target_id;
-      $map[$tid] = ($map[$tid] ?? 0.0) + $pending;
+      $oid = (int) $order->id();
+      if (!isset($map[$tid][$oid])) {
+        $map[$tid][$oid] = ['order' => $order, 'quantity' => 0.0];
+      }
+      $map[$tid][$oid]['quantity'] += $pending;
+    }
+
+    return $map;
+  }
+
+  /**
+   * Quantity still to come per material, in purchase units.
+   *
+   * Until 15 August 2026 this returned the quantity ordered, which was the same
+   * number until the day a delivery arrived -- and there was no way to record
+   * that a delivery had arrived, so it stayed the same number forever.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   * @param int[] $tids
+   *   Material term ids to look up.
+   *
+   * @return float[]
+   *   Quantity outstanding keyed by material term id. Materials with nothing
+   *   coming are absent, not zero.
+   */
+  public static function onOrder(EntityTypeManagerInterface $entityTypeManager, array $tids): array {
+    $map = [];
+    foreach (self::incoming($entityTypeManager, $tids) as $tid => $orders) {
+      $map[$tid] = array_sum(array_column($orders, 'quantity'));
     }
 
     return $map;

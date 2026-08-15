@@ -310,6 +310,20 @@ $mirar('y se lee como entrega a medias', Purchasing::receiptState($pedido) === '
 $pendiente = Purchasing::onOrder($gestor, [$datos_a['tid'], $datos_b['tid']]);
 $mirar('lo pendiente de este pedido baja a 6', $camino($pendiente, $datos_a['tid']) === 6.0, $redondo($camino($pendiente, $datos_a['tid'])) . ' de mas');
 
+// Y el tablero ofrece el pedido en la columna de lo pedido, que es el atajo de
+// quien firma el albaran. Solo salen los materiales que pide la cola de
+// produccion, asi que si el material de la prueba no esta en ninguna orden no
+// hay fila donde mirar y se dice, en vez de fingir un fallo.
+$tablero = $pedir('/stock');
+$mirar('el tablero sigue cargando', $tablero->getStatusCode() === 200, 'codigo ' . $tablero->getStatusCode());
+$html_tablero = $tablero->getContent();
+if (str_contains($html_tablero, 'data-tid="' . $datos_a['tid'] . '"')) {
+  $mirar('el tablero ofrece recibir contra el pedido', str_contains($html_tablero, $direccion));
+}
+else {
+  printf("         %s no lo pide ninguna orden en cola, asi que no tiene fila en el tablero\n", $datos_a['nombre']);
+}
+
 echo "\n";
 echo "Segunda entrega: 5 mas y se cierra lo que falta, y 5 de los 4 pedidos\n";
 echo str_repeat('-', 78) . "\n";

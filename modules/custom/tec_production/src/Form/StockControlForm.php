@@ -68,7 +68,7 @@ class StockControlForm extends FormBase {
     uasort($terms, static fn($a, $b) => strnatcasecmp((string) $a->label(), (string) $b->label()));
 
     $checks = $this->loadChecks($order_ids);
-    $on_order = $this->loadOnOrder(array_keys($terms));
+    $incoming_orders = $this->loadIncoming(array_keys($terms));
 
     $form['#attached']['library'][] = 'tec_production/stock_control';
     // Modal dialog machinery for the ± (mutation with note) links.
@@ -76,7 +76,7 @@ class StockControlForm extends FormBase {
 
     $form['help'] = [
       '#markup' => '<div class="tec-stock__help">'
-        . $this->t('One row per material used by the queue. ☐ = material prepared / set aside for that order (does not move stock). Unchecked quantities count in <em>∑ Required</em> and <em>Stock after queue</em>. <em>Stock after queue (UoP)</em> is what stays in the warehouse once the queue takes what it needs, in purchase units: if it is red, that is roughly what you are short of. It counts only what is physically there, not what is already ordered, so check <em>Ordered (UoP)</em> before buying again. Checkboxes save automatically. Click the <em>Stock</em> number to register a +/- mutation.')
+        . $this->t('One row per material used by the queue. ☐ = material prepared / set aside for that order (does not move stock). Unchecked quantities count in <em>∑ Required</em> and <em>Stock after queue</em>. <em>Stock after queue (UoP)</em> is what stays in the warehouse once the queue takes what it needs, in purchase units: if it is red, that is roughly what you are short of. It counts only what is physically there, not what is already ordered, so check <em>Ordered (UoP)</em> before buying again. Checkboxes save automatically. Click the <em>Stock</em> number to register a +/- mutation, and the order number next to <em>Ordered</em> to say that a delivery has arrived.')
         . '</div>',
     ];
 
@@ -135,7 +135,8 @@ class StockControlForm extends FormBase {
         : 0.0;
       $split = $this->factor($term, 'field_tec_split_into');
       $units = $this->factor($term, 'field_tec_units');
-      $incoming = (float) ($on_order[$tid] ?? 0.0);
+      $waiting_on = $incoming_orders[$tid] ?? [];
+      $incoming = array_sum(array_column($waiting_on, 'quantity'));
 
       $uos_name = $this->unitName($term, 'field_tec_uos');
       $uop_name = $this->unitName($term, 'field_tec_unit_purchase');
@@ -210,12 +211,32 @@ class StockControlForm extends FormBase {
           '#wrapper_attributes' => ['class' => ['tec-stock__c-sup']],
         ];
 
+      // The number, and then the orders it is waiting on. Whoever watches this
+      // column is the same person who signs for the delivery, so the order they
+      // have to open is right here rather than three screens away.
       $row['on_order'] = [
-        '#markup' => '<span class="' . ($incoming > 0 ? '' : 'tec-stock__muted') . '"'
-          . ($uop_name !== '' ? ' title="' . Html::escape($uop_name) . '"' : '') . '>'
-          . $this->fmt($incoming) . '</span>',
         '#wrapper_attributes' => ['class' => ['tec-stock__c-num']],
+        'quantity' => [
+          '#markup' => '<span class="' . ($incoming > 0 ? '' : 'tec-stock__muted') . '"'
+            . ($uop_name !== '' ? ' title="' . Html::escape($uop_name) . '"' : '') . '>'
+            . $this->fmt($incoming) . '</span>',
+        ],
       ];
+      foreach ($waiting_on as $oid => $entry) {
+        $row['on_order']['po_' . $oid] = [
+          '#type' => 'link',
+          '#title' => $entry['order']->label(),
+          '#url' => Url::fromRoute('tec_production.po_receive', ['tec_order' => $oid]),
+          '#attributes' => [
+            'class' => ['tec-stock__receive'],
+            'title' => $this->t('Receive against purchase order @number: @quantity @unit still to come', [
+              '@number' => $entry['order']->label(),
+              '@quantity' => $this->fmt($entry['quantity']),
+              '@unit' => $uop_name !== '' ? $uop_name : $this->t('purchase units'),
+            ]),
+          ],
+        ];
+      }
 
       $row['after_queue_uop'] = [
         '#markup' => '<span class="tec-stock__after-queue-uop' . ($after_queue_uop < -0.000001 ? ' is-neg' : '') . '"'
@@ -370,8 +391,8 @@ class StockControlForm extends FormBase {
    * delivered stops counting here, which is what makes the Ordered column drop
    * as deliveries arrive instead of standing still forever.
    */
-  protected function loadOnOrder(array $tids): array {
-    return Purchasing::onOrder($this->entityTypeManager, $tids);
+  protected function loadIncoming(array $tids): array {
+    return Purchasing::incoming($this->entityTypeManager, $tids);
   }
 
   /**

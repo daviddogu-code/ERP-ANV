@@ -186,6 +186,14 @@
   color: #b5b5b5;
 }
 
+/* The purchase orders an Ordered figure is waiting on. Small and after the
+   number, so the column still reads as a column of numbers. */
+.tec-stock__receive {
+  margin-left: 0.35rem;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
 /* Per-order pair: narrow checkbox column + qty column. */
 .tec-stock__table .tec-stock__h-chk,
 .tec-stock__table .tec-stock__c-chk {
