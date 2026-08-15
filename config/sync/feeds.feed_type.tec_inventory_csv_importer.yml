@@ -4,7 +4,24 @@ status: true
 dependencies:
   config:
     - core.base_field_override.taxonomy_term.tec_inventory.name
+    - field.field.taxonomy_term.tec_inventory.field_tec_colors
+    - field.field.taxonomy_term.tec_inventory.field_tec_cost
+    - field.field.taxonomy_term.tec_inventory.field_tec_importer_item_id
+    - field.field.taxonomy_term.tec_inventory.field_tec_internal_sku
+    - field.field.taxonomy_term.tec_inventory.field_tec_lead_time_days
+    - field.field.taxonomy_term.tec_inventory.field_tec_material_type
+    - field.field.taxonomy_term.tec_inventory.field_tec_moq_quantity
+    - field.field.taxonomy_term.tec_inventory.field_tec_reorder_point
+    - field.field.taxonomy_term.tec_inventory.field_tec_safety_stock
+    - field.field.taxonomy_term.tec_inventory.field_tec_scrap_margin
+    - field.field.taxonomy_term.tec_inventory.field_tec_split_into
     - field.field.taxonomy_term.tec_inventory.field_tec_traceability
+    - field.field.taxonomy_term.tec_inventory.field_tec_unit_purchase
+    - field.field.taxonomy_term.tec_inventory.field_tec_unit_use
+    - field.field.taxonomy_term.tec_inventory.field_tec_units
+    - field.field.taxonomy_term.tec_inventory.field_tec_uos
+    - field.field.taxonomy_term.tec_inventory.field_tec_vendor
+    - field.field.taxonomy_term.tec_inventory.field_tec_volume_cbm
     - taxonomy.vocabulary.tec_inventory
   module:
     - feeds_log
@@ -33,6 +50,7 @@ id: tec_inventory_csv_importer
 description: 'Imports Inventory from CSV files.'
 help: ''
 import_period: -1
+import_period_per_feed: false
 fetcher: upload
 fetcher_configuration:
   allowed_extensions: 'txt csv tsv xml opml'
@@ -41,7 +59,7 @@ parser: csv
 parser_configuration:
   delimiter: ','
   no_headers: false
-  line_limit: 100
+  line_limit: 1000
 processor: 'entity:taxonomy_term'
 processor_configuration:
   values:
@@ -69,72 +87,179 @@ custom_sources:
     label: 'Material Type'
     machine_name: material_type
     type: csv
-  suppliers:
-    value: Suppliers
-    label: Suppliers
-    machine_name: suppliers
+  supplier:
+    value: Supplier
+    label: Supplier
+    machine_name: supplier
     type: csv
-  traceable:
-    value: Traceable
-    label: Traceable
-    machine_name: traceable
+  purchase_cost:
+    value: 'Purchase Cost'
+    label: 'Purchase Cost'
+    machine_name: purchase_cost
     type: csv
-  traceability:
-    value: Traceable
-    label: Traceable
-    machine_name: traceability
+  purchase_uom:
+    value: 'Purchase UoM'
+    label: 'Purchase UoM'
+    machine_name: purchase_uom
     type: csv
-  unit_of_use:
-    value: 'Unit of Use'
-    label: 'Unit of Use'
-    machine_name: unit_of_use
+  inventory_uom:
+    value: 'Inventory UoM'
+    label: 'Inventory UoM'
+    machine_name: inventory_uom
+    type: csv
+  consumption_uom:
+    value: 'Consumption UoM'
+    label: 'Consumption UoM'
+    machine_name: consumption_uom
+    type: csv
+  purchase_to_inventory_factor:
+    value: 'Purchase to Inventory Factor'
+    label: 'Purchase to Inventory Factor'
+    machine_name: purchase_to_inventory_factor
+    type: csv
+  inventory_to_consumption_factor:
+    value: 'Inventory to Consumption Factor'
+    label: 'Inventory to Consumption Factor'
+    machine_name: inventory_to_consumption_factor
     type: csv
   description:
     value: Description
     label: Description
     machine_name: description
     type: csv
-  inventory_name:
-    value: Name
-    label: Name
-    machine_name: inventory_name
+  traceability:
+    value: Traceability
+    label: Traceability
+    machine_name: traceability
     type: csv
-  cost_by_uou:
-    value: 'Cost by UoU'
-    label: 'Cost by UoU'
-    machine_name: cost_by_uou
+  colors:
+    value: Colors
+    label: Colors
+    machine_name: colors
     type: csv
-  name_2:
-    value: Name
-    label: Name
-    machine_name: name_2
+  internal_sku:
+    value: 'Internal SKU'
+    label: 'Internal SKU'
+    machine_name: internal_sku
     type: csv
-  description_2:
-    value: Description
-    label: Description
-    machine_name: description_2
+  importer_item_id:
+    value: 'Importer Item ID'
+    label: 'Importer Item ID'
+    machine_name: importer_item_id
     type: csv
-  unit_of_use_2:
-    value: Unit_of_use_2
-    label: Unit_of_use_2
-    machine_name: unit_of_use_2
+  lead_time_days:
+    value: 'Supplier Lead Time (Days)'
+    label: 'Supplier Lead Time (Days)'
+    machine_name: lead_time_days
     type: csv
-  unit_of_use_22:
-    value: Unit_of_use
-    label: Unit_of_use
-    machine_name: unit_of_use_22
+  moq_quantity:
+    value: 'Minimum Order Quantity (MOQ)'
+    label: 'Minimum Order Quantity (MOQ)'
+    machine_name: moq_quantity
     type: csv
-  unit_of_use_3:
-    value: Unit_of_use
-    label: Unit_of_use
-    machine_name: unit_of_use_3
+  reorder_point:
+    value: 'Reorder Point (ROP)'
+    label: 'Reorder Point (ROP)'
+    machine_name: reorder_point
     type: csv
-  material_type_3:
-    value: Material_type
-    label: Material_type
-    machine_name: material_type_3
+  safety_stock:
+    value: 'Safety Stock Qty'
+    label: 'Safety Stock Qty'
+    machine_name: safety_stock
+    type: csv
+  scrap_margin:
+    value: 'Scrap / Loss Margin (%)'
+    label: 'Scrap / Loss Margin (%)'
+    machine_name: scrap_margin
+    type: csv
+  volume_cbm:
+    value: 'Volume per Purchase UoM (CBM)'
+    label: 'Volume per Purchase UoM (CBM)'
+    machine_name: volume_cbm
     type: csv
 mappings:
+  -
+    target: name
+    map:
+      value: name
+    settings:
+      language: null
+    unique:
+      value: 1
+  -
+    target: field_tec_material_type
+    map:
+      target_id: material_type
+    settings:
+      language: null
+      reference_by: name
+      feeds_item: false
+      autocreate: 0
+      autocreate_bundle: false
+  -
+    target: field_tec_vendor
+    map:
+      target_id: supplier
+    settings:
+      language: null
+      reference_by: title
+      autocreate: 0
+      autocreate_bundle: false
+  -
+    target: field_tec_cost
+    map:
+      value: purchase_cost
+    settings:
+      language: null
+  -
+    target: field_tec_unit_purchase
+    map:
+      target_id: purchase_uom
+    settings:
+      language: null
+      reference_by: name
+      feeds_item: false
+      autocreate: 0
+      autocreate_bundle: false
+  -
+    target: field_tec_uos
+    map:
+      target_id: inventory_uom
+    settings:
+      language: null
+      reference_by: name
+      feeds_item: false
+      autocreate: 0
+      autocreate_bundle: false
+  -
+    target: field_tec_unit_use
+    map:
+      target_id: consumption_uom
+    settings:
+      language: null
+      reference_by: name
+      feeds_item: false
+      autocreate: 0
+      autocreate_bundle: false
+  -
+    target: field_tec_units
+    map:
+      value: purchase_to_inventory_factor
+    settings:
+      language: null
+  -
+    target: field_tec_split_into
+    map:
+      value: inventory_to_consumption_factor
+    settings:
+      language: null
+  -
+    target: description
+    map:
+      value: description
+    settings:
+      language: null
+      format: plain_text
   -
     target: field_tec_traceability
     map:
@@ -142,17 +267,60 @@ mappings:
     settings:
       language: null
   -
-    target: name
+    target: field_tec_colors
     map:
-      value: name_2
+      target_id: colors
     settings:
       language: null
-    unique:
-      value: 1
+      reference_by: name
+      feeds_item: false
+      autocreate: 0
+      autocreate_bundle: false
   -
-    target: description
+    target: field_tec_internal_sku
     map:
-      value: description_2
+      value: internal_sku
     settings:
       language: null
-      format: plain_text
+  -
+    target: field_tec_importer_item_id
+    map:
+      value: importer_item_id
+    settings:
+      language: null
+  -
+    target: field_tec_lead_time_days
+    map:
+      value: lead_time_days
+    settings:
+      language: null
+  -
+    target: field_tec_moq_quantity
+    map:
+      value: moq_quantity
+    settings:
+      language: null
+  -
+    target: field_tec_reorder_point
+    map:
+      value: reorder_point
+    settings:
+      language: null
+  -
+    target: field_tec_safety_stock
+    map:
+      value: safety_stock
+    settings:
+      language: null
+  -
+    target: field_tec_scrap_margin
+    map:
+      value: scrap_margin
+    settings:
+      language: null
+  -
+    target: field_tec_volume_cbm
+    map:
+      value: volume_cbm
+    settings:
+      language: null
