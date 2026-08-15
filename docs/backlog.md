@@ -1009,11 +1009,55 @@ por una celda que no existe. Un barrido del ERP entero dice que no queda ningún
 
 ## 6. Funcionalidad nueva
 
-Sin prisa y sin orden fijo entre ellas. La lista de compra es la que más valor daría a corto
-plazo.
+Sin prisa y sin orden fijo entre ellas.
 
-- **Lista de compra sugerida por proveedor**, con el total de cada uno y aviso de los
-  umbrales de envío gratuito. Boceto ya acordado, falta montarlo.
+- **Lista de compra sugerida por proveedor** — **hecha el 15 de agosto de 2026**. Vive en
+  `/purchase`, con el icono trece de la portada, y la sirve
+  `modules/custom/tec_production/src/Form/PurchaseListForm.php`. Un material entra en la lista
+  cuando lo disponible deja de cubrir su punto de pedido, y disponible es el stock **más lo que
+  ya viene de camino** en pedidos de compra abiertos, así que lo pedido esta mañana no se pide
+  otra vez esta tarde. La cantidad sugerida tapa el hueco hasta punto de pedido más stock de
+  seguridad, se redondea hacia arriba a unidades de compra enteras y nunca baja del MOQ; es una
+  sugerencia, y todas las cantidades se pueden cambiar antes de crear el pedido. Cada proveedor
+  lleva su total y su botón, que escribe el pedido de compra con sus líneas rellenas. No hay
+  total general a propósito: cada proveedor factura en su moneda y sumarlos sería sumar bahts
+  con dólares. Prueba de punta a punta en `scripts/funciona-la-lista-de-compra.php` —pide la
+  pantalla, pulsa el botón, revisa el pedido y borra lo que ha creado— y la misma cuenta por
+  línea de comandos en `scripts/que-hay-que-comprar.php`.
+
+  Cinco cosas que ha dejado por el camino, por orden de importancia:
+
+  1. **Ni un material tiene punto de pedido.** Sin punto de pedido no hay nivel por debajo del
+     cual caer, así que hoy la pantalla no propone nada: solo enseña el apartado "N materials
+     have no reorder point" con la lista de los que nadie vigila. Rellenar el punto de pedido de
+     los 38 materiales del servidor es lo único que separa esta pantalla de ser útil, y es
+     trabajo del dueño: cuánto aguantar de cada material no lo puede decidir un script.
+  2. **La numeración de pedidos de compra se rompe al cambiar de año.** `process_kryibry` los
+     titula año-cuenta *de todos los pedidos que existen*, no de los del año, que es de donde
+     salió `26-1`. En enero de 2027, con un pedido de 2026 en la base, el primero será `27-2`.
+     El botón nuevo sigue esa misma regla a propósito, para no abrir una segunda serie; el
+     arreglo, cuando se haga, hay que hacerlo en los dos sitios.
+  3. **Los dos caminos discrepan en el precio de la línea.** El flujo viejo `process_kryibry`
+     copia en el precio el `field_tec_price` del material, que es el **coste de consumo**,
+     mientras que el total lo calcula `process_fpvka81` con el `field_tec_cost`, que es el
+     **coste de compra**. O sea que en los pedidos creados por el flujo viejo el precio que se
+     lee y el total no cuadran. El botón nuevo pone el coste de compra, que es el que manda en
+     el total. Arreglarlo es cambiar una línea de la ECA.
+  4. **El pedido de compra no tiene estado de borrador.** `field_tec_po_status` admite un solo
+     valor, `open`, y ese estado es justamente el que el tablero de stock cuenta como mercancía
+     en camino. O sea que en cuanto se pulsa el botón, lo pedido cuenta como que viene, aunque
+     nadie se lo haya mandado todavía al proveedor. Es coherente y evita pedir dos veces, pero
+     si algún día se quiere un borrador de verdad hay que añadir el valor y decidir quién pasa
+     de borrador a abierto. El sitio donde se decide qué cuenta como "en camino" es la constante
+     `Purchasing::INCOMING_STATUS`.
+  5. **El aviso de envío gratuito se queda fuera**, decisión del dueño del 15 de agosto. No
+     existe ningún campo de umbral en el proveedor; el día que se quiera, es un campo nuevo en
+     `tec_crm.tec_contact_organization` y un aviso por grupo en la pantalla.
+
+  Dos avisos para el despliegue: el permiso nuevo es `access tec purchase list` y lo tienen
+  Manager y Executive, **no el supervisor de planta**, porque crear un pedido de compra
+  compromete dinero; y la imagen del icono está en `sites/default/private`, que está fuera de
+  git igual que los otros doce, así que hay que subirla al servidor a mano o el icono sale roto.
 - **Avance automático del estado del pedido** cuando "Remaining" llega a cero. Decidido
   dejarlo desconectado de momento; se puede conectar más adelante sin rehacer nada.
 - **Packing lists.**

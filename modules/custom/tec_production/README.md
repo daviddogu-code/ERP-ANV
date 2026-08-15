@@ -157,6 +157,46 @@ capacity parameters.
   auditable). Open point: a "pending close-out" view for orders that left
   with unchecked materials.
 
+### Purchase list (phase 5)
+- `/purchase` (permission `access tec purchase list`, granted to Manager and
+  Executive but **not** to the floor supervisor: creating a purchase order
+  commits money): what to buy right now, grouped by supplier.
+- **Rows** = materials whose available quantity no longer covers their reorder
+  point. Available = `field_tec_stock_level` (UoS) + on order (UoP × units),
+  so something ordered this morning is not ordered again this afternoon.
+- A material with an empty `field_tec_reorder_point` can never appear, however
+  low its stock: those are listed in a collapsed section at the bottom rather
+  than silently dropped, because an empty purchase list and a list of
+  unwatched materials look identical from the outside.
+- Columns: Buy ☐ | Material | Stock (UoS) | On order (UoP) | Reorder point
+  (UoS) | Short by (UoS) | MOQ | Lead time | Quantity (UoP, editable) |
+  Unit cost | Line total.
+- **Suggested quantity** = ceil((reorder point + safety stock − available) /
+  `field_tec_units`), raised to `field_tec_moq_quantity`, never below 1.
+  Filling up to the reorder point alone would leave the material on the edge
+  and it would be suggested again the next day. Every quantity is editable and
+  every row can be unticked: the screen suggests, the buyer decides. JS keeps
+  the line and supplier totals live while editing.
+- **No total across suppliers**, on purpose: each supplier bills in its own
+  currency (`field_tec_purchase_currency`, shown next to its total).
+- **Create purchase order**, one button per supplier, writes a
+  `tec_purchase_order` titled `YY-N` — same series and format as the older
+  flag-driven ECA `process_kryibry`, so there is only one numbering — with
+  owner = current user, status = the field default `open`, and one
+  `tec_po_line_item` per ticked row carrying material, quantity (UoP) and
+  price = `field_tec_cost`. The price has to be written even though the line
+  total is computed from the material cost: the presave ECA `process_fpvka81`
+  only computes the total when the line already carries a price. Lines are
+  created first (the order requires them) and then pointed back at the order.
+- `Purchasing::onOrder()` and `Purchasing::factor()` are shared with the stock
+  board so both screens count incoming goods the same way.
+  `Purchasing::INCOMING_STATUS` is the one place that decides which purchase
+  order status counts as coming in — relevant the day a draft status exists,
+  since today `open` is the only one.
+- End-to-end test: `scripts/funciona-la-lista-de-compra.php` asks for the
+  page, presses the button, checks the order it wrote and deletes it again.
+  The same arithmetic on the command line: `scripts/que-hay-que-comprar.php`.
+
 ## Backlog / future ideas
 - Auto-advance order status from the production log: when SUM(produced) >=
   total ordered, move the order to Quality Control/Inspection (or Completed,
@@ -171,9 +211,11 @@ capacity parameters.
 ## Integration points
 - Home tiles: nodes (tec_landing_page) whose nids are stored in
   `tec_production.settings.queue_tile_nid` / `log_tile_nid` /
-  `report_tile_nid` / `stock_tile_nid`; viewing one redirects to
-  `/o/queue` / `/production/log` / `/production/report` / `/stock`
-  (see `QueueTileRedirectSubscriber`).
+  `report_tile_nid` / `stock_tile_nid` / `purchase_tile_nid`; viewing one
+  redirects to `/o/queue` / `/production/log` / `/production/report` /
+  `/stock` / `/purchase` (see `QueueTileRedirectSubscriber`). The tiles
+  themselves link straight to those paths through their `field_tec_target`,
+  so the redirect only catches someone opening the node itself.
 - Order fields added by this module: `field_tec_queue_position`,
   `field_tec_produced` (both on bundle `tec_sales_order`, not shown on forms).
 - Custom table added by this module: `tec_stock_check` (phase 4 checkbox
