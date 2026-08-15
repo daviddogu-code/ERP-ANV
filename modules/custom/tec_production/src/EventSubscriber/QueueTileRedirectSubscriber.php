@@ -48,6 +48,7 @@ class QueueTileRedirectSubscriber implements EventSubscriberInterface {
       'log_tile_nid' => 'tec_production.log',
       'report_tile_nid' => 'tec_production.report',
       'stock_tile_nid' => 'tec_production.stock',
+      'purchase_tile_nid' => 'tec_production.purchase_list',
     ];
     foreach ($map as $key => $route) {
       $tile_nid = (int) $settings->get($key);

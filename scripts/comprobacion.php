@@ -133,14 +133,17 @@ const REFERENCIA_VARIOS = [
   // 69 que quedaron son 39 fuentes tipograficas, 28 imagenes -entre ellas los
   // iconos de la portada y los de la aplicacion movil- y 2 hojas de estilo. El 70
   // es el icono de marcas, refichado el 15 de agosto: la imagen nunca se fue del
-  // disco, pero su ficha murio con la portada.
-  'ficheros' => 70,
+  // disco, pero su ficha murio con la portada. El 71 es el icono de la lista de
+  // compra, del mismo dia.
+  'ficheros' => 71,
   // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
   // Super BOM, porque su funcion la hace ya el tablero de stock. Y volvieron a ser
   // doce el 15, al rehacer la portada de marcas, que llevaba borrada desde antes de
   // las limpiezas: la marca es obligatoria en producto, asi que sin esa pantalla no
-  // se podia crear ni una marca ni, por tanto, un producto.
-  'nodos' => 12,
+  // se podia crear ni una marca ni, por tanto, un producto. Son trece desde ese
+  // mismo dia, al anadir el icono de la lista de compra: /purchase existia pero
+  // no habia manera de llegar sin escribir la direccion a mano.
+  'nodos' => 13,
   // Fueron seis unas horas: se pusieron cuatro para que los iconos de la cola, el
   // registro, el informe y el stock llevaran a su pantalla. Vuelven a ser dos
   // porque el arreglo bueno llego el mismo dia: el enlace sale ahora del campo
