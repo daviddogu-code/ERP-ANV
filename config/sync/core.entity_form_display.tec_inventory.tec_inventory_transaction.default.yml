@@ -7,6 +7,7 @@ dependencies:
     - field.field.tec_inventory.tec_inventory_transaction.field_tec_inventory
     - field.field.tec_inventory.tec_inventory_transaction.field_tec_mutation_complete
     - field.field.tec_inventory.tec_inventory_transaction.field_tec_mutation_note
+    - field.field.tec_inventory.tec_inventory_transaction.field_tec_po_line
     - field.field.tec_inventory.tec_inventory_transaction.field_tec_quantity
   module:
     - field_group
@@ -96,9 +97,9 @@ content:
     third_party_settings: {  }
   flag:
     weight: 10
+    region: content
     settings: {  }
     third_party_settings: {  }
-    region: content
   langcode:
     type: language_select
     weight: 2
@@ -117,5 +118,6 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
+  field_tec_po_line: true
   status: true
   title: true

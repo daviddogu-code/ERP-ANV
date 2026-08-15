@@ -1,0 +1,25 @@
+uuid: 75661b47-a066-4744-8855-035093ff9f71
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_po_line_item
+    - field.storage.tec_line_item.field_tec_quantity_received
+id: tec_line_item.tec_po_line_item.field_tec_quantity_received
+field_name: field_tec_quantity_received
+entity_type: tec_line_item
+bundle: tec_po_line_item
+label: 'Received (UoP)'
+description: 'How much of this line has already arrived, in purchase units. The Receive form maintains it; change it by hand only to correct a mistake.'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

@@ -362,11 +362,13 @@ class StockControlForm extends FormBase {
   }
 
   /**
-   * Quantity on order (UoP) per material, from open purchase orders.
+   * Quantity still to come (UoP) per material, from open purchase orders.
    *
    * Shared with the Purchase List (/purchase), which subtracts what is already
    * coming in before suggesting anything. Both screens have to count it the
-   * same way or one of them orders the same roll twice.
+   * same way or one of them orders the same roll twice. What a line has already
+   * delivered stops counting here, which is what makes the Ordered column drop
+   * as deliveries arrive instead of standing still forever.
    */
   protected function loadOnOrder(array $tids): array {
     return Purchasing::onOrder($this->entityTypeManager, $tids);

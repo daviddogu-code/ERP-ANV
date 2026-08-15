@@ -1,0 +1,24 @@
+uuid: 338b046f-40b6-418f-b00a-b4efc1387757
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_inventory.tec_inventory_transaction
+    - eck.eck_type.tec_line_item.tec_po_line_item
+    - field.storage.tec_inventory.field_tec_po_line
+id: tec_inventory.tec_inventory_transaction.field_tec_po_line
+field_name: field_tec_po_line
+entity_type: tec_inventory
+bundle: tec_inventory_transaction
+label: 'Purchase order line'
+description: 'The purchase order line this stock came in on, when it came from a delivery. Empty for a hand-made +/- mutation.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_line_item'
+  handler_settings:
+    target_bundles:
+      tec_po_line_item: tec_po_line_item
+field_type: entity_reference

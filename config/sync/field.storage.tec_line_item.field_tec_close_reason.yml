@@ -1,0 +1,21 @@
+uuid: c7a80ecd-d206-485c-a668-31ece347dce9
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_line_item.field_tec_close_reason
+field_name: field_tec_close_reason
+entity_type: tec_line_item
+type: string
+settings:
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,19 @@
+uuid: 67977af0-7772-49d7-901d-ee8931a0dc90
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_po_line_item
+    - field.storage.tec_line_item.field_tec_close_reason
+id: tec_line_item.tec_po_line_item.field_tec_close_reason
+field_name: field_tec_close_reason
+entity_type: tec_line_item
+bundle: tec_po_line_item
+label: 'Reason for closing'
+description: 'Why the rest is not coming. Optional, but line items keep no author or revisions, so without it that decision leaves no trace at all.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,0 +1,20 @@
+uuid: 8c449793-ff19-48cd-bd17-fabd299e89f1
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_line_item.field_tec_quantity_received
+field_name: field_tec_quantity_received
+entity_type: tec_line_item
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

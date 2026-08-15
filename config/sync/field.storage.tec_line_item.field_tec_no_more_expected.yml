@@ -1,0 +1,18 @@
+uuid: 2c1c8c04-083f-42f0-a018-3f5c30c8cb1b
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_line_item.field_tec_no_more_expected
+field_name: field_tec_no_more_expected
+entity_type: tec_line_item
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
