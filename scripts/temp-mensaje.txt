@@ -1,0 +1,13 @@
+Deja el tablero de stock en las siete columnas que se miran
+
+El dueno del almacen solo reacciona a dos numeros: cuanto queda cuando la cola
+coge lo suyo, y si eso ya se pidio. Las otras dos columnas de saldo eran el
+mismo dato en otra unidad y el mismo dato mas lo que viene de camino, que es la
+pregunta de /purchase, no la de esta pantalla.
+
+Fuera Projected (UoP) y Stock after queue (UoS). On order pasa a Ordered, y
+Required a su sumatorio. El orden ahora empieza por el stock y sigue por el
+material, asi que el bloque congelado de la izquierda cambia de sitio: los
+desplazamientos son sumas de anchos escritas a mano, y eso obliga a fijar el
+ancho de la columna de material, que hasta ahora podia estirarse porque era la
+ultima del bloque.

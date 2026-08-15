@@ -25,22 +25,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * models). Only unchecked quantities count towards Required / Stock after
  * queue.
  *
- * Three balance columns, and they are not the same number three times:
+ * One balance column, Stock after queue (UoP) = (stock - required/split)/units.
+ * It counts only what is in the warehouse, because production cannot cut a roll
+ * that is still on a lorry, and it is shown in purchase units because the only
+ * reaction to a red number is to order that many.
  *
- *   Stock after queue (UoS)  stock - required/split
- *   Stock after queue (UoP)  the same, divided by units
- *   Projected (UoP)          the same, plus what is already on order
- *
- * The first two count only what is in the warehouse, because production cannot
- * cut a roll that is still on a lorry, and with lead times of weeks that
- * distinction decides whether the queue runs or stops. The third is the buyer's
- * question, not the floor's. So a material whose incoming delivery covers the
- * gap shows red in the first two and does not appear on /purchase, and all of
- * them are right.
- *
- * Until 15 August 2026 the first and the third were both called "Projected",
- * which read as one figure in two units when they differ by exactly the goods
- * in transit.
+ * The board carried three balance columns until 15 August 2026: the same figure
+ * in inventory units, and a "Projected (UoP)" that added the goods in transit.
+ * Both went out on the owner's call: the first because nobody orders in
+ * inventory units, the second because the incoming-goods question belongs to
+ * /purchase. Git has them if the buying side ever wants them back here.
  *
  * Unit conversions per material (see README):
  *   field_tec_units      = Purchase to Inventory factor (1 UoP = X UoS)
@@ -82,20 +76,22 @@ class StockControlForm extends FormBase {
 
     $form['help'] = [
       '#markup' => '<div class="tec-stock__help">'
-        . $this->t('One row per material used by the queue. ☐ = material prepared / set aside for that order (does not move stock). Unchecked quantities count in <em>Required</em> and <em>Stock after queue</em>. <em>Stock after queue</em> is what stays in the warehouse once the queue takes what it needs, counting only what is physically there; it is shown in inventory units and in purchase units, which are the ones you order in. <em>Projected (UoP)</em> is that same figure plus what is already on order. Checkboxes save automatically. Click the <em>Stock</em> number to register a +/- mutation.')
+        . $this->t('One row per material used by the queue. ☐ = material prepared / set aside for that order (does not move stock). Unchecked quantities count in <em>∑ Required</em> and <em>Stock after queue</em>. <em>Stock after queue (UoP)</em> is what stays in the warehouse once the queue takes what it needs, in purchase units: if it is red, that is roughly what you are short of. It counts only what is physically there, not what is already ordered, so check <em>Ordered (UoP)</em> before buying again. Checkboxes save automatically. Click the <em>Stock</em> number to register a +/- mutation.')
         . '</div>',
     ];
 
+    // El orden lo fijo el dueno el 15 de agosto de 2026, y es el de quien
+    // vigila que no falte material: primero lo que hay, luego de que material
+    // se trata, luego si ya se pidio, y al final el saldo y lo que se lleva la
+    // cola. Las tres primeras van congeladas a la izquierda al desplazarse.
     $header = [
-      'image' => ['data' => $this->t('Image'), 'class' => ['tec-stock__h-img']],
       'stock' => ['data' => $this->t('Stock (UoS)'), 'class' => ['tec-stock__h-num', 'tec-stock__h-stock']],
       'material' => ['data' => $this->t('Material'), 'class' => ['tec-stock__h-mat']],
+      'image' => ['data' => $this->t('Image'), 'class' => ['tec-stock__h-img']],
       'supplier' => ['data' => $this->t('Supplier'), 'class' => ['tec-stock__h-sup']],
-      'on_order' => ['data' => $this->t('On order (UoP)'), 'class' => ['tec-stock__h-num']],
-      'proj_uop' => ['data' => $this->t('Projected (UoP)'), 'class' => ['tec-stock__h-num']],
+      'on_order' => ['data' => $this->t('Ordered (UoP)'), 'class' => ['tec-stock__h-num']],
       'after_queue_uop' => ['data' => $this->t('Stock after queue (UoP)'), 'class' => ['tec-stock__h-num']],
-      'after_queue' => ['data' => $this->t('Stock after queue (UoS)'), 'class' => ['tec-stock__h-num']],
-      'required' => ['data' => $this->t('Required (UoU)'), 'class' => ['tec-stock__h-num']],
+      'required' => ['data' => $this->t('∑ Required (UoU)'), 'class' => ['tec-stock__h-num']],
     ];
     foreach ($orders as $order) {
       $oid = $order['id'];
@@ -154,14 +150,10 @@ class StockControlForm extends FormBase {
       // Lo que queda en el almacen cuando la cola coge lo suyo, contando solo
       // lo que hay fisicamente: la produccion no puede cortar un rollo que
       // todavia esta en un camion, y menos con plazos de entrega de semanas.
-      // Por eso este numero no suma lo que viene de camino y el de al lado si:
-      // uno contesta "puedo fabricar la cola" y el otro "tengo que comprar".
-      $after_queue = $stock - $required / $split;
-      // El mismo saldo en unidades de compra, que es en las que se pide: un
-      // "faltan 6 metros" se escribe tal cual en el pedido, mientras que el
+      // El saldo se ensena en unidades de compra, que son en las que se pide:
+      // un "faltan 6 metros" se escribe tal cual en el pedido, mientras que el
       // saldo en unidades de inventario hay que convertirlo mentalmente.
-      $after_queue_uop = $after_queue / $units;
-      $proj_uop = $after_queue_uop + $incoming;
+      $after_queue_uop = ($stock - $required / $split) / $units;
 
       $row = [
         '#attributes' => [
@@ -169,12 +161,7 @@ class StockControlForm extends FormBase {
           'data-stock' => (string) $stock,
           'data-split' => (string) $split,
           'data-units' => (string) $units,
-          'data-onorder' => (string) $incoming,
         ],
-      ];
-
-      $row['image'] = $this->imageCell($term) + [
-        '#wrapper_attributes' => ['class' => ['tec-stock__c-img']],
       ];
 
       // Stock is read-only on the board; mutations only through the ± link,
@@ -206,6 +193,10 @@ class StockControlForm extends FormBase {
         '#wrapper_attributes' => ['class' => ['tec-stock__c-mat']],
       ];
 
+      $row['image'] = $this->imageCell($term) + [
+        '#wrapper_attributes' => ['class' => ['tec-stock__c-img']],
+      ];
+
       $vendor = $term->hasField('field_tec_vendor') ? $term->get('field_tec_vendor')->entity : NULL;
       $row['supplier'] = $vendor
         ? [
@@ -226,24 +217,10 @@ class StockControlForm extends FormBase {
         '#wrapper_attributes' => ['class' => ['tec-stock__c-num']],
       ];
 
-      $row['proj_uop'] = [
-        '#markup' => '<span class="tec-stock__proj-uop' . ($proj_uop < -0.000001 ? ' is-neg' : '') . '"'
-          . ($uop_name !== '' ? ' title="' . Html::escape($uop_name) . '"' : '') . '>'
-          . $this->fmt($proj_uop) . '</span>',
-        '#wrapper_attributes' => ['class' => ['tec-stock__c-num']],
-      ];
-
       $row['after_queue_uop'] = [
         '#markup' => '<span class="tec-stock__after-queue-uop' . ($after_queue_uop < -0.000001 ? ' is-neg' : '') . '"'
           . ($uop_name !== '' ? ' title="' . Html::escape($uop_name) . '"' : '') . '>'
           . $this->fmt($after_queue_uop) . '</span>',
-        '#wrapper_attributes' => ['class' => ['tec-stock__c-num']],
-      ];
-
-      $row['after_queue'] = [
-        '#markup' => '<span class="tec-stock__after-queue' . ($after_queue < -0.000001 ? ' is-neg' : '') . '"'
-          . ($uos_name !== '' ? ' title="' . Html::escape($uos_name) . '"' : '') . '>'
-          . $this->fmt($after_queue) . '</span>',
         '#wrapper_attributes' => ['class' => ['tec-stock__c-num']],
       ];
 

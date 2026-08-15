@@ -116,13 +116,13 @@ capacity parameters.
   (`tec_line_item_bom_item`) of the orders currently on the queue, sorted
   by name. **Order columns** use the same statuses and ordering as
   `/o/queue`: left = next to produce (bottom of the queue page).
-- Fixed columns: Image | Stock (UoS, read-only; ± opens the mutation modal) |
-  Material | Supplier (link to the CRM page) | On order (UoP) |
-  Projected (UoP) | Stock after queue (UoP) | Stock after queue (UoS) |
-  Required (UoU). Image + Stock +
-  Material are frozen left (sticky) while scrolling horizontally; header
-  row + bottom fixed
-  scrollbar use the same Google Sheets pattern as /o/queue.
+- Fixed columns: Stock (UoS, read-only; ± opens the mutation modal) |
+  Material | Image | Supplier (link to the CRM page) | Ordered (UoP) |
+  Stock after queue (UoP) | ∑ Required (UoU). Stock + Material + Image are
+  frozen left (sticky) while scrolling horizontally, which is why the material
+  column has a fixed width in the CSS: the sticky offsets are hand-written
+  sums of the widths to their left. Header row + bottom fixed scrollbar use the
+  same Google Sheets pattern as /o/queue.
 - Per order: narrow ☐ (header checkbox = master for the column) + qty cell.
   Always ☐ + number (0 when the order does not use the material). BoM
   snapshot quantities are already line-item totals (verified against real
@@ -140,23 +140,20 @@ capacity parameters.
 - Unit conversions per material: `field_tec_units` = Purchase → Inventory
   (1 UoP = X UoS), `field_tec_split_into` = Inventory → Consumption
   (1 UoS = Y UoU). Missing/zero factors fall back to 1.
-  - `Required (UoU)` = Σ unchecked BoM quantities.
-  - `Stock after queue (UoS)` = stock − required / split_into. Negative = red =
-    the queue needs more than the warehouse holds. **Not** a purchase signal,
-    which is what it was called here until 15 August 2026: it ignores what is
-    already on order on purpose, because production cannot cut a roll that is
-    still on a lorry. The purchase signal is `/purchase`, which does subtract
-    what is coming. So a material whose delivery covers the gap shows red here
-    and does not appear there, and both screens are right.
-  - `Stock after queue (UoP)` = stock_after_queue / units. The same balance in
-    the unit you actually order in, so a shortage reads straight off the screen
-    as the quantity to put on the purchase order (before MOQ and before
-    subtracting what is already coming).
-  - `Projected (UoP)` = stock_after_queue / units + on_order. The buyer's
-    version of the same balance. It and the UoS column were both called
-    "Projected" until that date, which read as one figure in two units when
-    they differ by exactly the goods in transit.
-- `On order (UoP)` = Σ `field_tec_quantity` of PO line items
+  - `∑ Required (UoU)` = Σ unchecked BoM quantities.
+  - `Stock after queue (UoP)` = (stock − required / split_into) / units.
+    Negative = red = the queue needs more than the warehouse holds, and the
+    figure is already the quantity to put on a purchase order (before MOQ).
+    It ignores what is already on order on purpose, because production cannot
+    cut a roll that is still on a lorry, so read it next to `Ordered (UoP)`
+    before buying. The purchase signal proper is `/purchase`, which does
+    subtract what is coming: a material whose delivery covers the gap shows red
+    here and does not appear there, and both screens are right.
+  - The board showed this balance in three shapes until 15 August 2026 (the
+    same figure in UoS, and a `Projected (UoP)` that added the goods in
+    transit). The owner cut the two extras: nobody orders in inventory units,
+    and the incoming-goods question belongs to `/purchase`.
+- `Ordered (UoP)` = Σ `field_tec_quantity` of PO line items
   (`tec_po_line_item`) whose parent PO has `field_tec_po_status = open`.
 - **Stock mutations**: the Stock number on the board is read-only. The ±
   link next to it opens `/stock/{tid}/adjust` in a modal (number field, so

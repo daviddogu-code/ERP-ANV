@@ -83,20 +83,15 @@
   border-bottom: 2px solid #ccc;
 }
 
-/* Sticky left block: image + stock + material name. */
-.tec-stock__table .tec-stock__h-img,
-.tec-stock__table .tec-stock__c-img {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  min-width: 48px;
-  width: 48px;
-}
-
+/* Sticky left block: stock + material name + image, in that order.
+   Each left: offset is the sum of the widths before it, so the three widths
+   below are load-bearing: change one and the ones after it slide under it.
+   That is also why the material column is pinned to one width instead of the
+   12-18rem range it had while it was the last of the block. */
 .tec-stock__table .tec-stock__h-stock,
 .tec-stock__table .tec-stock__c-stock {
   position: sticky;
-  left: 48px;
+  left: 0;
   z-index: 2;
   min-width: 88px;
   width: 88px;
@@ -105,12 +100,21 @@
 .tec-stock__table .tec-stock__h-mat,
 .tec-stock__table .tec-stock__c-mat {
   position: sticky;
-  left: 136px; /* 48px image + 88px stock */
+  left: 88px; /* 88px stock */
   z-index: 2;
-  min-width: 12rem;
-  max-width: 18rem;
+  min-width: 14rem;
+  max-width: 14rem;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.tec-stock__table .tec-stock__h-img,
+.tec-stock__table .tec-stock__c-img {
+  position: sticky;
+  left: calc(88px + 14rem); /* 88px stock + 14rem material */
+  z-index: 2;
+  min-width: 48px;
+  width: 48px;
   border-right: 2px solid #d8d8d8;
 }
 
@@ -168,16 +172,12 @@
   font-weight: 600;
 }
 
-.tec-stock__after-queue,
-.tec-stock__after-queue-uop,
-.tec-stock__proj-uop {
+.tec-stock__after-queue-uop {
   font-weight: 600;
   color: #1a7f37;
 }
 
-.tec-stock__after-queue.is-neg,
-.tec-stock__after-queue-uop.is-neg,
-.tec-stock__proj-uop.is-neg {
+.tec-stock__after-queue-uop.is-neg {
   color: #c62828;
 }
 

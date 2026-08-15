@@ -1,6 +1,6 @@
 /**
  * @file
- * Stock Control board: master column checkboxes + live Required / balances.
+ * Stock Control board: master column checkboxes + live Required / balance.
  *
  * Server-side values are authoritative; this only previews the numbers as
  * checkboxes are toggled, before Save persists them.
@@ -26,7 +26,6 @@
     var stock = parseFloat(row.dataset.stock || '0') || 0;
     var split = parseFloat(row.dataset.split || '1') || 1;
     var units = parseFloat(row.dataset.units || '1') || 1;
-    var onOrder = parseFloat(row.dataset.onorder || '0') || 0;
 
     var required = 0;
     row.querySelectorAll('.tec-stock__qty').forEach(function (span) {
@@ -39,14 +38,10 @@
       }
     });
 
-    var afterQueue = stock - required / split;
-    var afterQueueUop = afterQueue / units;
-    var projUop = afterQueueUop + onOrder;
+    var afterQueueUop = (stock - required / split) / units;
 
     setNumber(row, '.tec-stock__req', required);
-    setNumber(row, '.tec-stock__after-queue', afterQueue);
     setNumber(row, '.tec-stock__after-queue-uop', afterQueueUop);
-    setNumber(row, '.tec-stock__proj-uop', projUop);
   }
 
   function refreshMaster(table, orderId) {
