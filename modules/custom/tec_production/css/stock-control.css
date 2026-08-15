@@ -168,13 +168,13 @@
   font-weight: 600;
 }
 
-.tec-stock__proj-uos,
+.tec-stock__after-queue,
 .tec-stock__proj-uop {
   font-weight: 600;
   color: #1a7f37;
 }
 
-.tec-stock__proj-uos.is-neg,
+.tec-stock__after-queue.is-neg,
 .tec-stock__proj-uop.is-neg {
   color: #c62828;
 }

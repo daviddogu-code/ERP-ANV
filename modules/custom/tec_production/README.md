@@ -118,7 +118,7 @@ capacity parameters.
   `/o/queue`: left = next to produce (bottom of the queue page).
 - Fixed columns: Image | Stock (UoS, read-only; ± opens the mutation modal) |
   Material | Supplier (link to the CRM page) | On order (UoP) |
-  Projected (UoP) | Projected (UoS) | Required (UoU). Image + Stock +
+  Projected (UoP) | Stock after queue (UoS) | Required (UoU). Image + Stock +
   Material are frozen left (sticky) while scrolling horizontally; header
   row + bottom fixed
   scrollbar use the same Google Sheets pattern as /o/queue.
@@ -129,7 +129,7 @@ capacity parameters.
 - **Checkbox = material prepared / set aside for that order.** It does NOT
   touch stock. Persisted in the custom table `tec_stock_check`
   (order_id + material_tid = checked; uid + changed for audit). Only
-  unchecked quantities count in Required / Projected. JS previews the
+  unchecked quantities count in Required / Stock after queue. JS previews the
   numbers live.
 - **Auto-save, no Save button:** every toggle POSTs immediately to
   `/stock/check` (`StockCheckController`, permission-gated +
@@ -140,9 +140,16 @@ capacity parameters.
   (1 UoP = X UoS), `field_tec_split_into` = Inventory → Consumption
   (1 UoS = Y UoU). Missing/zero factors fall back to 1.
   - `Required (UoU)` = Σ unchecked BoM quantities.
-  - `Projected (UoS)` = stock − required / split_into. Negative = red =
-    purchase signal.
-  - `Projected (UoP)` = projected_uos / units + on_order.
+  - `Stock after queue (UoS)` = stock − required / split_into. Negative = red =
+    the queue needs more than the warehouse holds. **Not** a purchase signal,
+    which is what it was called here until 15 August 2026: it ignores what is
+    already on order on purpose, because production cannot cut a roll that is
+    still on a lorry. The purchase signal is `/purchase`, which does subtract
+    what is coming. So a material whose delivery covers the gap shows red here
+    and does not appear there, and both screens are right.
+  - `Projected (UoP)` = stock_after_queue / units + on_order. The buyer's
+    version of the same balance. Both columns were called "Projected" until
+    that date, which read as one figure in two units and was not.
 - `On order (UoP)` = Σ `field_tec_quantity` of PO line items
   (`tec_po_line_item`) whose parent PO has `field_tec_po_status = open`.
 - **Stock mutations**: the Stock number on the board is read-only. The ±
@@ -473,7 +480,7 @@ drush cr
   return 200 when logged in as administrator (307 to the login page when
   anonymous, via r4032login).
 - `/o/queue` shows orders with a computed TOTAL row; `/stock` shows materials
-  with suppliers and non-zero `Projected` / `Required` columns;
+  with suppliers and non-zero `Stock after queue` / `Required` columns;
   `/production/log` lists dated entries.
 - Image styles generate: request any
   `/sites/default/files/styles/small_40x40/public/...` URL and expect 200.

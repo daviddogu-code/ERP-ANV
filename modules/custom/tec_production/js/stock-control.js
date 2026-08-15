@@ -1,6 +1,6 @@
 /**
  * @file
- * Stock Control board: master column checkboxes + live Required/Projected.
+ * Stock Control board: master column checkboxes + live Required / balances.
  *
  * Server-side values are authoritative; this only previews the numbers as
  * checkboxes are toggled, before Save persists them.
@@ -39,11 +39,11 @@
       }
     });
 
-    var projUos = stock - required / split;
-    var projUop = projUos / units + onOrder;
+    var afterQueue = stock - required / split;
+    var projUop = afterQueue / units + onOrder;
 
     setNumber(row, '.tec-stock__req', required);
-    setNumber(row, '.tec-stock__proj-uos', projUos);
+    setNumber(row, '.tec-stock__after-queue', afterQueue);
     setNumber(row, '.tec-stock__proj-uop', projUop);
   }
 
