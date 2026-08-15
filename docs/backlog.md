@@ -160,14 +160,19 @@ El resto de esta lista es el "no publicar sin esto" de la segunda fase, la de lo
 empleados. Casi todo es trabajo técnico y no requiere decisiones del dueño, salvo los tres
 puntos de correo y el de las cuentas.
 
-- **Programar el cron.** Hoy Ultimate Cron reporta once tareas atrasadas. **Ya no queda ninguna
-  decisión pendiente: solo poner la llamada del sistema.** Los trece trabajos están revisados uno
-  por uno y desarmados los dos peligrosos (14 de agosto, ver Hecho), y las dos decisiones que
-  figuraban aquí se han caído las dos. La del idioma no existía: `locale_cron` tiene la
-  comprobación de traducciones puesta en "nunca", así que no descarga nada. Y la de los ficheros
-  huérfanos tampoco bloqueaba, porque con `make_unused_managed_files_temporary` en `false`
-  `file_cron` no los tocaba; se han borrado igualmente ese mismo día, por limpieza y no por el
-  cron.
+- **Programar el cron.** **Lo único que queda es pegar una línea en el servidor el día del
+  despliegue**, y está escrita y explicada en la sección 7, en "El cron del sistema". El lado de
+  Drupal ya está como tiene que estar y se volvió a comprobar el 15 de agosto: `automated_cron` no
+  está instalado, así que el cron no lo dispara la primera visita de la mañana; la clave de cron
+  existe y la ruta `/cron/{key}` responde, que es la vía de repuesto si algún día no se puede usar
+  `drush`; y los trece trabajos siguen como se dejaron el 14, con los dos peligrosos apagados. La
+  prueba en local: una vuelta completa a mano tarda **3,4 segundos** con los ocho trabajos
+  encendidos y **0,9 segundos** en régimen normal, y deja los dos avisos de cron del informe del
+  estado en cero. Las dos decisiones que figuraban aquí se cayeron las dos: la del idioma no
+  existía, porque `locale_cron` tiene la comprobación de traducciones puesta en "nunca" y no
+  descarga nada; y la de los ficheros huérfanos tampoco bloqueaba, porque con
+  `make_unused_managed_files_temporary` en `false` `file_cron` no los tocaba; se han borrado
+  igualmente ese mismo día, por limpieza y no por el cron.
 - **Crear el buzón `erp@anvfightgear.com`** en Google Workspace, como alias que reenvía al
   dueño y no como cuenta de pago nueva. Es la dirección desde la que el ERP manda los
   correos desde el 2026-08-12.
@@ -261,7 +266,40 @@ Del orden en que se hizo y de por qué, en Hecho. Aquí queda solo lo que sigue 
 **El importador de materiales es ahora lo único que separa al ERP de tener catálogo.** Antes era
 una mejora; desde el borrado es la puerta de entrada, porque no hay otra manera de meter 869
 materiales. Existe (`tec_inventory_csv_importer`) y por él entraron 470 de los de prueba, pero
-está a medio hacer:
+estaba a medio hacer.
+
+**Arreglado el 15 de agosto de 2026.** Pasa de **3 a 20 columnas con destino**, con las **nueve
+obligatorias** cubiertas y ninguna columna pidiéndose dos veces. `Traceable` pasa a `Traceability`,
+el proveedor va a `field_tec_vendor` resolviendo por título, el límite sube de 100 a **1.000 filas
+por pasada**, y la creación automática de unidades y tipos queda **apagada**. Los seis términos
+duplicados, el `Blue ` con espacio incluido, ya no están: se limpiaron en una fase anterior.
+
+Se probó importando de verdad, no solo validando: tres materiales creados con los veinte campos
+rellenos y el proveedor enganchado al CRM, más una **fila trampa** con la unidad `Metro Inventado`,
+que se rechazó sin crear nada — los recuentos de unidades, tipos y colores salieron idénticos antes
+y después, o sea que la autocreación está apagada de verdad. Todo lo de la prueba quedó borrado.
+
+La plantilla está en `docs/plantillas/`: el `.xlsx` es para rellenar (obligatorias en rojo,
+opcionales en gris, la ayuda en el comentario de cada celda, y cuatro hojas con las listas cerradas
+que existen hoy) y el `.csv` es el que se sube, porque el lector solo acepta `txt csv tsv xml opml`
+y un `.xlsx` no se puede ni subir. Las columnas no están escritas a mano: **el generador las lee del
+propio importador**, así que la plantilla no puede desincronizarse. Era justo el fallo de `Traceable`
+pidiendo una columna que el fichero llamaba de otra manera.
+
+**Y una trampa que hay que saber antes de lanzar las 857 filas: la importación corre con el usuario
+que firma la ficha, no con quien pulsa el botón.** Feeds hace `switchTo($feed->getOwnerId())` antes
+de empezar. Importa porque la columna `Supplier` resuelve contra la vista `tec_crm_references`, que
+tiene el acceso limitado a los roles `tec_supervisor`, `tec_manager`, `tec_executive` y
+`administrator`, y **el usuario 1 no se salta ese control**: el control de acceso por rol de Views
+compara roles y no hace excepción con el uno. La ficha 4 la firma `david`, que es administrador, así
+que la importación funcionará. Si alguien le cambia el autor a una cuenta sin esos roles, fallan las
+857 filas con "This entity cannot be referenced", y poner `--user` en la línea de órdenes no lo
+arregla. Queda escrito también en la hoja de instrucciones del Excel.
+
+Sigue pendiente **la decisión del dueño** sobre el proveedor vacío en el fichero, que está más abajo
+en esta misma lista y no es técnica.
+
+El diagnóstico que se encontró, punto por punto:
 
 - **Conecta tres campos, no cinco.** Esto se leyó en la configuración el 14 de agosto por la
   noche, y es peor de lo que decía aquí: `feeds.feed_type.tec_inventory_csv_importer` declara
@@ -289,6 +327,27 @@ está a medio hacer:
   `field_tec_suppliers` **ninguno, cero de 869**. O sea que el campo que se usaba de verdad es
   `field_tec_vendor`, el obligatorio que se elige de una lista, y el otro se puede retirar. La
   decisión se llevaba semanas en el aire y se contestó sola en cuanto hubo con qué contar.
+
+  **Y `field_tec_suppliers` está retirado del todo desde el 15 de agosto de 2026**: columna,
+  relación y entradas de tabla fuera de las cuatro pantallas de `views.view.tec_inventory`, fuera de
+  las pantallas de ver y editar del material, y fuera el campo, el almacén y la tabla
+  `taxonomy_term__field_tec_suppliers`, que Drupal tiró en el momento al no haber ni un dato. Un
+  barrido de toda la configuración activa dice que nadie lo nombra ya. La copia de la vista, 5.377
+  líneas, está en `backups/views.view.tec_inventory.backup-2026-08-15.yml`.
+
+  De paso se arregló **el botón "Add new material" de la pestaña del proveedor**, que llevaba
+  quién sabe cuánto abriendo el formulario sin proveedor puesto. El fallo no era el campo viejo: la
+  cabecera de `block_2` escribía `{{ id }}`, que es una marca de columna de fila y **una cabecera de
+  vista no la ve**, así que el enlace salía con el hueco vacío. Ahora usa `{{ raw_arguments.id }}` y
+  `/supplier/31` da `?target_id=31&destination=/tec_crm/31`, que abre el formulario con
+  `<option value="31" selected>`. Se eligió `raw_arguments` y no `arguments` porque `arguments.id` es
+  el *título* del argumento: hoy valen lo mismo, pero el día que alguien encienda un validador o un
+  título pasaría a valer la etiqueta de la ficha y el enlace se rompería por dentro sin dejar de
+  parecer correcto. El `destination` se dejó en el camino interno `/tec_crm/{id}` y no en el alias,
+  porque el camino lo garantiza la ruta y se cura solo si pathauto cambia de patrón. Comprobado
+  además que el relleno funciona con las cuatro cuentas que pueden crear materiales, no solo con la
+  del dueño. Queda el arnés `scripts/carga-el-listado-de-materiales.php`, que dibuja el listado de
+  materiales y sirve para ver si la pantalla más usada se descoloca.
 - **Procesa solo 100 filas por pasada**, así que con 869 materiales hay que lanzarlo nueve
   veces o subir ese límite.
 - **Inventa unidades y tipos de material** cuando el texto del Excel no coincide exactamente.
@@ -785,13 +844,37 @@ entonces no avisa el día que el rojo es de verdad. **Y hay un cabo atado a esto
 contenido son el juego de pruebas, así que el día que se ejecute `borrar-el-juego-de-pruebas.php` hay
 que devolverlas a cero. Está escrito en el propio fichero, al lado de las cifras.
 
-##### Un cabo cosmético, apuntado y no arreglado
+##### ~~Un cabo cosmético, apuntado y no arreglado~~ Arreglado el 15 de agosto de 2026
 
-En la vista de resumen de materiales, el display maestro enseña identificadores en vez de etiquetas en
-la columna de unidad de consumo: pone `2, 706` donde debería poner `Centimeter (cm)`. **No se ve desde
-ninguna pantalla**, porque ni esa vista ni la de cálculo tienen display de página, solo maestro y
-bloque, y los bloques van embebidos. Es cosa de una función de agregación mal puesta en una columna
-que nadie pide. Se deja apuntado y no se toca.
+En la vista de resumen de materiales, la pantalla maestra enseñaba identificadores en vez de etiquetas
+en la columna de unidad de consumo: ponía `2, 706` donde debía poner `Centimeter (cm)`. Se confirmó
+que **no se ve desde ninguna pantalla**, y se confirmó a conciencia, por los cinco caminos por los que
+una pantalla puede colarse: Views nunca da ruta a la maestra, no hay ningún bloque de esa vista
+colocado en ninguna región, el único objeto de configuración que la nombra es la pestaña «Material
+Summary» de la ficha de pedido y dice expresamente `display: block_1`, ningún fichero de código la
+incrusta a mano —7.195 mirados— y ningún contenido guardado la nombra. Al `2, 706` solo le veía la
+cara quien abría la vista para editarla.
+
+**El diagnóstico que estaba apuntado aquí era casi correcto y fallaba en lo que importaba.** Sí era
+una agregación mal puesta, pero no la de `views_aggregator`, que es donde apetece mirar: era **la del
+núcleo**, `group_type: sum` en esa columna, y la maestra es la única pantalla de la vista con
+`group_by: true`. Cuando la agregación de una columna no es «agrupar», Views **cambia el manejador de
+la columna por el numérico**, y el numérico no sabe nada de formateadores, así que el
+`entity_reference_label` que la columna tenía configurado no se usaba nunca.
+
+Y el número tampoco era lo que parecía: **`2, 706` no son dos números, es uno solo, el 2706**, que es
+el identificador del término `Centimeter (cm)`, partido por el separador de valores múltiples de la
+columna, que el manejador numérico reaprovecha como separador de miles. La segunda fila ponía
+`2, 703`, o sea el 2703, `Sheet`. Ni el 2 ni el 706 existen como término, así que quien los busque por
+separado no encuentra nada y pierde la tarde. Arreglado cambiando esa única clave a `group`. Las
+pantallas hijas no cambian ni una celda, porque `block_1` tiene su propia lista de campos; lo que sí
+hereda es el estilo, y por eso el estilo de `views_aggregator` es justo lo que no se podía tocar.
+
+Quedan dos cosas dichas y no arregladas, las dos a propósito. **`Total required UoU (SUM)` pone
+`75.0000` en vez de `75.00`** por el mismo mecanismo, pero ahí la suma es lo que se quiere y el número
+es correcto, así que ponerla en `group` rompería la columna. Y `field_tec_quantity_input`, en la misma
+maestra, tiene el mismo fallo pero está excluida y no la dibuja nadie: cambiarla movería la consulta
+por una celda que no existe. Un barrido del ERP entero dice que no queda ningún otro caso.
 
 ### Los tres cabos que dejó el borrado
 
@@ -1021,6 +1104,80 @@ máquina entera. Sacar esos volcados fuera del servidor, a Drive, queda para una
 
 Crear el servidor son veinte minutos. Dejarlo bien, una tarde.
 
+### El cron del sistema
+
+Esta es la llamada que hay que dejar puesta en el servidor. Va en un fichero nuevo,
+`/etc/cron.d/erp-cron`, propiedad de `root` y con permisos `644` (sin punto en el nombre, o `cron`
+lo ignora sin decir nada):
+
+```
+*/15 * * * * www-data /usr/bin/php /var/www/erp/vendor/bin/drush.php --root=/var/www/erp --uri=https://erp.anvfightgear.com core:cron >> /var/log/erp/cron.log 2>&1
+```
+
+Antes, una sola vez, hay que crear la carpeta del registro, porque `www-data` no puede escribir en
+`/var/log` directamente:
+
+```bash
+sudo mkdir -p /var/log/erp && sudo chown www-data:www-data /var/log/erp
+```
+
+**Cada quince minutos** porque el trabajo útil más frecuente que queda encendido, `field_cron`, se
+programa cada tres horas: los dos que piden diez minutos son `dblog_cron`, que recorta el registro,
+y `update_cron`, que consulta si hay actualizaciones, y ninguno de los dos nota cinco minutos de
+retraso. Correr cada minuto —lo que recomienda Ultimate Cron cuando la máquina va sobrada— serían
+1.440 arranques de PHP al día compitiendo por el único núcleo del droplet con los empleados que
+están usando el ERP. Y no se pierde nada por esperar: Ultimate Cron tiene `catch_up` en 86.400
+segundos, así que un trabajo que se salte su hora lo recoge la vuelta siguiente, no el día
+siguiente.
+
+**El usuario tiene que ser `www-data`, y esto es la trampa.** El instinto es poner `david`, que es
+el dueño del código, y con `david` el cron parece funcionar: `drush status` contesta. Pero
+`settings.php` es `root:www-data` con permisos `640` y `david` no está en el grupo `www-data`, así
+que no puede leer las credenciales de la base de datos. Lo que saldría en `cron.log` cada cuarto de
+hora es *"Drush was unable to query the database"*, y el cron llevaría meses sin correr con el
+registro lleno de una queja que nadie mira. Es la misma pared del 14 de agosto que obligó a hacer
+por el navegador lo que se quería hacer por SSH. `www-data` sí está en su propio grupo, sí lee
+`settings.php`, y además es quien ya escribe en `sites/default/files`, así que los ficheros que
+genere el cron —los estilos de imagen, sobre todo— nacen con el dueño correcto y no con uno que
+Apache luego no pueda sobrescribir.
+
+**Los otros tres detalles, y por qué están escritos así:**
+
+- `/usr/bin/php … drush.php` y no `vendor/bin/drush`. El de `vendor/bin` es un script de shell que
+  busca `php` en el `PATH`, y `cron` arranca con un `PATH` recortado a `/usr/bin:/bin`. Funciona en
+  Ubuntu, pero depende de una suposición que no hace falta hacer: llamar al binario por su ruta
+  absoluta no depende de nada.
+- `--root=/var/www/erp`. `cron` no arranca en ninguna carpeta en particular, así que sin esto Drush
+  no encuentra el sitio. Es un `drupal/legacy-project`: la raíz del sitio **es** la raíz del
+  repositorio, no hay subcarpeta `web/`.
+- `--uri=https://erp.anvfightgear.com`. Sin esto Drush usa `http://default`, y todo lo que el cron
+  genere con una dirección absoluta dentro —los enlaces del informe de actualizaciones, los correos
+  cuando el `smtp` esté puesto— sale apuntando a un dominio que no existe. Se ve en local: el
+  informe de actualizaciones enlaza a `http://default/admin/reports/updates`.
+
+El `>> … 2>&1` no es decoración: sin él, `cron` intenta enviar por correo cualquier cosa que el
+comando escriba, y el correo saliente todavía no está configurado. Conviene añadirle rotación,
+porque el fichero solo crece:
+
+```bash
+sudo tee /etc/logrotate.d/erp-cron > /dev/null <<'EOF'
+/var/log/erp/cron.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+    create 644 www-data www-data
+}
+EOF
+```
+
+Comprobar que ha quedado bien, el día del despliegue: `sudo systemctl status cron`, esperar un
+cuarto de hora y mirar que `/var/log/erp/cron.log` existe y está vacío (vacío es la señal buena: si
+hay texto, es un error). La prueba de verdad es que en
+*Informes → Informe del estado* desaparezcan los dos avisos de cron, el de "última ejecución" y el
+de "trabajos atrasados" de Ultimate Cron.
+
 ### Lo que el ensayo no pudo probar
 
 Se hizo sobre Windows y por HTTP, así que esto sigue sin verificar: HTTPS, la programación
@@ -1226,17 +1383,72 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   recuperar un importador que llena una entidad que ya no existe. Se decide con la tarea del
   importador, no antes.
 
-- **`tec_app_link`: otro tipo de entidad abandonado, y este ya sin tablas.** Salió a la luz el 15 de
-  agosto, de rebote, al guardar los tres roles para quitarles los permisos de `tec_gui`: Drupal
-  avisó de que retiraba **permisos que no existen** —`create`, `edit any`, `view any` y en dos roles
-  también `delete any tec_app_link entities`—. Los retiró él, no yo; un rol no puede guardar
-  permisos de algo que el sitio no conoce.
+- ~~**`tec_app_link`: otro tipo de entidad abandonado, y este ya sin tablas.**~~ **Retirado el 15 de
+  agosto de 2026.** Salió a la luz de rebote, al guardar los tres roles para quitarles los permisos
+  de `tec_gui`: Drupal avisó de que retiraba **permisos que no existen** —`create`, `edit any`,
+  `view any` y en dos roles también `delete any tec_app_link entities`—. Los retiró él, no nadie; un
+  rol no puede guardar permisos de algo que el sitio no conoce.
 
-  Lo que queda de él es poco y es inofensivo: **cero tablas** en la base y una entrada
-  `tec_app_link_type` en `cancel_button.settings`. No deja ningún error en el informe de estado, al
-  contrario que `tec_gui`, porque no hay definición descuadrada: simplemente ya no está. No corre
-  ninguna prisa. Se apunta por lo mismo que se apuntó el otro: para que el día que alguien lo vea en
-  la configuración no tenga que averiguar de cero si es algo vivo.
+  Era un tipo de entidad de ECK con seis subtipos, uno por cada enlace de redes sociales de la
+  portada: Facebook, Instagram, LINE, WhatsApp, X y teléfono. **Nunca tuvo una sola ficha dentro.**
+  El grueso se había ido ya el 14 de agosto con `scripts/borrar-lo-que-no-usa-nadie.php`, que se
+  llevó los seis subtipos, el tipo y sus dos tablas. Lo que se retiró el 15 fue la cola.
+
+  **Lo apuntado aquí estaba a medias, en las dos direcciones**, y conviene saber en qué: lo de "cero
+  tablas" era correcto; lo de los permisos sueltos **ya no era verdad** cuando se fue a mirar, porque
+  Drupal los había quitado solo al guardar los roles en la limpieza de `tec_gui`, o sea que este
+  apunte se escribió antes de ese guardado. Y lo que sí quedaba no estaba apuntado: **ocho** entradas
+  en `cancel_button.settings` y no una —las seis parejas tipo-subtipo, el tipo suelto y el tipo de
+  subtipo—, más una definición de entidad instalada huérfana, `tec_app_link_type`, que nadie había
+  visto. Ningún campo de otra entidad le apuntaba, así que no hubo nada parecido al campo obligatorio
+  que tenía `tec_gui`. Queda `scripts/quitar-a-app-link-del-erp.php` y dos guiones de reconocimiento.
+
+- ~~**Quedan tres definiciones de entidad instaladas huérfanas, y una es el gemelo de `tec_gui`.**~~
+  **Retiradas el 15 de agosto de 2026.** Hallazgo del mismo día, al retirar la cola de
+  `tec_app_link`. ECK deriva por cada tipo de entidad un tipo de configuración aparte para sus
+  subtipos, y al borrar un tipo se retira su definición pero **no la del subtipo derivado**. O sea que
+  la limpieza de `tec_gui` dejó exactamente el mismo resto que hubo que quitar en `tec_app_link`.
+
+  Lo que hacía esto peligroso no era el resto, que es inofensivo, sino que **no se veía**: no pinta
+  nada en rojo en el informe de estado, porque `getChangeList()` del núcleo solo recorre los tipos que
+  existen hoy y a un tipo que ya no existe nunca lo compara con nada. Y el guardián *"no queda nada de
+  tec_gui"* daba el visto bueno igual, porque mira tablas, campos y permisos y no las definiciones
+  instaladas.
+
+  **Y aquí el diagnóstico que se escribió primero estaba equivocado, esto conviene leerlo.** Se dio
+  por hecho que las otras dos, `commerce_product_variation_type` y `commerce_store_type`, eran de un
+  Drupal Commerce desinstalado. **No lo eran.** Al abrir el objeto serializado, las tres dicen
+  proveedor `eck` y clase `Drupal\eck\Entity\EckEntityBundle`; si fueran de Commerce, el proveedor
+  sería `commerce_product` o `commerce_store`. Y sus etiquetas las delatan: **«temp1 type»** y **«assd
+  type»**. O sea que alguien creó con ECK dos tipos de entidad reutilizando dos nombres de máquina de
+  Commerce, los llamó «temp1» y «assd», y los borró. Misma especie que los otros dos, mismo origen,
+  ninguna razón para tratarlas distinto.
+
+  El comprobador ya no está ciego a esto: tiene un guardián nuevo, **`ninguna definicion de entidad
+  instalada huerfana`**, que compara las claves del almacén con los tipos que el sitio conoce hoy, sin
+  lista de nombres a mano, y mira las dos entradas que guarda cada tipo, porque una retirada hecha a
+  mano por la tabla puede llevarse una y dejar la otra. Se probó **plantándole un fantasma falso
+  delante**: con `tec_tipo_de_mentira` metido lo cantó por su nombre, mientras los dos guardianes
+  vecinos seguían en verde. Queda `scripts/probar-el-guardian-de-las-definiciones-huerfanas.php` para
+  repetir esa prueba.
+
+- **Quedan 55 tablas de Commerce con 180 filas dentro, y son el catálogo de producto de la generación
+  anterior.** Hallazgo del 15 de agosto, de rebote al investigar los fantasmas. Commerce **sí estuvo
+  instalado** aquí, y esto es lo que dejó: `commerce_product_variation__field_tec_bom` con 46 filas,
+  `commerce_product_variation` con 14, `commerce_product` con 8, `commerce_store` con 1, y campos
+  `tec_` dentro —`attribute_tec_color`, `attribute_tec_size`, `field_tec_pattern_shin_guard`—, o sea
+  la misma época que `tec_gui`.
+
+  De código no queda **nada**: ni módulo instalado ni en el disco, no está en `core.extension`, no
+  guarda versión de esquema, no aparece en `composer.json` ni en `composer.lock`, y no hay
+  configuración, campos, vistas, rutas ni permisos. Son tablas inertes que nadie gobierna. Con ellas
+  quedan sueltas 3 entradas de `entity.definitions.bundle_field_map` y 2 de estado
+  (`commerce.inbox_messages_cron_last` y `uc-progress: commerce_cron`).
+
+  **No se han tocado, y es una decisión aparte**, más grande que la de los fantasmas: son datos
+  históricos, aunque de un producto que ya no existe. Lo que sí conviene saber es por qué no se puso
+  un guardián de tablas huérfanas al lado del de definiciones: saldría en rojo desde el primer día por
+  estas 55, y un rojo permanente es lo que enseña a no mirar los rojos.
 
 - ~~**Trece tablas `tmp_b44c2b*` en la base de datos.**~~ Tiradas el 14 de agosto de 2026, y no eran
   restos de Backup and Migrate como se suponía aquí: eran las tablas de `tec_gui` con cincuenta

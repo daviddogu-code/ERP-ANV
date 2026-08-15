@@ -51,14 +51,29 @@ const REFERENCIA_TIPOS = [
 // hay manera de comprobar una formula.
 //
 // Estas cifras son ese juego de pruebas, y vuelven a cero en cuanto se ejecute
-// `borrar-el-juego-de-pruebas.php`. Si alguien lo borra, hay que devolver estas
-// seis lineas a cero, que es lo que las hace volver a servir de aviso.
-const REFERENCIA_CONTENIDO = [
+// `borrar-el-juego-de-pruebas.php`. Durante un dia hubo que bajarlas a mano cada
+// vez, con la trampa de que quien borrara el juego y no se acordara de tocar aqui
+// se encontraba siete guardianes en rojo sin haber roto nada. Asi que ya no se
+// tocan a mano: hay dos caras, la de con juego y la de sin juego, y se elige sola
+// mirando los datos. Si sale una cifra intermedia -ni una cara ni la otra- eso si
+// es un aviso de verdad: significa que el juego se borro a medias.
+const CONTENIDO_CON_JUEGO = [
   'tec_inventory' => 4,
   'tec_product' => 3,
   'tec_line_item' => 2,
   'tec_order' => 2,
   'tec_crm' => 2,
+  'tec_production_entry' => 0,
+];
+
+// La otra cara: el ERP vacio, como quedo la noche del 14 de agosto de 2026 y como
+// tiene que quedar antes de importar el catalogo de verdad.
+const CONTENIDO_SIN_JUEGO = [
+  'tec_inventory' => 0,
+  'tec_product' => 0,
+  'tec_line_item' => 0,
+  'tec_order' => 0,
+  'tec_crm' => 0,
   'tec_production_entry' => 0,
 ];
 
@@ -68,11 +83,18 @@ const REFERENCIA_CONTENIDO = [
 // campos, y hay que desmontarlos antes. Cuando se retiren, estas dos lineas se
 // van con ellos.
 //
-// Los dos materiales y la marca son del juego de pruebas de la noche del 14 de
-// agosto, igual que las cifras de contenido de mas arriba, y se van con el.
-const REFERENCIA_TAXONOMIA = [
+// Los dos terminos de material y la marca son del juego de pruebas de la noche del
+// 14 de agosto, igual que las cifras de contenido de mas arriba, y se van con el.
+// Por eso esas dos lineas tampoco se tocan a mano: van en TAXONOMIA_DEL_JUEGO y se
+// suman o no segun este el juego puesto.
+const TAXONOMIA_DEL_JUEGO = [
   'tec_inventory' => 2,
   'tec_brands' => 1,
+];
+
+const REFERENCIA_TAXONOMIA = [
+  'tec_inventory' => 0,
+  'tec_brands' => 0,
   'tec_patterns' => 0,
   'tags' => 0,
   'tec_colors' => 32,
@@ -96,7 +118,14 @@ const REFERENCIA_VARIOS = [
   // administrador -o sea permisos totales- con un correo en un dominio que parece
   // una errata del del dueno. Estaba bloqueada desde 2024 y sin nada colgado, pero
   // una llave maestra que no es de nadie conocido no se deja bloqueada, se quita.
-  'usuarios' => 6,
+  //
+  // Y son cinco desde el 15 de agosto de 2026, cuando se repasaron las cuentas a
+  // mano. Se fueron cuatro que no eran de nadie de la empresa: `rat`,
+  // `david-antiguo`, `executive` y el `manager` viejo, dos de ellas con correo en
+  // drusphere.com y otra en actafight.com, dominios ajenos. Y entraron las tres de
+  // los empleados: `lukpla`, `coo` y `manager`. Neto, una menos. Las cinco que
+  // cuenta son el anonimo, `david` y esas tres.
+  'usuarios' => 5,
   // Eran 315 hasta el 14 de agosto de 2026, y se vaciaron en dos pasadas esa
   // noche. Primero las 142 fotos que se quedaron sin dueno al vaciar los datos de
   // prueba, con sus 304 versiones recortadas. Despues los 104 CSV y Excel de las
@@ -117,7 +146,16 @@ const REFERENCIA_VARIOS = [
   // porque el arreglo bueno llego el mismo dia: el enlace sale ahora del campo
   // field_tec_target de cada portada y va derecho, sin rebote.
   'redirecciones' => 2,
-  'importaciones' => 3,
+  // Eran tres hasta el 15 de agosto de 2026. Se borraron las fichas 5 "Primo
+  // products" y 6 "Trust products", huerfanas desde que desaparecio su tipo de
+  // importador, tec_products_csv_importer. Con el tipo borrado, la lista de
+  // /admin/content/feed se caia entera al pedir su etiqueta, o sea que el ERP se
+  // quedaba sin la pantalla de importaciones por dos fichas muertas. No se
+  // perdio nada: la tabla tec_gui__feeds_item ya estaba vacia en los tres
+  // volcados que hay, y no ha existido nunca una tec_product__feeds_item, asi
+  // que ningun importador ha escrito jamas un producto del sistema nuevo.
+  // Queda la ficha 4, "Inventory Excel-CSV file", que es la de los materiales.
+  'importaciones' => 1,
   // Eran ocho. El nucleo borro el de Super BOM al borrar su nodo.
   'enlaces_menu' => 7,
   // Eran 36, de los que 29 estaban encendidos, hasta la noche del 14 de agosto
@@ -142,14 +180,19 @@ const REFERENCIA_VARIOS = [
   // apagados a proposito: node_cron y los dos de feeds no hacen falta, y los dos
   // de CRON_QUE_SIGUE_APAGADO son los que se desarmaron el 14 de agosto.
   'trabajos_cron_encendidos' => 8,
+  // Y trece en total. Se cuenta el total, y no solo los encendidos, para que el
+  // dia que un modulo nuevo traiga su propio hook_cron se entere alguien antes de
+  // que lleve un mes corriendo por su cuenta.
+  'trabajos_cron' => 13,
 ];
 
 // Estos dos no se vuelven a encender sin pensarlo. El de las copias volcaba la
 // base entera a la carpeta privada del proyecto cada noche y guardaba treinta:
 // es lo que dejo 178 volcados y 111 MB dentro del arbol de ficheros, que hubo que
 // sacar a mano. El de ECA se despertaba 96 veces al dia sin que ningun proceso
-// escuchara. El cron no ha corrido nunca aqui, asi que nadie lo habia notado; el
-// dia que se encienda, estas dos lineas son las que avisan si han vuelto.
+// escuchara. Durante meses el cron no corrio aqui y nadie lo habia notado; el 15
+// de agosto de 2026 se ejecuto por primera vez, ya con los dos desarmados, y
+// estas dos lineas son las que avisan si vuelven.
 const CRON_QUE_SIGUE_APAGADO = ['backup_migrate_cron', 'eca_base_cron'];
 
 // El unico boton de crear al que se le permite esconderse con la lista vacia.
@@ -157,6 +200,26 @@ const CRON_QUE_SIGUE_APAGADO = ['backup_migrate_cron', 'eca_base_cron'];
 // arregla un boton a una pantalla que puede desaparecer. El dia que se decida,
 // esta lista se queda vacia o se va entera con la vista.
 const BOTONES_ESCONDIDOS_A_PROPOSITO = ['tec_patterns:block_1'];
+
+// Los tipos de entidad a los que se les perdona seguir teniendo definicion
+// instalada sin existir ya. Esta vacia, y lo suyo es que siga asi.
+//
+// El 15 de agosto de 2026 habia tres huerfanos y se fueron los tres, porque los
+// tres eran la misma cosa: el tipo de subtipo que ECK deriva por cada tipo de
+// entidad y que se queda atras cuando se borra el tipo. Ninguno tenia tablas, ni
+// campos, ni configuracion, ni nada que apuntara a el.
+//
+// Dos se llamaban `commerce_store_type` y `commerce_product_variation_type`, y
+// el nombre engana: no eran de Drupal Commerce, que aqui no esta instalado ni
+// esta en el disco. Los traia `eck`, con la clase EckEntityBundle y las
+// etiquetas "assd type" y "temp1 type", o sea dos pruebas de alguien que
+// reutilizo dos nombres de maquina de Commerce. Lo que si dejo Commerce, y sigue
+// ahi, son 55 tablas sueltas con 180 filas: eso es otra conversacion y no la
+// vigila este guardian, que mira definiciones y no tablas.
+//
+// Se deja el mecanismo puesto para el dia que aparezca una que de verdad haya
+// que tolerar. Lo que no se puede hacer ese dia es apagar el guardian.
+const DEFINICIONES_INSTALADAS_QUE_SE_TOLERAN = [];
 
 // Herramientas de diagnostico que se instalan durante una actualizacion y se
 // quitan al terminar. No cuentan para el total. Vacia desde el 14 de agosto de
@@ -204,12 +267,32 @@ foreach (REFERENCIA_TIPOS as $entidad => $esperados) {
     . ($sobran ? ', sobra ' . implode(' y ', $sobran) : ''));
 }
 
-foreach (REFERENCIA_CONTENIDO as $entidad => $esperado) {
+// Esta puesto el juego de pruebas? Se le pregunta a los datos, no a un interruptor:
+// se cuentan las fichas cuyo nombre empieza por PRUEBA, que es el mismo criterio con
+// el que las busca `borrar-el-juego-de-pruebas.php`. No sirve para saber cuantas son
+// -las copias de escandallo que fabrica ECA salen con el nombre del material, sin
+// PRUEBA delante-, pero para saber si esta o no esta, basta.
+$conPrueba = 0;
+foreach (['tec_inventory' => 'title', 'tec_product' => 'title', 'tec_crm' => 'title', 'taxonomy_term' => 'name'] as $tipo => $campo) {
+  $conPrueba += (int) $etm->getStorage($tipo)->getQuery()
+    ->accessCheck(FALSE)
+    ->condition($campo, 'PRUEBA', 'STARTS_WITH')
+    ->count()
+    ->execute();
+}
+$juegoPuesto = $conPrueba > 0;
+echo '  El juego de pruebas esta ' . ($juegoPuesto ? "PUESTO ($conPrueba fichas con PRUEBA delante)" : 'BORRADO')
+  . ", asi que las cifras de contenido se miden contra esa cara.\n";
+
+foreach ($juegoPuesto ? CONTENIDO_CON_JUEGO : CONTENIDO_SIN_JUEGO as $entidad => $esperado) {
   $n = (int) $etm->getStorage($entidad)->getQuery()->accessCheck(FALSE)->count()->execute();
   comprobar($resultados, "contenido de $entidad", $n === $esperado, "$n (se esperaban $esperado)");
 }
 
 foreach (REFERENCIA_TAXONOMIA as $vid => $esperado) {
+  if ($juegoPuesto) {
+    $esperado += TAXONOMIA_DEL_JUEGO[$vid] ?? 0;
+  }
   $n = (int) $etm->getStorage('taxonomy_term')->getQuery()
     ->accessCheck(FALSE)
     ->condition('vid', $vid)
@@ -365,6 +448,48 @@ foreach (\Drupal\user\Entity\Role::loadMultiple() as $rol) {
 comprobar($resultados, 'no queda nada de tec_gui', !$restosDeGui,
   $restosDeGui ? 'HA VUELTO: ' . implode(', ', $restosDeGui) : 'ni tablas ni campos ni permisos');
 
+// Ninguna definicion de entidad instalada puede quedar huerfana: o sea, ningun
+// tipo guardado en `entity.definitions.installed` que el sitio ya no conozca.
+// Drupal apunta ahi una copia de cada tipo tal y como estaba el dia que se
+// instalo, y cuando se retira un tipo y la limpieza se queda a medias, esa copia
+// se queda dentro para siempre.
+//
+// Este guardian nacio de un fallo del de aqui arriba. El de tec_gui daba el
+// visto bueno mirando tablas, campos y permisos, que es donde se esconde lo
+// caro, pero no miraba el almacen de claves: el 15 de agosto de 2026 los 55
+// guardianes estaban en verde con tres huerfanos dentro, y uno era de tec_gui.
+//
+// Y no lo cazaba nadie mas, porque el descuadre de tres lineas mas arriba
+// tampoco puede: getChangeList() recorre los tipos que el sitio conoce HOY para
+// compararlos con su copia instalada, asi que a un tipo que ya no existe no lo
+// compara con nada y no lo pinta de rojo nunca. Por eso estos restos aguantan
+// meses sin que nadie se entere. El caso contrario -un tipo que el sitio conoce
+// y que no tiene copia instalada- ese si lo caza el descuadre, y por eso aqui
+// solo se mira en un sentido.
+//
+// Va sin ninguna lista de nombres a proposito. La gracia no es acordarse de los
+// tres de aquel dia, es que el dia que se retire otro tipo de entidad y se
+// olvide la cola, esto lo cante solo. Se miran las dos entradas que guarda cada
+// tipo, la del tipo y la de sus campos, porque una retirada hecha a mano por la
+// tabla puede llevarse una y dejar la otra.
+$instaladas = [];
+foreach (array_keys(\Drupal::keyValue('entity.definitions.installed')->getAll()) as $clave) {
+  foreach (['.entity_type', '.field_storage_definitions'] as $cola) {
+    if (str_ends_with($clave, $cola)) {
+      $instaladas[substr($clave, 0, -strlen($cola))] = TRUE;
+    }
+  }
+}
+$huerfanas = array_diff(array_keys($instaladas), array_keys($etm->getDefinitions()),
+  DEFINICIONES_INSTALADAS_QUE_SE_TOLERAN);
+comprobar($resultados, 'ninguna definicion de entidad instalada huerfana', !$huerfanas,
+  $huerfanas
+    ? 'HUERFANAS: ' . implode(', ', $huerfanas)
+    : count($instaladas) . ' instaladas, todas de tipos que el sitio conoce'
+      . (DEFINICIONES_INSTALADAS_QUE_SE_TOLERAN
+        ? ', menos ' . implode(' y ', DEFINICIONES_INSTALADAS_QUE_SE_TOLERAN) . ', a proposito'
+        : ''));
+
 // -----------------------------------------------------------------------------
 // 2. Estructura: modulos y automatismos.
 // -----------------------------------------------------------------------------
@@ -401,6 +526,18 @@ comprobar($resultados, 'trabajos de cron encendidos',
   $cronEncendidos === REFERENCIA_VARIOS['trabajos_cron_encendidos'],
   "$cronEncendidos de " . count($trabajos) . " (se esperaban " . REFERENCIA_VARIOS['trabajos_cron_encendidos'] . ")");
 
+comprobar($resultados, 'trabajos de cron en total',
+  count($trabajos) === REFERENCIA_VARIOS['trabajos_cron'],
+  count($trabajos) . " (se esperaban " . REFERENCIA_VARIOS['trabajos_cron'] . ")");
+
+// Quien dispara el cron tiene que ser el sistema, no las visitas. Con
+// automated_cron puesto, el cron lo lanza la primera persona que entra por la
+// manana y le toca esperar a ella. Se comprueba tambien que no asome por
+// core.extension, que es por donde volveria a colarse en un config:import.
+$cronDeVisitas = \Drupal::moduleHandler()->moduleExists('automated_cron');
+comprobar($resultados, 'el cron no lo disparan las visitas', !$cronDeVisitas,
+  $cronDeVisitas ? 'automated_cron ESTA INSTALADO' : 'automated_cron fuera');
+
 $revividos = array_filter(CRON_QUE_SIGUE_APAGADO,
   fn($id) => isset($trabajos[$id]) && $trabajos[$id]->status());
 comprobar($resultados, 'los dos que se desarmaron siguen apagados', !$revividos,
@@ -411,6 +548,43 @@ $horarios = $etm->getStorage('backup_migrate_schedule')->loadMultiple();
 $horariosVivos = array_filter($horarios, fn($h) => $h->get('enabled'));
 comprobar($resultados, 'ningun horario de copias encendido', !$horariosVivos,
   $horariosVivos ? 'ENCENDIDO: ' . implode(', ', array_keys($horariosVivos)) : count($horarios) . ' apagado');
+
+// Ninguna importacion periodica, ni programada ni encolada. Importa desde que el
+// cron corre de verdad: una pasada bastaria para lanzar el importador de materiales
+// por su cuenta, y con 857 filas de catalogo eso es mucho ruido si se cuela algo mal
+// mapeado. Se miran las dos puertas, porque cada una se abre por su lado: el tipo de
+// importador decide cada cuanto toca, y la ficha guarda cuando le toca a ella. En la
+// ficha, `next` a -1 es nunca, y `queued` a cero es que no esta esperando en la cola.
+$periodicos = [];
+foreach ($etm->getStorage('feeds_feed_type')->loadMultiple() as $tipo) {
+  if ((int) $tipo->getImportPeriod() !== -1) {
+    $periodicos[] = 'el tipo ' . $tipo->id() . ' importa cada ' . $tipo->getImportPeriod() . 's';
+  }
+}
+foreach ($etm->getStorage('feeds_feed')->loadMultiple() as $ficha) {
+  if ((int) ($ficha->get('next')->value ?? -1) !== -1) {
+    $periodicos[] = 'la ficha ' . $ficha->id() . ' tiene hora puesta';
+  }
+  if ((int) ($ficha->get('queued')->value ?? 0) !== 0) {
+    $periodicos[] = 'la ficha ' . $ficha->id() . ' espera en la cola';
+  }
+}
+comprobar($resultados, 'ninguna importacion periodica', !$periodicos,
+  $periodicos ? 'ENCENDIDA: ' . implode(', ', $periodicos) : 'todas a nunca');
+
+// Que el cron corre de verdad. Es el guardian que caza el fallo silencioso del
+// despliegue: que la linea del crontab no se pegara nunca, o que se rompiera y
+// llevemos meses con la queja escrita en un registro que nadie mira. Solo se exige
+// donde hay cron del sistema; aqui, en Windows, no lo hay, asi que se informa de la
+// edad y no se suspende a nadie por ello.
+$ultimoCron = (int) \Drupal::state()->get('system.cron_last', 0);
+$horas = $ultimoCron ? (time() - $ultimoCron) / 3600 : NULL;
+$hayCronDelSistema = PHP_OS_FAMILY !== 'Windows';
+comprobar($resultados, 'el cron ha corrido en las ultimas 24 horas',
+  !$hayCronDelSistema || ($horas !== NULL && $horas < 24),
+  $horas === NULL
+    ? 'NUNCA ha corrido'
+    : sprintf('hace %.1f horas%s', $horas, $hayCronDelSistema ? '' : ', y aqui no hay cron del sistema'));
 
 // Sin esta cifra, dblog_cron no recorta nada y el registro crece sin freno: el
 // objeto de configuracion no existia, y lo que no existe no vale cero, vale nada.
@@ -584,6 +758,40 @@ titulo('4. Nada se ha quedado roto');
 $banderas = $db->query('SELECT flag_id, COUNT(*) AS n FROM {flagging} GROUP BY flag_id')->fetchAllKeyed();
 comprobar($resultados, 'sin banderas colgadas', !$banderas,
   $banderas ? 'sobran: ' . json_encode($banderas) : 'ninguna puesta');
+
+// La bandera colgada es el sintoma; esto es la causa. Un campo que apunta a un
+// termino que ya no existe es lo que hace que ECA se pare en seco: la accion que
+// carga el material no encuentra nada, devuelve acceso denegado, y la cadena se
+// corta antes de quitar el bloqueo. Desde el 15 de agosto el formulario impide
+// borrar un material en uso, pero por codigo se sigue pudiendo, y el importador
+// todavia esta por venir, asi que conviene contarlas.
+$colgando = [];
+foreach ($etm->getStorage('field_storage_config')->loadMultiple() as $almacenCampo) {
+  if (!in_array($almacenCampo->getType(), ['entity_reference', 'entity_reference_revisions'], TRUE)
+    || $almacenCampo->getSetting('target_type') !== 'taxonomy_term') {
+    continue;
+  }
+  $campo = $almacenCampo->getName();
+  try {
+    $tabla = $etm->getStorage($almacenCampo->getTargetEntityTypeId())->getTableMapping()->getFieldTableName($campo);
+  }
+  catch (\Throwable $e) {
+    continue;
+  }
+  if (!$db->schema()->tableExists($tabla)) {
+    continue;
+  }
+  $rotas = (int) $db->query(
+    "SELECT COUNT(*) FROM {" . $tabla . "} f
+     LEFT JOIN {taxonomy_term_field_data} t ON t.tid = f." . $campo . "_target_id
+     WHERE t.tid IS NULL"
+  )->fetchField();
+  if ($rotas) {
+    $colgando[$almacenCampo->getTargetEntityTypeId() . '.' . $campo] = $rotas;
+  }
+}
+comprobar($resultados, 'ninguna referencia a un termino borrado', !$colgando,
+  $colgando ? 'ROTAS: ' . json_encode($colgando) : 'todas resuelven');
 
 $errores = $db->query('SELECT COUNT(*) FROM {watchdog} WHERE wid > :w AND severity <= 3 AND type <> :t',
   [':w' => $wid_inicial, ':t' => 'eca'])->fetchField();
