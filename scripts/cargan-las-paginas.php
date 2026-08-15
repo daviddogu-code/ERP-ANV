@@ -33,6 +33,7 @@ if (!$rutas) {
       '/start',
       '/o/queue',
       '/stock',
+      '/purchase',
       '/production/log',
       '/production/report',
       // Administracion, que es donde se nota un modulo mal subido.

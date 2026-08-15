@@ -157,6 +157,16 @@ if (count($materiales) < 2) {
     'field_tec_units' => '3.00',
     'field_tec_split_into' => '50.00',
     'field_tec_traceability' => 1,
+    // La politica de reposicion, que es lo que hace que este material salga en
+    // la lista de compra (/purchase). Sin ella esa pantalla se dibuja vacia y
+    // la prueba de humo la aprueba sin haber pintado ni una fila, que es
+    // justo el aprobado falso contra el que avisa cargan-las-paginas.php.
+    // Con el stock a cero: faltan 120 de inventario, el factor de compra es 3,
+    // asi que sugiere 40 unidades de compra y 1.800 de importe.
+    'field_tec_reorder_point' => '100.00',
+    'field_tec_safety_stock' => '20.00',
+    'field_tec_moq_quantity' => 5,
+    'field_tec_lead_time_days' => 14,
   ]));
   $materiales[$segundo->id()] = $segundo;
 }
