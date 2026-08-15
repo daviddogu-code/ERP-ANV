@@ -18,8 +18,11 @@
  * contenido no sirve para nada contra una base vacia.
  *
  * Asi que ahora vigila otra cosa. Que los dieciseis tipos de contenido sigan
- * declarados, que los vocabularios que se quedan tengan lo que tenian, y que
- * los automatismos sigan reaccionando. Esto ultimo era lo unico que de verdad
+ * declarados, que los vocabularios de referencia tengan lo que tenian, y que
+ * los automatismos sigan reaccionando. Cuanto contenido hay se sigue
+ * imprimiendo, marcado como dato, pero desde el 15 de agosto de 2026 ya no da
+ * veredicto: ese fue el dia que el ERP empezo a usarse de verdad, y una cifra
+ * que sube porque alguien esta trabajando no es una averia. Esto ultimo era lo unico que de verdad
  * probaba algo, y era tambien lo unico que dependia de los datos de prueba: se
  * apoyaba en un material cualquiera de los 869 y en una linea de pedido con
  * precio. Ahora se fabrica sus propios datos, los usa, y los borra. Es mas
@@ -50,13 +53,19 @@ const REFERENCIA_TIPOS = [
 // los numeros despues de sacarles el sistema de unidades de Oscar. Sin datos no
 // hay manera de comprobar una formula.
 //
-// Estas cifras son ese juego de pruebas, y vuelven a cero en cuanto se ejecute
-// `borrar-el-juego-de-pruebas.php`. Durante un dia hubo que bajarlas a mano cada
-// vez, con la trampa de que quien borrara el juego y no se acordara de tocar aqui
-// se encontraba siete guardianes en rojo sin haber roto nada. Asi que ya no se
-// tocan a mano: hay dos caras, la de con juego y la de sin juego, y se elige sola
-// mirando los datos. Si sale una cifra intermedia -ni una cara ni la otra- eso si
-// es un aviso de verdad: significa que el juego se borro a medias.
+// Estas seis cifras dieron veredicto hasta el 15 de agosto de 2026, y ese dia
+// dejaron de darlo. El motivo es que el ERP empezo a usarse: el dueno creo su
+// primer material de verdad y su primer pedido de compra desde la pantalla, y
+// los recuentos se pusieron en rojo sin que nada estuviera roto, solo porque
+// habia mas contenido que el dia que se escribieron. Un guardian que da la
+// alarma cada vez que alguien hace su trabajo es un guardian que se acaba
+// mirando de reojo, y entonces no avisa el dia que hay que avisar.
+//
+// Asi que ahora solo informan: se imprimen al lado de lo que trae el juego de
+// pruebas, para poder mirarlas de un vistazo, y el aprobado lo dan las
+// comprobaciones que no dependen de cuanto contenido haya -la estructura, los
+// automatismos y los vocabularios de referencia-, que son las que de verdad
+// dicen si el ERP sigue haciendo lo mismo que antes.
 const CONTENIDO_CON_JUEGO = [
   'tec_inventory' => 4,
   'tec_product' => 3,
@@ -66,16 +75,13 @@ const CONTENIDO_CON_JUEGO = [
   'tec_production_entry' => 0,
 ];
 
-// La otra cara: el ERP vacio, como quedo la noche del 14 de agosto de 2026 y como
-// tiene que quedar antes de importar el catalogo de verdad.
-const CONTENIDO_SIN_JUEGO = [
-  'tec_inventory' => 0,
-  'tec_product' => 0,
-  'tec_line_item' => 0,
-  'tec_order' => 0,
-  'tec_crm' => 0,
-  'tec_production_entry' => 0,
-];
+// Los materiales son taxonomia, pero son contenido: crece cada vez que alguien
+// da de alta uno. Los demas vocabularios son datos de referencia -colores,
+// tipos de material, tallas, unidades- que cambian a proposito y pocas veces,
+// asi que esos si siguen dando veredicto. Y bien que hacen: fue el recuento de
+// tipos de material el que delato el termino "vcvcvcx" que se colo al teclear
+// en el formulario del material.
+const VOCABULARIOS_DE_CONTENIDO = ['tec_inventory'];
 
 // Los vocabularios. Los tres primeros se vaciaron a proposito; `tec_brands` y
 // `tec_patterns` siguen existiendo vacios porque retirarlos es un cambio de
@@ -240,6 +246,18 @@ function comprobar(array &$resultados, string $nombre, bool $bien, string $detal
   printf("  [%s] %-50s %s\n", $bien ? 'BIEN' : 'FALLA', $nombre, $detalle);
 }
 
+/**
+ * Una cifra que se ensena y no se juzga.
+ *
+ * No entra en el recuento de aprobados a proposito: son cifras que crecen
+ * cuando alguien usa el ERP, asi que ponerlas en rojo seria confundir trabajo
+ * hecho con algo roto. Se imprimen porque una cifra rara sigue mereciendo una
+ * mirada, aunque no merezca una alarma.
+ */
+function informar(string $nombre, int $cuantos, string $detalle = ''): void {
+  printf("  [dato ] %-50s %s\n", $nombre, $cuantos . ($detalle === '' ? '' : ' (' . $detalle . ')'));
+}
+
 function titulo(string $t): void {
   echo "\n" . $t . "\n" . str_repeat('-', strlen($t)) . "\n";
 }
@@ -285,22 +303,28 @@ foreach (['tec_inventory' => 'title', 'tec_product' => 'title', 'tec_crm' => 'ti
 }
 $juegoPuesto = $conPrueba > 0;
 echo '  El juego de pruebas esta ' . ($juegoPuesto ? "PUESTO ($conPrueba fichas con PRUEBA delante)" : 'BORRADO')
-  . ", asi que las cifras de contenido se miden contra esa cara.\n";
+  . ", que es con lo que se comparan las cifras de contenido de abajo.\n";
 
-foreach ($juegoPuesto ? CONTENIDO_CON_JUEGO : CONTENIDO_SIN_JUEGO as $entidad => $esperado) {
+foreach (CONTENIDO_CON_JUEGO as $entidad => $delJuego) {
   $n = (int) $etm->getStorage($entidad)->getQuery()->accessCheck(FALSE)->count()->execute();
-  comprobar($resultados, "contenido de $entidad", $n === $esperado, "$n (se esperaban $esperado)");
+  informar("contenido de $entidad", $n, $juegoPuesto ? "el juego trae $delJuego" : 'sin juego puesto');
 }
 
 foreach (REFERENCIA_TAXONOMIA as $vid => $esperado) {
-  if ($juegoPuesto) {
-    $esperado += TAXONOMIA_DEL_JUEGO[$vid] ?? 0;
-  }
   $n = (int) $etm->getStorage('taxonomy_term')->getQuery()
     ->accessCheck(FALSE)
     ->condition('vid', $vid)
     ->count()
     ->execute();
+
+  if (in_array($vid, VOCABULARIOS_DE_CONTENIDO, TRUE)) {
+    informar("taxonomia $vid", $n, $juegoPuesto ? 'el juego trae ' . (TAXONOMIA_DEL_JUEGO[$vid] ?? 0) : 'sin juego puesto');
+    continue;
+  }
+
+  if ($juegoPuesto) {
+    $esperado += TAXONOMIA_DEL_JUEGO[$vid] ?? 0;
+  }
   comprobar($resultados, "taxonomia $vid", $n === $esperado, "$n (se esperaban $esperado)");
 }
 

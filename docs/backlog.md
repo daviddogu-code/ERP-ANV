@@ -1717,6 +1717,56 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-15 (noche) — La ficha del material: tres fallos que el dueño vio en la pantalla y un cuarto que se encontró detrás
+
+El dueño repasó el alta de material con Lukpla delante y sacó cinco pegas. Las cinco eran ciertas y
+las cinco están arregladas, pero la última destapó algo bastante peor que lo que se reportaba.
+
+**Lo que se reportó.** Que el campo *Material Type* dejaba escribir libremente en vez de obligar a
+elegir; que los dos factores de conversión necesitaban cinco decimales y solo tenían dos; y que
+*Safety Stock Qty*, *Reorder Point* y *MOQ* no decían en qué unidad estaban.
+
+**Por qué lo de las etiquetas no era cosmética.** Esa misma tarde el dueño escribió el punto de
+pedido y el stock de seguridad de un material en metros, que es como lo compra, cuando esos campos
+cuentan unidades de inventario. Como ese material lleva dos metros y medio por unidad de inventario,
+la lista de compra le pidió 4.990 metros en vez de 1.990. Nada dio error y la única pista estaba en
+un factor de 0,4 escondido en otra pestaña. Ahora las etiquetas llevan `(UoS)` y `(UoP)`, y el
+comprobador nuevo encontró un cuarto campo igual de mudo, `Stock level`.
+
+**La creación al vuelo dejó su prueba del delito.** `Material Type` y `Colors` tenían `auto_create`
+puesto, y con el widget de select2 eso convierte el desplegable en una caja de texto libre. Se cerró
+a las 20:31; el guardián de recuentos, media hora después, delató un tipo de material llamado
+**`vcvcvcx`** creado a las 20:18, teclazo puro, con su término, su URL y su ficha. Se le había echado
+la culpa al importador de los seis duplicados anteriores, como el color `"Blue "` con un espacio
+detrás, y el importador también lo hacía, pero la ficha tenía el mismo agujero.
+
+**Y el cuarto fallo, el que nadie había visto.** Al subir los factores a cinco decimales había que
+comprobar que las pantallas los enseñaran, porque el módulo de cálculo de las vistas no lee la base:
+lee lo que la columna dibuja. Resultó que en **diecisiete columnas los factores se dibujaban con el
+formateador de enteros**. Cuatro pantallas de cálculo de material dividen por ellos con la fórmula
+`cantidad / split_into / units`, así que un factor menor que uno —0,4 es normal y corriente— llegaba
+a la fórmula como **cero**: una división por cero en la pantalla que dice cuánto material hace falta
+para un pedido, sin necesidad de ningún dato raro. Veinte columnas de cinco vistas quedan dibujadas
+como decimales con los mismos cinco decimales que guarda el campo.
+
+**Cambiar los decimales de un campo con datos** no se puede desde la pantalla, y la receta quedó en
+`scripts/dar-cinco-decimales-a-los-factores.php`: las columnas primero, partiendo de la
+especificación que Drupal ya tenía apuntada para no perder ninguna propiedad; luego el apunte de
+esquema, que si se queda diciendo dos, el día que alguien guarde el campo Drupal "arregla" la columna
+hacia atrás; luego la configuración, escrita en crudo porque guardarla como entidad dispara la
+comprobación que prohíbe el cambio; y la copia de la definición instalada, que al contrario de lo
+que suponía la nota del cambio anterior, para estos dos campos sí existía.
+
+**Los recuentos de contenido dejan de dar veredicto.** `comprobacion.php` medía el contenido contra
+dos caras, "con juego de pruebas" y "vacío", y ese día apareció una tercera: el dueño usando el ERP.
+Sus dos materiales y su pedido de compra pusieron cuatro guardianes en rojo sin que nada estuviera
+roto. Un guardián que da la alarma cada vez que alguien hace su trabajo se acaba mirando de reojo, y
+entonces no avisa el día que hay que avisar. Las siete cifras se siguen imprimiendo, marcadas como
+dato y al lado de lo que trae el juego de pruebas, pero el aprobado lo dan ahora las 49
+comprobaciones que no dependen de cuánto contenido haya. Los vocabularios de referencia —colores,
+tipos de material, tallas, unidades— siguen juzgando, y bien que hacen: fue uno de ellos el que cazó
+el `vcvcvcx`.
+
 ### 2026-08-15 — `tec_gui`, fuera del ERP: el producto del programador anterior llevaba dos años atornillado a las líneas de pedido
 
 El dueño preguntó qué era `tec_gui`, porque el nombre no dice nada, y decidió retirarlo entero.
