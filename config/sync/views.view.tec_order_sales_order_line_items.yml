@@ -17,8 +17,10 @@ dependencies:
     - field.storage.tec_crm.field_tec_tax_nr
     - field.storage.tec_line_item.field_tec_line_item_total
     - field.storage.tec_line_item.field_tec_line_item_total_number
+    - field.storage.tec_line_item.field_tec_no_more_expected
     - field.storage.tec_line_item.field_tec_price
     - field.storage.tec_line_item.field_tec_quantity
+    - field.storage.tec_line_item.field_tec_quantity_received
     - field.storage.tec_line_item.field_tec_size_variation
     - field.storage.tec_order.field_tec_customer
     - field.storage.tec_order.field_tec_line_items
@@ -4069,6 +4071,137 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        field_tec_quantity_received:
+          id: field_tec_quantity_received
+          table: tec_line_item__field_tec_quantity_received
+          field: field_tec_quantity_received
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_field: field_tec_quantity_received
+          plugin_id: field
+          label: Received
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: number_integer
+          settings:
+            thousand_separator: ''
+            prefix_suffix: true
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        field_tec_no_more_expected:
+          id: field_tec_no_more_expected
+          table: tec_line_item__field_tec_no_more_expected
+          field: field_tec_no_more_expected
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_field: field_tec_no_more_expected
+          plugin_id: field
+          label: ''
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: boolean
+          settings:
+            format: custom
+            format_custom_false: ''
+            format_custom_true: 'closed short'
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         name:
           id: name
           table: taxonomy_term_field_data
@@ -4764,7 +4897,9 @@ display:
         - 'config:field.storage.taxonomy_term.field_tec_cost'
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
+        - 'config:field.storage.tec_line_item.field_tec_no_more_expected'
         - 'config:field.storage.tec_line_item.field_tec_quantity'
+        - 'config:field.storage.tec_line_item.field_tec_quantity_received'
         - 'config:field.storage.tec_order.field_tec_vendor'
   block_4:
     id: block_4

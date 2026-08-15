@@ -384,6 +384,26 @@ $respuesta = $pedir($direccion);
 $mirar('un pedido cerrado ya no se puede recibir', $respuesta->getStatusCode() === 403, 'codigo ' . $respuesta->getStatusCode());
 
 echo "\n";
+echo "Las pantallas que arrastra\n";
+echo str_repeat('-', 78) . "\n";
+
+$ficha = $pedir('/tec_order/' . $pedido->id());
+$mirar('la ficha del pedido carga', $ficha->getStatusCode() === 200, 'codigo ' . $ficha->getStatusCode());
+$mirar('y su tabla de lineas cuenta lo recibido', str_contains($ficha->getContent(), 'Received'));
+
+$impresa = $pedir('/po/' . $pedido->id() . '/print');
+$mirar('la ficha impresa sigue en pie', $impresa->getStatusCode() === 200, 'codigo ' . $impresa->getStatusCode());
+
+// Los botones de esta lista salen de un campo condicional que solo se cumplia
+// con el estado "Open". Con el pedido ya cerrado se comprueba lo que se decidio:
+// que conserve el de imprimir, porque es la copia para contabilidad, y que
+// pierda el de editar, que en un pedido terminado no se quiere tocar a la ligera.
+$construccion = views_embed_view('tec_supplier_orders', 'block_3', $proveedor);
+$lista = (string) \Drupal::service('renderer')->renderInIsolation($construccion);
+$mirar('un pedido cerrado conserva el boton de imprimir', str_contains($lista, '/po/' . $pedido->id() . '/print'));
+$mirar('y pierde el de editar', !str_contains($lista, '/po/draft/' . $pedido->id()));
+
+echo "\n";
 echo "Recogiendo\n";
 echo str_repeat('-', 78) . "\n";
 
