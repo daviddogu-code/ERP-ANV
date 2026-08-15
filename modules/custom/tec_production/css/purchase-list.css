@@ -1,0 +1,137 @@
+/* Purchase List (/purchase). Same visual language as the Stock Control board. */
+
+.tec-buy__help {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3f6fb;
+  border: 1px solid #dbe4f0;
+  border-radius: 6px;
+  color: #444;
+  font-size: 0.82rem;
+  max-width: 72rem;
+}
+
+.tec-buy__nothing {
+  padding: 1.25rem;
+  background: #f4f9f4;
+  border: 1px solid #cfe3cf;
+  border-radius: 6px;
+  color: #2f5d2f;
+  max-width: 72rem;
+}
+
+.tec-buy__warning {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.75rem;
+  background: #fdf6e7;
+  border: 1px solid #ecd9a6;
+  border-radius: 6px;
+  color: #6b4e00;
+  font-size: 0.82rem;
+}
+
+/* One block per supplier. */
+.tec-buy__group {
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid #c8c8c8;
+  border-radius: 6px;
+  background: #fff;
+  max-width: 72rem;
+}
+
+.tec-buy__group > legend {
+  padding: 0 0.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tec-buy__table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 0.82rem;
+}
+
+.tec-buy__table th,
+.tec-buy__table td {
+  padding: 0.3rem 0.45rem;
+  white-space: nowrap;
+  vertical-align: middle;
+  border-bottom: 1px solid #e3e3e3;
+  background: #fff;
+}
+
+.tec-buy__table thead th {
+  background: #f5f5f5;
+  font-weight: 600;
+  border-bottom: 2px solid #ccc;
+  font-size: 0.78rem;
+}
+
+.tec-buy__h-num,
+.tec-buy__c-num,
+.tec-buy__h-qty,
+.tec-buy__c-qty {
+  text-align: right;
+}
+
+.tec-buy__h-chk,
+.tec-buy__c-chk {
+  text-align: center;
+  width: 2.5rem;
+}
+
+.tec-buy__c-mat {
+  font-weight: 500;
+}
+
+/* The one number the buyer is expected to change. */
+.tec-buy__c-qty input.tec-buy__qty {
+  width: 6rem;
+  text-align: right;
+  font-weight: 600;
+}
+
+.tec-buy__c-qty .field-suffix {
+  margin-left: 0.3rem;
+  color: #777;
+  font-size: 0.78rem;
+}
+
+.tec-buy__line-total {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A row left out of the order: still readable, clearly not counted. */
+.tec-buy__table tr.is-out td {
+  color: #999;
+  background: #fafafa;
+}
+
+.tec-buy__foot {
+  margin: 0.6rem 0 0;
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+.tec-buy__group-total {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tec-buy__currency {
+  color: #777;
+  font-size: 0.82rem;
+}
+
+.tec-buy__create {
+  margin-top: 0.5rem;
+}
+
+/* The materials nobody is watching: present, but out of the way. */
+.tec-buy__gap {
+  max-width: 72rem;
+  margin-top: 1rem;
+  font-size: 0.86rem;
+}

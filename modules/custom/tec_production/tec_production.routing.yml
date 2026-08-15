@@ -39,6 +39,14 @@ tec_production.stock_check:
     _permission: 'access tec stock control'
     _csrf_request_header_token: 'TRUE'
 
+tec_production.purchase_list:
+  path: '/purchase'
+  defaults:
+    _form: '\Drupal\tec_production\Form\PurchaseListForm'
+    _title: 'Purchase List'
+  requirements:
+    _permission: 'access tec purchase list'
+
 tec_production.stock_adjust:
   path: '/stock/{taxonomy_term}/adjust'
   defaults:

@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\tec_production\Purchasing;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -350,50 +351,20 @@ class StockControlForm extends FormBase {
 
   /**
    * Quantity on order (UoP) per material, from open purchase orders.
+   *
+   * Shared with the Purchase List (/purchase), which subtracts what is already
+   * coming in before suggesting anything. Both screens have to count it the
+   * same way or one of them orders the same roll twice.
    */
   protected function loadOnOrder(array $tids): array {
-    $map = [];
-    if (!$tids) {
-      return $map;
-    }
-    $storage = $this->entityTypeManager->getStorage('tec_line_item');
-    $ids = $storage->getQuery()
-      ->condition('type', 'tec_po_line_item')
-      ->condition('field_tec_inventory', $tids, 'IN')
-      ->accessCheck(FALSE)
-      ->execute();
-    if (!$ids) {
-      return $map;
-    }
-    foreach ($storage->loadMultiple($ids) as $line) {
-      $po = $line->hasField('field_tec_order') ? $line->get('field_tec_order')->entity : NULL;
-      if (!$po || $po->bundle() !== 'tec_purchase_order') {
-        continue;
-      }
-      $status = $po->hasField('field_tec_po_status') ? $po->get('field_tec_po_status')->value : NULL;
-      if ($status !== 'open') {
-        continue;
-      }
-      $tid = (int) $line->get('field_tec_inventory')->target_id;
-      $qty = $line->hasField('field_tec_quantity') && !$line->get('field_tec_quantity')->isEmpty()
-        ? (float) $line->get('field_tec_quantity')->value
-        : 0.0;
-      $map[$tid] = ($map[$tid] ?? 0.0) + $qty;
-    }
-    return $map;
+    return Purchasing::onOrder($this->entityTypeManager, $tids);
   }
 
   /**
    * Conversion factor with a safe fallback of 1.
    */
   protected function factor($term, string $field): float {
-    if ($term->hasField($field) && !$term->get($field)->isEmpty()) {
-      $value = (float) $term->get($field)->value;
-      if ($value > 0.0) {
-        return $value;
-      }
-    }
-    return 1.0;
+    return Purchasing::factor($term, $field);
   }
 
   /**

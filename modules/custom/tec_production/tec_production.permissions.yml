@@ -13,3 +13,7 @@ view tec production report:
 access tec stock control:
   title: 'Access stock control'
   description: 'View the Stock Control board and register +/- stock mutations.'
+
+access tec purchase list:
+  title: 'Access the purchase list'
+  description: 'See what is below its reorder point and create purchase orders from it.'
