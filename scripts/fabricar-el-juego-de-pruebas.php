@@ -195,12 +195,19 @@ $lineaVenta = $anotar('linea de pedido', $gestor->getStorage('tec_line_item')->c
   'field_tec_price' => '1250.00',
 ]));
 
+// El estado tiene que ser draft, que es el que se ensena como "Open". Hasta el
+// 15 de agosto de 2026 aqui ponia 'new', que no esta en la lista de valores
+// permitidos del campo: Drupal no valida al guardar por codigo, asi que lo
+// aceptaba callando y el pedido quedaba en un estado que no existe. Con eso las
+// dos pantallas de trabajo del pedido de venta, o/draft/% y o/pf/%/print, no
+// encontraban ni una fila, porque las dos filtran por draft. La prueba de humo
+// las saltaba y decia "cargan todas" mirando dos pantallas menos.
 $pedido = $anotar('pedido de venta', $gestor->getStorage('tec_order')->create([
   'type' => 'tec_sales_order',
   'title' => 'PRUEBA pedido de venta',
   'field_tec_customer' => $cliente->id(),
   'field_tec_line_items' => [$lineaVenta->id()],
-  'field_tec_order_status' => 'new',
+  'field_tec_order_status' => 'draft',
 ]));
 
 $lineaVenta->set('field_tec_order', $pedido->id());
