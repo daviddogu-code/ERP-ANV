@@ -40,8 +40,11 @@ por error algo que estaba puesto a propósito.
 
   **Propuesta: reemplazar la base de datos entera con la de local**, en vez de actualizar la del
   servidor paso a paso. Local es la copia maestra, allí no hay datos reales, y así el servidor
-  queda idéntico a lo que se probó. Lo único que se pierde es la cuenta de Lukpla, que se vuelve
-  a crear en dos minutos. Aun así, antes hay que pasar `drush config:status` **en el servidor** y
+  queda idéntico a lo que se probó. **Y desde el 15 de agosto ya no se pierde nada al hacerlo**:
+  aquí se decía que el precio era la cuenta de Lukpla, que existía en el servidor y no en local, y
+  ese precio ha desaparecido porque ese día se crearon aquí las tres cuentas de los empleados
+  —`lukpla`, `coo` y `manager`—, así que viajan con la base. Lo único que hay que hacer al llegar es
+  ponerles la contraseña. Aun así, antes hay que pasar `drush config:status` **en el servidor** y
   contar los procesos de ECA, que allí deben ser **36** antes de desplegar y **32** después. La
   explicación de por qué bajan cuatro está unas líneas más abajo, en la comprobación de los
   procesos.
@@ -105,14 +108,16 @@ El ERP ya está publicado en `https://erp.anvfightgear.com` desde el 12 de agost
 de momento no entre, para poder trabajar sin la restricción de no romperle nada. Lo que hay
 preparado para cuando se retome:
 
-- ~~**Crear la cuenta de Lukpla.**~~ Hecha, con rol *supervisor*, directamente en el servidor.
+- ~~**Crear la cuenta de Lukpla.**~~ Hecha, con rol *supervisor*, directamente en el servidor. Y
+  **desde el 15 de agosto existe también en local**, con las de `coo` y `manager`, así que deja de
+  ser una cuenta que solo vive en un lado.
 - **Llevar al servidor la limpieza de módulos del 13 de agosto**, con un cuidado que antes no
-  hacía falta. **Local y servidor ya no son la misma cosa**: la cuenta de Lukpla existe allí y
-  no aquí, y si ella ha empezado a revisar puede haber tocado vistas o pantallas. Los usuarios
-  son contenido y no corren peligro, pero **la configuración sí**: un `drush cim` desde local
-  machacaría cualquier cambio que ella haya hecho. Antes de desplegar hay que ejecutar
-  `drush config:status` **en el servidor** y mirar si ha divergido. Si ha divergido, primero se
-  traen sus cambios, y luego se sube la limpieza.
+  hacía falta. **Local y servidor ya no son la misma cosa**, y lo que importa de esa diferencia no
+  son los usuarios sino lo que ella haya podido tocar: si ha empezado a revisar puede haber cambiado
+  vistas o pantallas. Los usuarios son contenido y no corren peligro, pero **la configuración sí**:
+  un `drush cim` desde local machacaría cualquier cambio que ella haya hecho. Antes de desplegar hay
+  que ejecutar `drush config:status` **en el servidor** y mirar si ha divergido. Si ha divergido,
+  primero se traen sus cambios, y luego se sube la limpieza.
 
   Y una comprobación más, por lo que pasó al quitar los módulos de IA: **contar los procesos de
   ECA en el servidor antes y después** de desplegar. Al desinstalar en local, Drupal borró nueve
@@ -187,9 +192,21 @@ puntos de correo y el de las cuentas.
   contraseña siguen sin llegar. Y mientras no funcionen, un empleado que olvide su clave
   depende de que alguien se la restablezca desde la línea de comandos.
 
-- **Repasar las cuentas de usuario.** Hay seis, ninguna usada desde 2024 y todas bloqueadas
-  salvo una. Además de crear las de los tres empleados, el repaso del 12 de agosto dejó tres
-  cosas concretas:
+- ~~**Repasar las cuentas de usuario.**~~ **Hecho por el dueño el 15 de agosto de 2026**, a mano y
+  desde el navegador. Quedan cinco cuentas contando el anónimo: `david`, que es la del dueño con rol
+  de administrador, y las tres de los empleados, `lukpla`, `coo` y `manager`. Se fueron las cuatro
+  que no eran de nadie de la empresa —`rat`, `david-antiguo`, `executive` y el `manager` viejo, dos
+  de ellas con correo en `drusphere.com` y otra en `actafight.com`—. Neto, una cuenta menos, y el
+  guardián del comprobador ya espera cinco.
+
+  **Queda ponerles la contraseña a mano a las tres nuevas**, y con un detalle que hay que recordar:
+  la de `manager` se creó **sin correo**, a propósito. Sin correo no puede recibir el enlace para
+  ponerse contraseña ni ningún aviso del ERP, así que esa cuenta depende de que se la pongan por
+  consola o desde la pantalla de administración. Las de `lukpla` y `coo` sí tienen dirección, en el
+  dominio de la casa.
+
+  Lo que sigue debajo es el estado en que quedó el repaso del 12 de agosto, que es de donde salió
+  la lista de lo que había que limpiar:
 
   - ~~**El superusuario (`uid 1`) se llama `drusphere`**~~ — hecho el 12 de agosto. Se
     renombró a `david` y se le puso contraseña nueva. Para liberar ese nombre hubo que
@@ -197,11 +214,12 @@ puntos de correo y el de las cuentas.
   - ~~**`devT` (`uid 7`) tiene rol de administrador**~~ — borrada el 14 de agosto de 2026. Antes se
     comprobó que no tenía absolutamente nada colgado, ni fichas ni ficheros, así que se fue sin
     dejar huérfanos. Llevaba sin entrar desde el 8 de junio de 2024.
-  - **Cuentas muertas por revisar y probablemente borrar**: `manager`, `executive` (la de
+  - ~~**Cuentas muertas por revisar y probablemente borrar**: `manager`, `executive` (la de
     Oscar, bloqueada el 12 de agosto), `rat` con correo en `actafight.com`, y una llamada
-    `David` que es del dueño pero está bloqueada. Las cuatro siguen ahí, bloqueadas, y ninguna
-    tiene rol de administrador: `manager` y `rat` son *tec_manager*, `executive` y `david-antiguo`
-    son *tec_executive*. O sea que ya no hay ninguna llave maestra suelta.
+    `David` que es del dueño pero está bloqueada.~~ **Borradas las cuatro el 15 de agosto de
+    2026.** Ninguna tenía rol de administrador —`manager` y `rat` eran *tec_manager*, `executive` y
+    `david-antiguo` *tec_executive*—, o sea que no había ninguna llave maestra suelta, pero tampoco
+    eran de nadie de la empresa.
 
 ### Los idiomas: qué hay montado, qué no, y por qué no hay nada que decidir todavía
 
@@ -380,16 +398,24 @@ ficheros de Primo **venía vacía en todas las filas** — con clave única vac�
 colapsan sobre un solo elemento. Eso explica los reintentos que había guardados
 (`primo-black-s.csv`, `_1`, `_2`).
 
-**Dos de los tres importadores están huérfanos, y abrirlos revienta.** Las fichas 5 y 6
-—"Primo products" y "Trust products"— son de tipo `tec_products_csv_importer`, **un importador de
-productos cuya configuración ya no existe**. Confirma que sí se intentó importar productos en su día,
-y que se quedó a medias. Consecuencia comprobada el 14 de agosto: la lista de
-`/admin/content/feed` carga bien, pero `/feed/5/edit` lanza una excepción, "The feed type
-tec_products_csv_importer for feed 5 no longer exists". No se pueden ni ejecutar ni guardar: cualquier
-código que las cargue y llame a su tipo se cae, y eso incluye guardarles el origen. **Lo que hay que
-hacer es borrar las dos fichas**, y hay que hacerlo por consulta directa a `feeds_feed` porque la vía
-normal de Drupal pasa por pedir el tipo y lanza antes de llegar. Al hacerlo, el recuento
-`importaciones` del guardián baja de 3 a 1.
+~~**Dos de los tres importadores están huérfanos, y abrirlos revienta.**~~ **Borradas las dos fichas
+el 15 de agosto de 2026**, por consulta directa a `feeds_feed`, que era la única vía: la normal de
+Drupal pasa por pedir el tipo y lanza antes de llegar. El recuento `importaciones` del guardián baja
+de 3 a 1.
+
+Las fichas 5 y 6 —"Primo products" y "Trust products"— eran de tipo `tec_products_csv_importer`, un
+importador de productos cuya configuración ya no existe, y confirmaban que sí se intentó importar
+productos en su día y se quedó a medias. **Y era peor de lo que estaba apuntado aquí**: no es que
+`/feed/5/edit` reventara, es que reventaba la lista entera. `FeedListBuilder::buildRow()` se cae al
+pedir la etiqueta del tipo, así que `/admin/content/feed` no se podía ni abrir y el ERP se quedaba
+sin la pantalla de importaciones por dos fichas muertas.
+
+No se perdió nada, y se comprobó antes de borrar: la tabla `tec_product__feeds_item` **no ha
+existido nunca** en ningún volcado, así que ningún importador ha escrito jamás un producto del
+sistema nuevo. La pista de `tec_gui__feeds_item` se confirma a medias, porque la tabla sí existía
+pero vacía en los tres volcados que hay. Y sus ficheros de origen, que siguen en el disco, traen
+columnas de producto acabado —`Product Name`, `Picture`, `Pattern`, `Sales price`, `Brand`,
+`Category`, `Size`, `Customer`—, nada que ver con el inventario. Eran cáscaras vacías.
 
 **El importador de productos, con sus variaciones y sus tallas: pendiente, y no ahora.** Decisión del
 dueño del 14 de agosto. Lo que sí queda dicho es por dónde **no** hay que ir, porque está en la
@@ -918,51 +944,50 @@ por una celda que no existe. Un barrido del ERP entero dice que no queda ningún
 - ~~Decidir qué se hace con 315 ficheros huérfanos.~~ **Hecho el 14 de agosto**, y con dos
   correcciones a lo que decía aquí. Ver la entrada del día en Hecho.
 
-- **Devolverle a la prueba de humo las seis pantallas que ha perdido.** Con la base vacía no hay
-  con qué pedirlas, así que se salta `o/draft/%`, `po/draft/%`, `po/%/print`, `o/pf/%/print`,
-  `po/%/x/pdf` y `tec_crm/%/reorder`. Pasó de mirar veintiséis pantallas a veinte, y las seis que
-  faltan son las peores de perder: los dos editores de líneas —donde vivía el error 500 del 13
-  de agosto—, las dos de imprimir y la del PDF.
+- ~~**Devolverle a la prueba de humo las seis pantallas que ha perdido.**~~ **Recuperadas las seis,
+  y la prueba está hoy en 55 pantallas.** Con la base vacía no había con qué pedirlas, así que se
+  saltaba `o/draft/%`, `po/draft/%`, `po/%/print`, `o/pf/%/print`, `po/%/x/pdf` y
+  `tec_crm/%/reorder`, que eran las peores de perder: los dos editores de líneas —donde vivía el
+  error 500 del 13 de agosto—, las dos de imprimir y la del PDF. Las seis responden 200.
 
-  El 14 de agosto se hizo lo baratísimo, que era **que lo diga**: antes se las saltaba en
-  silencio y el resumen ponía "todas cargan", que es la clase de frase con la que uno despliega
-  tranquilo sin motivo. Ahora las nombra una por una. Lo que falta es lo bueno: **que la prueba
-  se fabrique un pedido con líneas**, lo pida, y lo borre, igual que hace ya la comprobación del
-  ERP desde esa misma noche. Mientras no lo haga, el despliegue se verifica con seis pantallas
-  menos, y una de ellas es la que ya se rompió una vez.
+  Se hizo en tres empujones. El 14 de agosto, lo baratísimo: **que lo diga**, porque antes se las
+  saltaba en silencio y el resumen ponía "todas cargan", que es la clase de frase con la que uno
+  despliega tranquilo sin motivo. Ese mismo día se le añadió lo que le faltaba por el otro lado, las
+  doce portadas del ERP, que son nodos y no vistas y por eso no las descubría —por ese hueco se
+  habían colado diez botones de crear escondidos—.
 
-  **La parte difícil ya está resuelta**, esa misma tarde y de rebote: para poder probar el parche de
-  `views_simple_math_field` hacía falta exactamente eso, un pedido con líneas, y
-  `scripts/probar-el-parche.php` lo fabrica, pide dos de las seis pantallas y lo borra. La receta
-  —material, talla con escandallo, pedido de venta, líneas colgadas del pedido— está escrita y
-  probada. Falta llevarla a `cargan-las-paginas.php` y añadirle un pedido de compra y un cliente con
-  productos, que son las otras tres pantallas: `po/draft/%`, `po/%/print`, `po/%/x/pdf` y
-  `tec_crm/%/reorder`. Ojo con un detalle que salió al mirar la estructura: las líneas de compra son
-  otro subtipo, `tec_po_line_item`, con sus propios campos.
+  Y el 15 de agosto se cerró, con un arreglo que no estaba previsto aquí: las dos pantallas de
+  pedido de venta no salían porque el juego de pruebas fabricaba los pedidos **con estado `new`, que
+  en este ERP no existe**, y las vistas filtran por borrador. O sea que no era la prueba de humo la
+  que fallaba, era el dato. Corregido el guion que fabrica el juego y los pedidos que ya estaban con
+  el estado inventado, las seis entran solas.
 
-  Ese mismo día se le añadió lo que le faltaba por el otro lado: **ahora pide las doce portadas
-  del ERP**, que son nodos y no vistas, y por eso no las descubría. De 20 pantallas a 31. El
-  motivo está abajo, en Hecho: por ese hueco se colaron diez botones de crear escondidos.
+- ~~**El orden de las tallas no se guarda.**~~ **Arreglado el 15 de agosto de 2026**, el mismo día
+  que se apuntó. Se arrastraban las tallas al orden que se quería en
+  `/admin/structure/taxonomy/manage/tec_sizes/overview`, se pulsaba **Save**, y el orden no se
+  guardaba. Importaba porque el orden de un catálogo de tallas no es alfabético ni casual —XS, S, M,
+  L, XL, y las onzas de 6 a 20— y así salía mal en todos los desplegables y en los documentos de
+  producción.
 
-- **El orden de las tallas no se guarda.** Visto por el dueño el 15 de agosto y aparcado a
-  propósito para más adelante: en
-  `/admin/structure/taxonomy/manage/tec_sizes/overview` se arrastran las tallas al orden que se
-  quiere, se pulsa **Save**, y el orden no se guarda. Importa porque el orden de un catálogo de
-  tallas no es alfabético ni casual —XS, S, M, L, XL, y las onzas de 6 a 20— y así saldrá mal en
-  todos los desplegables y en los documentos de producción.
+  **La guía de diagnóstico que estaba escrita aquí acertó de lleno**, y conviene decirlo porque es
+  la primera vez que pasa: descartaba `admin_form_styles`, que efectivamente no era, y señalaba como
+  sospechoso *otro `hook_form_alter` sobre `taxonomy_overview_terms`*. Era exactamente eso.
 
-  **Ya está descartado lo primero que uno miraría**: `admin_form_styles` altera esa misma pantalla
-  para pintar las casillas de *Show in Production Documents*, pero su alteración está acotada a
-  `tec_materials` con una comprobación explícita del vocabulario, así que no toca la de tallas. No
-  se pierda el tiempo por ahí.
+  El culpable es **`taxonomy_unique`**, que engancha su
+  `hook_form_taxonomy_vocabulary_form_alter()` por el identificador de formulario **base**, y ese
+  identificador lo comparten todos los formularios del vocabulario, incluida la pantalla de
+  reordenar. Allí el botón de Guardar no lleva `#submit` propio, así que ponerle uno reemplaza la
+  vuelta al manejador del propio formulario: el botón guardaba los ajustes del módulo y tiraba los
+  pesos nuevos en silencio. El arreglo es una guarda de tres líneas, en
+  `patches/taxonomy-unique-no-tocar-el-orden-de-terminos.patch`.
 
-  **La primera comprobación, que separa dos fallos muy distintos en un minuto**: leer la columna
-  `weight` de los términos en la base justo después de guardar. Si los pesos han cambiado, el
-  guardado funciona y el problema está en quién los lee —algo reordena por nombre al mostrar, y
-  entonces hay que buscar quién—. Si no han cambiado, el guardado se está perdiendo, y ahí los
-  sospechosos son otro `hook_form_alter` sobre `taxonomy_overview_terms` o un proceso de ECA que
-  reaccione al guardar un término y lo vuelva a escribir. Sin hacer esa distinción primero, se
-  puede pasar una tarde arreglando el lado que no era.
+  **Costó encontrarlo porque por código sí funcionaba.** `submitForm()` guardaba los pesos sin
+  queja, y solo fallaba pasando por HTTP, que es donde entra el gancho. Quien vuelva a tocar esto
+  que no se fíe de una prueba programática. La que queda,
+  `scripts/se-guarda-el-orden-de-las-tallas.php`, mira las dos caras a propósito: que el orden se
+  guarde, y que `taxonomy_unique` siga rechazando nombres repetidos en su formulario de verdad, que
+  es justo lo que se rompería si la guarda se pasara de ancha. Las quince tallas quedaron después en
+  el orden del catálogo con `scripts/poner-las-tallas-en-su-orden.php`.
 
 ## 4. Cuando el ERP nuevo ya funcione
 
@@ -1456,19 +1481,27 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   comprobó antes que las tablas de verdad existen y están vacías y que Drupal no ve ninguna ficha.
 
 - **Borrar un material en uso avería en silencio las líneas que lo usan.** Descubierto el 13 de
-  agosto durante la prueba funcional. Cuando una línea de pedido tiene en su escandallo un
-  material que ya no existe, el proceso de ECA que calcula el total arranca, se para en seco al
-  intentar cargar ese material y **deja puesta la bandera de bloqueo**. No da error ni aviso: el
-  total simplemente deja de actualizarse, y como la bandera se queda puesta, esa línea no
-  vuelve a recalcular nunca más aunque se arregle el material. Hoy hay cinco líneas así (1567,
-  4076, 4077, 4078 y 4079) y 2.459 referencias rotas en total, apuntando a 88 materiales
-  borrados. **El borrado de datos de prueba se lleva por delante esas referencias, pero no el
-  fallo**, que volverá a aparecer el día que alguien borre un material que esté en uso con
-  datos reales. Hacen falta dos cosas: impedir el borrado de un material referenciado (o
-  avisar), y que el proceso, si no encuentra el material, se salte ese elemento y siga en vez de
-  morirse. Mientras tanto, la señal para detectarlo es que queden banderas `%lock%` puestas:
-  `SELECT flag_id, COUNT(*) FROM flagging WHERE flag_id LIKE '%lock%' GROUP BY flag_id`. En
-  reposo solo debe salir `tec_eca_gui_lock` con una.
+  agosto durante la prueba funcional. **Hecha la mitad el 15 de agosto de 2026: ya no se puede
+  borrar. Falta la otra mitad, que el proceso aguante.**
+
+  Cuando una línea de pedido tiene en su escandallo un material que ya no existe, el proceso de ECA
+  que calcula el total arranca, se para en seco al intentar cargar ese material y **deja puesta la
+  bandera de bloqueo**. No da error ni aviso: el total simplemente deja de actualizarse, y como la
+  bandera se queda puesta, esa línea no vuelve a recalcular nunca más aunque se arregle el material.
+
+  Hacían falta dos cosas y solo está una. **La puesta**: el formulario de borrar un material lo
+  impide si algo le apunta, y dice qué se lo impide, con nombre y enlace, hasta diez y luego cuántos
+  más quedan. Se eligió impedir y no avisar porque un aviso que se lee después de pulsar Borrar no
+  sirve de nada cuando lo que rompe es invisible y no se arregla volviendo atrás. **La que falta**:
+  que el proceso, si no encuentra el material, se salte ese elemento y siga en vez de morirse. Sin
+  eso, cualquier vía que no pase por el formulario —una importación, un guion, un borrado en
+  cascada— vuelve a dejar líneas con la bandera puesta.
+
+  Mientras tanto, la señal para detectarlo es que queden banderas `%lock%` puestas:
+  `SELECT flag_id, COUNT(*) FROM flagging WHERE flag_id LIKE '%lock%' GROUP BY flag_id`. En reposo
+  no debe salir ninguna, y el comprobador ya lo exige: la excepción de `tec_eca_gui_lock` que se
+  perdonaba aquí resultó ser una marca huérfana sobre una ficha que no existía, y se fue con
+  `tec_gui`.
 - ~~**Una errata mete "emergencias" falsas en el registro.**~~ Arreglado el 14 de agosto de 2026,
   y no era un carácter sino dos: ver abajo, en Hecho. El aviso que aquí quedaba escrito —"se
   arregla cambiando un carácter en `config/sync/eca.eca.process_rxuimsq.yml`, línea 166"— habría
