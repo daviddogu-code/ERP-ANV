@@ -11,7 +11,6 @@ dependencies:
     - field.storage.taxonomy_term.field_tec_price
     - field.storage.taxonomy_term.field_tec_split_into
     - field.storage.taxonomy_term.field_tec_stock_level
-    - field.storage.taxonomy_term.field_tec_suppliers
     - field.storage.taxonomy_term.field_tec_traceability
     - field.storage.taxonomy_term.field_tec_unit_purchase
     - field.storage.taxonomy_term.field_tec_unit_symbol
@@ -242,69 +241,6 @@ display:
           separator: ', '
           field_api_classes: false
           convert_spaces: false
-        field_tec_suppliers:
-          id: field_tec_suppliers
-          table: taxonomy_term__field_tec_suppliers
-          field: field_tec_suppliers
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Suppliers
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_vendor:
           id: field_tec_vendor
           table: taxonomy_term__field_tec_vendor
@@ -734,7 +670,6 @@ display:
             edit_taxonomy_term: edit_taxonomy_term
             field_tec_color_code_html: field_tec_color_code_html
             name: name
-            field_tec_suppliers: field_tec_suppliers
             field_tec_vendor: field_tec_vendor
             name_1: name_1
             field_tec_unit_use: field_tec_unit_use
@@ -788,11 +723,6 @@ display:
               sortable: true
               default_sort_order: asc
               align: views-align-left
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_suppliers:
-              align: ''
               separator: ''
               empty_column: false
               responsive: ''
@@ -920,15 +850,6 @@ display:
           admin_label: 'Material type'
           plugin_id: standard
           required: false
-        field_tec_suppliers:
-          id: field_tec_suppliers
-          table: taxonomy_term__field_tec_suppliers
-          field: field_tec_suppliers
-          relationship: none
-          group_type: group
-          admin_label: 'CRM - Suppliers'
-          plugin_id: standard
-          required: false
         field_tec_colors:
           id: field_tec_colors
           table: taxonomy_term__field_tec_colors
@@ -989,7 +910,6 @@ display:
       tags:
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
         - 'config:field.storage.taxonomy_term.field_tec_stock_level'
-        - 'config:field.storage.taxonomy_term.field_tec_suppliers'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
         - 'config:field.storage.taxonomy_term.field_tec_unit_use'
         - 'config:field.storage.taxonomy_term.field_tec_vendor'
@@ -1381,69 +1301,6 @@ display:
           separator: ', '
           field_api_classes: false
           convert_spaces: false
-        field_tec_suppliers:
-          id: field_tec_suppliers
-          table: taxonomy_term__field_tec_suppliers
-          field: field_tec_suppliers
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Suppliers
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_vendor:
           id: field_tec_vendor
           table: taxonomy_term__field_tec_vendor
@@ -2612,7 +2469,6 @@ display:
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
         - 'config:field.storage.taxonomy_term.field_tec_split_into'
         - 'config:field.storage.taxonomy_term.field_tec_stock_level'
-        - 'config:field.storage.taxonomy_term.field_tec_suppliers'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
         - 'config:field.storage.taxonomy_term.field_tec_unit_symbol'
         - 'config:field.storage.taxonomy_term.field_tec_unit_use'
@@ -2629,72 +2485,6 @@ display:
     position: 1
     display_options:
       fields:
-        id:
-          id: id
-          table: tec_crm_field_data
-          field: id
-          relationship: field_tec_suppliers
-          group_type: group
-          admin_label: ''
-          entity_type: tec_crm
-          entity_field: id
-          plugin_id: field
-          label: ''
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_integer
-          settings:
-            thousand_separator: ''
-            prefix_suffix: false
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_inventory_image:
           id: field_tec_inventory_image
           table: taxonomy_term__field_tec_inventory_image
@@ -3065,69 +2855,6 @@ display:
           separator: ', '
           field_api_classes: false
           convert_spaces: false
-        field_tec_suppliers:
-          id: field_tec_suppliers
-          table: taxonomy_term__field_tec_suppliers
-          field: field_tec_suppliers
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Suppliers
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_stock_level:
           id: field_tec_stock_level
           table: taxonomy_term__field_tec_stock_level
@@ -3451,15 +3178,6 @@ display:
           admin_label: 'field_tec_material_type: Taxonomy term'
           plugin_id: standard
           required: false
-        field_tec_suppliers:
-          id: field_tec_suppliers
-          table: taxonomy_term__field_tec_suppliers
-          field: field_tec_suppliers
-          relationship: none
-          group_type: group
-          admin_label: 'CRM - Suppliers'
-          plugin_id: standard
-          required: false
         field_tec_vendor_1:
           id: field_tec_vendor_1
           table: taxonomy_term__field_tec_vendor
@@ -3480,7 +3198,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: true
-          content: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\">\r\n<a href=\"/admin/structure/taxonomy/manage/tec_inventory/add/?target_id={{ id }}&destination=/tec_crm/{{ id }}\">Add new material</a>\r\n</div>\r\n</div>"
+          content: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\">\r\n<a href=\"/admin/structure/taxonomy/manage/tec_inventory/add/?target_id={{ raw_arguments.id }}&destination=/tec_crm/{{ raw_arguments.id }}\">Add new material</a>\r\n</div>\r\n</div>"
           tokenize: true
       display_extenders: {  }
       block_description: 'TEC Inventory: CRM Supplier Inventory block'
@@ -3495,7 +3213,6 @@ display:
       tags:
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
         - 'config:field.storage.taxonomy_term.field_tec_stock_level'
-        - 'config:field.storage.taxonomy_term.field_tec_suppliers'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
         - 'config:field.storage.taxonomy_term.field_tec_unit_use'
   data_export_1:
@@ -4913,69 +4630,6 @@ display:
           multi_type: separator
           separator: ''
           field_api_classes: false
-        field_tec_suppliers:
-          id: field_tec_suppliers
-          table: taxonomy_term__field_tec_suppliers
-          field: field_tec_suppliers
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Suppliers
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_vendor:
           id: field_tec_vendor
           table: taxonomy_term__field_tec_vendor
@@ -5370,7 +5024,6 @@ display:
         - 'config:field.storage.taxonomy_term.field_tec_colors'
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
         - 'config:field.storage.taxonomy_term.field_tec_stock_level'
-        - 'config:field.storage.taxonomy_term.field_tec_suppliers'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
         - 'config:field.storage.taxonomy_term.field_tec_unit_use'
         - 'config:field.storage.taxonomy_term.field_tec_vendor'
