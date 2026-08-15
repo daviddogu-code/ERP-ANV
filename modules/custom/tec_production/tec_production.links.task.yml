@@ -1,0 +1,7 @@
+tec_production.po_receive:
+  route_name: tec_production.po_receive
+  # Hangs off the order page next to View and Edit. It shows only where the
+  # route grants access, which is open purchase orders: see ReceiveForm::access.
+  base_route: entity.tec_order.canonical
+  title: 'Receive'
+  weight: 5

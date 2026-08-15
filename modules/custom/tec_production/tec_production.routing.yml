@@ -47,6 +47,22 @@ tec_production.purchase_list:
   requirements:
     _permission: 'access tec purchase list'
 
+tec_production.po_receive:
+  path: '/tec_order/{tec_order}/receive'
+  defaults:
+    _form: '\Drupal\tec_production\Form\ReceiveForm'
+    _title: 'Receive'
+  requirements:
+    # The custom check is what limits this to open purchase orders, and it is
+    # also what hides the tab on sales orders: Drupal drops local tasks whose
+    # route the user cannot reach.
+    _custom_access: '\Drupal\tec_production\Form\ReceiveForm::access'
+    tec_order: \d+
+  options:
+    parameters:
+      tec_order:
+        type: 'entity:tec_order'
+
 tec_production.stock_adjust:
   path: '/stock/{taxonomy_term}/adjust'
   defaults:

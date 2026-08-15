@@ -1,0 +1,97 @@
+/* Receive form (/tec_order/{id}/receive). Same visual language as /purchase. */
+
+.tec-receive__head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 0.5rem;
+}
+
+.tec-receive__number {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.tec-receive__supplier {
+  color: #555;
+}
+
+.tec-receive__help {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3f6fb;
+  border: 1px solid #dbe4f0;
+  border-radius: 6px;
+  color: #444;
+  font-size: 0.82rem;
+  max-width: 72rem;
+}
+
+.tec-receive__note {
+  max-width: 18rem;
+}
+
+.tec-receive__table {
+  width: auto;
+  max-width: 72rem;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.tec-receive__table th,
+.tec-receive__table td {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid #e4e4e4;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.tec-receive__table thead th {
+  background: #f5f5f5;
+  font-size: 0.78rem;
+  text-align: left;
+}
+
+.tec-receive__h-num,
+.tec-receive__c-num {
+  text-align: right;
+}
+
+.tec-receive__c-mat {
+  min-width: 12rem;
+}
+
+.tec-receive__qty {
+  width: 7rem;
+  text-align: right;
+}
+
+/* The conversion is the number most worth double-checking on this screen, so it
+   is the one that stands out. */
+.tec-receive__into {
+  font-weight: 700;
+  color: #1a7f37;
+}
+
+.tec-receive__unit,
+.tec-receive__muted {
+  color: #888;
+}
+
+.tec-receive__closed {
+  color: #6b4e00;
+  font-weight: 600;
+}
+
+.tec-receive__reason {
+  color: #555;
+  font-style: italic;
+}
+
+.tec-receive__reason-input {
+  font-size: 0.82rem;
+}
+
+.tec-receive__table tbody tr:nth-child(even) td {
+  background: #fafafa;
+}

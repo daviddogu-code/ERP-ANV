@@ -44,6 +44,16 @@ purchase_list:
     - core/drupal
     - core/once
 
+receive:
+  css:
+    theme:
+      css/receive.css: {}
+  js:
+    js/receive.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
 dxpr_gin_header_fix:
   css:
     theme:
