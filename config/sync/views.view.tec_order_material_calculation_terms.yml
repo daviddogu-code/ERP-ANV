@@ -1226,9 +1226,11 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: value
-          type: number_integer
+          type: number_decimal
           settings:
             thousand_separator: ''
+            decimal_separator: .
+            scale: 5
             prefix_suffix: false
           group_column: value
           group_columns: {  }
@@ -1294,7 +1296,7 @@ display:
           settings:
             thousand_separator: ''
             decimal_separator: .
-            scale: 2
+            scale: 5
             prefix_suffix: false
           group_column: value
           group_columns: {  }
@@ -2708,9 +2710,11 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: value
-          type: number_integer
+          type: number_decimal
           settings:
             thousand_separator: ''
+            decimal_separator: .
+            scale: 5
             prefix_suffix: false
           group_column: value
           group_columns: {  }
@@ -2985,9 +2989,11 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: value
-          type: number_integer
+          type: number_decimal
           settings:
             thousand_separator: ''
+            decimal_separator: .
+            scale: 5
             prefix_suffix: false
           group_column: value
           group_columns: {  }
@@ -3116,7 +3122,7 @@ display:
           settings:
             thousand_separator: ''
             decimal_separator: .
-            scale: 2
+            scale: 5
             prefix_suffix: false
           group_column: value
           group_columns: {  }

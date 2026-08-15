@@ -118,27 +118,31 @@ foreach (DECIMALES as $campo => $quiere) {
 }
 
 // De poco sirve guardar cinco decimales si la pantalla ensena dos: el dato
-// esta bien y el que lo lee cree que esta mal. Cada visor redondea por su
-// cuenta, asi que hay que mirarlos uno a uno.
+// esta bien y el que lo lee cree que esta mal. Y con los factores es peor que
+// eso, porque el modulo de calculo de las vistas no lee la base, lee lo que la
+// columna dibuja: la cifra recortada es la que entra en la formula. Un factor
+// dibujado con el formateador de enteros llega a la formula como 0 en cuanto
+// vale menos que uno, y las formulas dividen por el.
 echo "\n";
-echo "Y las pantallas los ensenan\n";
+echo "Y las pantallas los ensenan enteros\n";
 echo str_repeat('-', 78) . "\n";
 
 foreach (\Drupal::entityTypeManager()->getStorage('view')->loadMultiple() as $vista) {
   foreach ($vista->get('display') as $nombre => $display) {
-    foreach ($display['display_options']['fields'] ?? [] as $id => $campo) {
+    foreach ($display['display_options']['fields'] ?? [] as $campo) {
       $cual = $campo['field'] ?? '';
-      if (!isset(DECIMALES[$cual])) {
+      if (!isset(DECIMALES[$cual]) || ($campo['plugin_id'] ?? '') !== 'field') {
         continue;
       }
-      $dibuja = $campo['settings']['scale'] ?? NULL;
-      if ($dibuja === NULL) {
-        continue;
-      }
+      // Sin decimales apuntados no es que este bien: es que el formateador no
+      // tiene donde apuntarlos, que es el caso peligroso.
+      $dibuja = ($campo['type'] ?? '') === 'number_decimal'
+        ? (int) ($campo['settings']['scale'] ?? 0)
+        : 0;
       $mirar(
         $vista->id() . ' / ' . $nombre,
-        (int) $dibuja >= DECIMALES[$cual],
-        $cual . ' con ' . (int) $dibuja . ' decimales'
+        $dibuja >= DECIMALES[$cual],
+        $cual . ' con ' . ($dibuja ?: 'formateador ' . ($campo['type'] ?? '?')) . ($dibuja ? ' decimales' : '')
       );
     }
   }
