@@ -422,7 +422,7 @@ actions:
       field_value: '[entity:field_tec_customer_code:value] [current-date:custom:y]-[soPad]'
       method: 'set:clear'
       strip_tags: false
-      trim: false
+      trim: true
       save_entity: false
       object: order
     successors:

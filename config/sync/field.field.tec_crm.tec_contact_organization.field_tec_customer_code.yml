@@ -9,8 +9,8 @@ id: tec_crm.tec_contact_organization.field_tec_customer_code
 field_name: field_tec_customer_code
 entity_type: tec_crm
 bundle: tec_contact_organization
-label: 'Customer code'
-description: 'Short code for order numbers (max 6 characters), e.g. ACTA. Used as ACTA-26-001.'
+label: 'Short code'
+description: 'Short code for order numbers (max 6 characters), e.g. ACTA. Sales orders come out as ACTA 26-001. Leave it empty and the order is just 26-001.'
 required: false
 translatable: false
 default_value: {  }
