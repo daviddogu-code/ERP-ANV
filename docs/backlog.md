@@ -42,7 +42,9 @@ por error algo que estaba puesto a propósito.
   servidor paso a paso. Local es la copia maestra, allí no hay datos reales, y así el servidor
   queda idéntico a lo que se probó. Lo único que se pierde es la cuenta de Lukpla, que se vuelve
   a crear en dos minutos. Aun así, antes hay que pasar `drush config:status` **en el servidor** y
-  contar los procesos de ECA, que deben ser 36.
+  contar los procesos de ECA, que allí deben ser **36** antes de desplegar y **32** después. La
+  explicación de por qué bajan cuatro está unas líneas más abajo, en la comprobación de los
+  procesos.
 
   De los tres tropiezos que aquí se anotaron como "volverán a salir allí", **dos eran de
   Windows** y no se repetirán en Linux: que `drush updatedb` no se reconociera y que las
@@ -113,9 +115,18 @@ preparado para cuando se retome:
   traen sus cambios, y luego se sube la limpieza.
 
   Y una comprobación más, por lo que pasó al quitar los módulos de IA: **contar los procesos de
-  ECA en el servidor antes y después** de desplegar. Deben ser 36. Al desinstalar en local,
-  Drupal borró nueve procesos en cascada sin avisar, y la cuenta de módulos salía bien igual.
+  ECA en el servidor antes y después** de desplegar. Al desinstalar en local, Drupal borró nueve
+  procesos en cascada sin avisar, y la cuenta de módulos salía bien igual.
   `drush sql:query "SELECT COUNT(*) FROM config WHERE name LIKE 'eca.eca.%'"`.
+
+  **La cifra que hay que esperar cambió, y conviene tenerlo claro antes de contar, porque si no
+  este control se lee al revés.** El servidor sigue en **36**, porque allí no se ha desplegado nada.
+  Local está en **32**: el 14 de agosto se borraron cuatro procesos que hacían el trabajo del
+  sistema de unidades opcionales de Óscar y que sobraban al erradicarlo —`rxuimsq`, `uix9n5i`,
+  `pehrnr8` e `idtd6ah`—. O sea que al desplegar la cuenta **baja a propósito de 36 a 32**, y eso es
+  la señal de que ha ido bien, no de que se haya perdido nada. Lo que este control busca es lo otro:
+  una bajada que nadie ha pedido. La comprobación del ERP ya exige 32, así que si algún día se pierde
+  un proceso por el camino, salta ahí.
 - **Preparar dónde apunta lo que vea**, aunque sea una hoja de cálculo compartida. Por chat
   se evapora en tres días.
 - **Darle un encargo concreto**, empezando por compras, en vez de un "míralo a ver qué te
