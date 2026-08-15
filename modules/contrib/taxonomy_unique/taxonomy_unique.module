@@ -13,6 +13,15 @@ use Drupal\taxonomy_unique\TaxonomyUniqueConstants;
  * Implements hook_form_FORM_ID_alter().
  */
 function taxonomy_unique_form_taxonomy_vocabulary_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  // Every vocabulary form shares taxonomy_vocabulary_form as its base form id,
+  // so this hook also fires on the term overview form, where terms are
+  // reordered. That form's Save button carries no #submit handler of its own,
+  // so setting one replaces the fallback to the form's own handler: the button
+  // then saves these settings and silently discards the new term weights.
+  if ($form_id !== 'taxonomy_vocabulary_form') {
+    return;
+  }
+
   /** @var \Drupal\taxonomy\VocabularyInterface $taxonomy_vocabulary */
   $taxonomy_vocabulary = $form_state->getFormObject()->getEntity();
 

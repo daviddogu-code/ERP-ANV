@@ -1,0 +1,35 @@
+Stop the settings form alter from breaking term reordering.
+
+Every vocabulary form shares taxonomy_vocabulary_form as its base form id, so
+hook_form_taxonomy_vocabulary_form_alter() also fires on the term overview form
+at /admin/structure/taxonomy/manage/VOCABULARY/overview.
+
+There the alter appends a handler to $form['actions']['submit']['#submit'].
+That button carries no #submit handler of its own, so Drupal was falling back
+to the form's own handler. Setting one on the button replaces that fallback,
+and OverviewTerms::submitForm() never runs: pressing Save stores these
+settings and silently discards the reordered term weights. The page reloads
+without an error and the old order is still there.
+
+Only alter the actual vocabulary add/edit form.
+
+diff --git a/taxonomy_unique.module b/taxonomy_unique.module
+--- a/taxonomy_unique.module
++++ b/taxonomy_unique.module
+@@ -12,7 +12,16 @@ use Drupal\taxonomy_unique\TaxonomyUniqueConstants;
+ /**
+  * Implements hook_form_FORM_ID_alter().
+  */
+ function taxonomy_unique_form_taxonomy_vocabulary_form_alter(&$form, FormStateInterface $form_state, $form_id) {
++  // Every vocabulary form shares taxonomy_vocabulary_form as its base form id,
++  // so this hook also fires on the term overview form, where terms are
++  // reordered. That form's Save button carries no #submit handler of its own,
++  // so setting one replaces the fallback to the form's own handler: the button
++  // then saves these settings and silently discards the new term weights.
++  if ($form_id !== 'taxonomy_vocabulary_form') {
++    return;
++  }
++
+   /** @var \Drupal\taxonomy\VocabularyInterface $taxonomy_vocabulary */
+   $taxonomy_vocabulary = $form_state->getFormObject()->getEntity();
+ 

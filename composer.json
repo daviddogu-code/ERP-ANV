@@ -213,6 +213,9 @@
             "drupal/views_aggregator": {
                 "Fix TypeError on empty multi-value fields in getCellRaw()": "patches/views_aggregator-getcellraw-empty-array.patch"
             },
+            "drupal/taxonomy_unique": {
+                "No romper el orden de los terminos": "patches/taxonomy-unique-no-tocar-el-orden-de-terminos.patch"
+            },
             "drupal/verf": {
                 "Update autocomplete (#12)": "patches/verf-update-autocomplete-12.patch",
                 "Introduce correct hook, deprecate the old one (#14)": "patches/verf-introduce-correct-hook-14.patch",
