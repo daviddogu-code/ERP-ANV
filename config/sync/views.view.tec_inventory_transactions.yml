@@ -561,6 +561,7 @@ display:
         type: full
         options:
           offset: 0
+          pagination_heading_level: h4
           items_per_page: 60
           total_pages: null
           id: 0
@@ -578,7 +579,6 @@ display:
             offset: false
             offset_label: Offset
           quantity: 9
-          pagination_heading_level: h4
       exposed_form:
         type: basic
         options:
@@ -636,11 +636,6 @@ display:
           grouping: {  }
           row_class: ''
           default_row_class: true
-          override: 1
-          sticky: 0
-          caption: ''
-          summary: ''
-          description: ''
           columns:
             id: id
             title: title
@@ -650,71 +645,76 @@ display:
             field_tec_quantity: field_tec_quantity
             uid: uid
             created: created
+          default: created
           info:
             id:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             title:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: ''
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_inventory:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-left
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_mutation_complete:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-center
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             field_tec_mutation_note:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-left
               separator: ''
-              empty_column: 1
+              empty_column: true
               responsive: ''
             field_tec_quantity:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             uid:
-              sortable: 1
+              sortable: true
               default_sort_order: asc
               align: views-align-center
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
             created:
-              sortable: 1
+              sortable: true
               default_sort_order: desc
               align: views-align-right
               separator: ''
-              empty_column: 0
+              empty_column: false
               responsive: ''
-          default: created
-          empty_table: 0
-          responsive: 1
+          override: true
+          sticky: false
+          summary: ''
+          empty_table: false
+          caption: ''
+          description: ''
+          responsive: true
           bootstrap_styles:
-            striped: striped
             bordered: bordered
+            sm: '0'
             hover: hover
-            sm: 0
+            striped: striped
       row:
         type: fields
       query:
@@ -805,7 +805,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: text_custom
-          empty: false
+          empty: true
           content: "<div class=\"text-align-right\">\r\n    <div class=\"btn-default\">\r\n        <a class=\"use-ajax\" data-dialog-renderer=\"\" data-dialog-options=\"{&quot;width&quot;:400}\" data-dialog-type=\"modal\" href=\"/admin/content/tec_inventory/add/tec_inventory_transaction?target_id={{ raw_arguments.tid }}&destination=/taxonomy/term/{{ raw_arguments.tid }}\" >\r\n        +/- Stock\r\n        </a>\r\n    </div>\r\n</div>"
           tokenize: true
       display_extenders: {  }

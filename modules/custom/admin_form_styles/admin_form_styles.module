@@ -5,6 +5,7 @@
  * Admin form styling helpers (inventory stock modal, etc.).
  */
 
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
@@ -99,35 +100,18 @@ function admin_form_styles_form_alter(&$form, $form_state, $form_id) {
     }
   }
 
-  // Product type is managed in taxonomy (no inline create).
-  if ($form_id === 'tec_product_tec_product_form') {
-    _admin_form_styles_attach_taxonomy_manage_link(
-      $form,
-      'field_tec_product_type',
-      'tec_product_types',
-      t('Manage product types')
-    );
-  }
-
-  // Color catalog is managed in taxonomy (no inline create).
-  if ($form_id === 'tec_product_tec_color_variation_form') {
-    _admin_form_styles_attach_taxonomy_manage_link(
-      $form,
-      'field_tec_colors',
-      'tec_colors',
-      t('Manage colors')
-    );
-  }
-
-  // Size catalog is managed in taxonomy (no inline create).
-  if ($form_id === 'tec_product_tec_size_variation_form') {
-    _admin_form_styles_attach_taxonomy_manage_link(
-      $form,
-      'field_tec_size',
-      'tec_sizes',
-      t('Manage sizes')
-    );
-  }
+  // Product, color and size catalogs are managed in taxonomy (no inline create),
+  // so each of those forms carries a link to its catalog.
+  //
+  // These used to be matched by form id — 'tec_product_tec_product_form' and
+  // friends — and that silently failed on every edit screen. The edit route uses
+  // the 'edit' form operation and Drupal appends the operation to the id, so the
+  // real id there is 'tec_product_tec_product_edit_form'. The links only ever
+  // showed while creating. Matching on the entity is immune to the operation.
+  _admin_form_styles_attach_catalog_links(
+    $form,
+    _admin_form_styles_form_entity($form_state)
+  );
 
   // Material Types overview: editable "Show on production document" checkboxes.
   if ($form_id === 'taxonomy_overview_terms') {
@@ -180,6 +164,68 @@ function admin_form_styles_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
+ * Implements hook_inline_entity_form_entity_form_alter().
+ *
+ * Colors and sizes are almost never edited on their own page: they are worked on
+ * embedded inside the product form, and an embedded form does not go through
+ * hook_form_alter() with its own form id — the parent's id is the only one that
+ * fires. So without this hook the catalog links can never show up where the work
+ * actually happens, no matter how well the form ids are matched.
+ *
+ * Sizes reach it through "Add new size" / "Edit" on the sizes table, which is
+ * exactly the moment someone notices a size is missing from the catalog.
+ */
+function admin_form_styles_inline_entity_form_entity_form_alter(array &$entity_form, FormStateInterface &$form_state) {
+  _admin_form_styles_attach_catalog_links(
+    $entity_form,
+    $entity_form['#entity'] ?? NULL
+  );
+}
+
+/**
+ * Attach whichever catalog links belong to the entity being edited.
+ *
+ * @param array $form
+ *   The form, or the embedded entity form.
+ * @param mixed $entity
+ *   The entity being edited, if there is one.
+ */
+function _admin_form_styles_attach_catalog_links(array &$form, $entity) {
+  if (!$entity instanceof EntityInterface) {
+    return;
+  }
+
+  // Field that holds the catalog value, the vocabulary behind it, and the link
+  // text, per kind of entity. The material form has its own two links attached
+  // above, together with the calculator library it also needs.
+  $catalogs = [
+    'tec_product:tec_product' => [
+      ['field_tec_product_type', 'tec_product_types', t('Manage product types')],
+    ],
+    'tec_product:tec_color_variation' => [
+      ['field_tec_colors', 'tec_colors', t('Manage colors')],
+    ],
+    'tec_product:tec_size_variation' => [
+      ['field_tec_size', 'tec_sizes', t('Manage sizes')],
+    ],
+  ];
+
+  $key = $entity->getEntityTypeId() . ':' . $entity->bundle();
+  foreach ($catalogs[$key] ?? [] as [$field_name, $vocabulary, $link_text]) {
+    _admin_form_styles_attach_taxonomy_manage_link($form, $field_name, $vocabulary, $link_text);
+  }
+}
+
+/**
+ * The entity a form is editing, if it is an entity form at all.
+ */
+function _admin_form_styles_form_entity(FormStateInterface $form_state) {
+  $form_object = $form_state->getFormObject();
+
+  return $form_object instanceof EntityFormInterface ? $form_object->getEntity() : NULL;
+}
+
+/**
  * Attach a manage-catalog link under a form field.
  *
  * @param array $form
@@ -223,6 +269,11 @@ function _admin_form_styles_attach_taxonomy_manage_link(array &$form, $field_nam
 
   if (!isset($form[$field_name]['widget']['#suffix'])) {
     $form[$field_name]['widget']['#suffix'] = '';
+  }
+  // Two callers can reach the same field now — hook_form_alter() and the inline
+  // form hook — and appending blindly would print the link twice.
+  if (str_contains($form[$field_name]['widget']['#suffix'], $markup)) {
+    return;
   }
   $form[$field_name]['widget']['#suffix'] .= $markup;
 }

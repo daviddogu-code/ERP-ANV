@@ -4192,7 +4192,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: text_custom
-          empty: false
+          empty: true
           content: "<div class=\"text-align-right\">\r\n<span class=\"btn-default\">\r\n<strong><a href=\"/tec_crm/{{ raw_arguments.id }}/reorder?destination=/tec_crm/{{ raw_arguments.id }}\"></>Organize products\r\n</a></strong>\r\n</span>\r\n<span class=\"btn-default\">\r\n<strong><a href=\"/admin/content/tec_product/add/tec_product?target_id={{ raw_arguments.id }}&destination=/tec_crm/{{ raw_arguments.id }}\">+ Product\r\n</a></strong>\r\n</span>\r\n</div>"
           tokenize: true
       display_extenders: {  }
@@ -5072,7 +5072,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: text_custom
-          empty: false
+          empty: true
           content: "<div class=\"text-align-right\">\r\n<span class=\"btn-default\">\r\n<strong><a href=\"/tec_crm/{{ raw_arguments.id }}/reorder?destination=/tec_crm/{{ raw_arguments.id }}\"></>Organize products\r\n</a></strong>\r\n</span>\r\n<span class=\"btn-default\">\r\n<strong><a href=\"/admin/content/tec_product/add/tec_product?target_id={{ raw_arguments.id }}&destination=/tec_crm/{{ raw_arguments.id }}\">+ Product\r\n</a></strong>\r\n</span>\r\n</div>"
           tokenize: true
       display_extenders: {  }

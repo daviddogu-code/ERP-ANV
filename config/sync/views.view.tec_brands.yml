@@ -285,6 +285,7 @@ display:
         type: full
         options:
           offset: 0
+          pagination_heading_level: h4
           items_per_page: 100
           total_pages: null
           id: 0
@@ -302,7 +303,6 @@ display:
             offset: false
             offset_label: Offset
           quantity: 9
-          pagination_heading_level: h4
       exposed_form:
         type: basic
         options:
@@ -324,7 +324,18 @@ display:
       cache:
         type: tag
         options: {  }
-      empty: {  }
+      empty:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: text_custom
+          empty: true
+          content: '<div class="text-align-center"><h3 class="subtle">Nothing here yet. Use the button above to add a brand.</h3></div>'
+          tokenize: false
       sorts: {  }
       arguments:
         tid:
@@ -383,7 +394,7 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: text_custom
-          empty: false
+          empty: true
           content: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\">\r\n<a href=\"/admin/structure/taxonomy/manage/tec_brands/add/?destination=/node/4\">+ Brand</a>\r\n</div>\r\n</div>"
           tokenize: false
       footer: {  }
