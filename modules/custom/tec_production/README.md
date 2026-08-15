@@ -178,7 +178,7 @@ capacity parameters.
   low its stock: those are listed in a collapsed section at the bottom rather
   than silently dropped, because an empty purchase list and a list of
   unwatched materials look identical from the outside.
-- Columns: Buy ☐ | Material | Stock (UoS) | On order (UoP) | Reorder point
+- Columns: Buy ☐ | Material | Stock (UoS) | Ordered (UoP) | Reorder point
   (UoS) | Short by (UoS) | MOQ | Lead time | Quantity (UoP, editable) |
   Unit cost | Line total.
 - **Suggested quantity** = ceil((reorder point + safety stock − available) /

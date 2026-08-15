@@ -108,7 +108,7 @@ class PurchaseListForm extends FormBase {
         'include' => ['data' => $this->t('Buy'), 'class' => ['tec-buy__h-chk']],
         'material' => ['data' => $this->t('Material'), 'class' => ['tec-buy__h-mat']],
         'stock' => ['data' => $this->t('Stock (UoS)'), 'class' => ['tec-buy__h-num']],
-        'on_order' => ['data' => $this->t('On order (UoP)'), 'class' => ['tec-buy__h-num']],
+        'on_order' => ['data' => $this->t('Ordered (UoP)'), 'class' => ['tec-buy__h-num']],
         'rop' => ['data' => $this->t('Reorder point (UoS)'), 'class' => ['tec-buy__h-num']],
         'short' => ['data' => $this->t('Short by (UoS)'), 'class' => ['tec-buy__h-num']],
         'moq' => ['data' => $this->t('MOQ'), 'class' => ['tec-buy__h-num']],
