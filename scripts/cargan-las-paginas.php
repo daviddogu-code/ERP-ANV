@@ -355,6 +355,20 @@ function fichasDeEjemplo(): array {
     }
   }
 
+  // La pantalla de recibir mercancia solo existe para un pedido de compra
+  // abierto, asi que hay que buscar uno: puesta en la lista fija con un numero
+  // de ficha a pelo, dejaria de comprobar nada el dia que ese pedido se cierre.
+  $pedidos = $gestor->getStorage('tec_order')->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', 'tec_purchase_order')
+    ->condition('field_tec_po_status', 'open')
+    ->sort('id', 'DESC')
+    ->range(0, 1)
+    ->execute();
+  if ($pedidos) {
+    $rutas[] = '/tec_order/' . reset($pedidos) . '/receive';
+  }
+
   // Los materiales y las unidades son terminos de taxonomia, no entidades del
   // ERP, asi que se quedaban fuera. Y el material es el dato que mas se edita.
   $terminos = $gestor->getStorage('taxonomy_term');

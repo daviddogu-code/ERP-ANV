@@ -234,7 +234,7 @@ class ReceiveForm extends FormBase {
       '#step' => 1,
       '#attributes' => [
         'class' => ['tec-receive__qty'],
-        'title' => $units == 1.0
+        'title' => $units === 1.0
           ? $this->t('Same unit in and out')
           : $this->t('1 @uop = @units @uos', [
             '@uop' => $uop !== '' ? $uop : $this->t('purchase unit'),

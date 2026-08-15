@@ -825,6 +825,70 @@ $errores = $db->query('SELECT COUNT(*) FROM {watchdog} WHERE wid > :w AND severi
 comprobar($resultados, 'sin errores nuevos en el registro', (int) $errores === 0, "$errores errores");
 
 // -----------------------------------------------------------------------------
+// 5. El circulo de la compra se cierra.
+// -----------------------------------------------------------------------------
+titulo('5. El circulo de la compra se cierra');
+
+// Desde el 16 de agosto de 2026 un pedido de compra puede dejar de estar en
+// camino. Antes no: el estado admitia un unico valor y ninguna linea guardaba lo
+// recibido, asi que lo pedido contaba como pendiente para siempre y el tablero
+// mandaba comprar cosas que ya estaban en la estanteria.
+foreach (
+  [
+    'tec_line_item' => ['tec_po_line_item' => ['field_tec_quantity_received', 'field_tec_no_more_expected', 'field_tec_close_reason']],
+    'tec_inventory' => ['tec_inventory_transaction' => ['field_tec_po_line']],
+  ] as $entidad => $tipos
+) {
+  foreach ($tipos as $tipo => $campos) {
+    $definiciones = \Drupal::service('entity_field.manager')->getFieldDefinitions($entidad, $tipo);
+    $faltan = array_values(array_diff($campos, array_keys($definiciones)));
+    comprobar($resultados, "los datos de la recepcion en $tipo", !$faltan,
+      $faltan ? 'FALTA ' . implode(' y ', $faltan) : count($campos) . ' campos');
+  }
+}
+
+$estados = \Drupal::service('entity_field.manager')
+  ->getFieldStorageDefinitions('tec_order')['field_tec_po_status']
+  ->getSetting('allowed_values');
+comprobar($resultados, 'el pedido de compra se puede cerrar',
+  isset($estados['open']) && isset($estados['closed']),
+  implode(' y ', array_keys($estados)));
+
+try {
+  \Drupal::service('router.route_provider')->getRouteByName('tec_production.po_receive');
+  comprobar($resultados, 'la puerta de recibir existe', TRUE, '/tec_order/{id}/receive');
+}
+catch (\Throwable $e) {
+  comprobar($resultados, 'la puerta de recibir existe', FALSE, 'no hay ruta');
+}
+
+// Y la comprobacion que de verdad importa: ningun pedido abierto sin nada
+// pendiente. Uno asi es justo el fallo que se arreglo -sigue contando como que
+// viene de camino aunque ya no venga nada- y solo puede aparecer si el cierre
+// automatico deja de funcionar o si alguien reabre un pedido a mano.
+$abiertos = $etm->getStorage('tec_order')->getQuery()
+  ->accessCheck(FALSE)
+  ->condition('type', 'tec_purchase_order')
+  ->condition('field_tec_po_status', 'open')
+  ->execute();
+$vacios = [];
+$por_estado = ['none' => 0, 'partial' => 0, 'full' => 0, 'cancelled' => 0];
+foreach ($etm->getStorage('tec_order')->loadMultiple($abiertos) as $pedidoCompra) {
+  $pendiente = 0.0;
+  foreach ($pedidoCompra->get('field_tec_line_items')->referencedEntities() as $lineaCompra) {
+    $pendiente += \Drupal\tec_production\Purchasing::outstanding($lineaCompra);
+  }
+  if ($pendiente <= 0.0) {
+    $vacios[] = (string) $pedidoCompra->label();
+  }
+  $por_estado[\Drupal\tec_production\Purchasing::receiptState($pedidoCompra)]++;
+}
+comprobar($resultados, 'ningun pedido abierto sin nada pendiente', !$vacios,
+  $vacios ? 'DEBERIAN ESTAR CERRADOS: ' . implode(', ', $vacios) : count($abiertos) . ' abiertos, todos esperando algo');
+informar('pedidos abiertos por estado de entrega', count($abiertos),
+  'sin recibir ' . $por_estado['none'] . ', a medias ' . $por_estado['partial']);
+
+// -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------
 $mal = array_filter($resultados, fn($r) => !$r['bien']);

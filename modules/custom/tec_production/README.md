@@ -153,8 +153,12 @@ capacity parameters.
     same figure in UoS, and a `Projected (UoP)` that added the goods in
     transit). The owner cut the two extras: nobody orders in inventory units,
     and the incoming-goods question belongs to `/purchase`.
-- `Ordered (UoP)` = Σ `field_tec_quantity` of PO line items
-  (`tec_po_line_item`) whose parent PO has `field_tec_po_status = open`.
+- `Ordered (UoP)` = Σ still to come on PO line items (`tec_po_line_item`) whose
+  parent PO has `field_tec_po_status = open`, where "still to come" is
+  `field_tec_quantity` − `field_tec_quantity_received` and zero for a line
+  marked as expecting nothing more. So the figure drops as deliveries arrive
+  instead of standing still until someone deletes the order. Each order it is
+  waiting on is listed next to the number, linked to its receive form.
 - **Stock mutations**: the Stock number on the board is read-only. The ±
   link next to it opens `/stock/{tid}/adjust` in a modal (number field, so
   no free text; optional note). That form creates a
@@ -172,8 +176,10 @@ capacity parameters.
   Executive but **not** to the floor supervisor: creating a purchase order
   commits money): what to buy right now, grouped by supplier.
 - **Rows** = materials whose available quantity no longer covers their reorder
-  point. Available = `field_tec_stock_level` (UoS) + on order (UoP × units),
-  so something ordered this morning is not ordered again this afternoon.
+  point. Available = `field_tec_stock_level` (UoS) + still to come (UoP ×
+  units), so something ordered this morning is not ordered again this
+  afternoon, and something that has already arrived is not counted twice — it
+  left the "still to come" side and turned up in the stock level.
 - A material with an empty `field_tec_reorder_point` can never appear, however
   low its stock: those are listed in a collapsed section at the bottom rather
   than silently dropped, because an empty purchase list and a list of
@@ -204,11 +210,82 @@ capacity parameters.
 - `Purchasing::onOrder()` and `Purchasing::factor()` are shared with the stock
   board so both screens count incoming goods the same way.
   `Purchasing::INCOMING_STATUS` is the one place that decides which purchase
-  order status counts as coming in — relevant the day a draft status exists,
-  since today `open` is the only one.
+  order status counts as coming in, and it is a whitelist of one rather than
+  "anything that is not closed" so that a draft status can never start counting
+  by accident.
 - End-to-end test: `scripts/funciona-la-lista-de-compra.php` asks for the
   page, presses the button, checks the order it wrote and deletes it again.
   The same arithmetic on the command line: `scripts/que-hay-que-comprar.php`.
+
+### Receiving (phase 6)
+Built 16 August 2026. Until then a purchase order could not stop being on its
+way: the status field had one allowed value and no line recorded what had
+arrived, so an ordered quantity counted as incoming forever and the board told
+people to buy things that were already on the shelf.
+
+- `/tec_order/{id}/receive` (permission `access tec stock control` — receiving
+  is a stock movement with paperwork, so it rides on the board's permission
+  instead of inventing one). Reached from the **Receive** tab on an open
+  purchase order, or from the order number shown next to `Ordered (UoP)` on
+  `/stock`, which is the shortcut for whoever signs the delivery note.
+- Quantities are typed in **purchase units**, and the screen shows live what
+  that becomes in **inventory units** (`field_tec_units` ×). That preview is
+  there because the multiplication is the only thing on this screen that can
+  fail without showing it: get the factor backwards and the warehouse receives
+  a believable wrong number that nobody notices for weeks.
+- Per line with a quantity, on submit:
+  1. `field_tec_quantity_received` goes up.
+  2. A `tec_inventory_transaction` is created for the material with the
+     converted quantity. That is the only door stock has — the existing ECA
+     models ("Inventory: Stock manager") move `field_tec_stock_level` from it,
+     exactly as the `±` link on `/stock` does.
+  3. The transaction points at the line through `field_tec_po_line`, so the
+     material's history says which order brought each entry.
+- **Nothing is stored for "outstanding"**, and there is no box to type it in.
+  `Purchasing::outstanding()` is ordered − received, floored at zero, and zero
+  for a line closed short. An ERP that lets a human type what is still coming
+  ends up with a figure nobody can reconcile against the orders; Odoo and SAP
+  both derive it.
+- **Two statuses in the database**, `open` and `closed`. Whether a receipt was
+  full, partial, short-closed or never came is derived by
+  `Purchasing::receiptState()` from the lines (`none` / `partial` / `full` /
+  `cancelled`). Storing that as a third status would be a second version of the
+  truth and the two would drift the first time a quantity was fixed by hand.
+  The order closes itself when no line has anything outstanding.
+- Three decisions taken by the owner, all visible in the code:
+  - A short delivery is written off with the **checkbox on its row**, not with
+    a dialog at the end. Odoo asks the question once, at validation, and only
+    for lines that fall short — nicer, and impossible to forget. That is a
+    second form step and can be added later without changing a single stored
+    value, because the data written is identical either way.
+  - **Over-delivery is accepted with a warning.** The goods are physically in
+    the building, and stock that lies to keep a document tidy is worse than a
+    surprise.
+  - The **reason for closing is optional**. Still worth writing: line items
+    carry no author and no revisions, so without it the decision leaves no
+    trace beyond a changed timestamp.
+- **No undo.** To correct a receipt, register the difference with the `±` link
+  on `/stock` and fix `Received` on the line by hand (it is on the line item
+  form for exactly that).
+- Screens this dragged along:
+  - The purchase order's line table (`tec_order_sales_order_line_items`,
+    `block_2`) gained `Received` and a `closed short` marker behind the
+    quantity.
+  - In the supplier's order list (`tec_supplier_orders`, `block_3`) the edit
+    and print buttons live inside a views_conditional that only fires when the
+    status is `Open`. With one status that never showed; with two, a closed
+    order would have lost both. The conditional now has its else branch:
+    closed orders keep **print** (the copy for accounts) and lose **edit**.
+  - The material's stock history needed nothing: the mutation note already
+    reads `Received on PO 26-2, delivery note 4471-B`.
+- End-to-end test: `scripts/funciona-la-recepcion.php` walks a real delivery
+  with both of its surprises — part of one line arrives, the rest is written
+  off short, and more than ordered arrives on the other — and checks the
+  conversion by computing it separately from the material's factor. It undoes
+  everything it creates, including the stock levels the ECA moved.
+- The fields were created by `scripts/crear-los-campos-de-la-recepcion.php` and
+  the view changes by `scripts/poner-lo-recibido-en-las-pantallas.php`; both are
+  safe to run twice.
 
 ## Backlog / future ideas
 - Auto-advance order status from the production log: when SUM(produced) >=

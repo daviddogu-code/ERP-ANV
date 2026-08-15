@@ -1712,10 +1712,131 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   agosto de 2026 con el parche de una línea que se anunciaba, y probado con un pedido fabricado a
   propósito: la pantalla responde 200 y el registro se queda a cero. Detalle en Hecho, incluidas las
   dos maneras de escribir un parche que no se aplica.
+- **`git status` enseña cincuenta ficheros modificados que no lo están.** Visto el 16 de agosto de
+  2026 al empezar la recepción. El `git` de Laragon trae `core.autocrlf = true` en su configuración
+  del sistema —`C:/laragon/bin/git/etc/gitconfig`—, y el `.gitattributes` de Drupal dice
+  `text eol=lf` para todo. Las dos reglas se contradicen, así que ficheros cuyo contenido es
+  idéntico al del repositorio aparecen como modificados para siempre: `git diff` sale vacío para
+  todos menos dos.
+
+  **No es peligroso pero cuesta caro**, porque convierte `git status` en ruido y obliga a comprometer
+  con rutas explícitas en vez de `git add -A`, que es lo que se ha hecho esa noche. El arreglo es una
+  línea, `git config --local core.autocrlf false`, seguida de una pasada de `git add --renormalize .`
+  en un commit propio que no lleve nada más. Se deja para un rato tranquilo, porque ese commit toca
+  cincuenta ficheros y no conviene mezclarlo con trabajo de verdad.
+
+  Y dos que **sí tienen cambio de contenido sin comprometer**: `scripts/pon-el-simbolo-que-toca.php`
+  y `scripts/que-calcula-el-javascript.php` han pasado de 17.800 a 8.900 bytes cada uno, justo la
+  mitad, que es lo que ocurre al convertir un fichero de UTF-16 a UTF-8. Alguien los arregló y no los
+  comprometió. Hay que mirarlos y decidir, pero el cambio parece bueno.
+- **En `/supplier-orders` el botón de editar probablemente no sale nunca.** Visto el 16 de agosto de
+  2026 al revisar los campos condicionales por el estado nuevo del pedido de compra. Esa pantalla
+  filtra por `tec_purchase_order`, pero su condicional pregunta por `field_tec_order_status`, que es
+  el estado de los pedidos de **venta**, no `field_tec_po_status`. Si los pedidos de compra no llevan
+  ese campo, la condición no se cumple nunca y el botón no aparece jamás.
+
+  No se ha tocado porque no era el encargo de esa noche y porque nadie se ha quejado —lo que sugiere
+  que la pantalla que se usa de verdad es el bloque del CRM del proveedor, `block_3`, que sí pregunta
+  por el campo correcto y que quedó arreglado ese día. Comprobarlo es abrir `/supplier-orders` y ver
+  si hay lápiz en las filas.
 
 ---
 
 ## Hecho
+
+### 2026-08-16 — El círculo de la compra se cierra: recibir mercancía, al modo de Odoo
+
+Faltaba la puerta de entrada. Se podía pedir —`/purchase` propone, el botón escribe el pedido, la
+cantidad aparece en `Ordered (UoP)` del tablero— y ahí se quedaba todo para siempre. **No había
+ningún sitio donde decir que el material había llegado.** El dueño lo vio con el ojo puesto en la
+pantalla: *"tiene que haber una manera, ya sea dentro de la purchase order o dentro de `/stock`, que
+nos deje indicar que el material ha llegado"*.
+
+Y el daño no era estético. Mientras un pedido contaba como en camino, `/purchase` restaba esa
+cantidad antes de sugerir nada, así que **el tablero mandaba comprar cosas que ya estaban en la
+estantería** —o peor, dejaba de mandar comprar creyendo que venían de camino unos rollos que llegaron
+hace tres semanas y que ya se han gastado.
+
+#### La pregunta que decidió el diseño
+
+El dueño planteó el caso que ningún atajo resuelve: **el proveedor manda 1.980 de los 1.990 y el
+resto no va a llegar nunca**. Y dio dos opciones: arreglarlo a fondo *"como lo hace Odoo y SAP,
+seguramente ya hayan solucionado este problema"*, o dejar la columna editable a mano *"sin conexiones
+que luego pueden desatar un montón de problemas"*. Eligió la primera, entera: *"si hacemos la A, la
+hacemos completa. modo Odoo"*.
+
+Los tres principios que comparten Odoo y SAP, y que son los que se han copiado:
+
+1. **Lo pendiente se deduce, nunca se escribe.** Es `pedido − recibido`, calculado cada vez que se
+   pregunta. No hay ningún campo con "lo que queda por llegar" ni ninguna casilla donde teclearlo,
+   porque una cifra así acaba sin poder cuadrarse contra los pedidos.
+2. **Todo movimiento de stock dice de dónde viene.** Cada entrada apunta a la línea de pedido que la
+   trajo.
+3. **El pedido corto se cierra a propósito.** Los 10 que faltan no desaparecen solos: alguien marca
+   que no vienen más, y entonces —y solo entonces— dejan de contar.
+
+#### Lo que se ha construido
+
+- **Cuatro datos nuevos**: lo recibido por línea, la marca de "no viene nada más", su motivo, y la
+  referencia del movimiento de inventario a su línea de pedido. Más un **segundo estado** de pedido,
+  `closed`, porque hasta esa noche el campo admitía un único valor y por tanto un pedido no podía
+  terminar.
+- **La pantalla de recibir**, en `/tec_order/{id}/receive`, con pestaña propia en la ficha del pedido
+  y atajo desde el número de `Ordered (UoP)` del tablero, que es donde mira quien firma el albarán.
+  Se teclea en unidad de compra y **la pantalla enseña, mientras se teclea, en qué se convierte en
+  unidad de almacén**. Esa vista previa es lo más importante del formulario: la multiplicación por el
+  factor es lo único que puede fallar sin dar la cara, porque mete en el almacén un número creíble y
+  equivocado que nadie descubre hasta que se cuentan rollos a mano semanas después.
+- El stock se mueve **por la única puerta que ya tenía**, los modelos ECA del gestor de stock, igual
+  que el `±` del tablero. No se ha inventado un segundo camino para llegar al mismo sitio.
+- **El pedido se cierra solo** cuando ninguna línea deja nada pendiente, y entonces desaparece de
+  `Ordered (UoP)` y de los cálculos de `/purchase`.
+
+#### Las tres decisiones del dueño
+
+- **La entrega corta se cierra con la casilla de su fila**, no con un diálogo al final. Odoo pregunta
+  una vez, al validar, y solo por las líneas que se quedan cortas: es más elegante y es imposible
+  olvidarlo. Se descartó por precio —cuatro horas frente a seis— y se puede añadir encima más
+  adelante **sin tocar ni un dato guardado**, porque lo que se escribe es idéntico de las dos formas.
+- **Recibir más de lo pedido se acepta, con aviso.** La mercancía está físicamente en el edificio, y
+  un stock que miente para que un documento quede cuadrado es peor que una sorpresa.
+- **El motivo del cierre es opcional.** Merece la pena escribirlo igual: las líneas de pedido no
+  guardan autor ni versiones, así que sin él esa decisión no deja más rastro que una fecha cambiada.
+
+Deshacer una recepción **no se ha construido**, a propósito. Se corrige con el `±` del tablero y
+arreglando el recibido a mano en la línea, que está en su formulario justo para eso.
+
+#### Dos cosas que se encontraron por el camino
+
+**Un pedido cerrado se habría quedado sin el botón de imprimir.** En la lista de pedidos del
+proveedor, los botones de editar e imprimir viven dentro de un campo condicional que solo se cumple
+cuando el estado es `Open`. Mientras hubo un único estado eso no se notaba, porque siempre se
+cumplía. Con el estado nuevo, un pedido terminado habría perdido los dos, y perder el de imprimir es
+perder la copia para la carpeta de contabilidad. El condicional tiene ahora su rama de "si no": los
+cerrados conservan imprimir y pierden editar, que en un pedido terminado es justo lo que no se quiere
+que se toque a la ligera.
+
+**Una trampa de Drupal que cuesta media hora.** El control de acceso de la ruta recibía el `768` de
+la dirección en crudo en vez del pedido cargado, y reventaba con *"Call to a member function bundle()
+on string"*. La causa está en `ArgumentsResolver::getArgument()`: sin declaración de tipo en el
+parámetro, Drupal entrega el valor plano; con ella, entrega la entidad. Está anotado en el código
+para el próximo que escriba un `_custom_access`.
+
+#### Comprobado
+
+- **La prueba de punta a punta**, `scripts/funciona-la-recepcion.php`, recorre una entrega de verdad
+  con sus dos sorpresas: llegan 4 de 10, luego 5 más y se cierra el que falta, y de la otra línea
+  llegan 5 de los 4 pedidos. Comprueba la conversión **calculándola aparte** a partir del factor del
+  material, que es la única forma de cazar un factor puesto al revés. Deshace todo lo que crea,
+  incluidos los niveles de stock que movió el ECA.
+- **El guardián** tiene apartado nuevo, el 5, con la comprobación que de verdad importa: **ningún
+  pedido abierto sin nada pendiente**. Uno así es exactamente el fallo que se ha arreglado, y solo
+  puede reaparecer si el cierre automático se rompe. Pasa 54 de 54.
+- **La prueba de humo** pasa 58 páginas, incluida la nueva, que se busca sola: coge el último pedido
+  de compra abierto en vez de un número a pelo, que dejaría de comprobar nada el día que ese pedido
+  se cierre.
+- La prueba de la lista de compra sigue en verde, que era el riesgo real del cambio: `onOrder()`
+  ahora devuelve lo pendiente en vez de lo pedido, y las dos pantallas beben de esa función.
 
 ### 2026-08-15 (noche) — La ficha del material: tres fallos que el dueño vio en la pantalla y un cuarto que se encontró detrás
 
