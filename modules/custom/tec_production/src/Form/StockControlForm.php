@@ -25,13 +25,22 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * models). Only unchecked quantities count towards Required / Stock after
  * queue.
  *
- * The two balance columns answer different questions, and until 15 August 2026
- * they were both called "Projected", which read as one figure in two units and
- * was not. "Stock after queue" counts only what is in the warehouse, because
- * production cannot cut a roll that is still on a lorry; "Projected (UoP)" adds
- * what is already on order, which is the buyer's question, not the floor's. So
- * a material whose incoming delivery covers the gap shows red here and does not
- * appear on /purchase, and both are right.
+ * Three balance columns, and they are not the same number three times:
+ *
+ *   Stock after queue (UoS)  stock - required/split
+ *   Stock after queue (UoP)  the same, divided by units
+ *   Projected (UoP)          the same, plus what is already on order
+ *
+ * The first two count only what is in the warehouse, because production cannot
+ * cut a roll that is still on a lorry, and with lead times of weeks that
+ * distinction decides whether the queue runs or stops. The third is the buyer's
+ * question, not the floor's. So a material whose incoming delivery covers the
+ * gap shows red in the first two and does not appear on /purchase, and all of
+ * them are right.
+ *
+ * Until 15 August 2026 the first and the third were both called "Projected",
+ * which read as one figure in two units when they differ by exactly the goods
+ * in transit.
  *
  * Unit conversions per material (see README):
  *   field_tec_units      = Purchase to Inventory factor (1 UoP = X UoS)
@@ -73,7 +82,7 @@ class StockControlForm extends FormBase {
 
     $form['help'] = [
       '#markup' => '<div class="tec-stock__help">'
-        . $this->t('One row per material used by the queue. ☐ = material prepared / set aside for that order (does not move stock). Unchecked quantities count in <em>Required</em> and <em>Stock after queue</em>. <em>Stock after queue</em> is what stays in the warehouse once the queue takes what it needs, counting only what is physically there; <em>Projected (UoP)</em> is the same figure plus what is already on order. Checkboxes save automatically. Click the <em>Stock</em> number to register a +/- mutation.')
+        . $this->t('One row per material used by the queue. ☐ = material prepared / set aside for that order (does not move stock). Unchecked quantities count in <em>Required</em> and <em>Stock after queue</em>. <em>Stock after queue</em> is what stays in the warehouse once the queue takes what it needs, counting only what is physically there; it is shown in inventory units and in purchase units, which are the ones you order in. <em>Projected (UoP)</em> is that same figure plus what is already on order. Checkboxes save automatically. Click the <em>Stock</em> number to register a +/- mutation.')
         . '</div>',
     ];
 
@@ -84,6 +93,7 @@ class StockControlForm extends FormBase {
       'supplier' => ['data' => $this->t('Supplier'), 'class' => ['tec-stock__h-sup']],
       'on_order' => ['data' => $this->t('On order (UoP)'), 'class' => ['tec-stock__h-num']],
       'proj_uop' => ['data' => $this->t('Projected (UoP)'), 'class' => ['tec-stock__h-num']],
+      'after_queue_uop' => ['data' => $this->t('Stock after queue (UoP)'), 'class' => ['tec-stock__h-num']],
       'after_queue' => ['data' => $this->t('Stock after queue (UoS)'), 'class' => ['tec-stock__h-num']],
       'required' => ['data' => $this->t('Required (UoU)'), 'class' => ['tec-stock__h-num']],
     ];
@@ -147,7 +157,11 @@ class StockControlForm extends FormBase {
       // Por eso este numero no suma lo que viene de camino y el de al lado si:
       // uno contesta "puedo fabricar la cola" y el otro "tengo que comprar".
       $after_queue = $stock - $required / $split;
-      $proj_uop = $after_queue / $units + $incoming;
+      // El mismo saldo en unidades de compra, que es en las que se pide: un
+      // "faltan 6 metros" se escribe tal cual en el pedido, mientras que el
+      // saldo en unidades de inventario hay que convertirlo mentalmente.
+      $after_queue_uop = $after_queue / $units;
+      $proj_uop = $after_queue_uop + $incoming;
 
       $row = [
         '#attributes' => [
@@ -216,6 +230,13 @@ class StockControlForm extends FormBase {
         '#markup' => '<span class="tec-stock__proj-uop' . ($proj_uop < -0.000001 ? ' is-neg' : '') . '"'
           . ($uop_name !== '' ? ' title="' . Html::escape($uop_name) . '"' : '') . '>'
           . $this->fmt($proj_uop) . '</span>',
+        '#wrapper_attributes' => ['class' => ['tec-stock__c-num']],
+      ];
+
+      $row['after_queue_uop'] = [
+        '#markup' => '<span class="tec-stock__after-queue-uop' . ($after_queue_uop < -0.000001 ? ' is-neg' : '') . '"'
+          . ($uop_name !== '' ? ' title="' . Html::escape($uop_name) . '"' : '') . '>'
+          . $this->fmt($after_queue_uop) . '</span>',
         '#wrapper_attributes' => ['class' => ['tec-stock__c-num']],
       ];
 

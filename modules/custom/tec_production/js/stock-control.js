@@ -40,10 +40,12 @@
     });
 
     var afterQueue = stock - required / split;
-    var projUop = afterQueue / units + onOrder;
+    var afterQueueUop = afterQueue / units;
+    var projUop = afterQueueUop + onOrder;
 
     setNumber(row, '.tec-stock__req', required);
     setNumber(row, '.tec-stock__after-queue', afterQueue);
+    setNumber(row, '.tec-stock__after-queue-uop', afterQueueUop);
     setNumber(row, '.tec-stock__proj-uop', projUop);
   }
 

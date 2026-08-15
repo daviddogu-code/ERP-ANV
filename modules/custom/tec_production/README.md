@@ -118,7 +118,8 @@ capacity parameters.
   `/o/queue`: left = next to produce (bottom of the queue page).
 - Fixed columns: Image | Stock (UoS, read-only; ± opens the mutation modal) |
   Material | Supplier (link to the CRM page) | On order (UoP) |
-  Projected (UoP) | Stock after queue (UoS) | Required (UoU). Image + Stock +
+  Projected (UoP) | Stock after queue (UoP) | Stock after queue (UoS) |
+  Required (UoU). Image + Stock +
   Material are frozen left (sticky) while scrolling horizontally; header
   row + bottom fixed
   scrollbar use the same Google Sheets pattern as /o/queue.
@@ -147,9 +148,14 @@ capacity parameters.
     still on a lorry. The purchase signal is `/purchase`, which does subtract
     what is coming. So a material whose delivery covers the gap shows red here
     and does not appear there, and both screens are right.
+  - `Stock after queue (UoP)` = stock_after_queue / units. The same balance in
+    the unit you actually order in, so a shortage reads straight off the screen
+    as the quantity to put on the purchase order (before MOQ and before
+    subtracting what is already coming).
   - `Projected (UoP)` = stock_after_queue / units + on_order. The buyer's
-    version of the same balance. Both columns were called "Projected" until
-    that date, which read as one figure in two units and was not.
+    version of the same balance. It and the UoS column were both called
+    "Projected" until that date, which read as one figure in two units when
+    they differ by exactly the goods in transit.
 - `On order (UoP)` = Σ `field_tec_quantity` of PO line items
   (`tec_po_line_item`) whose parent PO has `field_tec_po_status = open`.
 - **Stock mutations**: the Stock number on the board is read-only. The ±
