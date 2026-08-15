@@ -349,23 +349,6 @@ entity_type_cancel_destination:
   pathauto_pattern:
     path: /
     enabled: true
-  tec_app_link_tec_facebook:
-    path: /
-  tec_app_link_tec_instagram:
-    path: /
-  tec_app_link_tec_line:
-    path: /
-  tec_app_link_tec_phone:
-    path: /
-  tec_app_link_tec_whatsapp:
-    path: /
-  tec_app_link_tec_x:
-    path: /
-  tec_app_link:
-    enabled: true
-  tec_app_link_type:
-    path: /
-    enabled: true
   tec_crm_tec_contact_organization:
     path: /
   tec_crm_tec_contact_person:
