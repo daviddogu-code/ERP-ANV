@@ -5,6 +5,7 @@
  * TEC Inventory helpers.
  */
 
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -163,6 +164,224 @@ function _tec_inventory_field_scale(FieldableEntityInterface $entity, string $na
     ->getFieldDefinition()
     ->getFieldStorageDefinition()
     ->getSetting('scale');
+}
+
+/**
+ * How many referring entities to name before saying "and N more".
+ */
+const TEC_INVENTORY_USAGES_SHOWN = 10;
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Refuse to delete a material that something still points at, and say what.
+ *
+ * Deleting one used to break the lines that use it, silently, which is the worst
+ * way for it to break. Nothing stops the delete: the reference is left dangling,
+ * and the next time ECA recalculates that line it tries to load the material,
+ * gets nothing, and the load action answers "access denied — no entity
+ * available". ECA writes that to the log as a warning and stops the chain right
+ * there, which means it never reaches the step that clears the lock flag. The
+ * line keeps the flag, and a flagged line never recalculates again — not even
+ * after the material is put back. The total just quietly stops being true.
+ *
+ * That is why this blocks instead of warning. The damage is invisible, it lands
+ * on a different entity than the one being deleted, and it does not undo itself.
+ *
+ * Only the form is guarded, on purpose. Deleting by code stays open, because the
+ * cleanup scripts delete materials by the hundred and they already handle the
+ * order themselves, from the leaves to the trunk. A hard block in presave would
+ * break them for no gain: a script is not somebody clicking Delete by mistake.
+ */
+function tec_inventory_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  if ($form_id !== 'taxonomy_term_tec_inventory_delete_form') {
+    return;
+  }
+
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof EntityFormInterface) {
+    return;
+  }
+  $usages = _tec_inventory_material_usages($form_object->getEntity());
+  if (!$usages['total']) {
+    return;
+  }
+
+  $form['tec_inventory_in_use'] = [
+    '#theme' => 'status_messages',
+    '#message_list' => [
+      'error' => [
+        t('This material cannot be deleted: @count things still use it. Deleting it would stop their totals from ever being recalculated, without any warning. Take it out of the list below first.', [
+          '@count' => $usages['total'],
+        ]),
+      ],
+    ],
+    '#weight' => -100,
+  ];
+
+  foreach ($usages['groups'] as $group => $items) {
+    $form['tec_inventory_in_use_' . preg_replace('/[^a-z0-9_]/', '_', strtolower($group))] = [
+      '#theme' => 'item_list',
+      '#title' => $group,
+      '#items' => $items,
+      '#weight' => -90,
+    ];
+  }
+
+  // With the button gone there is no way through the form. The validator is for
+  // a submission that arrives without it.
+  unset($form['actions']['submit']);
+  $form['#validate'][] = '_tec_inventory_refuse_to_delete_a_used_material';
+}
+
+/**
+ * Form validator: last stop for a delete that got past the missing button.
+ */
+function _tec_inventory_refuse_to_delete_a_used_material(array &$form, FormStateInterface $form_state): void {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof EntityFormInterface) {
+    return;
+  }
+  if (_tec_inventory_material_usages($form_object->getEntity())['total']) {
+    $form_state->setErrorByName('', t('This material is in use and cannot be deleted.'));
+  }
+}
+
+/**
+ * Find what points at a material, by name.
+ *
+ * Asks the field definitions which fields can reference a taxonomy term and
+ * queries every one of them, instead of naming the two that do it today. The
+ * configuration is not reliable here: field_tec_inventory on tec_bom_item does
+ * not declare target_bundles, so by configuration alone there is no way to tell
+ * that it points at materials. Querying by term ID sidesteps the question, and a
+ * field added later is covered without anyone remembering to come back here.
+ *
+ * @return array
+ *   'total' is how many were found, capped. 'groups' maps a human name for the
+ *   kind of thing to a list of links, ready for an item_list.
+ */
+function _tec_inventory_material_usages(EntityInterface $material): array {
+  $groups = [];
+  $total = 0;
+
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $bundle_info = \Drupal::service('entity_type.bundle.info');
+
+  foreach ($entity_type_manager->getStorage('field_storage_config')->loadMultiple() as $field_storage) {
+    if (!in_array($field_storage->getType(), ['entity_reference', 'entity_reference_revisions'], TRUE)) {
+      continue;
+    }
+    if ($field_storage->getSetting('target_type') !== 'taxonomy_term') {
+      continue;
+    }
+
+    $entity_type_id = $field_storage->getTargetEntityTypeId();
+    $field_name = $field_storage->getName();
+
+    try {
+      $storage = $entity_type_manager->getStorage($entity_type_id);
+      // Counted apart from what gets loaded, so the figure in the message is the
+      // real one and not however many fitted in the list.
+      $count = (int) $storage->getQuery()
+        ->accessCheck(FALSE)
+        ->condition($field_name, $material->id())
+        ->count()
+        ->execute();
+      if (!$count) {
+        continue;
+      }
+      $ids = $storage->getQuery()
+        ->accessCheck(FALSE)
+        ->condition($field_name, $material->id())
+        ->range(0, TEC_INVENTORY_USAGES_SHOWN)
+        ->execute();
+    }
+    catch (\Throwable $e) {
+      // An entity type without a queryable field is not a usage.
+      continue;
+    }
+    $total += $count;
+
+    foreach ($storage->loadMultiple($ids) as $referring) {
+      $bundles = $bundle_info->getBundleInfo($entity_type_id);
+      $group = (string) ($bundles[$referring->bundle()]['label'] ?? $entity_type_id);
+      if (count($groups[$group] ?? []) >= TEC_INVENTORY_USAGES_SHOWN) {
+        continue;
+      }
+
+      // Naming the referring entity itself is no help: a BoM item and a purchase
+      // order line are both titled after the material, so the list would come
+      // out as the same word repeated. What the reader needs is the product or
+      // the order it sits in.
+      $context = _tec_inventory_usage_context($referring);
+      $label = (string) ($context ?? $referring)->label();
+      if ($label === '') {
+        $label = (string) t('Untitled (@id)', ['@id' => $referring->id()]);
+      }
+      try {
+        $groups[$group][] = [
+          '#type' => 'link',
+          '#title' => $label,
+          '#url' => ($context ?? $referring)->toUrl(),
+        ];
+      }
+      catch (\Throwable $e) {
+        // Plenty of things in this ERP have no page of their own.
+        $groups[$group][] = ['#markup' => $label];
+      }
+    }
+  }
+
+  return [
+    'total' => $total,
+    'groups' => $groups,
+  ];
+}
+
+/**
+ * Walk up from a thing that uses a material to something worth naming.
+ *
+ * A BoM item hangs off a size variation, a purchase order line off its order,
+ * and a line item BoM item off another BoM item, which needs one more hop before
+ * it reaches the size variation. So the walk keeps going through the plumbing and
+ * stops at the first order or product, which are the two things a person can
+ * actually go and look at.
+ *
+ * @return \Drupal\Core\Entity\EntityInterface|null
+ *   The order or product this sits in, or NULL when there is no way up.
+ */
+function _tec_inventory_usage_context(EntityInterface $entity, int $hops = 3): ?EntityInterface {
+  $worth_naming = ['tec_order', 'tec_product'];
+  $plumbing = ['tec_inventory', 'tec_line_item'];
+
+  while ($hops-- > 0) {
+    if (!$entity instanceof FieldableEntityInterface) {
+      return NULL;
+    }
+
+    $next = NULL;
+    foreach ($entity->getFields() as $items) {
+      $definition = $items->getFieldDefinition();
+      if ($definition->getType() !== 'entity_reference' || $items->isEmpty()) {
+        continue;
+      }
+      $target = $definition->getSetting('target_type');
+      if (in_array($target, $worth_naming, TRUE) && $items->entity) {
+        return $items->entity;
+      }
+      if ($next === NULL && in_array($target, $plumbing, TRUE) && $items->entity) {
+        $next = $items->entity;
+      }
+    }
+
+    if ($next === NULL) {
+      return NULL;
+    }
+    $entity = $next;
+  }
+
+  return NULL;
 }
 
 /**
