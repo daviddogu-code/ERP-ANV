@@ -5,7 +5,6 @@ dependencies:
   config:
     - field.field.taxonomy_term.tec_patterns.field_tec_customer
     - field.field.taxonomy_term.tec_patterns.field_tec_images
-    - field.field.taxonomy_term.tec_patterns.field_tec_pattern_boms
     - taxonomy.vocabulary.tec_patterns
     - views.view.tec_pattern_elements
   module:
@@ -180,7 +179,7 @@ third_party_settings:
               provider: views
               context_mapping: {  }
               views_label: ''
-              items_per_page: none
+              items_per_page: 0
             weight: 2
             additional:
               bootstrap_styles:
@@ -315,17 +314,6 @@ content:
         class: inline-block
     weight: 3
     region: blb_region_col_1
-  field_tec_pattern_boms:
-    type: entity_reference_entity_view
-    label: above
-    settings:
-      view_mode: default
-      link: true
-    third_party_settings:
-      field_formatter_class:
-        class: ''
-    weight: 2
-    region: content
   name:
     type: title
     label: hidden

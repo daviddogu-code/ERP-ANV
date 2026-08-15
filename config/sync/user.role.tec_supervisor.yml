@@ -15,6 +15,7 @@ dependencies:
     - eck.eck_type.tec_product.tec_color_variation
     - eck.eck_type.tec_product.tec_product
     - eck.eck_type.tec_product.tec_size_variation
+    - entity_browser.browser.tec_products
     - feeds.feed_type.tec_inventory_csv_importer
     - filter.format.full_html
     - filter.format.restricted_html
@@ -67,7 +68,6 @@ permissions:
   - 'access shortcuts'
   - 'access tec production queue'
   - 'access tec stock control'
-  - 'access tec_gui_products entity browser pages'
   - 'access tec_products entity browser pages'
   - 'access user profiles'
   - 'cancel account'
@@ -78,10 +78,8 @@ permissions:
   - 'create image media'
   - 'create media'
   - 'create remote_video media'
-  - 'create tec_app_link entities'
   - 'create tec_crm entities'
   - 'create tec_crm entities of bundle tec_contact_person'
-  - 'create tec_gui entities'
   - 'create tec_inventory entities'
   - 'create tec_inventory entities of bundle tec_bom_item'
   - 'create tec_inventory entities of bundle tec_inventory_item'
@@ -112,7 +110,6 @@ permissions:
   - 'delete own image media'
   - 'delete own remote_video media'
   - 'delete own tec_crm entities'
-  - 'delete own tec_gui entities'
   - 'delete own tec_inventory entities'
   - 'delete own tec_inventory_csv_importer feeds'
   - 'delete own tec_order entities'
@@ -124,9 +121,7 @@ permissions:
   - 'delete own tec_product entities of bundle tec_size_variation'
   - 'delete own video media'
   - 'delete terms in tec_brands'
-  - 'edit any tec_app_link entities'
   - 'edit any tec_crm entities'
-  - 'edit any tec_gui entities'
   - 'edit any tec_inventory entities'
   - 'edit any tec_line_item entities'
   - 'edit any tec_order entities'
@@ -136,7 +131,6 @@ permissions:
   - 'edit own image media'
   - 'edit own remote_video media'
   - 'edit own tec_crm entities'
-  - 'edit own tec_gui entities'
   - 'edit own tec_inventory entities'
   - 'edit own tec_order entities'
   - 'edit own tec_order entities of bundle tec_draft_order'
@@ -153,7 +147,6 @@ permissions:
   - feeds_log.access
   - 'flag tec_delete_order'
   - 'flag tec_draft_order_excel_lover'
-  - 'flag tec_duplicate_gui'
   - 'flag tec_eca_line_item_lock'
   - 'flag tec_order_cancel_sales_order'
   - 'flag tec_order_checkout_excel'
@@ -171,7 +164,6 @@ permissions:
   - 'schedule_import own tec_inventory_csv_importer feeds'
   - 'schedule_import tec_inventory_csv_importer feeds'
   - 'unflag tec_draft_order_excel_lover'
-  - 'unflag tec_duplicate_gui'
   - 'unflag tec_eca_line_item_lock'
   - 'unflag tec_product_duplicate'
   - 'unflag tec_product_duplicate_color'
@@ -184,9 +176,7 @@ permissions:
   - 'use text format restricted_html'
   - 'use views bulk edit'
   - 'view all media revisions'
-  - 'view any tec_app_link entities'
   - 'view any tec_crm entities'
-  - 'view any tec_gui entities'
   - 'view any tec_inventory entities'
   - 'view any tec_line_item entities'
   - 'view any tec_order entities'
@@ -199,7 +189,6 @@ permissions:
   - 'view own tec_crm entities'
   - 'view own tec_crm entities of bundle tec_contact_organization'
   - 'view own tec_crm entities of bundle tec_contact_person'
-  - 'view own tec_gui entities'
   - 'view own tec_inventory entities'
   - 'view own tec_inventory entities of bundle tec_bom_item'
   - 'view own tec_inventory entities of bundle tec_inventory_item'

@@ -784,22 +784,42 @@ que nadie pide. Se deja apuntado y no se toca.
 
 ### Los tres cabos que dejó el borrado
 
-- **Retirar Marcas y Patrones de la configuración.** Sus términos se borraron, pero los dos
-  vocabularios siguen ahí vacíos, y con ellos el campo en productos, tres vistas
-  (`tec_brands`, `tec_patterns`, `tec_pattern_elements`), los formularios, los permisos en tres
-  roles y los campos propios de cada vocabulario.
+- ~~Retirar Marcas y Patrones de la configuración.~~ **Este punto estaba mal planteado, y la
+  mitad de Marcas se arregló el 15 de agosto.** Ver la entrada del día en Hecho.
 
-  **No se puede borrar del tirón, y esto es el hallazgo.** Los dos procesos de duplicar
+  Marcas no era una tarea de retirada: **la marca es obligatoria para crear un producto**, así que
+  retirarla habría dejado el catálogo sin poder nacer. Lo que faltaba era la puerta, no la función.
+  Ya está devuelta.
+
+- **Decidir qué se hace con Patrones.** Aquí sí queda la decisión, y solo esta. El vocabulario
+  `tec_patterns` sigue vacío con sus campos, dos vistas (`tec_patterns`,
+  `tec_pattern_elements`), sus formularios y los permisos en tres roles. Su portada se borró hace
+  tiempo, igual que la de Marcas, así que hoy no hay pantalla ni icono.
+
+  **La diferencia con Marcas es que `field_tec_pattern` no es obligatorio**, o sea que el producto
+  se crea sin él y retirarlo no bloquea nada. Pero tampoco corre prisa.
+
+  **Dos cosas cambiaron el 15 de agosto, al retirar `tec_gui`, y hay que leerlas antes de decidir.**
+  Patrones tenía un campo, `field_tec_pattern_boms`, que apuntaba a `tec_gui`, o sea al tipo de
+  entidad muerto. Ese campo se fue con la retirada, porque ECK, al borrar un tipo de entidad,
+  arrastra todos los campos de referencia que apuntan a él. No se perdió nada: estaba vacío, y no
+  podía dejar de estarlo porque su destino no existía.
+
+  Lo que sí hay que saber es la consecuencia. La vista `tec_pattern_elements` no tenía más campo
+  que ese, así que **Drupal la dejó desactivada** al quedarse sin nada que mostrar. Y su bloque
+  **sigue incrustado** en la ficha de un término de patrón, en el modo de vista `default` de
+  `taxonomy_term.tec_patterns`. Hoy no molesta a nadie porque hay **cero términos de patrones**,
+  pero el día que se cree uno y se pinte en ese modo, ese bloque apunta a una vista apagada. Si
+  Patrones vuelve, esto se arregla antes: o se saca el bloque de la ficha, o se le devuelve a la
+  vista un campo que mostrar. Si Patrones se retira, se va con el resto y da igual.
+
+  **Si algún día se retira, no se puede borrar del tirón.** Los dos procesos de duplicar
   producto —`process_llpx4tp` y `process_icpsbgv`, "TEC Product: Duplicate product" y su
-  clon— copian `field_tec_brand` y `field_tec_pattern` al duplicar. Si se borran los campos sin
+  clon— copian `field_tec_brand` y `field_tec_pattern` al duplicar. Si se borra el campo sin
   desmontar antes esos dos procesos, **se rompe el duplicado de productos**, que es una función
-  viva y de las que más se usan. Así que el orden es: primero quitar esos dos pasos de los dos
-  procesos, y después los campos, las vistas y los vocabularios. Es un cambio de configuración,
-  o sea que viaja por Git y se puede revisar antes de aplicar.
-
-  Es la razón por la que el 14 de agosto se paró aquí: el borrado de datos y el desmontaje de
-  configuración son dos trabajos distintos, y mezclarlos a las tres de la mañana era la manera
-  de no saber después qué había roto qué.
+  viva y de las que más se usan. El orden es: primero quitar ese paso de los dos procesos, y
+  después el campo, las vistas y el vocabulario. Es un cambio de configuración, o sea que viaja
+  por Git y se puede revisar antes de aplicar.
 
 - ~~Decidir qué se hace con 315 ficheros huérfanos.~~ **Hecho el 14 de agosto**, y con dos
   correcciones a lo que decía aquí. Ver la entrada del día en Hecho.
@@ -829,6 +849,26 @@ que nadie pide. Se deja apuntado y no se toca.
   Ese mismo día se le añadió lo que le faltaba por el otro lado: **ahora pide las doce portadas
   del ERP**, que son nodos y no vistas, y por eso no las descubría. De 20 pantallas a 31. El
   motivo está abajo, en Hecho: por ese hueco se colaron diez botones de crear escondidos.
+
+- **El orden de las tallas no se guarda.** Visto por el dueño el 15 de agosto y aparcado a
+  propósito para más adelante: en
+  `/admin/structure/taxonomy/manage/tec_sizes/overview` se arrastran las tallas al orden que se
+  quiere, se pulsa **Save**, y el orden no se guarda. Importa porque el orden de un catálogo de
+  tallas no es alfabético ni casual —XS, S, M, L, XL, y las onzas de 6 a 20— y así saldrá mal en
+  todos los desplegables y en los documentos de producción.
+
+  **Ya está descartado lo primero que uno miraría**: `admin_form_styles` altera esa misma pantalla
+  para pintar las casillas de *Show in Production Documents*, pero su alteración está acotada a
+  `tec_materials` con una comprobación explícita del vocabulario, así que no toca la de tallas. No
+  se pierda el tiempo por ahí.
+
+  **La primera comprobación, que separa dos fallos muy distintos en un minuto**: leer la columna
+  `weight` de los términos en la base justo después de guardar. Si los pesos han cambiado, el
+  guardado funciona y el problema está en quién los lee —algo reordena por nombre al mostrar, y
+  entonces hay que buscar quién—. Si no han cambiado, el guardado se está perdiendo, y ahí los
+  sospechosos son otro `hook_form_alter` sobre `taxonomy_overview_terms` o un proceso de ECA que
+  reaccione al guardar un término y lo vuelva a escribir. Sin hacer esa distinción primero, se
+  puede pasar una tarde arreglando el lado que no era.
 
 ## 4. Cuando el ERP nuevo ya funcione
 
@@ -1121,8 +1161,14 @@ tiempo. Se pueden borrar del repositorio.
 
 Nada de esto corre prisa, pero conviene que esté escrito para que no se descubra por sorpresa.
 
-- **`tec_gui`: un tipo de entidad abandonado que deja el informe de estado en rojo.** Encontrado
-  el 13 de agosto al subir a Drupal 11, al revisar los requisitos del sitio. Es un tipo de
+- ~~**`tec_gui`: un tipo de entidad abandonado que deja el informe de estado en rojo.**~~ **Retirado
+  el 15 de agosto de 2026**, entero: el tipo de entidad, sus trece tablas, los dos campos que le
+  apuntaban, las dos banderas, el selector, el modo de vista y los veintinueve permisos. Ver la
+  entrada del día en Hecho. El informe de estado se queda con **un solo error, el HTTPS de local**.
+  Lo que queda debajo es cómo se veía el problema antes de resolverlo, que explica por qué se hizo
+  ahora y no después.
+
+  Encontrado el 13 de agosto al subir a Drupal 11, al revisar los requisitos del sitio. Es un tipo de
   entidad de ECK, "GUI", con **cero** contenidos, pero con sus doce tablas creadas en la base y
   un campo suyo, `field_tec_gui_product`, colgado de las líneas de pedido de venta. Ese campo
   tiene **20 filas que apuntan a productos GUI que no existen**.
@@ -1159,6 +1205,27 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   perdió en alguna importación de configuración. Y decidir si esas dos importaciones se
   recuperan o se borran.
   Diagnóstico: `drush scr scripts/quien-usa-feeds.php`.
+
+  **Pista fuerte encontrada el 15 de agosto, al retirar `tec_gui`**: entre sus trece tablas había
+  una `tec_gui__feeds_item`, que es la que Feeds crea para llevar la cuenta de lo que ha importado.
+  O sea que hubo un importador configurado para fabricar fichas GUI, y GUI era el producto de
+  entonces. Eso apunta a que esas dos importaciones huérfanas, "Primo products" y "Trust products",
+  no importaban a `tec_product` sino a `tec_gui`, y que el tipo de importación desapareció con el
+  cambio de un producto al otro. Si es así, **no hay nada que recuperar**: recuperarlas sería
+  recuperar un importador que llena una entidad que ya no existe. Se decide con la tarea del
+  importador, no antes.
+
+- **`tec_app_link`: otro tipo de entidad abandonado, y este ya sin tablas.** Salió a la luz el 15 de
+  agosto, de rebote, al guardar los tres roles para quitarles los permisos de `tec_gui`: Drupal
+  avisó de que retiraba **permisos que no existen** —`create`, `edit any`, `view any` y en dos roles
+  también `delete any tec_app_link entities`—. Los retiró él, no yo; un rol no puede guardar
+  permisos de algo que el sitio no conoce.
+
+  Lo que queda de él es poco y es inofensivo: **cero tablas** en la base y una entrada
+  `tec_app_link_type` en `cancel_button.settings`. No deja ningún error en el informe de estado, al
+  contrario que `tec_gui`, porque no hay definición descuadrada: simplemente ya no está. No corre
+  ninguna prisa. Se apunta por lo mismo que se apuntó el otro: para que el día que alguien lo vea en
+  la configuración no tenga que averiguar de cero si es algo vivo.
 
 - ~~**Trece tablas `tmp_b44c2b*` en la base de datos.**~~ Tiradas el 14 de agosto de 2026, y no eran
   restos de Backup and Migrate como se suponía aquí: eran las tablas de `tec_gui` con cincuenta
@@ -1334,6 +1401,310 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-15 — `tec_gui`, fuera del ERP: el producto del programador anterior llevaba dos años atornillado a las líneas de pedido
+
+El dueño preguntó qué era `tec_gui`, porque el nombre no dice nada, y decidió retirarlo entero.
+
+**Qué era.** No la interfaz gráfica, como sugiere el nombre: era el **producto original**, el que
+había antes de `tec_product`. Lo delatan sus propias tablas, que se leyeron una por una antes de
+tirarlas: `field_product_name`, `field_tec_brand`, `field_tec_customer`, `field_tec_images`,
+`field_tec_pattern`, `field_tec_product_type`, `field_tec_sales_price`, `field_tec_size`,
+`field_tec_bom`, `field_tec_view_bill_of_materials`. Eso es un producto, campo por campo. Cuando
+llegó el producto de verdad, alguien añadió `field_tec_product` a las líneas de pedido y le puso al
+viejo la etiqueta **`Product - DEPRECATING`** a mano. Ahí se quedó la faena, dos años.
+
+**Por qué iba primero de la lista.** No por los dos errores en rojo del informe de estado, que eran
+el síntoma cómodo. Por esto: `field_tec_gui_product` era un campo **obligatorio** de las líneas de
+pedido de venta, la pieza más usada del ERP. Retirarlo con dos líneas en la base cuesta lo que
+cuesta un `truncate`; retirarlo con los 857 materiales importados y pedidos reales dentro es otra
+conversación. Y había un segundo abaratamiento que conviene no olvidar para el resto de tareas
+estructurales: **la base del servidor se va a reemplazar con la de local**, así que no hizo falta
+escribir ningún gancho de actualización. Se borró aquí y viaja ya limpio.
+
+**Lo que se encontró al levantar la alfombra**, y que no coincidía con lo apuntado:
+
+- El tipo de entidad **no tenía ni un subtipo**. Cero. No se podía crear una ficha GUI ni queriendo:
+  un armario sin estantes, con la puerta atornillada a la pared.
+- Las tablas eran **trece**, no doce, y las trece vacías.
+- La tabla del campo tenía **22 filas**, no 20. Y el campo, además, **no estaba instalado**: existía
+  en la configuración pero no en el registro de "qué hay en la base". Ese detalle decidió el orden de
+  la operación, ver abajo.
+- De las 22 filas, 21 eran huérfanas puras —ni línea ni ficha GUI—, y **la 22 colgaba de la línea de
+  prueba viva**. La escribió `scripts/fabricar-el-juego-de-pruebas.php`, que rellenaba
+  `field_tec_gui_product` con el id del producto para poder satisfacer un campo obligatorio muerto.
+  O sea que la mina que se describía en teoría ya había explotado una vez, en nuestro propio guion.
+  Esa línea del guion se ha quitado.
+- **Ningún proceso de ECA lo tocaba**, ni ningún módulo. Se buscó en los treinta y dos procesos y en
+  los cuatro módulos propios. Eso lo hizo mucho más barato que lo de Marcas y Patrones, donde el
+  problema eran justamente los dos procesos de duplicar producto.
+- Había **una marca huérfana** puesta con la bandera `tec_eca_gui_lock`, sobre una ficha GUI que no
+  existía. Resulta que era la excepción que la comprobación del ERP daba por buena desde el principio
+  —*"en reposo solo debe haber una bandera puesta, la del panel de ECA"*—. No era el panel de nada:
+  era basura. Ahora la comprobación exige **cero banderas puestas**, que es lo que significaba.
+
+**El orden, que no era negociable.** Las banderas y el modo de vista antes que el tipo de entidad,
+porque lo declaran como su entidad y se quedarían apuntando al vacío. La tabla del campo **vaciada
+antes** de borrar el campo, y esto es lo fino: el núcleo, cuando borras un campo con datos dentro,
+renombra su tabla y la deja en la cola de purga; vacía, la tira en el acto. Vaciarla primero cambió
+una operación con cola pendiente por una limpia. Y el tipo de entidad al final, porque **ECK, al
+borrarlo, busca él solo todos los campos de referencia que apuntan a él, los borra y desinstala el
+tipo**. Eso se leyó en `EckEntityType::preDelete()` antes de ejecutar nada, no se supuso.
+
+Lo que ECK **no** se lleva son las tablas `tec_gui__field_*`: sus definiciones de campo se habían
+borrado de la configuración hace años y las tablas sobrevivieron, así que no hay nada que las
+reclame. Esas once se tiraron a mano en el último paso, después de comprobar una por una que estaban
+vacías.
+
+**La cuenta final**: 1 tipo de entidad, 13 tablas, 2 campos con sus almacenes, 2 banderas, 4
+acciones, 1 selector etiquetado `TEMP` y sin un solo widget dentro, 1 modo de vista, 29 permisos en
+tres roles, 1 marca huérfana, 1 línea del service worker y 6 entradas del botón de cancelar. En
+configuración: 13 objetos borrados y 13 actualizados.
+
+**Cómo quedó comprobado.** El informe de estado pasa de dos errores a **uno**, y el que queda es el
+HTTPS de local, que es normal aquí. `que-esta-descuadrado.php` dice *"no hay nada descuadrado"*. La
+comprobación del ERP pasa **50 de 50** —con dos guardianes nuevos, ver abajo— y la prueba de humo
+carga **53 páginas de 53**, incluidas la línea de pedido de venta que tenía el campo, los dos pedidos
+y el borrador de compra. Y lo que de verdad importaba: la comprobación crea una línea de pedido de
+venta por código y ECA le recalcula el total, o sea que **crear líneas sin el campo obligatorio
+funciona**.
+
+**Dos guardianes nuevos**, porque volver a entrar es fácil:
+
+- *ninguna definición de entidad descuadrada*. Es el general, y es el que mantiene limpio el informe
+  de estado. Un rojo que siempre está enseña a no mirar los rojos.
+- *no queda nada de `tec_gui`*. Basta importar configuración vieja para que el tipo de entidad
+  reaparezca, y con él su campo obligatorio. Mira las cuatro cosas que importan —el tipo, las tablas,
+  los campos con ese destino y los permisos— y **no** busca el texto "tec_gui" a lo bruto, por una
+  trampa que casi se lleva algo vivo: la vista **`tec_gui_bom_item_viewfields`** lleva "gui" en el
+  nombre y no es de esto, la usan dos campos vivos de los despieces. Está escrito en el propio
+  guardián para que nadie lo repita.
+
+**Dos hallazgos de rebote**, apuntados en Deuda técnica: entre las trece tablas había una
+`tec_gui__feeds_item`, que apunta a que las dos importaciones huérfanas de Feeds importaban a `tec_gui`
+y no a `tec_product` —si se confirma, no hay nada que recuperar—; y al guardar los roles, Drupal
+retiró permisos de un **`tec_app_link`** que ya no existe, otro tipo de entidad abandonado, este ya
+sin tablas y sin dejar rojos.
+
+**Una consecuencia en Patrones**, contada entera en su ficha de decisión: Patrones tenía un campo que
+apuntaba a `tec_gui`, se fue con la retirada, y la vista `tec_pattern_elements` se quedó sin nada que
+mostrar, así que Drupal la desactivó. Su bloque sigue incrustado en la ficha de un término de patrón.
+Hoy no molesta porque hay cero términos; si Patrones vuelve, se arregla antes.
+
+Guion: `scripts/quitar-a-gui-del-erp.php`, con ensayo por defecto y cinco guardias que lo abortan si
+algo no está como se comprobó. Volcado previo en
+`backups/actatec_antes_de_quitar_gui_2026-08-15.sql.gz`.
+
+### 2026-08-15 — Los cinco enlaces a los catálogos llevaban perdidos en todas las pantallas de editar
+
+Empezó con una pregunta pequeña del dueño: *"necesito un link de acceso rápido a la URL donde se
+almacenan las sizes, igual que hicimos con los product type"*. La respuesta corta es que **ese enlace
+ya estaba escrito en el código** desde hacía meses, para producto, color y talla. No se veía.
+
+**El primer motivo, y es de los que duran años sin que nadie lo note.** Los enlaces se enganchaban
+comparando el identificador del formulario contra `tec_product_tec_product_form`. Pero la ruta de
+editar usa la operación `edit`, y Drupal le pega el nombre de la operación al identificador
+(`EntityForm::getFormId()`), así que allí el nombre real es `tec_product_tec_product_edit_form` y la
+comparación no acertaba nunca. O sea que **los enlaces solo salían al crear una ficha, jamás al
+editarla**. Medido antes de tocar: al añadir un producto salía *Manage product types*; al editar ese
+mismo producto no salía ninguno de los cinco.
+
+Y lo que hacía el fallo invisible: **el del material sí funcionaba**, que era justo el que el dueño
+tenía delante cuando dijo *"igual que hicimos con los product type"*. Funcionaba por casualidad,
+porque los términos de taxonomía usan la operación `default` para añadir y para editar, así que su
+identificador no cambia. Un fallo que deja funcionando el caso que más se usa es un fallo que no se
+denuncia solo.
+
+**El segundo motivo, más escondido, y sin él el primero no bastaba.** El color y la talla casi nunca
+se editan en su página: se trabajan **embebidos** dentro del formulario de producto con
+`inline_entity_form`, y un formulario embebido **no pasa por `hook_form_alter()` con su propio
+identificador** — solo salta el del padre. Con lo cual el enlace de tallas no podía aparecer donde de
+verdad hace falta ni arreglando los identificadores. Hacía falta
+`hook_inline_entity_form_entity_form_alter()`, que es por donde `EntityInlineForm` deja tocar el
+subformulario ya construido.
+
+**El arreglo va por la entidad, no por el nombre del formulario.** Se lee la ficha que se está
+editando y se decide por su tipo y su grupo, que es inmune a la operación y no se desfasa el día que
+alguien añada una operación nueva. La tabla de qué enlace va con qué campo queda en un solo sitio y la
+usan los dos ganchos. Como ahora dos caminos pueden llegar al mismo campo, el ayudante mira si el
+enlace ya está antes de añadirlo: sin eso saldría dos veces.
+
+**Comprobado por el camino real, que aquí es la única forma.** Los subformularios de color y talla se
+abren por AJAX al pulsar *Add new size* o *Edit*, así que pedir la página nunca los ve — de hecho la
+primera versión de la comprobación daba un falso fallo por esperar el enlace del color en una carga
+normal del formulario de producto, donde solo hay tabla y botón. Así que la comprobación monta el
+elemento de `inline_entity_form` y deja que el módulo lo construya, que es el mismo camino que sigue
+al pulsar el botón. Cubre seis pantallas y los tres casos embebidos, incluido **añadir una talla
+nueva**, que es exactamente el momento en el que alguien echa en falta una talla del catálogo. Queda
+en `scripts/salen-los-enlaces-de-catalogo.php`. Comprobación del ERP 48/48 y 53 pantallas sin
+problemas.
+
+**De camino, por qué la talla de prueba tiene ese nombre tan raro, y esto interesa para el
+importador.** El dueño vio *"PRUEBA producto - Black - XXS"* en la columna Sizes y no encontraba ese
+texto en el vocabulario de tallas. No está: el vocabulario tiene solo las tallas de verdad, y ese
+texto es el **título de una *Size variation***, que es la ficha donde vive el escandallo. Lo escriben
+dos procesos de ECA —`process_qlf96jn` al insertar y `process_ocmwa9c` al actualizar— y su receta es
+solo el nombre de la talla: *"XXS"*. Pero el de insertar lleva la condición **"solo si el título llega
+vacío"**, y el de actualizar solo lo reescribe **si cambia la talla**. Al fabricar el juego de pruebas
+se le escribió un título a mano, así que ECA lo respetó y ahí se quedó; la minúscula de *"producto"*
+es la prueba de que es texto congelado y no una fórmula, porque no siguió al producto cuando se
+renombró. **La consecuencia para el importador de productos es directa**: si el importador escribe un
+título en las variaciones de talla, ECA no lo va a corregir nunca. Hay que dejar ese campo vacío y que
+lo ponga el ERP.
+
+### 2026-08-15 — Marcas vuelve al ERP: no había que retirarla, había que devolverle la puerta
+
+El dueño leyó el punto pendiente *"Retirar Marcas y Patrones"* y respondió lo que hacía falta:
+*"pensaba que lo que habías borrado era la información dentro de esos dos módulos, no los módulos en
+sí"*. **Y el punto estaba mal planteado**, esta vez del todo: la marca es obligatoria para crear un
+producto, así que retirarla habría dejado el catálogo sin poder nacer. Corregido arriba.
+
+**Nunca se perdió la función; se perdió la puerta.** El vocabulario, el campo en productos, la vista
+`tec_brands`, los formularios y los permisos en tres roles estaban intactos. Lo que faltaba era el
+**nodo 4**, la portada que embebe el bloque de la vista y que pone el icono en el inicio. Y no lo
+borró ninguna de las limpiezas de estos días: cuando la prueba de humo empezó a pedir portadas ya
+contaba **doce** —1, 2, 3, 5, 6, 7, 9, 10, 11, 12, 13, 14—, o sea que el 4 llevaba caído desde antes.
+Nadie lo notó porque hasta ahora nadie necesitó una marca.
+
+**Dos fallos que se estaban tapando el uno al otro, y esto es lo que hay que llevarse.** El botón
+`+ Brand` de la vista tenía `empty: false`, o sea puesto para **esconderse justo cuando la lista está
+vacía**: el mismo fallo que dejó al CRM sin manera de crear un cliente. La auditoría del 14 de agosto
+encontró diez botones así **recorriendo las portadas**, y este se le escapó por una razón incómoda:
+su portada no existía, así que no había por dónde llegar a la vista para verlo. Un fallo escondía al
+otro. Si solo se hubiera devuelto la portada, la pantalla habría salido en blanco y sin manera de
+crear la primera marca; si solo se hubiera arreglado el botón, nadie lo habría visto nunca.
+
+**Rehecha con el número 4 a propósito.** La vista nombra `/node/4` en cuatro enlaces —el de editar
+cada marca y el destino del botón de crear—, igual que productos nombra `/node/1` y colores
+`/node/9`. Recuperando el número, los cuatro enlaces vuelven a valer sin tocar ni una ruta. El molde
+es la portada de **colores**, que es el caso gemelo —un vocabulario con una vista en cuadrícula dentro
+de un nodo—, y se copian sus tres piezas con sus pesos, así que esta queda indistinguible de las que
+ya funcionaban.
+
+**El icono estaba en el disco.** `isometric-brand-100.png` es una de las cinco imágenes de marca que
+se salvaron del borrado de fotos del 14 de agosto. Seguía en la carpeta pública de 2024-03, pero su
+ficha había muerto con el nodo, así que se copió al sistema **privado**, que es donde guardan los
+otros diez iconos, y se fichó de nuevo. Se le da orden 8, detrás de colores, que es el otro catálogo.
+
+**Comprobado lo que fallaba, no solo el código HTTP.** Un 200 ya nos engañó una vez. Así que
+`scripts/funciona-la-pantalla-de-marcas.php` mira el contenido: que el icono salga en `/start` y
+apunte a `/b`, que la pantalla traiga el botón y la marca, y **sobre todo que el botón siga saliendo
+con la lista vacía**, que es el caso que fallaba — para probarlo despublica un momento la única marca
+y la vuelve a publicar al terminar, pase lo que pase. También se comprobó que el enlace del botón
+responde con la barra de más que lleva escrita (`/add/?destination=`) y sin ella: las dos dan 200. Y
+el final de la cadena: el desplegable de marca del formulario de producto es una **lista fija y
+obligatoria**, y ya ofrece marca, o sea que el producto se puede guardar. Con cero marcas no se podía,
+y por eso esto no era cosmético.
+
+Prueba de humo en verde, **53 pantallas** con `/b` dentro, que la recoge sola porque desde el 14 de
+agosto pide todas las portadas.
+
+**Y aprovechando el hilo, cinco botones escondidos más, que el barrido de portadas no podía ver.**
+Si el de marcas se escapó porque su pantalla no existía, había que preguntarse a qué más no llegaba
+ese método. Se buscó otra vez, pero **por configuración en lugar de por pantallas**: la configuración
+está ahí aunque no haya puerta por donde llegar. Aparecieron cinco, en displays de los que no cuelga
+ninguna portada. Cuatro arreglados:
+
+- **`tec_inventory_transactions` / `block_1`**, y este era un fallo vivo: es el historial de stock de
+  un material, y un material recién creado no tiene movimientos por definición, así que el botón
+  `+/- Stock` se escondía **siempre el primer día**. No llegó a bloquear a nadie porque el listado de
+  inventario tiene el suyo por fila, y ese sí estaba bien puesto.
+- **`tec_products` / `block_2` y `block_4`**, dos listados de productos. Con el catálogo por importar,
+  la lista vacía es el estado normal de las próximas semanas.
+- **`tec_colors` / `page_1`**. El bloque de la portada `/cl` ya estaba bien, y por eso el barrido de
+  portadas lo dio por bueno: mira displays, y el fallo estaba en el otro.
+
+El quinto, **`tec_patterns` / `block_1`, se deja a propósito** por orden del dueño: Patrones está
+pendiente de decidir si se retira, y no tiene sentido arreglarle un botón a una pantalla que puede
+desaparecer.
+
+**Guardián nuevo, el 48**: *"ningún botón de crear se esconde con la lista vacía"*. Recorre las áreas
+de cabecera y pie de todas las vistas, se queda con las que llevan un enlace de crear, y exige que
+ninguna tenga `empty: false` salvo la de patrones, que figura en una lista de excepciones con su
+motivo escrito. Mira configuración, no pantallas, que es la lección de las dos veces anteriores. El
+diagnóstico suelto queda en `scripts/queda-algun-boton-escondido.php`. Comprobación 48/48.
+
+**Corrección del mismo día: la portada volvió, pero torcida.** El dueño la abrió y avisó: *"funciona,
+pero ha perdido el formato visual"*. Tenía razón — la rejilla con la marca se pintaba **encima** del
+título, y *"Brands"* aparecía debajo de las tarjetas. La portada respondía 200, tenía todas sus piezas
+y estaba mal.
+
+**La culpa es de `appendComponent()`, y esta trampa merece quedar escrita** porque la receta de copiar
+una portada es lo único que se va a reutilizar el día que se haga la siguiente. El guion copiaba las
+tres piezas del molde de colores con sus pesos —que son los que mandan el orden en pantalla— y las
+metía en la sección con `Section::appendComponent()`. Lo que no se miró es la primera línea de ese
+método en el núcleo:
+
+```php
+public function appendComponent(SectionComponent $component) {
+  $component->setWeight($this->getNextHighestWeight($component->getRegion()));
+```
+
+**Reescribe el peso antes de guardar la pieza.** O sea que copiar los pesos del molde no sirve
+absolutamente de nada si luego se añaden con ese método: cada pieza se queda con el número que le toca
+por orden de llegada. En colores los pesos son título 2, cuerpo 3 y rejilla 4; en marcas quedaron
+cuerpo 0, rejilla 1 y título 2.
+
+**Y hay un segundo detalle que es el que convirtió un fallo invisible en un fallo visible**, al revés
+de lo que suele pasar: `getComponents()` devuelve las piezas en el orden en que están **guardadas**,
+que no es el orden en que se pintan. El bucle las recorrió cuerpo, rejilla y título, y por eso el
+título acabó último. Si el molde las hubiera tenido guardadas en el mismo orden en que se pintan, la
+copia habría salido bien **por casualidad**, el fallo se habría quedado dormido en la receta y lo
+habría pagado la próxima portada. Salió mal el primer día, que es la mejor manera de que salga mal.
+
+**Arreglado sobre el nodo que ya existía, sin recrearlo**, porque el número 4 es justo lo que había
+que conservar. Los pesos no se escriben a mano en ningún sitio: se leen del nodo 9 emparejando pieza
+con pieza, así que el día que se retoque la portada de colores el guion sigue diciendo la verdad en
+vez de repetir tres números caducados. Queda como **revisión 16**, con su motivo escrito, de modo que
+la versión torcida sigue en el historial. `scripts/poner-en-orden-la-portada-de-marcas.php`.
+
+La receta, `scripts/devolver-la-pantalla-de-marcas.php`, ya no puede repetirlo: le pasa las piezas al
+**constructor de `Section`**, que es el único camino que respeta el peso porque llama a
+`setComponent()` sin tocarlo, y de paso copia los ajustes de terceros de la sección, que antes se
+perdían —hoy da igual porque colores no tiene ninguno, pero no daría igual con otro molde—. Como ese
+guion se para en seco si el nodo 4 existe, no se puede probar sin borrar el nodo, así que la receta se
+prueba aparte: `scripts/respeta-el-peso-al-copiar-la-seccion.php` monta la misma sección por los dos
+caminos y los enseña juntos. Con `appendComponent()` salen los pesos 0, 1 y 2 — **exactamente los que
+tenía el nodo roto**, o sea que reproduce el fallo, no solo lo describe. Con el constructor salen 2, 3
+y 4, los del molde.
+
+**La zona gris y el botón no eran fallos, y esto se midió antes de tocar nada.** El dueño señaló las
+dos cosas en la captura y las dos salen igual en `/cl`:
+
+- **La zona gris de la mitad inferior es el fondo del tema.** No hay ningún bloque de más: `/b` y
+  `/cl` tienen el **mismo armazón**, 44 envoltorios cada una en los tres primeros niveles. Lo que
+  cambia es cuánto contenido hay encima — `/b` pinta **2** celdas de rejilla y `/cl` **64**. Con una
+  marca el contenido no llega a la mitad de la pantalla y el resto lo pinta el fondo; en colores no se
+  ve porque las 32 fichas la llenan. El día que haya marcas de verdad desaparece sola.
+- **El botón `+ Brand` sale con el mismo HTML y el mismo CSS que el de colores**: los dos son
+  `div.text-align-right > div.btn-default > a`, y las dos pantallas cargan las mismas hojas de estilo
+  salvo tres que solo necesita `/cl` —el filtro de búsqueda expuesto, la muestra de color y el buscador
+  del tema—, ninguna de las cuales define `btn-default`. Se miró también si el tema trata distinto al
+  primer bloque de una región, que habría explicado el botón sin tocar el botón: **no**, sus reglas de
+  `:first-child` solo mueven el `h2` de los bloques de las barras laterales. Se veía raro porque
+  estaba **en lo alto de la página, sin el `h1` encima**. Con el orden arreglado se coloca donde el de
+  colores.
+
+**El guardián que faltaba.** `scripts/funciona-la-pantalla-de-marcas.php` dio **"todo bien" con la
+pantalla visiblemente torcida**, y eso es lo más incómodo de todo esto: comprobaba que el título y el
+botón estuvieran en el HTML, no **dónde**. Es la tercera versión del mismo error —primero creímos que
+un 200 bastaba, luego que estar bastaba— y ahora exige además que el título vaya antes de la rejilla.
+Lo encontró el dueño mirando la pantalla, que es justo lo que estas pruebas tendrían que ahorrarle.
+
+La comparación completa, pieza a pieza y HTML contra HTML, queda en
+`scripts/donde-se-desordeno-la-portada-de-marcas.php`. El nodo es contenido y no configuración, así
+que no hubo nada que exportar. Comprobación **48/48**, marcas **todo bien**, **53 pantallas** y **0**
+con problemas.
+
+**De propina, una cifra que no cuadraba y no era un fallo.** La comprobación empezó a dar 47/48 por
+las tallas: 15 donde esperaba 14. No lo había roto el arreglo. La primera sospecha —que fuera basura
+que la propia comprobación se dejara detrás, porque su apartado 3 crea una variación de talla— era
+razonable y era **falsa**: la de más se llama **"20 oz"** y continúa la serie de onzas que ya estaba,
+y el registro dice *"Created new term 20 oz"* desde el formulario del vocabulario con el usuario 1. La
+metió el dueño a mano mientras se arreglaba la portada. **Borrarla para que la cuenta cuadrara habría
+sido tirar un dato de verdad**, así que se subió la referencia a 15 con el motivo escrito. Que una
+cifra de referencia falle no significa que algo esté roto: significa que hay que mirar quién la movió.
+`scripts/quien-creo-la-talla-de-mas.php`.
 
 ### 2026-08-14 — Los 104 CSV y Excel de las importaciones de ensayo, fuera, y dos importadores huérfanos al descubierto
 

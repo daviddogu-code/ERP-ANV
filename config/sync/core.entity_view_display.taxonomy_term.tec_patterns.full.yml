@@ -6,7 +6,6 @@ dependencies:
     - core.entity_view_mode.taxonomy_term.full
     - field.field.taxonomy_term.tec_patterns.field_tec_customer
     - field.field.taxonomy_term.tec_patterns.field_tec_images
-    - field.field.taxonomy_term.tec_patterns.field_tec_pattern_boms
     - image.style.large
     - taxonomy.vocabulary.tec_patterns
   module:
@@ -28,6 +27,7 @@ third_party_settings:
       disable_css: false
       entity_classes: all_classes
       settings:
+        label: ''
         classes:
           layout_class: {  }
         wrappers:
@@ -37,7 +37,6 @@ third_party_settings:
         attributes: ''
         link_attribute: ''
         link_custom: ''
-        label: ''
     regions:
       left:
         - name
@@ -92,5 +91,4 @@ content:
     weight: 0
     region: left
 hidden:
-  field_tec_pattern_boms: true
   langcode: true

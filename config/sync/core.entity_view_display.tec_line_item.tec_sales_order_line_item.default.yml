@@ -6,7 +6,6 @@ dependencies:
     - eck.eck_type.tec_line_item.tec_sales_order_line_item
     - field.field.tec_line_item.tec_sales_order_line_item.field_tec_color_variation
     - field.field.tec_line_item.tec_sales_order_line_item.field_tec_custom_sales_price
-    - field.field.tec_line_item.tec_sales_order_line_item.field_tec_gui_product
     - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_bom
     - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_total
     - field.field.tec_line_item.tec_sales_order_line_item.field_tec_line_item_total_number
@@ -158,5 +157,4 @@ content:
     region: content
 hidden:
   changed: true
-  field_tec_gui_product: true
   langcode: true

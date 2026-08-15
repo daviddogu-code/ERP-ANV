@@ -178,10 +178,6 @@ $rotas = (int) $bd->query("
 ")->fetchField();
 printf("  referencias a materiales que ya no existen: %d\n", $rotas);
 
-if ($bd->schema()->tableExists('tec_line_item__field_tec_gui_product')) {
-  printf("  filas de field_tec_gui_product: %d\n", filas($bd, 'tec_line_item__field_tec_gui_product'));
-}
-
 print "\n  banderas puestas:\n";
 foreach ($bd->query("SELECT flag_id, COUNT(*) AS n FROM {flagging} GROUP BY flag_id")->fetchAll() as $fila) {
   printf("      %-30s %d\n", $fila->flag_id, $fila->n);

@@ -5,7 +5,6 @@ dependencies:
   config:
     - field.field.taxonomy_term.tec_patterns.field_tec_customer
     - field.field.taxonomy_term.tec_patterns.field_tec_images
-    - field.field.taxonomy_term.tec_patterns.field_tec_pattern_boms
     - taxonomy.vocabulary.tec_patterns
   module:
     - field_group
@@ -116,7 +115,6 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
-  field_tec_pattern_boms: true
   langcode: true
   path: true
   status: true

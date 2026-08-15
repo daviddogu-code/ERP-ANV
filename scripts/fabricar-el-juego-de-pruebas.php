@@ -191,7 +191,6 @@ $lineaVenta = $anotar('linea de pedido', $gestor->getStorage('tec_line_item')->c
   'field_tec_product' => $producto->id(),
   'field_tec_color_variation' => $variacionColor->id(),
   'field_tec_size_variation' => $variacionTalla->id(),
-  'field_tec_gui_product' => $producto->id(),
   'field_tec_quantity' => 30,
   'field_tec_price' => '1250.00',
 ]));

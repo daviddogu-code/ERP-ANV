@@ -260,10 +260,6 @@ entity_type_cancel_destination:
     enabled: true
   flagging_duplicate_product_variation:
     path: /
-  flagging_tec_duplicate_gui:
-    path: /
-  flagging_tec_eca_gui_lock:
-    path: /
   flagging_tec_eca_line_item_lock:
     path: /
   flagging:
@@ -377,15 +373,6 @@ entity_type_cancel_destination:
   tec_crm:
     enabled: true
   tec_crm_type:
-    path: /
-    enabled: true
-  tec_gui_pattern_bom:
-    path: /
-  tec_gui_tec_general_product_ui:
-    path: /
-  tec_gui:
-    enabled: true
-  tec_gui_type:
     path: /
     enabled: true
   tec_inventory_tec_bom_item:

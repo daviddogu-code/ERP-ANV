@@ -79,7 +79,15 @@ const REFERENCIA_TAXONOMIA = [
   'tec_crm_contact_type' => 3,
   'tec_materials' => 22,
   'tec_product_types' => 23,
-  'tec_sizes' => 14,
+  // Eran catorce hasta la madrugada del 15 de agosto de 2026, cuando el dueno
+  // anadio "20 oz" por el formulario del vocabulario mientras se arreglaba la
+  // portada de marcas. Se comprobo antes de tocar esta cifra, porque una talla de
+  // mas puede ser basura de una prueba y entonces lo que hay que borrar es la
+  // talla y no la referencia: el registro dice "Created new term 20 oz" desde
+  // /admin/structure/taxonomy/manage/tec_sizes/add con el usuario 1, y el nombre
+  // continua la serie de onzas que ya estaba -6, 8, 10, 12, 14, 16 y 18-. O sea
+  // que es un dato de verdad y la que estaba vieja era la cuenta.
+  'tec_sizes' => 15,
   'tec_units' => 13,
 ];
 
@@ -93,12 +101,17 @@ const REFERENCIA_VARIOS = [
   // noche. Primero las 142 fotos que se quedaron sin dueno al vaciar los datos de
   // prueba, con sus 304 versiones recortadas. Despues los 104 CSV y Excel de las
   // importaciones de ensayo, mas 10 archivos sueltos que ya no tenian ficha. Los
-  // 69 que quedan son 39 fuentes tipograficas, 28 imagenes -entre ellas los once
-  // iconos de la portada y los de la aplicacion movil- y 2 hojas de estilo.
-  'ficheros' => 69,
+  // 69 que quedaron son 39 fuentes tipograficas, 28 imagenes -entre ellas los
+  // iconos de la portada y los de la aplicacion movil- y 2 hojas de estilo. El 70
+  // es el icono de marcas, refichado el 15 de agosto: la imagen nunca se fue del
+  // disco, pero su ficha murio con la portada.
+  'ficheros' => 70,
   // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
-  // Super BOM, porque su funcion la hace ya el tablero de stock.
-  'nodos' => 11,
+  // Super BOM, porque su funcion la hace ya el tablero de stock. Y volvieron a ser
+  // doce el 15, al rehacer la portada de marcas, que llevaba borrada desde antes de
+  // las limpiezas: la marca es obligatoria en producto, asi que sin esa pantalla no
+  // se podia crear ni una marca ni, por tanto, un producto.
+  'nodos' => 12,
   // Fueron seis unas horas: se pusieron cuatro para que los iconos de la cola, el
   // registro, el informe y el stock llevaran a su pantalla. Vuelven a ser dos
   // porque el arreglo bueno llego el mismo dia: el enlace sale ahora del campo
@@ -138,6 +151,12 @@ const REFERENCIA_VARIOS = [
 // escuchara. El cron no ha corrido nunca aqui, asi que nadie lo habia notado; el
 // dia que se encienda, estas dos lineas son las que avisan si han vuelto.
 const CRON_QUE_SIGUE_APAGADO = ['backup_migrate_cron', 'eca_base_cron'];
+
+// El unico boton de crear al que se le permite esconderse con la lista vacia.
+// Patrones esta pendiente de decidir si se retira del ERP, asi que no se le
+// arregla un boton a una pantalla que puede desaparecer. El dia que se decida,
+// esta lista se queda vacia o se va entera con la vista.
+const BOTONES_ESCONDIDOS_A_PROPOSITO = ['tec_patterns:block_1'];
 
 // Herramientas de diagnostico que se instalan durante una actualizacion y se
 // quitan al terminar. No cuentan para el total. Vacia desde el 14 de agosto de
@@ -272,6 +291,79 @@ foreach (array_keys($imagenesDeMarca) as $uri) {
 }
 comprobar($resultados, 'las imagenes de marca siguen en el disco', !$marcaQueFalta,
   $marcaQueFalta ? 'FALTAN: ' . implode(', ', $marcaQueFalta) : count($imagenesDeMarca) . ' de ' . count($imagenesDeMarca));
+
+// Ningun boton de crear puede esconderse cuando la lista esta vacia, que es justo
+// cuando es la unica manera de empezar. Un area de cabecera con `empty: false` no
+// se pinta sin filas: para un boton de exportar esta bien, para el de crear es una
+// trampa. El 14 de agosto aparecieron diez asi recorriendo las portadas, y el 15
+// otros cinco que ese barrido no podia ver porque sus displays no cuelgan de
+// ninguna portada -el de marcas entre ellos, escondido detras de una portada que
+// tampoco existia-. Por eso esto mira la configuracion y no las pantallas: la
+// configuracion esta ahi aunque no haya puerta por donde llegar.
+$botonesEscondidos = [];
+foreach (\Drupal::configFactory()->listAll('views.view.') as $nombre) {
+  $vista = \Drupal::config($nombre);
+  foreach ($vista->get('display') ?? [] as $displayId => $display) {
+    foreach (['header', 'footer'] as $sitio) {
+      foreach ($display['display_options'][$sitio] ?? [] as $area) {
+        if (($area['plugin_id'] ?? '') !== 'text_custom' || !empty($area['empty'])) {
+          continue;
+        }
+        $texto = (string) ($area['content'] ?? '');
+        // Que sea un enlace, y que sea de crear: '+ algo' o una ruta de anadir.
+        if (!str_contains($texto, '<a ') || !preg_match('~(\+\s*\w|/add\b|/add/|/add\?)~i', $texto)) {
+          continue;
+        }
+        $botonesEscondidos[] = substr($nombre, strlen('views.view.')) . ':' . $displayId;
+      }
+    }
+  }
+}
+$botonesDeMas = array_diff($botonesEscondidos, BOTONES_ESCONDIDOS_A_PROPOSITO);
+comprobar($resultados, 'ningun boton de crear se esconde con la lista vacia', !$botonesDeMas,
+  $botonesDeMas
+    ? 'ESCONDIDOS: ' . implode(', ', $botonesDeMas)
+    : 'solo ' . implode(', ', BOTONES_ESCONDIDOS_A_PROPOSITO) . ', a proposito');
+
+// Lo que la base tiene apuntado como instalado tiene que coincidir con lo que
+// dice la configuracion. Cuando no coincide, el informe de estado se queda en
+// rojo permanente, y un rojo que siempre esta ensena a no mirar los rojos: el
+// dia que aparezca uno de verdad, nadie lo vera. Los dos que habia, herencia de
+// una actualizacion de tipo de entidad que se quedo a medias, se fueron el 15 de
+// agosto con tec_gui.
+$descuadres = \Drupal::entityDefinitionUpdateManager()->getChangeSummary();
+comprobar($resultados, 'ninguna definicion de entidad descuadrada', !$descuadres,
+  $descuadres ? 'DESCUADRADO: ' . implode(', ', array_keys($descuadres)) : 'todas al dia');
+
+// De tec_gui no puede quedar nada. Era el producto original del programador
+// anterior, sustituido por tec_product, y lo que lo hacia caro es que dejo un
+// campo OBLIGATORIO colgado de las lineas de pedido de venta. Esto se mira
+// porque volver a entrar es facil: basta con importar configuracion vieja para
+// que el tipo de entidad reaparezca y con el su campo obligatorio.
+// Ojo con la vista tec_gui_bom_item_viewfields, que lleva "gui" en el nombre y
+// NO es de esto: la usan dos campos vivos de los despieces. Por eso aqui no se
+// busca el texto "tec_gui" a lo bruto, sino las cuatro cosas que importan.
+$restosDeGui = [];
+if (\Drupal::config('eck.eck_entity_type.tec_gui')->get('id')) {
+  $restosDeGui[] = 'el tipo de entidad ha vuelto';
+}
+foreach ($db->query("SHOW TABLES LIKE 'tec_gui%'")->fetchCol() as $tabla) {
+  $restosDeGui[] = 'tabla ' . $tabla;
+}
+foreach (\Drupal::configFactory()->listAll('field.storage.') as $nombre) {
+  if (\Drupal::config($nombre)->get('settings.target_type') === 'tec_gui') {
+    $restosDeGui[] = 'campo ' . \Drupal::config($nombre)->get('id');
+  }
+}
+foreach (\Drupal\user\Entity\Role::loadMultiple() as $rol) {
+  foreach ($rol->getPermissions() as $permiso) {
+    if (str_contains($permiso, 'tec_gui') && !str_contains($permiso, 'bom_item_viewfields')) {
+      $restosDeGui[] = $rol->id() . ': ' . $permiso;
+    }
+  }
+}
+comprobar($resultados, 'no queda nada de tec_gui', !$restosDeGui,
+  $restosDeGui ? 'HA VUELTO: ' . implode(', ', $restosDeGui) : 'ni tablas ni campos ni permisos');
 
 // -----------------------------------------------------------------------------
 // 2. Estructura: modulos y automatismos.
@@ -484,13 +576,14 @@ foreach ($restaurar as [$tipo, $id, $campo, $valor]) {
 // -----------------------------------------------------------------------------
 titulo('4. Nada se ha quedado roto');
 
-// En reposo solo debe haber una bandera puesta en todo el sitio, la del panel
-// de ECA. Cualquier otra es un bloqueo que se quedo colgado, y un bloqueo
-// colgado significa que ese material o esa linea ya no recalcula y nadie avisa.
+// En reposo no debe quedar ninguna bandera puesta en todo el sitio. Cada una es
+// un bloqueo que se quedo colgado, y un bloqueo colgado significa que ese
+// material o esa linea ya no recalcula y nadie avisa. Hasta el 15 de agosto esto
+// hacia una excepcion con tec_eca_gui_lock, que resulto ser una marca huerfana
+// sobre una ficha GUI que no existia; se fue con el resto de tec_gui.
 $banderas = $db->query('SELECT flag_id, COUNT(*) AS n FROM {flagging} GROUP BY flag_id')->fetchAllKeyed();
-$otras = array_diff_key($banderas, ['tec_eca_gui_lock' => TRUE]);
-comprobar($resultados, 'sin banderas colgadas', !$otras,
-  $otras ? 'sobran: ' . json_encode($otras) : 'solo tec_eca_gui_lock');
+comprobar($resultados, 'sin banderas colgadas', !$banderas,
+  $banderas ? 'sobran: ' . json_encode($banderas) : 'ninguna puesta');
 
 $errores = $db->query('SELECT COUNT(*) FROM {watchdog} WHERE wid > :w AND severity <= 3 AND type <> :t',
   [':w' => $wid_inicial, ':t' => 'eca'])->fetchField();
