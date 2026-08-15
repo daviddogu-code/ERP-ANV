@@ -239,7 +239,7 @@ display:
           entity_type: taxonomy_term
           entity_field: name
           plugin_id: term_name
-          label: Namecccc
+          label: 'Material Name'
           exclude: false
           alter:
             alter_text: false
@@ -884,7 +884,7 @@ display:
           table: taxonomy_term__field_tec_unit_use
           field: field_tec_unit_use
           relationship: none
-          group_type: sum
+          group_type: group
           admin_label: ''
           plugin_id: field
           label: UoU
@@ -1894,6 +1894,7 @@ display:
         - 'config:field.storage.taxonomy_term.field_tec_price'
         - 'config:field.storage.taxonomy_term.field_tec_split_into'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
+        - 'config:field.storage.taxonomy_term.field_tec_unit_use'
         - 'config:field.storage.taxonomy_term.field_tec_units'
         - 'config:field.storage.taxonomy_term.field_tec_uos'
         - 'config:field.storage.taxonomy_term.field_tec_vendor'
