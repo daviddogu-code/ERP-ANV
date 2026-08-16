@@ -234,7 +234,7 @@ actions:
     configuration:
       operation: multiplication
       flip: false
-      value: '[inventoryItem:field_tec_cost:value]'
+      value: '[entity:field_tec_price:value]'
       eca_data: '[entity:field_tec_quantity:value]'
       eca_token_name: lineitemTotal
       skip_on_nan: false

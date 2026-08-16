@@ -5,7 +5,6 @@ dependencies:
   config:
     - core.entity_view_mode.tec_line_item.editable
     - field.field.tec_line_item.tec_po_line_item.field_tec_quantity
-    - field.storage.taxonomy_term.field_tec_cost
     - field.storage.taxonomy_term.field_tec_inventory_image
     - field.storage.taxonomy_term.field_tec_moq_quantity
     - field.storage.taxonomy_term.field_tec_split_into
@@ -60,7 +59,6 @@ dependencies:
     - views_bootstrap
     - views_conditional
     - views_entity_form_field
-    - views_simple_math_field
 id: tec_order_sales_order_line_items
 label: 'TEC Order: Sales order line items'
 module: views
@@ -4336,81 +4334,15 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_cost:
-          id: field_tec_cost
-          table: taxonomy_term__field_tec_cost
-          field: field_tec_cost
-          relationship: field_tec_inventory
+        field_tec_price:
+          id: field_tec_price
+          table: tec_line_item__field_tec_price
+          field: field_tec_price
+          relationship: none
           group_type: group
           admin_label: ''
           plugin_id: field
           label: 'Purchase Cost'
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ','
-            decimal_separator: .
-            scale: 2
-            prefix_suffix: true
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_views_simple_math_field:
-          id: field_views_simple_math_field
-          table: views_simple_math_field
-          field: field_views_simple_math_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field_views_simple_math_field
-          label: 'Sub total'
           exclude: false
           alter:
             alter_text: false
@@ -4451,30 +4383,89 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          fieldset_one:
-            data_field:
-              field_tec_quantity: field_tec_quantity
-              field_tec_cost: field_tec_cost
-              id: 0
-              counter: 0
-              field_tec_inventory_image: 0
-              field_tec_inventory_image_1: 0
-              simple_popup_views_field: 0
-              name: 0
-              field_tec_unit_purchase: 0
-              view_tec_order: 0
-              field_tec_vendor: 0
-              name_1: 0
-            formula: '@field_tec_quantity * @field_tec_cost'
-          mute_logs: false
-          set_precision: true
-          precision: '2'
-          decimal: .
-          separator: ','
-          format_plural: false
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: '฿ '
-          suffix: ''
+          click_sort_column: value
+          type: number_decimal
+          settings:
+            thousand_separator: ','
+            decimal_separator: .
+            scale: 2
+            prefix_suffix: true
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        field_tec_line_item_total_number:
+          id: field_tec_line_item_total_number
+          table: tec_line_item__field_tec_line_item_total_number
+          field: field_tec_line_item_total_number
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: 'Sub total'
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: strong
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: number_decimal
+          settings:
+            thousand_separator: ','
+            decimal_separator: .
+            scale: 2
+            prefix_suffix: true
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
         field_tec_quantity_received:
           id: field_tec_quantity_received
           table: tec_line_item__field_tec_quantity_received
@@ -4968,13 +4959,6 @@ display:
               separator: ''
               empty_column: false
               responsive: ''
-            field_views_simple_math_field:
-              sortable: false
-              default_sort_order: asc
-              align: views-align-right
-              separator: ''
-              empty_column: false
-              responsive: ''
             field_tec_quantity_received:
               sortable: false
               default_sort_order: asc
@@ -4986,6 +4970,20 @@ display:
               sortable: false
               default_sort_order: asc
               align: views-align-center
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_tec_price:
+              sortable: false
+              default_sort_order: asc
+              align: views-align-right
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_tec_line_item_total_number:
+              sortable: false
+              default_sort_order: asc
+              align: views-align-right
               separator: ''
               empty_column: false
               responsive: ''
@@ -5069,10 +5067,11 @@ display:
         - url.query_args
         - user.roles
       tags:
-        - 'config:field.storage.taxonomy_term.field_tec_cost'
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
         - 'config:field.storage.taxonomy_term.field_tec_unit_purchase'
+        - 'config:field.storage.tec_line_item.field_tec_line_item_total_number'
         - 'config:field.storage.tec_line_item.field_tec_no_more_expected'
+        - 'config:field.storage.tec_line_item.field_tec_price'
         - 'config:field.storage.tec_line_item.field_tec_quantity'
         - 'config:field.storage.tec_line_item.field_tec_quantity_received'
         - 'config:field.storage.tec_order.field_tec_vendor'
@@ -7246,11 +7245,11 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_cost:
-          id: field_tec_cost
-          table: taxonomy_term__field_tec_cost
-          field: field_tec_cost
-          relationship: field_tec_inventory
+        field_tec_price:
+          id: field_tec_price
+          table: tec_line_item__field_tec_price
+          field: field_tec_price
+          relationship: none
           group_type: group
           admin_label: ''
           plugin_id: field
@@ -7289,7 +7288,7 @@ display:
           element_label_class: ''
           element_label_colon: true
           element_wrapper_type: ''
-          element_wrapper_class: po-cost-field
+          element_wrapper_class: ''
           element_default_classes: true
           empty: ''
           hide_empty: false
@@ -7564,72 +7563,6 @@ display:
             decimal_separator: .
             scale: 5
             prefix_suffix: false
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_price:
-          id: field_tec_price
-          table: tec_line_item__field_tec_price
-          field: field_tec_price
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: 'Cost by'
-          exclude: true
-          alter:
-            alter_text: false
-            text: '{{ views_conditional_field }}'
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_decimal
-          settings:
-            thousand_separator: ''
-            decimal_separator: .
-            scale: 2
-            prefix_suffix: true
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -8052,93 +7985,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_views_simple_math_field_1:
-          id: field_views_simple_math_field_1
-          table: views_simple_math_field
-          field: field_views_simple_math_field
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field_views_simple_math_field
-          label: 'Simple Math Field'
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          fieldset_one:
-            data_field:
-              counter: counter
-              form_field_field_tec_quantity: form_field_field_tec_quantity
-              field_tec_quantity: field_tec_quantity
-              form_field_field_tec_quantity_1: form_field_field_tec_quantity_1
-              field_tec_cost: field_tec_cost
-              id: 0
-              field_tec_inventory_image: 0
-              field_tec_inventory_image_1: 0
-              simple_popup_views_field: 0
-              name: 0
-              description__value: 0
-              field_tec_units: 0
-              field_tec_price: 0
-              field_tec_unit_purchase_1: 0
-              field_tec_unit_purchase: 0
-              field_tec_line_item_total_number: 0
-              field_tec_moq_quantity: 0
-              view_tec_order: 0
-              edit_tec_line_item: 0
-              delete_tec_line_item: 0
-              field_tec_vendor: 0
-              field_tec_uos: 0
-              field_tec_split_into: 0
-              field_tec_line_item_total_number_1: 0
-              form_field_field_tec_line_item_total_number: 0
-              field_tec_line_item_total: 0
-            formula: '@field_tec_cost'
-          mute_logs: false
-          set_precision: 0
-          precision: '0'
-          decimal: .
-          separator: ','
-          format_plural: false
-          format_plural_string: !!binary MQNAY291bnQ=
-          prefix: ''
-          suffix: ''
         field_tec_split_into:
           id: field_tec_split_into
           table: taxonomy_term__field_tec_split_into
@@ -8599,7 +8445,6 @@ display:
         - user.roles
       tags:
         - 'config:field.field.tec_line_item.tec_po_line_item.field_tec_quantity'
-        - 'config:field.storage.taxonomy_term.field_tec_cost'
         - 'config:field.storage.taxonomy_term.field_tec_inventory_image'
         - 'config:field.storage.taxonomy_term.field_tec_moq_quantity'
         - 'config:field.storage.taxonomy_term.field_tec_split_into'
@@ -10776,7 +10621,7 @@ display:
           click_sort_column: value
           type: number_decimal
           settings:
-            thousand_separator: ''
+            thousand_separator: ','
             decimal_separator: .
             scale: 2
             prefix_suffix: true

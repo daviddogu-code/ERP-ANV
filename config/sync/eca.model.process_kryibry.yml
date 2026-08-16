@@ -268,7 +268,7 @@ modeldata: |
         <bpmn2:outgoing>Flow_17yijtv</bpmn2:outgoing>
       </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_0tp2je1" sourceRef="Activity_01wk5lh" targetRef="Activity_0eek2xm"/>
-      <bpmn2:task id="Activity_00es7rw" name="Set Sales price &amp; save" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
+      <bpmn2:task id="Activity_00es7rw" name="Set Purchase cost &amp; save" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
         <bpmn2:extensionElements>
           <camunda:properties>
             <camunda:property name="pluginid" value="eca_set_field_value"/>
@@ -289,7 +289,7 @@ modeldata: |
             <camunda:string>yes</camunda:string>
           </camunda:field>
           <camunda:field name="field_value">
-            <camunda:string>[inventoryItem:field_tec_price]</camunda:string>
+            <camunda:string>[inventoryItem:field_tec_cost]</camunda:string>
           </camunda:field>
           <camunda:field name="object">
             <camunda:string>lineitem</camunda:string>

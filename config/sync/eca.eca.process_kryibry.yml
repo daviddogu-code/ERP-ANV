@@ -195,10 +195,10 @@ actions:
         condition: ''
   Activity_00es7rw:
     plugin: eca_set_field_value
-    label: 'Set Sales price & save'
+    label: 'Set Purchase cost & save'
     configuration:
       field_name: field_tec_price
-      field_value: '[inventoryItem:field_tec_price]'
+      field_value: '[inventoryItem:field_tec_cost]'
       method: 'set:clear'
       strip_tags: false
       trim: false

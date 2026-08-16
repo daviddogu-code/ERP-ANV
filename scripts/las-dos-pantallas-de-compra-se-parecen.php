@@ -25,6 +25,12 @@
  *      "closed short" pegada detras, porque son lo que se mira despues de que
  *      llegue la mercancia y no mientras se lee el pedido.
  *
+ * Ese mismo dia, scripts/el-precio-de-la-linea-manda.php cambio dos de estas
+ * columnas de sitio de origen: Purchase Cost dejo de leer el coste de hoy del
+ * material y Sub total dejo de ser una multiplicacion de la pantalla. Los
+ * nombres que se fijaron aqui no cambiaron, pero los campos que los llevan si,
+ * y estan actualizados abajo para que repetir este script no invente columnas.
+ *
  * Run: php vendor\bin\drush.php scr scripts/las-dos-pantallas-de-compra-se-parecen.php
  */
 
@@ -38,13 +44,13 @@ const VISTA = 'tec_order_sales_order_line_items';
 const NOMBRES = [
   'page_1' => [
     'field_tec_unit_purchase_1' => 'Purchase UoM',
-    'field_tec_cost' => 'Purchase Cost',
+    'field_tec_price' => 'Purchase Cost',
   ],
   'block_2' => [
     'field_tec_quantity' => 'Quantity',
     'field_tec_unit_purchase' => 'Purchase UoM',
-    'field_tec_cost' => 'Purchase Cost',
-    'field_views_simple_math_field' => 'Sub total',
+    'field_tec_price' => 'Purchase Cost',
+    'field_tec_line_item_total_number' => 'Sub total',
   ],
 ];
 
@@ -55,8 +61,7 @@ const NOMBRES = [
  * complemento que lee {{ field_tec_inventory_image }} para la miniatura y
  * {{ field_tec_inventory_image_1 }} para la ampliacion, y Views solo deja a un
  * campo leer los que se declararon antes, asi que los dos tienen que ir
- * delante o la columna sale en blanco. Por lo mismo, Sub total multiplica
- * @field_tec_quantity por @field_tec_cost y no puede adelantarlos.
+ * delante o la columna sale en blanco.
  */
 const ORDEN_DE_LA_FICHA = [
   'id',                             // Oculto.
@@ -67,8 +72,8 @@ const ORDEN_DE_LA_FICHA = [
   'name',                           // Material name.
   'field_tec_quantity',             // Quantity.
   'field_tec_unit_purchase',        // Purchase UoM.
-  'field_tec_cost',                 // Purchase Cost.
-  'field_views_simple_math_field',  // Sub total, que multiplica las dos de arriba.
+  'field_tec_price',                // Purchase Cost, el de la linea.
+  'field_tec_line_item_total_number', // Sub total, el importe guardado.
   'field_tec_quantity_received',    // Received.
   'field_tec_no_more_expected',     // La marca de "closed short", pegada a Received.
   'view_tec_order',                 // Oculto.
@@ -84,7 +89,8 @@ const ALINEADO_DE_LA_FICHA = [
   'simple_popup_views_field' => 'views-align-center',
   'name' => 'views-align-left',
   'field_tec_quantity' => 'views-align-right',
-  'field_views_simple_math_field' => 'views-align-right',
+  'field_tec_price' => 'views-align-right',
+  'field_tec_line_item_total_number' => 'views-align-right',
   'field_tec_quantity_received' => 'views-align-right',
   'field_tec_no_more_expected' => 'views-align-center',
 ];
@@ -117,27 +123,24 @@ foreach (NOMBRES as $pantalla => $nombres) {
 // -----------------------------------------------------------------------------
 //
 // El simbolo del baht no lo pone la vista: lo lleva el propio campo en su
-// definicion y la vista solo lo respeta. Pero el Sub total de la ficha no es un
-// campo, es una cuenta de la propia vista -cantidad por coste-, asi que ahi hay
-// que escribirlo a mano o sale un numero pelado. Salia "3,998.5" al lado de un
-// "฿ 799.70", con la misma columna llamandose igual en la otra pantalla.
+// definicion y la vista solo lo respeta. Cuando esto se escribio, el Sub total
+// de la ficha no era un campo sino una cuenta de la propia vista, y habia que
+// escribirle el simbolo a mano: salia "3,998.5" al lado de un "฿ 799.70".
+//
+// Ese mismo dia paso a ser el importe guardado, que trae lo suyo puesto, asi
+// que aqui ya no queda nada que escribirle. Solo faltaba la coma de los
+// millares en el coste del borrador, que hacia leer "1200.00" en una pantalla
+// y "1,200.00" en la otra.
 print "\nEl dinero\n" . str_repeat('-', 78) . "\n";
 
-$suma = &$displays['block_2']['display_options']['fields']['field_views_simple_math_field'];
-$suma['set_precision'] = TRUE;
-$suma['precision'] = '2';
-$suma['decimal'] = '.';
-$suma['separator'] = ',';
-// Escapado en vez de escrito, que este fichero no tiene por que depender de
-// sobrevivir a un editor que adivine codificaciones.
-$suma['prefix'] = "\u{0E3F} ";
-unset($suma);
-print "  ficha    Sub total: dos decimales, millares con coma y su simbolo\n";
-
-// Y al coste del borrador le faltaba la coma de los millares, asi que un coste
-// de mil doscientos se leia "1200.00" en una pantalla y "1,200.00" en la otra.
-$displays['page_1']['display_options']['fields']['field_tec_cost']['settings']['thousand_separator'] = ',';
-print "  borrador Purchase Cost: millares con coma, como en la ficha\n";
+foreach (['page_1' => 'borrador', 'block_2' => 'ficha   '] as $pantalla => $como) {
+  if (!isset($displays[$pantalla]['display_options']['fields']['field_tec_price'])) {
+    printf("  [MAL] %s no tiene la columna del precio\n", $pantalla);
+    continue;
+  }
+  $displays[$pantalla]['display_options']['fields']['field_tec_price']['settings']['thousand_separator'] = ',';
+  printf("  %s Purchase Cost: millares con coma\n", $como);
+}
 
 // -----------------------------------------------------------------------------
 // 3. El orden de la ficha.
