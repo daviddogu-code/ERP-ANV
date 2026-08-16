@@ -1418,15 +1418,27 @@ $rotulosDe = function (string $pantalla) use ($vistaIva): array {
 };
 $rotulosBorrador = $rotulosDe('page_1');
 $rotulosFicha = $rotulosDe('block_2');
-comprobar($resultados, 'las dos pantallas de compra llaman igual a lo mismo',
-  $rotulosBorrador && array_slice($rotulosFicha, 0, count($rotulosBorrador)) === $rotulosBorrador,
-  implode(' | ', $rotulosBorrador));
 
-// Received va detras de todas esas, porque se mira cuando llega la mercancia y
-// no mientras se lee el pedido.
-comprobar($resultados, 'y Received va al final, con su marca detras',
-  array_slice($rotulosFicha, count($rotulosBorrador)) === ['Received', ''],
-  implode(' | ', array_slice($rotulosFicha, count($rotulosBorrador))));
+// La ficha lleva dos columnas de mas, Received y su marca de "closed short".
+// Quitadas esas, tiene que decir exactamente lo mismo que el borrador.
+$fichaSinRecepcion = array_values(array_diff($rotulosFicha, ['Received', '']));
+comprobar($resultados, 'las dos pantallas de compra llaman igual a lo mismo',
+  $rotulosBorrador && $fichaSinRecepcion === $rotulosBorrador,
+  implode(' | ', $fichaSinRecepcion));
+
+// Y esas dos van pegadas a Quantity: cuanto se pidio y cuanto ha llegado, una al
+// lado de la otra.
+$dondeLaCantidad = array_search('Quantity', $rotulosFicha, TRUE);
+comprobar($resultados, 'y Received va pegado a Quantity, con su marca detras',
+  $dondeLaCantidad !== FALSE && array_slice($rotulosFicha, $dondeLaCantidad + 1, 2) === ['Received', ''],
+  implode(' | ', array_slice($rotulosFicha, $dondeLaCantidad === FALSE ? 0 : $dondeLaCantidad, 3)));
+
+// Que es lo que deja el Sub total de ultimo. Las cifras del pie se pegan al
+// borde derecho de la tabla, asi que caen bajo la ultima columna sea cual sea:
+// con Received ahi, la suma de la derecha no era la suma de la columna de
+// encima, y el ojo tenia que saltar de una punta a otra para comprobarlo.
+comprobar($resultados, 'de modo que el pie cae debajo del Sub total',
+  end($rotulosFicha) === 'Sub total', (string) end($rotulosFicha));
 
 // El impreso no es una pantalla mas: es el papel que se manda al proveedor, y
 // tenia ademas otro orden, con la cantidad delante del material y el precio

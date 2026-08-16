@@ -580,9 +580,17 @@ by UoP** and **Cost per UoP**; the quantity, **Quantity** and **Qty.** Anyone
 looking at both had to translate, and translating is where people slip.
 
 Both now read: `Item | Picture | Material name | Quantity | Purchase UoM |
-Purchase Cost | Sub total`, and the order page continues with `Received` and its
-*closed short* marker, which belong after everything else because they are what
-gets looked at once goods arrive, not while the order is being read.
+Purchase Cost | Sub total`. The order page carries two more, `Received` and its
+*closed short* marker, sitting right after `Quantity` — how much was ordered and
+how much arrived, side by side.
+
+They were at the end at first, on the grounds that they are what gets looked at
+once goods arrive rather than while the order is read. What that missed is that
+**the footer follows the last column**: `Subtotal`, `VAT` and `Total` hug the
+right edge of the table, so they were landing under a column that says nothing
+about money, and the eye had to cross the table to check that the sum on the
+right was the sum of the column above. There is no honest way to line a table up
+with a column that is not the last one, so `Sub total` goes last.
 
 Money is written the same way too, which took one non-obvious fix. The baht
 symbol is not put there by the view: it is part of the field, and the view merely

@@ -1778,6 +1778,34 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-16 (noche) — El pie de la ficha cae debajo del Sub total
+
+Quedaba dicho como alternativa y el dueño la eligió en cuanto vio las tres pantallas en una tabla. Las
+cifras del pie —`Subtotal`, `VAT`, `Total`— se pegan al borde derecho de la tabla, así que caen bajo la
+**última columna, sea cual sea**. Con `Received` y su marca de *closed short* al final, caían bajo una
+columna que no habla de dinero, y el ojo tenía que saltar de una punta a otra para comprobar que la suma
+de la derecha era la suma de esa otra columna.
+
+```
+antes   ... | Quantity | Purchase UoM | Purchase Cost | Sub total | Received | (marca)
+ahora   ... | Quantity | Received | (marca) | Purchase UoM | Purchase Cost | Sub total
+```
+
+No hay forma honesta de alinear una tabla con una columna que no sea la última, así que la manera de que
+el pie cuadre con el `Sub total` es que el `Sub total` sea el último. `Received` se va detrás de
+`Quantity`, que además es donde mejor se lee: cuánto se pidió y cuánto ha llegado, una al lado de la
+otra.
+
+Esto deshace parte de lo que se decidió unas horas antes, cuando esas dos columnas se pusieron al final
+por ser lo que se mira cuando llega la mercancía. El razonamiento no era malo; lo que no se había visto
+es que arrastraban el pie con ellas.
+
+- Hecho por `scripts/el-pie-cae-debajo-del-sub-total.php`. `las-dos-pantallas-de-compra-se-parecen.php`
+  queda actualizado para que repetirlo no las devuelva al final.
+- Guardián: la comprobación de que las dos pantallas se llaman igual ahora **quita** `Received` y su
+  marca antes de comparar, en vez de dar por hecho que van al final; y hay dos nuevas, que van pegadas a
+  `Quantity` y que el `Sub total` es el último. 113 de 113.
+
 ### 2026-08-16 (noche) — Un pedido emitido vale lo que valía el día que se hizo
 
 El dueño lo planteó como un cuento de tres fechas, y era exactamente el caso que rompía:
@@ -1932,6 +1960,8 @@ entero, con el rótulo pegado a la cifra y la cifra al borde, y usa el relleno d
 Con `Received` al final, las cifras del pie caen bajo esa columna y no bajo *Sub total*. Si se
 prefiere lo segundo, la manera es poner `Received` **antes** de *Sub total*; no hay forma honesta de
 alinear una tabla con otra columna que no sea la última.
+
+> El dueño eligió lo segundo esa misma noche. Ver «El pie de la ficha cae debajo del Sub total».
 
 - Hecho por `scripts/las-dos-pantallas-de-compra-se-parecen.php`, que se niega a reordenar en vez de
   adivinar si la pantalla ha ganado o perdido una columna desde que se escribió la lista.

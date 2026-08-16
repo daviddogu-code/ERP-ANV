@@ -25,6 +25,12 @@
  *      "closed short" pegada detras, porque son lo que se mira despues de que
  *      llegue la mercancia y no mientras se lee el pedido.
  *
+ * Lo tercero duro unas horas. Las cifras del pie se pegan al borde derecho de
+ * la tabla, asi que caian bajo Received en vez de bajo el Sub total, y el dueno
+ * prefirio lo segundo: scripts/el-pie-cae-debajo-del-sub-total.php las puso
+ * detras de Quantity, que ademas es donde mejor se leen -cuanto se pidio y
+ * cuanto ha llegado, una al lado de la otra-. La lista de abajo ya lo refleja.
+ *
  * Ese mismo dia, scripts/el-precio-de-la-linea-manda.php cambio dos de estas
  * columnas de sitio de origen: Purchase Cost dejo de leer el coste de hoy del
  * material y Sub total dejo de ser una multiplicacion de la pantalla. Los
@@ -71,11 +77,11 @@ const ORDEN_DE_LA_FICHA = [
   'simple_popup_views_field',       // Picture.
   'name',                           // Material name.
   'field_tec_quantity',             // Quantity.
-  'field_tec_unit_purchase',        // Purchase UoM.
-  'field_tec_price',                // Purchase Cost, el de la linea.
-  'field_tec_line_item_total_number', // Sub total, el importe guardado.
   'field_tec_quantity_received',    // Received.
   'field_tec_no_more_expected',     // La marca de "closed short", pegada a Received.
+  'field_tec_unit_purchase',        // Purchase UoM.
+  'field_tec_price',                // Purchase Cost, el de la linea.
+  'field_tec_line_item_total_number', // Sub total, el ultimo, que es donde cae el pie.
   'view_tec_order',                 // Oculto.
   'field_tec_vendor',               // Oculto.
   'name_1',                         // Oculto, es por quien ordena la lista.
