@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\taxonomy\TermInterface;
 
 /**
@@ -74,6 +75,7 @@ function admin_form_styles_form_alter(&$form, $form_state, $form_id) {
   // Attach calculator library to main inventory form
   if ($form_id === 'taxonomy_term_tec_inventory_form') {
     $form['#attached']['library'][] = 'admin_form_styles/inventory-calculator';
+    _admin_form_styles_fix_decimal_steps($form, 'taxonomy_term');
     // Units are managed in taxonomy (no inline create on UoM selects).
     _admin_form_styles_attach_taxonomy_manage_link(
       $form,
@@ -109,6 +111,10 @@ function admin_form_styles_form_alter(&$form, $form_state, $form_id) {
   // real id there is 'tec_product_tec_product_edit_form'. The links only ever
   // showed while creating. Matching on the entity is immune to the operation.
   _admin_form_styles_attach_catalog_links(
+    $form,
+    _admin_form_styles_form_entity($form_state)
+  );
+  _admin_form_styles_attach_vat_rate_link(
     $form,
     _admin_form_styles_form_entity($form_state)
   );
@@ -180,6 +186,119 @@ function admin_form_styles_inline_entity_form_entity_form_alter(array &$entity_f
     $entity_form,
     $entity_form['#entity'] ?? NULL
   );
+  // Harmless on a form without decimal boxes, and the alternative is finding
+  // out the hard way the day a material is added from inside something else.
+  $embedded = $entity_form['#entity'] ?? NULL;
+  if ($embedded instanceof EntityInterface) {
+    _admin_form_styles_fix_decimal_steps($entity_form, $embedded->getEntityTypeId());
+  }
+}
+
+/**
+ * Costs and factors the server works out again on every save.
+ *
+ * Whatever the browser leaves in these boxes is discarded and divided out of
+ * the purchase cost by `tec_inventory_taxonomy_term_presave()`, so there is
+ * nothing in them worth checking. Everything else on the form is typed by hand
+ * and does get checked.
+ */
+const ADMIN_FORM_STYLES_DERIVED_COSTS = ['field_tec_price_uos', 'field_tec_price'];
+
+/**
+ * Replace Drupal's step check on decimal boxes with one that is exact.
+ *
+ * Drupal validates a decimal box against a step it derives from the column's
+ * scale — five decimals, a step of 0.00001 — and `Number::validStep()` gets
+ * that wrong for large numbers. It measures the leftover of dividing the value
+ * by the step in floating point, and compares it against a fixed margin of
+ * `step / 2^24`. The leftover grows with the size of the value while the margin
+ * does not, so past a certain figure nothing passes, however round.
+ *
+ * That ceiling works out at about 10^(9 - decimals): a thousand at six
+ * decimals, ten thousand at five, a hundred thousand at four. It refused a
+ * consumption cost of 799.70 and an inventory-to-consumption factor of 10000,
+ * both with *"is not a valid number"*, which was true of neither.
+ *
+ * The ceiling is invisible until someone meets it, and it moves whenever a
+ * scale changes. Raising the two conversion factors from two decimals to five
+ * dropped theirs from ten million to ten thousand and locked, without touching
+ * them, every material already holding a bigger factor — the value was in the
+ * database and the form revalidates it on every save.
+ *
+ * So the step goes to 'any' and the rule it was meant to enforce is checked
+ * properly instead, by counting the digits after the dot in the text that was
+ * typed. That is the same rule — a decimal is a multiple of its step exactly
+ * when it fits the scale — decided on the characters rather than on a division
+ * that cannot represent them.
+ *
+ * @param array $form
+ *   The form, or an embedded entity form.
+ * @param string $entity_type
+ *   Entity type whose field storage says how many decimals each box holds.
+ */
+function _admin_form_styles_fix_decimal_steps(array &$form, string $entity_type): void {
+  foreach (Element::children($form) as $field_name) {
+    // Checked before the reference is taken: referencing a key that is not
+    // there would create it, and every non-field child of the form would come
+    // out of this loop carrying an empty widget.
+    $type = $form[$field_name]['widget'][0]['value']['#type'] ?? NULL;
+    if ($type !== 'number') {
+      continue;
+    }
+
+    $storage = FieldStorageConfig::loadByName($entity_type, $field_name);
+    if (!$storage || $storage->getType() !== 'decimal') {
+      continue;
+    }
+
+    $scale = (int) $storage->getSetting('scale');
+    $element = &$form[$field_name]['widget'][0]['value'];
+    $element['#step'] = 'any';
+
+    // The calculator worked out how many decimals to print by reading the step.
+    // With no step to read it would print the raw division — 266.66666666666663
+    // — so it is told the scale instead.
+    $element['#attributes']['data-tec-decimals'] = $scale;
+
+    if (!in_array($field_name, ADMIN_FORM_STYLES_DERIVED_COSTS, TRUE)) {
+      $element['#tec_scale'] = $scale;
+      $element['#element_validate'][] = '_admin_form_styles_check_decimals';
+    }
+    unset($element);
+  }
+}
+
+/**
+ * Refuse a typed decimal that does not fit its column, counting characters.
+ *
+ * This is what `Number::validStep()` was there for. Without it the extra
+ * decimals would reach a column that cannot hold them and be rounded away in
+ * silence on the way in.
+ */
+function _admin_form_styles_check_decimals(array &$element, FormStateInterface $form_state): void {
+  $value = $element['#value'] ?? '';
+  if ($value === '' || $value === NULL || !is_numeric($value)) {
+    return;
+  }
+
+  // Exponent form has no digits after a dot to count. It reaches the column
+  // rounded either way, and nobody types it into a spinner.
+  $typed = (string) $value;
+  if (stripos($typed, 'e') !== FALSE) {
+    return;
+  }
+
+  $dot = strpos($typed, '.');
+  $decimals = $dot === FALSE ? 0 : strlen(rtrim(substr($typed, $dot + 1), '0'));
+  $scale = (int) ($element['#tec_scale'] ?? 0);
+  if ($decimals <= $scale) {
+    return;
+  }
+
+  $form_state->setError($element, t('%name holds at most @scale decimals.', [
+    '%name' => $element['#title'] ?? end($element['#parents']),
+    '@scale' => $scale,
+  ]));
 }
 
 /**
@@ -217,6 +336,46 @@ function _admin_form_styles_attach_catalog_links(array &$form, $entity) {
 }
 
 /**
+ * Put the company's VAT rate beside the field asking whether it is charged.
+ *
+ * Somebody standing on VAT treatment has just decided that this supplier
+ * charges, and the next thing they want to know is how much. That is one number
+ * for the whole company and it lives in the company settings, so the door goes
+ * here, where the question comes up, rather than only in a menu.
+ *
+ * The rate is read live rather than written into the text, so this cannot end
+ * up advertising a figure the company stopped using.
+ */
+function _admin_form_styles_attach_vat_rate_link(array &$form, $entity): void {
+  if (!$entity instanceof EntityInterface || $entity->getEntityTypeId() !== 'tec_crm') {
+    return;
+  }
+  // Asked rather than assumed: this module styles forms and should not stop
+  // working because the module that owns VAT is switched off.
+  if (!\Drupal::moduleHandler()->moduleExists('tec_production')) {
+    return;
+  }
+
+  $rate = \Drupal\tec_production\Vat::standardRate();
+  // 7 rather than 7.00, and 7.5 rather than 7.50.
+  $shown = rtrim(rtrim(number_format($rate, 2, '.', ''), '0'), '.');
+
+  try {
+    $url = Url::fromRoute('tec_production.company_settings');
+  }
+  catch (\Exception $e) {
+    return;
+  }
+
+  _admin_form_styles_attach_field_link(
+    $form,
+    \Drupal\tec_production\Vat::TREATMENT_FIELD,
+    $url,
+    t('VAT is currently @rate% — change it', ['@rate' => $shown])
+  );
+}
+
+/**
  * The entity a form is editing, if it is an entity form at all.
  */
 function _admin_form_styles_form_entity(FormStateInterface $form_state) {
@@ -238,10 +397,6 @@ function _admin_form_styles_form_entity(FormStateInterface $form_state) {
  *   Link label.
  */
 function _admin_form_styles_attach_taxonomy_manage_link(array &$form, $field_name, $vocabulary, $link_text) {
-  if (!isset($form[$field_name])) {
-    return;
-  }
-
   $account = \Drupal::currentUser();
   if (
     !$account->hasPermission('administer taxonomy')
@@ -260,7 +415,32 @@ function _admin_form_styles_attach_taxonomy_manage_link(array &$form, $field_nam
     return;
   }
 
-  if (!$url->access()) {
+  _admin_form_styles_attach_field_link($form, $field_name, $url, $link_text);
+}
+
+/**
+ * Attach a link under a form field, pointing anywhere.
+ *
+ * Split out of the catalog link above, which could only ever point at a
+ * taxonomy overview. That covered the four catalogs and nothing else, and the
+ * first field that needed a door somewhere other than a vocabulary — VAT
+ * treatment, whose question is answered by the company's rate and not by a list
+ * of terms — had nowhere to hang it.
+ *
+ * The link is dropped silently if the destination is one this user cannot
+ * reach. A door that opens onto "access denied" is worse than no door.
+ *
+ * @param array $form
+ *   The form, or the embedded entity form.
+ * @param string $field_name
+ *   Field machine name.
+ * @param \Drupal\Core\Url $url
+ *   Where the link goes.
+ * @param \Drupal\Core\StringTranslation\TranslatableMarkup|string $link_text
+ *   Link label.
+ */
+function _admin_form_styles_attach_field_link(array &$form, string $field_name, Url $url, $link_text): void {
+  if (!isset($form[$field_name]) || !$url->access()) {
     return;
   }
 

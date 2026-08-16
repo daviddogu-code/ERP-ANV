@@ -38,12 +38,22 @@
       purchaseCost.style.backgroundColor = '#fff';
       purchaseCost.style.border = '2px solid #007bff';
 
-      // Each field gets as many decimals as its column can hold. Drupal writes
-      // that into step as a power of ten, so reading it keeps this in step with
-      // the field the day someone changes its scale. It has to be read as a
-      // number and not counted as characters: for six decimals Drupal writes
-      // step="1.0E-6", and counting the digits after the dot gives four.
+      // Each field gets as many decimals as its column can hold, so that this
+      // stays in step with the field the day someone changes its scale.
+      //
+      // The scale arrives as a data attribute on every decimal box. Their step
+      // had to be set to 'any' because Drupal's own step check cannot cope with
+      // more than three decimals and was refusing perfectly good figures — see
+      // _admin_form_styles_fix_decimal_steps(). Reading the step is kept
+      // as the fallback for any field that still has a real one: Drupal writes
+      // it as a power of ten, and it has to be read as a number rather than
+      // counted as characters, because six decimals come out as step="1.0E-6"
+      // and counting the digits after the dot gives four.
       const decimalsOf = (field) => {
+        const declared = parseInt(field.getAttribute('data-tec-decimals'), 10);
+        if (!isNaN(declared)) {
+          return Math.max(0, declared);
+        }
         const step = parseFloat(field.getAttribute('step'));
         return step > 0 ? Math.max(0, Math.round(-Math.log10(step))) : null;
       };
