@@ -22,4 +22,15 @@ function tec_production_views_data_alter(array &$data): void {
       'click sortable' => FALSE,
     ],
   ];
+
+  // On the global table rather than on the order, because it belongs at the
+  // foot of a page and not in a row, and because the displays that use it list
+  // line items: the order is the argument, not the subject of the rows.
+  $data['views']['tec_purchase_vat_totals'] = [
+    'title' => t('Purchase order totals with VAT'),
+    'help' => t('Subtotal, VAT and the amount actually owed, at the foot of a purchase order. Shows nothing on anything that is not a purchase order.'),
+    'area' => [
+      'id' => 'tec_purchase_vat_totals',
+    ],
+  ];
 }

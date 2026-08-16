@@ -1,0 +1,45 @@
+/**
+ * @file
+ * The foot of a purchase order: subtotal, VAT and what is owed.
+ *
+ * Sits to the right under the line items, the way the single total it replaced
+ * did, so the page does not visibly rearrange itself for orders that gained a
+ * VAT line and orders that did not.
+ */
+
+.tec-vat-totals {
+  margin: 0 0 1rem auto;
+  width: auto;
+  min-width: 16rem;
+  border: 0;
+}
+
+.tec-vat-totals td {
+  border: 0;
+  padding: 0.15rem 0 0.15rem 1.5rem;
+  white-space: nowrap;
+}
+
+.tec-vat-totals__label {
+  text-align: right;
+}
+
+.tec-vat-totals__amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The figure that gets paid, told apart from the two that explain it. */
+.tec-vat-totals__row--total td {
+  font-weight: 700;
+  border-top: 1px solid currentColor;
+  padding-top: 0.35rem;
+}
+
+/* On paper the rule above the total is the only thing separating it from the
+   lines, so it has to survive the browser dropping backgrounds and colours. */
+@media print {
+  .tec-vat-totals__row--total td {
+    border-top: 1px solid #000;
+  }
+}

@@ -516,10 +516,62 @@ notices until the accountant does, months later.
   order already raised did not move.
 - Guardian: section 7, six checks.
 
-**Not done yet, and deliberately.** Nothing shows a subtotal, the VAT and a total
-on the order screens. The rate is hidden on every order view display for now,
-because a bare line reading `VAT %: 7.00` is not what anyone wants to read; the
-figures belong together in a totals block, which is the next job.
+The rate stays hidden on the order view display, because a bare line reading
+`VAT %: 7.00` is not what anyone wants to read. The figures belong together at
+the foot of the page, which is the next section.
+
+### The foot of a purchase order: subtotal, VAT, total (16 August 2026)
+The rate was being stamped on every order and read by nobody. All three purchase
+screens added up the lines and called the result **Total**. On a Thai supplier
+that is not what gets paid, so the number on the screen and the number on the
+invoice were never going to match.
+
+The two screens the server draws — the order page and the printed order — now end
+in three lines, put there by one handler written once,
+`src/Plugin/views/area/VatTotals.php` (`tec_purchase_vat_totals`, registered in
+`tec_production.views.inc`). It is an **area** and not a field because it says
+something about the order, not about a line. The arithmetic is
+`Vat::breakdown()`, which is also what the test and the guardian ask, so the
+three of them cannot end up disagreeing.
+
+Both screens used to borrow their total from `attachment_1`, an attachment
+**shared with the two sales screens**. They no longer do; `attachment_1` still
+serves `block_1` and `page_4` exactly as before. Sales was left alone on purpose:
+what VAT is charged to a customer is a different question and copying this answer
+would be guessing at it.
+
+Three cases, because they look different:
+
+- **Rate stamped.** `Subtotal`, `VAT 7%`, `Total`.
+- **Rate stamped as zero** — supplier abroad or unregistered. The same three
+  lines, with the VAT reading `VAT 0%`. A zero that is explained can be defended;
+  a gap where a number should be cannot.
+- **No rate at all** — the sixteen orders raised before any of this existed. The
+  single plain `Total` they have always printed. They are not given a rate now:
+  putting a VAT line on a paper already sent to a supplier is worse than leaving
+  it off.
+
+**The draft is different, and had to be.** `po/draft/%` is a form, and the point
+of it is that the figures move as quantities are typed, before anything is saved.
+So its foot is added up in the browser by the injected script, which had no way
+of knowing the rate: it is on the order, not on any row in front of it.
+`tec_production_views_pre_render()` hands it over in `drupalSettings`, and only
+when the order really is a purchase order with a rate.
+
+That guard matters because **the same script runs on the sales draft**. It asks
+for a rate, and when there is none it draws the single `Grand Total` it always
+drew. So purchases gained VAT and sales has not noticed.
+
+The VAT is rounded to the satang before being added, in the browser exactly as in
+`Vat::on()`. Add first and round after and the draft and the printed order end up
+a coin apart on the way to the supplier.
+
+- Built by `scripts/poner-el-iva-en-el-pie.php` (the view) and
+  `scripts/el-borrador-suma-el-iva.php` (the script). Both safe to run twice.
+- Test: `scripts/se-suma-el-iva.php` — a Thai supplier and a foreign one, both
+  screens read as a person reads them, the rate reaching the purchase draft and
+  not the sales one, and the proforma proved untouched.
+- Guardian: section 9, seven checks.
 
 ### Company settings, and the settings that had no screen (16 August 2026)
 `/admin/config/tec/company`, `src/Form/CompanySettingsForm.php`. Two things on it:

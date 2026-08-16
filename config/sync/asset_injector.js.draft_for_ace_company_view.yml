@@ -9,8 +9,8 @@ label: 'Draft for Ace company view'
 code: |-
   jQuery(document).ready(function () {
       // The column every figure here is about: the line total. It is what the row
-      // shows, what the grand total adds up and what ends up on the paper, so it
-      // is the one that has to be right.
+      // shows, what the foot adds up and what ends up on the paper, so it is the
+      // one that has to be right.
       var TOTAL = '.views-field-field-tec-line-item-total-number';
 
       // Two draft screens share this script and they do not name their columns
@@ -24,6 +24,14 @@ code: |-
 
       function money(amount) {
           return '\u0E3F ' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
+
+      // The rate the server stamped on this order, or null when there is none.
+      // Only the purchase draft is handed one. The sales draft gets nothing on
+      // purpose and so keeps the single total it has always had.
+      function vatRate() {
+          var given = (window.drupalSettings || {}).tecPurchaseVat;
+          return given && typeof given.rate === 'number' ? given.rate : null;
       }
 
       // Writes the line total into its cell and hands it back.
@@ -52,27 +60,61 @@ code: |-
           return total;
       }
 
+      // What goes at the foot of the table: one line without a rate, three with
+      // one. The VAT is rounded to the satang before being added, which is how
+      // the server does it, or the draft and the printed order would end up
+      // disagreeing by a coin on the way to the supplier.
+      function footLines(subtotal) {
+          var rate = vatRate();
+          if (rate === null) {
+              return [['Grand Total', subtotal, true]];
+          }
+
+          var vat = Math.round(subtotal * rate) / 100;
+          return [
+              ['Subtotal', subtotal, false],
+              ['VAT ' + String(parseFloat(rate.toFixed(2))) + '%', vat, false],
+              ['Total', subtotal + vat, true]
+          ];
+      }
+
+      function updateFoot(table, subtotal) {
+          table.find('.tec-foot-row').remove();
+
+          // Counted off the table rather than hardcoded. The number of columns is
+          // exactly the sort of thing that changes, and when it did, the old fixed
+          // span of eight left this row hanging off the edge.
+          var columns = table.find('thead th').length || table.find('tbody tr').first().find('td').length;
+          var body = table.find('tbody');
+
+          footLines(subtotal).forEach(function (line) {
+              var row = jQuery('<tr class="tec-foot-row"><td class="views-align-right"></td><td class="views-align-right"></td></tr>');
+              var label = jQuery('<span>').text(line[0]);
+              var value = jQuery('<span>').text(money(line[1]));
+
+              if (line[2]) {
+                  // The figure that gets paid, told apart from the two above it.
+                  row.addClass('grand-total-row');
+                  label = jQuery('<strong>').append(label);
+                  value = jQuery('<strong>').addClass('grand-total-value').append(value);
+              }
+
+              row.find('td').first().attr('colspan', Math.max(1, columns - 1)).append(label);
+              row.find('td').last().append(value);
+              body.append(row);
+          });
+      }
+
       function updateGrandTotal() {
           jQuery('.views-table').each(function () {
               var table = jQuery(this);
-              var grandTotal = 0;
+              var subtotal = 0;
 
-              table.find('tbody tr').not('.grand-total-row').each(function () {
-                  grandTotal += updateRowTotal(jQuery(this));
+              table.find('tbody tr').not('.tec-foot-row').not('.grand-total-row').each(function () {
+                  subtotal += updateRowTotal(jQuery(this));
               });
 
-              var row = table.find('.grand-total-row');
-              if (!row.length) {
-                  row = jQuery('<tr class="grand-total-row"><td class="views-align-right"><strong>Grand Total</strong></td><td class="views-align-right"><strong class="grand-total-value"></strong></td></tr>');
-                  table.find('tbody').append(row);
-              }
-
-              // Counted off the table rather than hardcoded. The number of columns
-              // is exactly the sort of thing that changes, and when it did, the
-              // old fixed span of eight left this row hanging off the edge.
-              var columns = table.find('thead th').length || table.find('tbody tr').first().find('td').length;
-              row.find('td').first().attr('colspan', Math.max(1, columns - 1));
-              row.find('.grand-total-value').text(money(grandTotal));
+              updateFoot(table, subtotal);
           });
       }
 

@@ -1318,6 +1318,91 @@ foreach ($etm->getStorage('tec_crm')->loadMultiple() as $contactoIva) {
 informar('proveedores que ya dicen como tributan', $fichasIva, 'de ' . $proveedoresIva);
 
 // -----------------------------------------------------------------------------
+// 8. El pais de un contacto se elige de una vez.
+// -----------------------------------------------------------------------------
+titulo('8. El pais de un contacto se elige de una vez');
+
+// El campo de direccion cambia de forma segun el pais: Tailandia pide provincia
+// y Singapur no. Eso lo resuelve el ajax del propio modulo Address. Estuvo
+// apagado, porque tiraba el proceso de Apache, y en su lugar un boton escondido
+// recargaba la pagina entera cada vez que el selector cambiaba. Con doscientos
+// cincuenta y siete paises en la lista eso era inservible: cualquier roce del
+// teclado enviaba el formulario a medio elegir y el pais parecia deseleccionarse
+// solo. Si alguien vuelve a apagarlo, que se sepa aqui y no en una ficha nueva.
+foreach (['tec_contact_organization', 'tec_contact_person'] as $bundlePais) {
+  $fichaPais = \Drupal::service('entity.form_builder')->getForm(
+    $etm->getStorage('tec_crm')->create(['type' => $bundlePais])
+  );
+  $cajaPais = $fichaPais['field_tec_address']['widget'][0]['address'] ?? [];
+  // El envoltorio address_country guarda el selector de verdad bajo su misma
+  // clave, asi que hay que bajar un piso antes de mirar.
+  $selectorPais = $cajaPais['country_code']['country_code'] ?? $cajaPais['country_code'] ?? [];
+
+  comprobar($resultados, 'el pais de ' . $bundlePais . ' cambia sin recargar',
+    !empty($selectorPais['#ajax']['callback'])
+      && ($selectorPais['#ajax']['wrapper'] ?? '') === ($cajaPais['#wrapper_id'] ?? ''),
+    empty($selectorPais['#ajax'])
+      ? 'sin ajax: alguien lo ha vuelto a quitar'
+      : (string) ($selectorPais['#ajax']['wrapper'] ?? ''));
+
+  comprobar($resultados, 'y no vuelve el boton que recargaba la pagina',
+    !isset($fichaPais['tec_crm_ux_address_rebuild']),
+    'la prueba entera esta en scripts/se-elige-el-pais.php');
+}
+
+// -----------------------------------------------------------------------------
+// 9. El pedido de compra ensena lo que de verdad se paga.
+// -----------------------------------------------------------------------------
+titulo('9. El pedido de compra ensena lo que de verdad se paga');
+
+// El porcentaje se estampaba en cada pedido desde el punto 7 y no lo leia nadie:
+// las tres pantallas de compra sumaban las lineas y llamaban Total al resultado.
+// Con un proveedor tailandes eso no es lo que se paga.
+$vistaIva = \Drupal\views\Entity\View::load('tec_order_sales_order_line_items');
+$pantallasIva = $vistaIva ? $vistaIva->get('display') : [];
+
+// La ficha del pedido y el impreso lo pintan en el servidor, cada una con el
+// mismo manejador, escrito una vez, para que no puedan discrepar en un satang.
+foreach (['block_2' => 'la ficha del pedido', 'page_3' => 'el impreso'] as $pantallaIva => $comoSeLlama) {
+  $pieIva = array_keys($pantallasIva[$pantallaIva]['display_options']['footer'] ?? []);
+  comprobar($resultados, $comoSeLlama . ' lleva su pie de IVA',
+    in_array('tec_purchase_vat_totals', $pieIva, TRUE),
+    implode(', ', $pieIva) ?: 'SIN PIE');
+}
+
+// Y ninguna de las dos usa ya el total de antes, o saldrian dos totales que
+// dicen cosas distintas, uno encima del otro.
+$atiendeA = array_keys($pantallasIva['attachment_1']['display_options']['displays'] ?? []);
+comprobar($resultados, 'y ya no arrastran el total sin IVA de antes',
+  !array_intersect(['block_2', 'page_3'], $atiendeA),
+  implode(', ', $atiendeA));
+
+// El mismo trozo sigue poniendo el total en ventas, que no se ha tocado.
+comprobar($resultados, 'ventas conserva el suyo intacto',
+  !array_diff(['block_1', 'page_4'], $atiendeA),
+  implode(', ', $atiendeA));
+
+comprobar($resultados, 'el manejador esta dado de alta en Views',
+  isset(\Drupal::service('views.views_data')->get('views')['tec_purchase_vat_totals']['area']),
+  'tec_production.views.inc');
+
+// El borrador no puede pintarlo en el servidor: las cifras se mueven mientras se
+// teclea. Lo suma el navegador, y el porcentaje se lo tiene que pasar el gancho,
+// porque esta en el pedido y no en ninguna de las filas que tiene delante.
+$moduloPie = file_get_contents(DRUPAL_ROOT . '/modules/custom/tec_production/tec_production.module');
+comprobar($resultados, 'al borrador de compra le llega el porcentaje',
+  str_contains($moduloPie, 'tecPurchaseVat') && str_contains($moduloPie, "str_starts_with((string) \$view->getPath(), 'po/draft')"),
+  'en tec_production_views_pre_render');
+
+// Y el borrador de ventas corre el mismo javascript. Sin porcentaje se comporta
+// como siempre, asi que lo que hay que vigilar es que siga preguntando por el en
+// vez de dar por hecho que hay uno.
+$javascriptPie = (string) \Drupal::config('asset_injector.js.draft_for_ace_company_view')->get('code');
+comprobar($resultados, 'y el javascript solo pone el pie si lo recibe',
+  str_contains($javascriptPie, 'function vatRate()') && str_contains($javascriptPie, "return [['Grand Total', subtotal, true]];"),
+  'sin porcentaje, ventas se queda como estaba');
+
+// -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------
 $mal = array_filter($resultados, fn($r) => !$r['bien']);

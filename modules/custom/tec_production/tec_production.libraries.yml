@@ -59,6 +59,11 @@ receipt_state:
     theme:
       css/receipt-state.css: {}
 
+purchase_totals:
+  css:
+    theme:
+      css/purchase-totals.css: {}
+
 dxpr_gin_header_fix:
   css:
     theme:

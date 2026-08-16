@@ -55,6 +55,7 @@ dependencies:
     - phone_number
     - simple_popup_views
     - taxonomy
+    - tec_production
     - user
     - views_bootstrap
     - views_conditional
@@ -884,8 +885,6 @@ display:
       display_extenders: {  }
       displays:
         block_1: block_1
-        block_2: block_2
-        page_3: page_3
         page_4: page_4
       attachment_position: after
     cache_metadata:
@@ -4985,6 +4984,7 @@ display:
         filters: false
         filter_groups: false
         header: false
+        footer: false
       relationships:
         reverse__tec_order__field_tec_line_items:
           id: reverse__tec_order__field_tec_line_items
@@ -5017,6 +5017,16 @@ display:
       use_ajax: false
       display_description: 'Shows line items on Purchase order full view'
       header: {  }
+      footer:
+        tec_purchase_vat_totals:
+          id: tec_purchase_vat_totals
+          table: views
+          field: tec_purchase_vat_totals
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: tec_purchase_vat_totals
+          empty: true
       display_extenders:
         views_flag_refresh:
           flags:
@@ -11544,6 +11554,7 @@ display:
         filters: false
         filter_groups: false
         header: false
+        footer: false
       relationships:
         reverse__tec_order__field_tec_line_items:
           id: reverse__tec_order__field_tec_line_items
@@ -11587,6 +11598,16 @@ display:
           empty: true
           content: "<table style=\"width: 100%; border-collapse: collapse;\" class=\"table-1\">\r\n    <tr class=\"table-1-row-1\">\r\n        <td class=\"table-1-row-1-col-1 table-cell\" style=\"width: 50%;\">\r\n            <h5>Acta Non Verba Co., LTD.</h5>\r\n            67, 29 Nongmaikaen Rd.<br>\r\n            Muang Pattaya, Bang Lamung District, Chon Buri<br>\r\n            20150 Thailand<br>\r\n            Phone: +66 (0) 910 699 203\r\n        </td>\r\n        <td class=\"table-1-row-1-col-2 table-cell\" style=\"width: 50%; text-align: right;\">\r\n            <table style=\"width: 100%; border-collapse: collapse;\" class=\"table-1-1\">\r\n                <tr class=\"table-1-1-row-1\">\r\n                    <td class=\"table-1-1-row-1-col-1 table-cell\"><strong>PURCHASE ORDER #</strong></td>\r\n                    <td class=\"table-1-1-row-1-col-2 table-cell\" style=\"text-align: right;\">{{ title }}</td>\r\n                </tr>\r\n                <tr class=\"table-1-1-row-2\">\r\n                    <td class=\"table-1-1-row-2-col-1 table-cell\" style=\"font-weight: bold;\"><strong>DATE</strong></td>\r\n                    <td class=\"table-1-1-row-2-col-2 table-cell\" style=\"text-align: right;\">{{ changed }}</td>\r\n                </tr>\r\n            </table>\r\n        </td>\r\n    </tr>\r\n</table>\r\n\r\n<table style=\"width: 100%; border-collapse: collapse;\" class=\"table-2\">\r\n    <tr class=\"table-2-row-1\">\r\n        <td class=\"table-2-row-1-col-1 table-cell\" style=\"width: 80%;\">\r\n            <table style=\"width: 100%; border-collapse: collapse;\" class=\"table-2-1\">\r\n                <tr class=\"table-2-1-row-1\">\r\n                    <td class=\"table-2-1-row-1-col-1 table-cell\" style=\"text-align: right;\"><strong>SUPPLIER:</strong><br>\r\n                    {{ field_tec_vendor_1 }}</td>\r\n                </tr>\r\n            </table>\r\n        </td>\r\n        <td class=\"table-2-row-1-col-2 table-cell\" style=\"width: 20%; text-align: right;\">\r\n            <table style=\"width: 100%; border-collapse: collapse;\">\r\n                <tr class=\"table-2-2-row-1\">\r\n                    <td class=\"table-2-2-row-1-col-1 table-cell\" style=\"text-align: right;\"><strong>SHIP TO:</strong><h5>Acta Non Verba Co., LTD.</h5>\r\n                        67, 29 Nongmaikaen Rd.<br>\r\n                        Muang Pattaya, Bang Lamung District, Chon Buri<br>\r\n                        20150 Thailand<br>\r\n                        Phone: +66 (0) 910 699 203</td>\r\n                </tr>\r\n            </table>\r\n        </td>\r\n    </tr>\r\n</table>"
           tokenize: true
+      footer:
+        tec_purchase_vat_totals:
+          id: tec_purchase_vat_totals
+          table: views
+          field: tec_purchase_vat_totals
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: tec_purchase_vat_totals
+          empty: true
       display_extenders:
         views_flag_refresh:
           flags:

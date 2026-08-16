@@ -22,6 +22,46 @@ function tec_production_page_attachments(array &$attachments) {
 }
 
 /**
+ * Implements hook_views_pre_render().
+ *
+ * Hands the purchase draft the VAT rate of the order it is editing.
+ *
+ * Every other screen draws its own foot on the server. The draft cannot: it is
+ * a form, and the whole point is that the figures move as quantities are typed,
+ * before anything is saved. So its total is added up in the browser, and the
+ * browser has no way of knowing the rate -- it is on the order, not on any of
+ * the rows in front of it.
+ *
+ * Nothing is handed over unless the order really is a purchase order with a
+ * rate stamped on it. The sales draft runs the same script, and it must keep
+ * showing the single total it has always shown until sales VAT is a question
+ * somebody has answered.
+ */
+function tec_production_views_pre_render(\Drupal\views\ViewExecutable $view): void {
+  if ($view->id() !== 'tec_order_sales_order_line_items') {
+    return;
+  }
+  // By path rather than by display id, because 'po/draft' says which screen
+  // this is and 'page_1' does not.
+  if (!str_starts_with((string) $view->getPath(), 'po/draft')) {
+    return;
+  }
+
+  $id = (int) ($view->args[0] ?? 0);
+  $order = $id > 0 ? \Drupal::entityTypeManager()->getStorage('tec_order')->load($id) : NULL;
+  if (!$order) {
+    return;
+  }
+
+  $sums = \Drupal\tec_production\Vat::breakdown($order);
+  if (!$sums || $sums['rate'] === NULL) {
+    return;
+  }
+
+  $view->element['#attached']['drupalSettings']['tecPurchaseVat']['rate'] = $sums['rate'];
+}
+
+/**
  * Implements hook_ENTITY_TYPE_presave() for tec_order.
  *
  * Stamps a new order with the two things it must not be left to decide for

@@ -1778,6 +1778,143 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-16 (cierre) — El pie del pedido de compra: base, IVA y lo que de verdad se paga
+
+El dueño lo vio él solo: creó un pedido a POLYTEC, proveedor tailandés registrado, y dijo que **no
+veía el IVA por ningún lado**. Tenía razón a medias, que es lo interesante. El 7% **sí** estaba
+guardado en el pedido —lo estampa el gancho desde el trabajo anterior— pero estaba oculto en la
+pantalla, y ninguna de las tres sumas de compra lo tenía en cuenta. Las tres sumaban las líneas y
+llamaban **Total** al resultado. Con un proveedor tailandés eso no es lo que se paga, así que el
+número de la pantalla y el de la factura no podían coincidir nunca.
+
+#### De dónde salía cada total, que no era de donde parecía
+
+Lo primero fue averiguarlo, porque las tres pantallas lo hacían distinto y solo una era javascript:
+
+| Pantalla | Quién ponía el total | Qué sumaba |
+|---|---|---|
+| Ficha del pedido (`/tec_order/838`) | `attachment_1` de la vista, con `group_type: sum` | las líneas, en SQL |
+| Impreso (`po/%/print`) | el mismo `attachment_1` | lo mismo |
+| Borrador (`po/draft/%`) | el javascript inyectado, en el navegador | precio por cantidad, fila a fila |
+
+Y una trampa que decidió el diseño: **`attachment_1` lo comparten ventas y compras**. Sirve también
+al bloque del pedido de venta y a la proforma. Meter el IVA ahí habría puesto una línea de IVA en
+las proformas de todos los clientes, que es exactamente lo que no se puede hacer todavía.
+
+#### Lo que se ha hecho
+
+Las dos pantallas que pinta el servidor dejan de usar ese trozo compartido y terminan en un pie
+propio, dibujado por **un solo manejador escrito una vez**,
+`src/Plugin/views/area/VatTotals.php`. Es un *area* y no una columna porque habla del pedido, no de
+una línea, y debe salir una vez abajo pase lo que pase con las filas. La cuenta la hace
+`Vat::breakdown()`, que es también a quien preguntan la prueba y el guardián: tres respuestas
+libres de separarse es justo el fallo que no interesa tener.
+
+`attachment_1` sigue sirviendo a `block_1` y a `page_4` exactamente igual que antes. **Ventas no se
+ha enterado de nada**, y eso está comprobado en la prueba y en el guardián.
+
+#### Tres casos, porque se ven distintos
+
+- **Con porcentaje.** `Subtotal`, `VAT 7%`, `Total`.
+- **Con un cero estampado** —proveedor de fuera, o tailandés sin registrar—. Las mismas tres líneas,
+  con el IVA diciendo `VAT 0%`. Un cero explicado se defiende; un hueco donde debería haber una
+  cifra, no. Es el mismo criterio que se usará en la proforma.
+- **Sin porcentaje ninguno** —los dieciséis pedidos anteriores a todo esto—. El `Total` pelado de
+  siempre. No se les inventa un tipo ahora: poner una línea de IVA en un papel ya enviado a un
+  proveedor es peor que no ponerla.
+
+#### El borrador es otra cosa, y tenía que serlo
+
+`po/draft/%` es un formulario, y la gracia es que las cifras se muevan **según se teclean las
+cantidades**, antes de guardar nada. Así que ahí el pie lo suma el navegador. El problema es que el
+javascript no tenía manera de saber el 7: el porcentaje está en el pedido, no en ninguna de las
+filas que tiene delante. Se lo pasa `tec_production_views_pre_render()`, y solo cuando el pedido es
+de compra y trae porcentaje.
+
+Esa guarda no es adorno: **el mismo javascript corre en el borrador de ventas**. Pregunta si hay
+porcentaje y, cuando no lo hay, dibuja el `Grand Total` de una sola línea que dibujaba antes. Así
+compras gana el IVA y ventas sigue igual hasta que le toque.
+
+El IVA se redondea al satang **antes** de sumarlo, en el navegador exactamente igual que en
+`Vat::on()`. Sumar primero y redondear después deja el borrador y el impreso separados por una
+moneda camino del proveedor.
+
+#### Un detalle que costó dos intentos en la prueba
+
+La prueba creaba líneas con precio 100 y 50 y esperaba 1.000. Salió 9.356,49. La razón es que **una
+línea de compra no usa su propio precio**: ECA le pone el total a partir del coste de compra del
+material, y el precio escrito a mano se ignora. La prueba pasó a leer lo que quedó guardado en vez
+de dar por hecho lo que pensaba haber escrito, que además es lo correcto: lo que hay que comprobar
+es que el pie diga lo mismo que las filas de encima.
+
+- Construido por `scripts/poner-el-iva-en-el-pie.php` (la vista) y
+  `scripts/el-borrador-suma-el-iva.php` (el javascript). Los dos se pueden pasar dos veces.
+- Prueba: `scripts/se-suma-el-iva.php` — un proveedor tailandés y uno extranjero, las dos pantallas
+  leídas como las lee una persona, el porcentaje llegando al borrador de compra y no al de ventas,
+  y la proforma demostrada intacta.
+- Guardián: sección 9, siete comprobaciones. 100 de 100.
+
+#### Lo que falta, y a propósito
+
+**Ventas.** Está confirmado con el dueño que ANV está registrada en Tailandia y vende a tailandeses
+y a extranjeros, y que el tipo de la venta debe salir del país del cliente, estamparse al crear el
+pedido y poder corregirse después. Es el mismo mecanismo, pero **la decisión no es la misma**: en
+compras la pregunta es si el proveedor cobra IVA, y en ventas es si a ese cliente hay que
+cobrárselo. Se hace por separado para no arrastrar una respuesta a una pregunta distinta.
+
+### 2026-08-16 (noche) — El país se deseleccionaba solo: la culpa era del apaño, no del país
+
+El dueño estaba dando de alta un cliente tailandés y contó que **al elegir el país la pantalla
+saltaba y el país se quedaba sin marcar**. Pasaba en `/admin/content/tec_crm/add/tec_contact_organization`.
+
+#### Lo que no era
+
+El registro estaba limpio: ni un error de PHP a esa hora. Y el servidor hacía su trabajo bien, dos
+veces comprobado: primero con una subpetición interna y después **por HTTP de verdad, atravesando
+Apache**, que es lo único que reproduce lo que ve el navegador. En las dos, Tailandia volvía marcada
+y aparecían los campos tailandeses. La estructura de la página también estaba sana: un solo
+selector de país, un solo formulario, los dos javascript cargados.
+
+#### Lo que era
+
+El módulo Address trae de fábrica un ajax en el selector de país: cambias de país y se rehace solo
+el recuadro de la dirección, porque cada país pide campos distintos —Tailandia quiere provincia,
+Singapur no—. **Ese ajax estaba arrancado a mano.** En su lugar había un botón escondido y un
+javascript nuestro que, en cuanto el selector lanzaba un `change`, **enviaba el formulario entero y
+recargaba la página**.
+
+Con **257 países en la lista**, eso es inservible. Un selector nativo dispara `change` con cada
+tecla y con cada vuelta de rueda del ratón: el dueño no llegaba a Tailandia, la página se le iba a
+medio elegir. De ahí el salto, y de ahí que pareciera deseleccionarse solo.
+
+#### Por qué estaba arrancado, y por qué ya no hace falta
+
+El comentario del código lo explicaba: el ajax **tiraba el proceso de Apache** en esta máquina
+Windows, con un `STATUS_ACCESS_VIOLATION`. Era verdad en su día. Se volvió a preguntar: **diez
+cambios de país seguidos por HTTP real, con cinco países distintos incluido Tailandia**, todos con
+respuesta correcta y ninguna caída.
+
+Lo más probable es que la caída ya la arreglara `tec_crm_ux_address_neutralize_group_keys()`, que se
+escribió a la vez y quita unas claves `#group` numéricas que Address usa para maquetar y que el
+Form API confunde con agrupaciones de verdad, corrompiendo el árbol del ajax. **Esa función se
+queda**; apagar el ajax encima era cinturón y tirantes.
+
+#### Lo que se ha ido
+
+- El botón escondido `tec_crm_ux_address_rebuild` y su manejador de envío.
+- `tec_crm_ux_address_disable_ajax()`, que era quien arrancaba el `#ajax`.
+- El fichero `js/crm-address.js` y la biblioteca `tec_crm_ux/address` que lo cargaba.
+
+Ahora se elige el país y **no se recarga nada**: se cambia solo el recuadro de la dirección.
+
+#### Que no se vuelva a apagar sin que nadie se entere
+
+- `scripts/se-elige-el-pais.php` comprueba, en las dos clases de ficha, que el selector lleva su
+  ajax, que apunta al recuadro correcto, que no ha vuelto el botón escondido y que la lista trae los
+  257 países. Y comprueba lo que de verdad importa: que con Tailandia sale provincia y con Singapur
+  no.
+- El guardián tiene una sección 8 con lo mismo en corto. Quedó en **93 de 93**.
+
 ### 2026-08-16 — El mismo fallo, un campo más allá: los factores de conversión
 
 Cuatro horas después de dar por cerrado lo del coste de consumo, el dueño estaba editando el
@@ -2079,6 +2216,9 @@ campo existiera. El guardián lo cuenta como dato y no como fallo. No se les ha 
 **Ninguna pantalla enseña todavía base, IVA y total.** El porcentaje está oculto en todas las vistas
 del pedido, porque una línea suelta que diga `VAT %: 7.00` no es lo que nadie quiere leer: las tres
 cifras van juntas en un bloque de totales, y eso es el trabajo siguiente.
+
+> Hecho ese mismo día, ver *El pie del pedido de compra: base, IVA y lo que de verdad se paga*. El
+> porcentaje sigue oculto como campo suelto, que era lo correcto; las tres cifras salen juntas al pie.
 
 #### Dos cambios que aparecieron en la exportación y no son de nadie
 

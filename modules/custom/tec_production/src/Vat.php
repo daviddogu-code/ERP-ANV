@@ -139,4 +139,56 @@ final class Vat {
     return round($net * $rate / 100, 2);
   }
 
+  /**
+   * The money lines at the foot of a purchase order.
+   *
+   * Returns net, rate, vat and gross, or NULL if the order is not one this
+   * applies to. It lives here and not in the screens because the order page,
+   * the printed order and the guardian all ask the same question, and three
+   * answers free to drift apart is the bug worth not having.
+   *
+   * A rate of NULL is not the same as a rate of zero. Zero is an answer: this
+   * supplier is abroad or unregistered, and the document says so. NULL means
+   * the order was raised before any of this existed, and those are left with
+   * the plain total they have always shown -- printing a VAT line on a paper
+   * already sent to a supplier would be worse than printing none.
+   */
+  public static function breakdown(EntityInterface $order): ?array {
+    if ($order->getEntityTypeId() !== 'tec_order' || $order->bundle() !== 'tec_purchase_order') {
+      return NULL;
+    }
+
+    $net = self::netOf($order);
+    $stamped = $order->hasField(self::RATE_FIELD) && !$order->get(self::RATE_FIELD)->isEmpty();
+    if (!$stamped) {
+      return ['net' => $net, 'rate' => NULL, 'vat' => NULL, 'gross' => $net];
+    }
+
+    $rate = (float) $order->get(self::RATE_FIELD)->value;
+    $vat = self::on($net, $rate);
+
+    return ['net' => $net, 'rate' => $rate, 'vat' => $vat, 'gross' => round($net + $vat, 2)];
+  }
+
+  /**
+   * What the lines of an order add up to before tax.
+   *
+   * Added from the line totals that ECA already keeps, and not recalculated
+   * from cost times quantity, so that the foot of the page cannot disagree with
+   * the rows printed right above it.
+   */
+  private static function netOf(EntityInterface $order): float {
+    if (!$order->hasField('field_tec_line_items')) {
+      return 0.0;
+    }
+
+    $net = 0.0;
+    foreach ($order->get('field_tec_line_items')->referencedEntities() as $line) {
+      if ($line->hasField('field_tec_line_item_total_number')) {
+        $net += (float) $line->get('field_tec_line_item_total_number')->value;
+      }
+    }
+    return round($net, 2);
+  }
+
 }
