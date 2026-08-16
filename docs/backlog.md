@@ -1778,6 +1778,58 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-16 (noche) — «Algo se ha roto»: había dos calculadoras y solo una se enteró del cambio
+
+El dueño abrió un borrador de compra y encontró esto:
+
+```
+1   PA-55 H 20 mm    [ 5 ]   Sheet   ฿ 799,70   ฿ 0,00      <- mal
+2   PA-55 H 18 mm    [ 1 ]   Sheet   ฿ 719,73   ฿ 719,73    <- bien
+                                     Subtotal   ฿ 4.718,23  <- bien, y son las dos líneas
+                                     VAT 7%     ฿ 330,28    <- bien
+                                     Total      ฿ 0,00      <- mal
+```
+
+Lo raro era la mezcla: el subtotal de abajo valía 4.718,23, que es justo 799,70 × 5 + 719,73 × 1, o sea
+que **alguien había calculado bien la fila que arriba salía a cero**. Esa contradicción solo se explica
+si hay dos manos escribiendo en la misma celda, y las había.
+
+El borrador de compra cargaba dos calculadoras a la vez. Una es la del inyector
+`draft_for_ace_company_view`, que es la que se ha ido tocando estos días y la que dibuja el pie con el
+IVA. La otra vivía en `admin_form_styles`, colgada de `/po/draft/` desde hacía meses, y hacía lo mismo:
+recorría las filas, multiplicaba y escribía el importe. Mientras las dos dijeron lo mismo, nadie tenía
+por qué notar que estaban las dos.
+
+Dejaron de decir lo mismo por el cambio de esa misma tarde, el de congelar el precio: el borrador cambió
+la columna del coste del material por el precio de la propia línea. La segunda calculadora seguía
+buscando `td.views-field-field-tec-cost`, no encontraba nada, `parseMoney('')` devolvía cero, y escribía
+`฿ 0,00` encima del importe que la primera acababa de dejar bien.
+
+Que solo se estropeara la fila 1 y el `Total` es el detalle que lo confirma: la segunda se dispara al
+teclear, y al teclear reescribe **la fila que se toca** y **el total general**, nada más. El dueño estaba
+escribiendo en la fila 1. Las líneas `Subtotal` y `VAT` no las conoce, y por eso quedaron bien.
+
+Nada llegó a la base de datos. El pedido 865 tenía sus 10 y sus 10 con 7.997,00 y 7.197,30 guardados
+mientras la pantalla decía cero, y el guardián confirma que las 53 líneas de compra siguen valiendo su
+precio por su cantidad. La calculadora sobrante sabía escribir en un campo oculto que sí se guardaba,
+pero esa columna se quitó del borrador el día que se eliminó el `Sub total` editable, así que llevaba
+semanas sin nada donde escribir.
+
+- Borrada entera: `js/purchase-order-calculator.js`, su librería y el enganche en
+  `admin_form_styles_page_attachments`, donde queda escrito por qué no debe volver. No se ha puesto nada
+  en su lugar: el script inyectado ya sumaba las filas y dibuja el pie, y además sirve a los dos
+  borradores, el de compra y el de venta.
+- De paso, `una-sola-suma-en-el-borrador.php` quita del script que queda el selector de reserva
+  `.views-field-field-tec-cost`, que era la misma trampa dormida: ninguna de las diecisiete pantallas de
+  línea enseña ya esa columna.
+- Guardián: dos comprobaciones nuevas que leen **todo** el javascript del sitio, el de los módulos y el
+  de los inyectores. Que ninguno nombre una columna que no existe, y que **una sola cosa** escriba los
+  importes del borrador. 115 de 115.
+
+La lección no es del selector, es del duplicado. Dos trozos de código haciendo la misma cuenta sobre las
+mismas celdas no dan la cara mientras coinciden; dan la cara meses después, cuando uno de los dos se
+actualiza y el otro no, y entonces el fallo no se parece a su causa.
+
 ### 2026-08-16 (noche) — El pie de la ficha cae debajo del Sub total
 
 Quedaba dicho como alternativa y el dueño la eligió en cuanto vio las tres pantallas en una tabla. Las

@@ -1513,6 +1513,41 @@ foreach (['page_1' => 'el borrador', 'block_2' => 'la ficha', 'page_3' => 'el im
 comprobar($resultados, 'ninguna pantalla de compra lee ya el coste de hoy del material',
   !$leenElMaterial, implode(', ', $leenElMaterial));
 
+// Y tampoco puede leerlo ningun javascript. El borrador tenia dos calculadoras
+// encima, la inyectada y otra en admin_form_styles colgada de /po/draft/, las
+// dos escribiendo las mismas celdas. Mientras coincidieron no se noto; el dia
+// que la columna del coste dejo su sitio al precio de la linea, la segunda
+// siguio buscandola, no la encontro, multiplico por cero y dejo un 0,00 encima
+// del subtotal bueno. Se borro entera. La regla que queda es: una sola cosa
+// hace las cuentas del borrador, y no nombra columnas que no existen.
+$javascriptDelSitio = [];
+foreach (['modules/custom', 'themes/custom'] as $dondeMirar) {
+  if (!is_dir(DRUPAL_ROOT . '/' . $dondeMirar)) {
+    continue;
+  }
+  $paseo = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(DRUPAL_ROOT . '/' . $dondeMirar));
+  foreach ($paseo as $fichero) {
+    if ($fichero->isFile() && strtolower($fichero->getExtension()) === 'js') {
+      $javascriptDelSitio[$dondeMirar . '/' . $fichero->getBasename()] = (string) file_get_contents($fichero->getPathname());
+    }
+  }
+}
+foreach (\Drupal::configFactory()->listAll('asset_injector.js.') as $nombreInyector) {
+  $javascriptDelSitio[$nombreInyector] = (string) \Drupal::config($nombreInyector)->get('code');
+}
+
+$nombranElCoste = array_keys(array_filter($javascriptDelSitio,
+  fn(string $codigo): bool => str_contains($codigo, 'views-field-field-tec-cost')));
+comprobar($resultados, 'ni ningun javascript, que ya no existe esa columna',
+  !$nombranElCoste, implode(', ', $nombranElCoste));
+
+$hacenLasCuentas = array_keys(array_filter($javascriptDelSitio,
+  fn(string $codigo): bool => str_contains($codigo, 'views-field-field-tec-line-item-total-number')
+    || str_contains($codigo, 'grand-total-value')));
+comprobar($resultados, 'y una sola cosa escribe los importes del borrador',
+  $hacenLasCuentas === ['asset_injector.js.draft_for_ace_company_view'],
+  implode(', ', $hacenLasCuentas) ?: 'ninguna, que tampoco puede ser');
+
 // Lo anterior es como esta montado. Esto es si de verdad cuadra: cada linea
 // guardada tiene que valer su precio por su cantidad. Una sola que no cuadre
 // significa que algo ha vuelto a escribir importes por su cuenta.

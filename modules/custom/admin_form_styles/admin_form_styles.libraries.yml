@@ -26,10 +26,3 @@ inventory-calculator:
   dependencies:
     - core/drupal
     - core/once
-
-purchase_order_calculator:
-  js:
-    js/purchase-order-calculator.js: {}
-  dependencies:
-    - core/jquery
-    - core/drupal

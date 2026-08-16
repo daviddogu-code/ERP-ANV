@@ -573,6 +573,17 @@ a coin apart on the way to the supplier.
   not the sales one, and the proforma proved untouched.
 - Guardian: section 9, ten checks.
 
+**One calculator, not two.** The purchase draft used to load a second one from
+`admin_form_styles`, hooked to `/po/draft/`, doing the same sums into the same
+cells. Two scripts agreeing on a figure look like one script; they only give
+themselves away when one is updated and the other is not. That day came when the
+draft swapped the material's cost column for the line's own price: the other one
+kept looking for `td.views-field-field-tec-cost`, found nothing, multiplied by
+zero and wrote `฿ 0.00` over a subtotal the injected script had just got right.
+It was deleted rather than repaired, since the injected script already does
+everything it did. Guardian, section 10: no JavaScript anywhere names a column
+that no screen has, and exactly one thing writes the draft's money.
+
 ### The draft and the order page read alike (16 August 2026)
 They were the same information written two ways. The same column was **Unit of
 Purchase (UoP)** on the draft and **Unit** on the order page; the cost was **Cost

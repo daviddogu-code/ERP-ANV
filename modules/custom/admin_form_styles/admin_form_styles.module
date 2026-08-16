@@ -44,11 +44,15 @@ function admin_form_styles_page_attachments(array &$attachments) {
   $current_path = \Drupal::service('path.current')->getPath();
   $request = \Drupal::request();
 
-  // Purchase Order Calculator - FIRST PRIORITY
-  if (strpos($current_path, '/po/draft/') !== FALSE) {
-    $attachments['#attached']['library'][] = 'admin_form_styles/purchase_order_calculator';
-    return; // Exit early to avoid conflicts
-  }
+  // The purchase draft used to load a second calculator here, on top of the one
+  // in asset_injector.js.draft_for_ace_company_view. Both wrote the same cells,
+  // so while they agreed nobody noticed. They stopped agreeing the day the draft
+  // swapped its cost column for the line's own price: this one still looked for
+  // td.views-field-field-tec-cost, found nothing, multiplied by zero and wrote
+  // "฿ 0.00" over a subtotal that the other one had just got right.
+  //
+  // Nothing was added back in its place. The injected script already totals the
+  // rows and draws the foot, and it does it for the sales draft too.
 
   // Load on taxonomy add/edit forms (original functionality)
   if (strpos($route_name, 'entity.taxonomy_term.add_form') !== FALSE ||

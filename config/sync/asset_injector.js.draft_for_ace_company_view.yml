@@ -13,13 +13,12 @@ code: |-
       // one that has to be right.
       var TOTAL = '.views-field-field-tec-line-item-total-number';
 
-      // Two draft screens share this script and they do not name their columns
-      // alike. A sales line carries its own price and its quantity box is the
-      // first in the view; a purchase line is priced from the material's purchase
-      // cost and its quantity box is the second, so Views suffixes the class with
-      // -1. Rather than work it out from the address, each row is asked which of
-      // the two it happens to have.
-      var PRICE = '.views-field-field-tec-price, .views-field-field-tec-cost';
+      // Both draft screens price a line the same way, from the line's own price,
+      // so there is one column to read. What they do not share is the quantity
+      // box: it is the first in the sales view and the second in the purchase
+      // one, and Views suffixes the class of the second with -1. Rather than work
+      // it out from the address, each row is asked which of the two it has.
+      var PRICE = '.views-field-field-tec-price';
       var QTY = '.views-field-form-field-field-tec-quantity input, .views-field-form-field-field-tec-quantity-1 input';
 
       function money(amount) {
