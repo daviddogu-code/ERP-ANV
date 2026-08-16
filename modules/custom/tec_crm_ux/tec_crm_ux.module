@@ -353,31 +353,16 @@ function tec_crm_ux_field_widget_complete_form_alter(&$field_widget_complete_for
 /**
  * #after_build for CRM address widgets.
  *
- * Address country AJAX crashes the Apache/PHP worker on this Windows host
- * (STATUS_ACCESS_VIOLATION) and/or returns "form outdated". Disable Address
- * AJAX and rebuild the form with a normal submit instead.
+ * Address country AJAX once took down the Apache worker on this host, so it was
+ * stripped out and the whole page reloaded on every country change instead.
+ * That reload made the country list unusable: any stray change event, including
+ * arrowing through the 250-odd options, posted the form mid-choice. The AJAX no
+ * longer crashes, the integer #group keys neutralised below being the likely
+ * cause, so it is back on and nothing reloads.
  */
 function tec_crm_ux_address_after_build(array $element, FormStateInterface $form_state): array {
-  tec_crm_ux_address_disable_ajax($element);
   tec_crm_ux_address_neutralize_group_keys($element);
   return $element;
-}
-
-/**
- * Strip #ajax from Address country / subdivision elements.
- */
-function tec_crm_ux_address_disable_ajax(array &$element): void {
-  $strip = static function (array &$el) use (&$strip): void {
-    if (isset($el['#ajax'])) {
-      unset($el['#ajax']);
-    }
-    foreach (Element::children($el) as $key) {
-      if (isset($el[$key]) && is_array($el[$key])) {
-        $strip($el[$key]);
-      }
-    }
-  };
-  $strip($element);
 }
 
 /**
@@ -394,13 +379,6 @@ function tec_crm_ux_address_neutralize_group_keys(array &$element): void {
     }
     tec_crm_ux_address_neutralize_group_keys($element[$key]);
   }
-}
-
-/**
- * Submit handler: rebuild CRM form after country/province change (no save).
- */
-function tec_crm_ux_address_rebuild_submit(array &$form, FormStateInterface $form_state): void {
-  $form_state->setRebuild(TRUE);
 }
 
 /**
@@ -481,26 +459,11 @@ function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $fo
 
   $form['#attributes']['class'][] = 'tec-crm-contact-form';
   $form['#attached']['library'][] = 'tec_crm_ux/prefill';
-  $form['#attached']['library'][] = 'tec_crm_ux/address';
   $form['#after_build'][] = 'tec_crm_ux_contact_form_after_build';
   $form['#validate'][] = 'tec_crm_ux_contact_form_validate';
   $form['#cache']['contexts'][] = 'url.query_args:tipo';
   $form['#cache']['contexts'][] = 'url.query_args:prefill';
   $form['#cache']['contexts'][] = 'url.query_args:works_at';
-
-  // Non-AJAX rebuild trigger used by crm-address.js when Country changes.
-  $form['tec_crm_ux_address_rebuild'] = [
-    '#type' => 'submit',
-    '#name' => 'tec_crm_ux_address_rebuild',
-    '#value' => t('Refresh address fields'),
-    '#limit_validation_errors' => [],
-    '#submit' => ['tec_crm_ux_address_rebuild_submit'],
-    '#attributes' => [
-      'class' => ['tec-crm-address-rebuild', 'visually-hidden'],
-      'formnovalidate' => 'formnovalidate',
-    ],
-    '#weight' => 1000,
-  ];
 
   if ($entity->isNew() && !$form_state->isSubmitted()) {
     $tids = tec_crm_ux_requested_contact_type_tids($entity);
