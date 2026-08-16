@@ -7,13 +7,13 @@ dependencies:
     - eck.eck_type.tec_crm.tec_contact_organization
     - field.field.tec_crm.tec_contact_organization.field_tec_address
     - field.field.tec_crm.tec_contact_organization.field_tec_contact_type
+    - field.field.tec_crm.tec_contact_organization.field_tec_customer_code
     - field.field.tec_crm.tec_contact_organization.field_tec_email
     - field.field.tec_crm.tec_contact_organization.field_tec_incoterm
     - field.field.tec_crm.tec_contact_organization.field_tec_payment_terms
     - field.field.tec_crm.tec_contact_organization.field_tec_phone
     - field.field.tec_crm.tec_contact_organization.field_tec_purchase_currency
     - field.field.tec_crm.tec_contact_organization.field_tec_supplier_active
-    - field.field.tec_crm.tec_contact_organization.field_tec_supplier_code
     - field.field.tec_crm.tec_contact_organization.field_tec_tax_nr
     - field.field.tec_crm.tec_contact_organization.field_tec_website
   module:
@@ -425,7 +425,7 @@ third_party_settings:
             uuid: 273da1ea-af58-4537-abab-d6fa57aceb4a
             region: content
             configuration:
-              id: 'field_block:tec_crm:tec_contact_organization:field_tec_supplier_code'
+              id: 'field_block:tec_crm:tec_contact_organization:field_tec_customer_code'
               label_display: '0'
               context_mapping:
                 entity: layout_builder.entity
@@ -492,6 +492,14 @@ content:
     third_party_settings: {  }
     weight: 11
     region: blb_region_col_1
+  field_tec_customer_code:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 23
+    region: content
   field_tec_email:
     type: basic_string
     label: inline
@@ -538,14 +546,6 @@ content:
       format_custom_true: ''
     third_party_settings: {  }
     weight: 25
-    region: content
-  field_tec_supplier_code:
-    type: string
-    label: above
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
-    weight: 23
     region: content
   field_tec_tax_nr:
     type: string

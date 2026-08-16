@@ -10,7 +10,7 @@ dependencies:
 id: tec_crm_contacts
 label: 'TEC CRM: Contacts'
 type: 'canonical_entities:tec_crm'
-pattern: '/[tec_crm:field_tec_contact_type:0]/[tec_crm:id]'
+pattern: '/[tec_crm:field_tec_contact_type:0:entity:name]/[tec_crm:id]'
 selection_criteria:
   47aa150a-34ed-4fe0-ae72-cc9f83c0ffbd:
     id: 'entity_bundle:tec_crm'

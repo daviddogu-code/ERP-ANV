@@ -24,20 +24,18 @@ dependencies:
     - field.storage.tec_order.field_tec_customer
     - field.storage.tec_order.field_tec_line_items
     - flag.flag.tec_eca_line_item_lock
-    - views.view.tec_order_eca_count_orders
     - views.view.tec_order_eca_create_draft_excel_lover
   module:
     - eca_base
     - eca_content
     - eca_flag
     - eca_log
-    - eca_tamper
     - eca_views
     - flag
 id: process_sclj26d
 modeller: bpmn_io
 label: 'TEC Order: Create Sales order - Excel lover'
-version: '1.5'
+version: '1.4'
 weight: 5
 events:
   Event_05bhyol:
@@ -202,7 +200,7 @@ actions:
       owner: '[session_user:uid]'
     successors:
       -
-        id: Activity_0eek2xm
+        id: Activity_01wk5lh
         condition: ''
   Activity_0eek2xm:
     plugin: eca_save_entity
@@ -211,7 +209,7 @@ actions:
       object: order
     successors:
       -
-        id: Activity_01wk5lh
+        id: Activity_1yw0bq2
         condition: ''
   Activity_00es7rw:
     plugin: eca_set_field_value
@@ -252,11 +250,11 @@ actions:
       method: 'set:clear'
       strip_tags: false
       trim: false
-      save_entity: true
+      save_entity: false
       object: order
     successors:
       -
-        id: Activity_1ss3tdk
+        id: Activity_0eek2xm
         condition: ''
   Activity_1qp5g3h:
     plugin: action_goto_action
@@ -364,68 +362,4 @@ actions:
     successors:
       -
         id: Activity_02hh29p
-        condition: ''
-  Activity_1ss3tdk:
-    plugin: eca_views_query
-    label: 'Query Sales orders'
-    configuration:
-      token_name: soList
-      view_id: tec_order_eca_count_orders
-      display_id: so_count
-      arguments: '[entity:id]'
-    successors:
-      -
-        id: Activity_014crcd
-        condition: ''
-  Activity_014crcd:
-    plugin: eca_count
-    label: 'Count the Sales orders'
-    configuration:
-      token_name: soCount
-      list_token: soList
-    successors:
-      -
-        id: Activity_so_next
-        condition: ''
-  Activity_so_next:
-    plugin: 'eca_tamper:math'
-    label: 'Next SO number (+1)'
-    configuration:
-      operation: addition
-      flip: false
-      value: '1'
-      eca_data: '[soCount]'
-      eca_token_name: soNext
-      skip_on_nan: false
-    successors:
-      -
-        id: Activity_so_pad
-        condition: ''
-  Activity_so_pad:
-    plugin: 'eca_tamper:str_pad'
-    label: 'Pad SO number to 3 digits'
-    configuration:
-      pad_length: '3'
-      pad_string: '0'
-      pad_type: 0
-      eca_data: '[soNext]'
-      eca_token_name: soPad
-    successors:
-      -
-        id: Activity_0xwr7vw
-        condition: ''
-  Activity_0xwr7vw:
-    plugin: eca_set_field_value
-    label: 'Set the order nr/ title'
-    configuration:
-      field_name: title
-      field_value: '[entity:field_tec_customer_code:value] [current-date:custom:y]-[soPad]'
-      method: 'set:clear'
-      strip_tags: false
-      trim: true
-      save_entity: false
-      object: order
-    successors:
-      -
-        id: Activity_1yw0bq2
         condition: ''

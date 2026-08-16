@@ -37,13 +37,18 @@ const TEC_CRM_UX_PREFILL_TYPES = [
 
 /**
  * Purchase / supplier fields shown only when Contact type = Supplier.
+ *
+ * The short code used to be in here as field_tec_supplier_code. It left on
+ * 16 August 2026: the same company can be customer and supplier at once, so
+ * there is now one code per contact (field_tec_customer_code) sitting in the
+ * general block, where it is always visible. Hiding it behind the Supplier
+ * checkbox would hide it from half the orders that use it.
  */
 function tec_crm_ux_supplier_field_names(): array {
   return [
     'field_tec_purchase_currency',
     'field_tec_incoterm',
     'field_tec_payment_terms',
-    'field_tec_supplier_code',
     'field_tec_website',
     'field_tec_supplier_active',
   ];

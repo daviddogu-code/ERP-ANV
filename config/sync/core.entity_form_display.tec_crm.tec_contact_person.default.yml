@@ -6,6 +6,7 @@ dependencies:
     - eck.eck_type.tec_crm.tec_contact_person
     - field.field.tec_crm.tec_contact_person.field_tec_address
     - field.field.tec_crm.tec_contact_person.field_tec_contact_type
+    - field.field.tec_crm.tec_contact_person.field_tec_customer_code
     - field.field.tec_crm.tec_contact_person.field_tec_email
     - field.field.tec_crm.tec_contact_person.field_tec_incoterm
     - field.field.tec_crm.tec_contact_person.field_tec_name
@@ -13,7 +14,6 @@ dependencies:
     - field.field.tec_crm.tec_contact_person.field_tec_phone
     - field.field.tec_crm.tec_contact_person.field_tec_purchase_currency
     - field.field.tec_crm.tec_contact_person.field_tec_supplier_active
-    - field.field.tec_crm.tec_contact_person.field_tec_supplier_code
     - field.field.tec_crm.tec_contact_person.field_tec_website
     - field.field.tec_crm.tec_contact_person.field_tec_works_at
   module:
@@ -52,7 +52,6 @@ third_party_settings:
         - field_tec_purchase_currency
         - field_tec_incoterm
         - field_tec_payment_terms
-        - field_tec_supplier_code
         - field_tec_website
         - field_tec_supplier_active
       label: 'Supplier purchase defaults'
@@ -104,6 +103,14 @@ content:
     weight: 3
     region: content
     settings: {  }
+    third_party_settings: {  }
+  field_tec_customer_code:
+    type: string_textfield
+    weight: 1
+    region: content
+    settings:
+      size: 10
+      placeholder: 'e.g. ACTA'
     third_party_settings: {  }
   field_tec_email:
     type: email_default
@@ -182,14 +189,6 @@ content:
     region: content
     settings:
       display_label: true
-    third_party_settings: {  }
-  field_tec_supplier_code:
-    type: string_textfield
-    weight: 23
-    region: content
-    settings:
-      size: 30
-      placeholder: ''
     third_party_settings: {  }
   field_tec_website:
     type: string_textfield

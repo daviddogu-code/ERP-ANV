@@ -3,7 +3,6 @@
 namespace Drupal\tec_production\Form;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -34,20 +33,19 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * added to dollars.
  *
  * The button writes the same shape of purchase order as the older flag-driven
- * flow "TEC Order: Create Purchase order - Excel lover" (process_kryibry):
- * same title format, same owner, same link between order and lines. That flow
- * lists every material of the supplier with no quantities for someone to type;
- * this one lists only what is short, with the quantity already worked out.
+ * flow "TEC Order: Create Purchase order - Excel lover" (process_kryibry): same
+ * owner, same link between order and lines, and literally the same number, since
+ * both get their name from OrderNumber on save. That flow lists every material
+ * of the supplier with no quantities for someone to type; this one lists only
+ * what is short, with the quantity already worked out.
  */
 class PurchaseListForm extends FormBase {
 
   protected EntityTypeManagerInterface $entityTypeManager;
-  protected DateFormatterInterface $dateFormatter;
 
   public static function create(ContainerInterface $container) {
     $instance = parent::create($container);
     $instance->entityTypeManager = $container->get('entity_type.manager');
-    $instance->dateFormatter = $container->get('date.formatter');
     return $instance;
   }
 
@@ -421,10 +419,13 @@ class PurchaseListForm extends FormBase {
       $lines[] = $line;
     }
 
+    // No title here on purpose. The number comes from OrderNumber, through the
+    // presave hook, so that this screen and the flag-driven flow cannot hand out
+    // the same one. The supplier has to be in this array rather than set
+    // afterwards, because that is where the short code in the name comes from.
     $order_storage = $this->entityTypeManager->getStorage('tec_order');
     $order = $order_storage->create([
       'type' => 'tec_purchase_order',
-      'title' => $this->nextOrderNumber(),
       'field_tec_vendor' => $supplier_id,
       'field_tec_line_items' => array_map(static fn($line) => $line->id(), $lines),
       'uid' => $this->currentUser()->id(),
@@ -437,44 +438,6 @@ class PurchaseListForm extends FormBase {
     }
 
     return $order;
-  }
-
-  /**
-   * The next purchase order number: the ERP's "YY-N" shape, but unique.
-   *
-   * The older flow (process_kryibry) builds the same shape from a Views count
-   * that is scoped to the supplier and to published orders, and that excludes
-   * the order being created. That count repeats: two suppliers reach their
-   * third order and both orders are called the same, and two drafts in a row
-   * for one supplier are called the same too. So the shape is copied here, but
-   * not the count.
-   *
-   * N is how many purchase orders this year already carry, plus one, and then
-   * bumped until the title is actually free. The bump is what makes it safe:
-   * deleted orders leave gaps, the older flow leaves repeats, and a number that
-   * two orders share is not a number.
-   */
-  protected function nextOrderNumber(): string {
-    $storage = $this->entityTypeManager->getStorage('tec_order');
-    $year = $this->dateFormatter->format(time(), 'custom', 'y');
-
-    $number = 1 + (int) $storage->getQuery()
-      ->accessCheck(FALSE)
-      ->condition('type', 'tec_purchase_order')
-      ->condition('title', $year . '-', 'STARTS_WITH')
-      ->count()
-      ->execute();
-
-    while ($storage->getQuery()
-      ->accessCheck(FALSE)
-      ->condition('type', 'tec_purchase_order')
-      ->condition('title', $year . '-' . $number)
-      ->count()
-      ->execute()) {
-      $number++;
-    }
-
-    return $year . '-' . $number;
   }
 
   /**

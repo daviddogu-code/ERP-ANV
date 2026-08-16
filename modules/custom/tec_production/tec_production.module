@@ -22,6 +22,31 @@ function tec_production_page_attachments(array &$attachments) {
 }
 
 /**
+ * Implements hook_ENTITY_TYPE_presave() for tec_order.
+ *
+ * Names sales and purchase orders "CODE YY-NNN" the moment they are created.
+ *
+ * Here and nowhere else. Before this, three places built order numbers -- two
+ * ECA processes and the purchase list -- and all three could hand out a number
+ * another order already had. Whoever creates an order now does not get a say in
+ * what it is called, which is the point: the title of an order is its number,
+ * and a number nobody controls centrally is not a number.
+ *
+ * Only on creation. Renaming an order later would change what is printed on a
+ * document already sent to a supplier, and the whole reason for the number is
+ * that both sides can refer to the same one.
+ */
+function tec_production_tec_order_presave($order) {
+  if (!$order->isNew() || !\Drupal\tec_production\OrderNumber::handles($order->bundle())) {
+    return;
+  }
+  $name = \Drupal\tec_production\OrderNumber::forOrder($order);
+  if ($name !== '') {
+    $order->set('title', $name);
+  }
+}
+
+/**
  * Implements hook_contextual_links_alter().
  *
  * Site-wide fix: draggableviews attaches an "Order view" contextual link to

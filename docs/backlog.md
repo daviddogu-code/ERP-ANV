@@ -1032,16 +1032,14 @@ Sin prisa y sin orden fijo entre ellas.
      have no reorder point" con la lista de los que nadie vigila. Rellenar el punto de pedido de
      los 38 materiales del servidor es lo único que separa esta pantalla de ser útil, y es
      trabajo del dueño: cuánto aguantar de cada material no lo puede decidir un script.
-  2. **La numeración del flujo viejo repite números.** `process_kryibry` titula el pedido
-     año-cuenta, pero la cuenta sale de una vista (`tec_order_eca_count_orders`, pantalla
-     `po_count`) que está acotada **al proveedor** y **a los pedidos publicados**, y que además
-     no cuenta el que se está creando, porque nace sin publicar. O sea tres repeticiones a la
-     vez: dos proveedores llegan a su tercer pedido y los dos pedidos se llaman igual; dos
-     borradores seguidos del mismo proveedor se llaman igual; y el primer borrador de un
-     proveedor sin pedidos publicados sale como `26-0`. El botón nuevo copia el formato pero no
-     la cuenta: cuenta los pedidos del año y sube el número hasta que esté libre de verdad, así
-     que el suyo no lo tiene otro. Arreglar el flujo viejo es cambiar esa vista; mientras no se
-     haga, los números que reparte no identifican un pedido.
+  2. ~~**La numeración del flujo viejo repite números.**~~ **RESUELTO la noche del 16 de agosto de
+     2026**, y de raíz: la numeración de compras y de ventas vive ahora en un solo sitio
+     (`OrderNumber`, llamado desde un gancho de guardado), con el formato `CÓDIGO AA-NNN`, contador
+     por contacto, reinicio anual y comprobación de que el nombre esté libre. Los tres sitios que
+     fabricaban números —las dos ECA y la lista de la compra— han dejado de hacerlo. Ver la entrada
+     «Un número por pedido, y uno solo» en la sección Hecho, incluida la mina que se descubrió por
+     el camino: el parche del código corto vivía solo en el fichero que se ejecuta y no en el dibujo
+     que edita la pantalla, así que estaba a un clic de desaparecer.
   3. **Los dos caminos discrepan en el precio de la línea.** El flujo viejo `process_kryibry`
      copia en el precio el `field_tec_price` del material, que es el **coste de consumo**,
      mientras que el total lo calcula `process_fpvka81` con el `field_tec_cost`, que es el
@@ -1413,6 +1411,24 @@ tiempo. Se pueden borrar del repositorio.
 
 Nada de esto corre prisa, pero conviene que esté escrito para que no se descubra por sorpresa.
 
+- **Un token de campo en un patrón de direcciones se rompe si alguien enciende Layout Builder.** Los
+  tokens del tipo `[entidad:campo]` o `[entidad:campo:0]` **no leen el campo, lo renderizan**, y para
+  renderizarlo usan la vista `default` de la ficha. Con Layout Builder encendido en esa vista, los
+  campos listados no son lo que se pinta —se pintan las secciones—, así que el token sale vacío.
+
+  Ya cobró una vez, la noche del 16 de agosto de 2026: el patrón de las fichas de CRM era
+  `/[tec_crm:field_tec_contact_type:0]/[tec_crm:id]` y la ficha 33 pasó de `/customer/33` a `/33`. Se
+  arregló leyendo el término directamente con `:0:entity:name`.
+
+  **Sigue vivo en el patrón de los materiales**, `/material/[term:field_tec_material_type]/[term:name]`.
+  Hoy funciona porque los términos de taxonomía no se maquetan con Layout Builder. El día que alguien lo
+  encienda para los materiales, todas las direcciones de material se convertirán en `/material//nombre`,
+  y nadie se dará cuenta hasta que empiecen a aparecer redirecciones raras: la dirección sigue siendo
+  única, el sitio sigue funcionando, y el fallo solo asoma cuando se guarda una ficha. Cambiarlo a
+  `[term:field_tec_material_type:0:entity:name]` cuesta un minuto y quita la trampa; no se ha hecho ya
+  porque cambiar el patrón regenera las direcciones de los 38 materiales y eso deja 38 redirecciones que
+  habría que revisar.
+
 - **Las pestañas de Drupal no se leen en este sitio, y solo las ve el administrador.** Dos cosas
   independientes que se suman. La primera es de DXPR: en `css/components/tabs.css` saca la barra de
   pestañas del flujo con `position: absolute` y la sube su altura entera con `translate(-50%,-100%)`,
@@ -1749,6 +1765,137 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-16 (noche) — Un número por pedido, y uno solo: `KJ 26-001`
+
+El dueño lo pidió con un ejemplo de tres líneas: cliente A pide y sale `A 26-001`, cliente B pide y
+sale `B 26-001` —no 002—, y cuando A vuelve, `A 26-002`. Código corto del contacto, espacio, año de dos
+cifras, y un contador **por contacto** que se reinicia cada enero. Lo mismo en compras y en ventas.
+
+#### Lo que había
+
+Tres sitios fabricaban números de pedido y **los tres contaban distinto**:
+
+| Quién | Qué producía | Qué contaba |
+|---|---|---|
+| `PurchaseListForm::nextOrderNumber()` | `26-4` | pedidos de compra por prefijo, de todos los proveedores juntos |
+| ECA `process_kryibry` (compras) | `26-4` | filas de la vista `tec_order_eca_count_orders:po_count` |
+| ECA `process_sclj26d` (ventas) | `A 26-001` | lo mismo por `so_count` |
+
+Solo el de ventas conocía el código corto y los tres ceros. Y tenía tres agujeros, los dos primeros
+compartidos con el de compras:
+
+1. **La cuenta solo veía pedidos publicados**, y los dos flujos crean el pedido con `published: false`.
+   Un borrador no contaba nunca, así que el segundo pedido de un cliente recibía el número que ya
+   llevaba el primero. Dos pedidos con el mismo número no son una numeración.
+2. **Nadie comprobaba que el nombre estuviera libre.** Borrabas un pedido y su número volvía a
+   repartirse, con el primero ya impreso y enviado al proveedor.
+3. **No había filtro de año.** El `26-` del nombre venía de la fecha, pero el contador de detrás no se
+   reiniciaba en enero: el primer pedido de A en 2027 habría sido `A 27-004`.
+
+#### Lo que se ha hecho
+
+- **`modules/custom/tec_production/src/OrderNumber.php`**, clase nueva y único sitio donde se decide un
+  nombre. No dentro de `Purchasing`, que está documentada como la aritmética del tablero y la lista de
+  compra: la numeración de ventas no es eso.
+- **`hook_tec_order_presave()`** en `tec_production.module`. Solo al crear. Renombrar después cambiaría
+  lo que dice un papel ya enviado, y el número existe justo para que las dos partes citen el mismo.
+- **El contador cuenta nombres, no pedidos.** Cuenta los títulos que ya empiezan por `KJ 26-`, suma uno,
+  y luego **sube hasta que el nombre está libre de verdad**. Contar nombres ata el número a lo que se ha
+  repartido, así que sobrevive a que un pedido cambie de manos o le corrijan la fecha, y se reinicia
+  solo porque el año forma parte de lo que se cuenta. La subida es lo que lo hace seguro y no solo
+  probable.
+- **Los borradores (`tec_draft_order`) no gastan número**, a propósito: son un sitio de paso que se tira,
+  y gastar un número en uno dejaría un hueco en la serie de un cliente que nadie sabría explicar.
+- **`PurchaseListForm` ya no fabrica títulos.** Ni pasa uno: lo pone el gancho.
+- **Los cuatro pedidos que existían, renumerados** por `scripts/renumerar-los-pedidos.php`, por contacto
+  y por año, tomando el año de la fecha de creación de cada pedido y no de hoy:
+  `26-1` → `KJ 26-001`, `26-2` → `KJ 26-002`, `26-3` → `KJ 26-003`, `PRUEBA pedido de venta` → `PRUEBA 26-001`.
+- **El código corto, también en las fichas de persona.** Esta mañana quedó solo en las de organización, y
+  parecía completo porque los dos contactos del sistema son organizaciones. No lo era: el selector de
+  cliente de un pedido de venta (`tec_crm_references:entity_reference_3`) filtra por **tipo de contacto**,
+  no por clase de ficha, así que una persona marcada como Customer es perfectamente elegible y el primer
+  pedido a una persona habría nacido sin código y sin campo donde ponerlo.
+
+#### La trampa del orden de los pasos
+
+Los dos flujos de ECA **creaban el pedido, lo guardaban, y solo después le pegaban el cliente o el
+proveedor**. Daba igual mientras el nombre llegaba más tarde. Ahora el nombre se decide en el primer
+guardado, así que todos los pedidos habrían nacido **sin código**. Los dos procesos van ahora
+crear → pegar contacto → guardar. El guardián vigila ese orden, porque es de esas cosas que alguien
+deshace sin querer ordenando un diagrama.
+
+#### La mina: la numeración estaba a un clic de desaparecer
+
+Un proceso de ECA vive en **dos** objetos de configuración. `eca.eca.X` es lo que se ejecuta; `eca.model.X`
+es el dibujo BPMN que muestra el editor visual. **El editor regenera el primero desde el segundo cada vez
+que alguien pulsa guardar.**
+
+El código corto y los tres ceros existían **solo en el fichero ejecutable**. El dibujo seguía diciendo
+`[current-date:custom:y]-[soCount]` y no tenía ni rastro de los pasos de relleno. Abrir ese proceso en el
+editor y pulsar guardar habría devuelto los pedidos de venta a `26-1`, sin aviso y sin dejar huella.
+
+Por eso `scripts/quitar-la-numeracion-de-eca.php` opera **el dibujo** y luego se lo entrega al propio
+modeller de ECA, que regenera el ejecutable a partir de él. Los dos coinciden ahora, que es el único
+estado que no se podre. Verificado además que volver a guardar el dibujo **no cambia nada**, que el XML
+sigue siendo válido, que no hay ninguna línea ni forma suelta, y que la pantalla del editor carga.
+
+#### Guardián: sección 6 nueva, doce comprobaciones
+
+- Todos los pedidos con el formato `CÓDIGO AA-NNN`.
+- Ningún número repartido dos veces.
+- Ningún pedido sin el código de su contacto en el nombre. **Esa es la que caza el orden de los pasos**:
+  un pedido cuyo contacto tiene código pero cuyo nombre no lo lleva solo puede salir de que el contacto
+  se pegara después del primer guardado.
+- El código corto en las dos clases de ficha, y el de proveedor sin resucitar.
+- Ninguna de las dos ECA pone el título **del pedido** (siguen poniendo el de sus líneas, que es otra
+  cosa y tiene que quedarse; la primera versión de la comprobación no distinguía y dio un falso rojo).
+- **El dibujo dice lo mismo que el ejecutable, en los treinta y dos procesos**, comparando los pasos que
+  conoce cada fichero. Es la comprobación general de la mina, y es la que habría cazado esto sin que
+  hiciera falta ir a mirar. Los treinta y dos están de acuerdo.
+- La lista de la compra no se ha vuelto a hacer su propio contador.
+
+#### Daño colateral que apareció por el camino, y estaba de verdad roto
+
+El guardián contaba **tres redirecciones donde debía haber dos**. Tirando del hilo: la ficha 33 había
+perdido su dirección bonita y se llamaba `/33` en lugar de `/customer/33`.
+
+El patrón de direcciones era `/[tec_crm:field_tec_contact_type:0]/[tec_crm:id]`. Ese tipo de token **no
+lee el campo, lo renderiza**, usando la vista `default` de la ficha — y esa vista tiene **Layout Builder
+encendido**. Con Layout Builder puesto, los campos listados en la vista no son lo que se pinta; se pintan
+las secciones. Así que el token salía vacío y un patrón de «/tipo/id» se quedaba en «/id».
+
+Nadie se queja cuando pasa: la dirección sigue siendo única porque lleva el id, el sitio funciona, y no
+se nota hasta que se guarda una ficha y su dirección vieja se convierte en una redirección. Arreglado
+leyendo el nombre del término directamente (`:0:entity:name`), regeneradas las direcciones de las dos
+fichas y borrada la redirección que dejó la dirección rota. **El patrón de los materiales usa el mismo
+tipo de token**; hoy funciona porque los términos no usan Layout Builder, pero es la misma trampa.
+
+#### También corregido
+
+La comprobación «ningún pedido abierto sin nada pendiente» daba rojo por `KJ 26-002` y `KJ 26-003`, que
+no tienen cantidades. Y no está mal: la bandera de la ficha del proveedor crea justo eso, un pedido con
+una línea por material y las cantidades en blanco para que alguien las escriba. Meter esos en el mismo
+saco que un pedido ya servido dejaba el guardián en rojo para siempre por algo correcto. Ahora solo
+salta si el pedido **tiene cantidades** y no queda nada pendiente, y los de a medio escribir se informan
+aparte.
+
+#### Cómo quedó
+
+- Guardián: **74 de 74**.
+- `scripts/se-numeran-los-pedidos.php`: todo bien, incluido el caso A/B/A palabra por palabra y los dos
+  caminos que crean pedidos.
+- `scripts/funciona-la-recepcion.php`: todo bien. Hubo que tocarla: ya no puede elegir cómo se llama el
+  pedido que crea, así que lee el nombre que le ha tocado.
+- `scripts/cargan-las-paginas.php`: 58 páginas, ninguna con problemas.
+- Copia previa: `backups/actatec_antes_de_la_numeracion_2026-08-16.sql.gz`.
+
+#### Queda dicho
+
+`views.view.tec_order_eca_count_orders` es configuración muerta: no la usa nada. Se deja porque borrarla
+dejaría una referencia colgando en la lista de ajustes de un viewfield, pero **no debe volver a
+conectarse**: sus displays `so_count` y `po_count` llevan dentro el filtro de solo publicados que causó
+los números repetidos.
 
 ### 2026-08-16 (tarde) — «¿Dónde están los estados?»: en ningún sitio, y por eso no se veían
 

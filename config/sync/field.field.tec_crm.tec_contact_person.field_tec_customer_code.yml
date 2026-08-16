@@ -1,18 +1,18 @@
-uuid: bb802f16-67dd-4965-b2c0-b4beb5b72810
+uuid: 6a77e2fb-6a8c-41e0-8113-268d388d421d
 langcode: en
 status: true
 dependencies:
   config:
-    - eck.eck_type.tec_crm.tec_contact_organization
+    - eck.eck_type.tec_crm.tec_contact_person
     - field.storage.tec_crm.field_tec_customer_code
-id: tec_crm.tec_contact_organization.field_tec_customer_code
+id: tec_crm.tec_contact_person.field_tec_customer_code
 field_name: field_tec_customer_code
 entity_type: tec_crm
-bundle: tec_contact_organization
+bundle: tec_contact_person
 label: 'Short code'
 description: 'Short code for order numbers (max 6 characters), e.g. ACTA. It goes on both sides: sales orders come out as ACTA 26-001 and purchase orders as ACTA 26-001 too. Required, because the number would repeat without it.'
 required: true
-translatable: false
+translatable: true
 default_value: {  }
 default_value_callback: ''
 settings: {  }

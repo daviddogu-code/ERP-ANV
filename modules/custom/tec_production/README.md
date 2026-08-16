@@ -373,6 +373,84 @@ bitten this feature — the first was the tab nobody could read.
   by `scripts/poner-el-boton-de-recibir-en-la-ficha.php`; all three are safe to
   run twice.
 
+### Order numbers, in one place (16 August 2026)
+Every order is now called `CODE YY-NNN`: the other party's short code, the
+two-digit year, and a counter that runs **per contact** and restarts each January.
+`KJ 26-001`. Asked for in these words: customer A orders and gets `A 26-001`,
+customer B orders and gets `B 26-001` — not 002 — and when A comes back, `A 26-002`.
+
+`src/OrderNumber.php` is the only place a number is decided, called from
+`hook_tec_order_presave()` in `tec_production.module`, on creation only. Renaming
+later would change what is printed on a document already sent to a supplier, and
+the number exists precisely so both sides can quote the same one.
+
+**Why one place.** There were three, and they disagreed:
+- `PurchaseListForm::nextOrderNumber()`, counting purchase orders by title prefix
+  across all suppliers, with no code and no padding: `26-4`.
+- `process_kryibry`, counting rows in `tec_order_eca_count_orders:po_count`.
+- `process_sclj26d`, the same through `so_count`, and the only one that had ever
+  been taught the short code and the three digits.
+
+Both ECA counts filtered to **published** orders, and both flows create orders
+`published: false`. So a draft never counted: the second order for a contact was
+handed the number the first one already had. Neither checked the name was free, so
+a deleted order's number got issued again. Neither had a year filter, so the
+counter would never have restarted in January — the `26-` in the name came from
+the date while the number behind it ran on forever.
+
+**How the counter works now.** It counts names of the exact shape already handed
+out (`KJ 26-` as a title prefix), adds one, and then climbs until the name is
+actually free. Counting names rather than orders ties the number to what has been
+issued, so it survives an order changing hands or having its date corrected, and
+it restarts by itself because the year is part of what is counted. The climb is
+what makes it safe rather than merely likely: counting alone hands out a number a
+deleted order already used. Two orders created in the same instant could still
+race; serialising that would mean a lock on every order to protect against
+something one person clicking one button cannot cause.
+
+Draft orders (`tec_draft_order`) are deliberately not numbered. They are a staging
+area that gets thrown away, and burning a number on one would leave a hole in a
+customer's sequence that nobody could explain.
+
+**The ordering trap, and why both ECA processes were re-wired.** Both created the
+order, saved it, and attached the customer or supplier *afterwards*. That was
+harmless while the name came later. Now the name is decided at the first save, so
+an order would be born with no short code at all. The two processes now go create,
+attach contact, save. The guardian asserts that order of steps, because it is the
+kind of thing that gets quietly undone by someone tidying up a diagram.
+
+**The landmine that was one click from erasing all of this.** An ECA process lives
+in two config objects: `eca.eca.X` runs, and `eca.model.X` is the BPMN drawing the
+visual editor shows — and the editor **regenerates the first from the second**
+every time anybody presses save. The short code and the three digits existed only
+in `eca.eca.process_sclj26d`. The drawing still said
+`[current-date:custom:y]-[soCount]` and had no trace of the padding steps. Opening
+that process in the editor and pressing save would have taken sales orders back to
+`26-1`, silently.
+
+So `scripts/quitar-la-numeracion-de-eca.php` operates on the **drawing** and then
+hands it to ECA's own modeller, which regenerates the executable file from it. The
+two agree now, which is the only state that does not rot. The guardian checks two
+things: that neither file has a step setting the *order's* title (each still sets
+its *line items'* titles, which is a different thing and has to stay), and — for
+all 32 processes, not just these two — that the drawing and the executable know
+the same set of steps. That general check is what would have caught this in the
+first place.
+
+`views.view.tec_order_eca_count_orders` is now dead config. It is left in place
+because deleting it would strand a reference in a viewfield settings list, but
+nothing uses it and nothing should: its `so_count` and `po_count` displays encode
+the published-only filter that caused the repeats.
+
+- Test: `scripts/se-numeran-los-pedidos.php` asserts the A/B/A case literally, and
+  checks both routes that create orders — the flag on a contact card and the entity
+  API — because for years they disagreed. It also proves the contact is attached in
+  time for its code to reach the name, that a gap in the sequence makes the counter
+  climb rather than repeat, and that no code leaves no dangling space: `26-001`.
+- The existing orders were renamed by `scripts/renumerar-los-pedidos.php`, which
+  renumbers per contact and per year from each order's own creation date, is
+  idempotent, and does nothing without `--de-verdad`.
+
 ## Backlog / future ideas
 - Auto-advance order status from the production log: when SUM(produced) >=
   total ordered, move the order to Quality Control/Inspection (or Completed,

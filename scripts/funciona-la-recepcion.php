@@ -276,9 +276,11 @@ $linea_b = $linea_storage->create([
 ]);
 $linea_b->save();
 
+// No title given, and none would stick if it were: since 16 August 2026 the name
+// of an order is decided by OrderNumber on save, so the test cannot pick one and
+// has to read back what the order ended up being called.
 $pedido = $pedido_storage->create([
   'type' => 'tec_purchase_order',
-  'title' => 'PRUEBA-RECEPCION',
   'field_tec_vendor' => $proveedor,
   'field_tec_line_items' => [$linea_a->id(), $linea_b->id()],
   'uid' => 1,
@@ -373,7 +375,7 @@ if ($movimientos) {
   $movimiento = $gestor->getStorage('tec_inventory')->load(reset($movimientos));
   $nota = (string) $movimiento->get('field_tec_mutation_note')->value;
   $mirar('el movimiento lleva el pedido y el albaran en la nota',
-    str_contains($nota, 'PRUEBA-RECEPCION') && str_contains($nota, '4471-B'), $nota);
+    str_contains($nota, (string) $pedido->label()) && str_contains($nota, '4471-B'), $nota);
   $mirar('el movimiento lleva la cantidad en unidad de almacen',
     $redondo((float) $movimiento->get('field_tec_quantity')->value) === $redondo(4 * $datos_a['units']),
     $redondo((float) $movimiento->get('field_tec_quantity')->value)

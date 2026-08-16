@@ -918,21 +918,202 @@ $abiertos = $etm->getStorage('tec_order')->getQuery()
   ->condition('field_tec_po_status', 'open')
   ->execute();
 $vacios = [];
+$sinRellenar = [];
 $por_estado = ['none' => 0, 'partial' => 0, 'full' => 0, 'cancelled' => 0];
 foreach ($etm->getStorage('tec_order')->loadMultiple($abiertos) as $pedidoCompra) {
   $pendiente = 0.0;
+  $pedido = 0.0;
   foreach ($pedidoCompra->get('field_tec_line_items')->referencedEntities() as $lineaCompra) {
     $pendiente += \Drupal\tec_production\Purchasing::outstanding($lineaCompra);
+    if ($lineaCompra->hasField('field_tec_quantity') && !$lineaCompra->get('field_tec_quantity')->isEmpty()) {
+      $pedido += (float) $lineaCompra->get('field_tec_quantity')->value;
+    }
   }
   if ($pendiente <= 0.0) {
-    $vacios[] = (string) $pedidoCompra->label();
+    // Sin cantidades no es un pedido que haya que cerrar, es uno que nadie ha
+    // rellenado. La bandera de la ficha del proveedor crea justo eso: un pedido
+    // con una linea por material y las cantidades en blanco para que alguien las
+    // escriba. Meterlos en el mismo saco que un pedido ya servido dejaria el
+    // guardian en rojo para siempre por algo que no esta mal.
+    if ($pedido > 0.0) {
+      $vacios[] = (string) $pedidoCompra->label();
+    }
+    else {
+      $sinRellenar[] = (string) $pedidoCompra->label();
+    }
   }
   $por_estado[\Drupal\tec_production\Purchasing::receiptState($pedidoCompra)]++;
 }
-comprobar($resultados, 'ningun pedido abierto sin nada pendiente', !$vacios,
-  $vacios ? 'DEBERIAN ESTAR CERRADOS: ' . implode(', ', $vacios) : count($abiertos) . ' abiertos, todos esperando algo');
+comprobar($resultados, 'ningun pedido servido sigue abierto', !$vacios,
+  $vacios ? 'DEBERIAN ESTAR CERRADOS: ' . implode(', ', $vacios) : count($abiertos) . ' abiertos, ninguno servido del todo');
 informar('pedidos abiertos por estado de entrega', count($abiertos),
   'sin recibir ' . $por_estado['none'] . ', a medias ' . $por_estado['partial']);
+if ($sinRellenar) {
+  informar('pedidos abiertos sin cantidades, a medio escribir', count($sinRellenar),
+    implode(', ', $sinRellenar));
+}
+
+// -----------------------------------------------------------------------------
+// 6. Cada pedido tiene su numero, y solo uno.
+// -----------------------------------------------------------------------------
+titulo('6. Cada pedido tiene su numero, y solo uno');
+
+// Desde el 16 de agosto de 2026 el nombre de un pedido se decide en un unico
+// sitio, OrderNumber, llamado desde un gancho de guardado. Antes lo decidian
+// tres: las dos ECA que crean pedidos y la lista de la compra. Los tres contaban
+// distinto y dos de ellos solo veian pedidos publicados, cuando todos nacen sin
+// publicar, asi que el segundo pedido de un cliente recibia el numero que ya
+// tenia el primero. Dos pedidos con el mismo numero no son una numeracion.
+$formato = '/^(?:.{1,6} )?\d{2}-\d{3}$/';
+$malFormato = [];
+$repetidos = [];
+$sinCodigo = [];
+$vistos = [];
+$cuantosPedidos = 0;
+
+foreach ($etm->getStorage('tec_order')->loadMultiple() as $pedidoNum) {
+  $tipo = $pedidoNum->bundle();
+  if (!\Drupal\tec_production\OrderNumber::handles($tipo)) {
+    continue;
+  }
+  $cuantosPedidos++;
+  $nombre = (string) $pedidoNum->label();
+
+  if (!preg_match($formato, $nombre)) {
+    $malFormato[] = $pedidoNum->id() . ': "' . $nombre . '"';
+  }
+
+  $clave = $tipo . '|' . $nombre;
+  if (isset($vistos[$clave])) {
+    $repetidos[] = '"' . $nombre . '" (' . $vistos[$clave] . ' y ' . $pedidoNum->id() . ')';
+  }
+  $vistos[$clave] = $pedidoNum->id();
+
+  // Un pedido cuyo contacto tiene codigo corto pero cuyo nombre no lo lleva solo
+  // puede salir de una cosa: que el contacto se pegase al pedido despues del
+  // primer guardado, que es cuando se decide el nombre. Es el fallo que tenian
+  // las dos ECA y por el que se les cambio el orden de los pasos, asi que si
+  // vuelve a aparecer es que alguien ha vuelto a moverlos.
+  $campo = \Drupal\tec_production\OrderNumber::contactField($tipo);
+  $contactoNum = $pedidoNum->hasField($campo) && !$pedidoNum->get($campo)->isEmpty()
+    ? $pedidoNum->get($campo)->entity
+    : NULL;
+  $codigo = \Drupal\tec_production\OrderNumber::shortCode($contactoNum);
+  if ($codigo !== '' && !str_starts_with($nombre, $codigo . ' ')) {
+    $sinCodigo[] = $pedidoNum->id() . ': "' . $nombre . '" deberia empezar por "' . $codigo . '"';
+  }
+}
+
+comprobar($resultados, 'todos los pedidos con el formato CODIGO AA-NNN', !$malFormato,
+  $malFormato ? implode(', ', $malFormato) : $cuantosPedidos . ' pedidos');
+comprobar($resultados, 'ningun numero repartido dos veces', !$repetidos,
+  $repetidos ? 'REPETIDOS: ' . implode(', ', $repetidos) : 'todos distintos');
+comprobar($resultados, 'el codigo del contacto esta en el nombre', !$sinCodigo,
+  $sinCodigo ? implode('; ', $sinCodigo) : 'ninguno se quedo sin codigo');
+
+// El campo del codigo corto, uno solo y en las dos clases de ficha. Faltaba en
+// las de persona, y una persona puede ser cliente: el selector de cliente de un
+// pedido de venta filtra por tipo de contacto, no por clase de ficha.
+foreach (['tec_contact_organization', 'tec_contact_person'] as $clase) {
+  $campoCodigo = \Drupal::service('entity_field.manager')->getFieldDefinitions('tec_crm', $clase);
+  comprobar($resultados, 'el codigo corto en las fichas de ' . str_replace('tec_contact_', '', $clase),
+    isset($campoCodigo['field_tec_customer_code']) && !isset($campoCodigo['field_tec_supplier_code']),
+    isset($campoCodigo['field_tec_supplier_code']) ? 'HA VUELTO EL DE PROVEEDOR' : 'uno solo');
+}
+
+// Que la numeracion siga en un solo sitio. Se comprueba en los dos ficheros de
+// cada proceso, no en uno: una ECA vive en eca.eca.X, que es lo que se ejecuta, y
+// en eca.model.X, que es el dibujo que edita la pantalla. El editor regenera el
+// primero desde el segundo cada vez que alguien guarda, asi que un parche puesto
+// solo en el ejecutable dura hasta el siguiente clic. Asi es justo como estaba
+// esto antes: el dibujo no sabia nada del codigo corto ni de los ceros.
+foreach (['process_sclj26d' => 'ventas', 'process_kryibry' => 'compras'] as $proceso => $que) {
+  // Solo el titulo del PEDIDO. Estos procesos tambien ponen el titulo de cada
+  // linea, que es otra cosa y tiene que seguir ahi.
+  $acciones = \Drupal::config('eca.eca.' . $proceso)->get('actions') ?? [];
+  $ponenTitulo = [];
+  foreach ($acciones as $id => $accion) {
+    if (($accion['configuration']['field_name'] ?? '') === 'title'
+      && ($accion['configuration']['object'] ?? '') === 'order') {
+      $ponenTitulo[] = $id;
+    }
+  }
+  comprobar($resultados, "la ECA de $que ya no pone el nombre", !$ponenTitulo,
+    $ponenTitulo ? 'LO PONE EN ' . implode(', ', $ponenTitulo) : 'lo pone el gancho');
+
+  // Lo mismo en el dibujo, y hay que leerlo como XML por la misma razon: un paso
+  // que pone el titulo de una linea es legitimo, uno que pone el del pedido no.
+  $dibujo = (string) \Drupal::config('eca.model.' . $proceso)->get('modeldata');
+  $enElDibujo = [];
+  $xmlDibujo = new DOMDocument();
+  if ($dibujo !== '' && @$xmlDibujo->loadXML($dibujo)) {
+    $buscador = new DOMXPath($xmlDibujo);
+    foreach ($buscador->query('//*[local-name()="task"]') as $paso) {
+      $valores = [];
+      foreach ($buscador->query('*[local-name()="extensionElements"]/*[local-name()="field"]', $paso) as $campo) {
+        $valores[$campo->getAttribute('name')] = trim($campo->textContent);
+      }
+      if (($valores['field_name'] ?? '') === 'title' && ($valores['object'] ?? '') === 'order') {
+        $enElDibujo[] = $paso->getAttribute('id');
+      }
+    }
+  }
+  comprobar($resultados, "y el dibujo de $que dice lo mismo", !$enElDibujo,
+    $enElDibujo ? 'EL DIBUJO AUN LO PONE EN ' . implode(', ', $enElDibujo) : 'de acuerdo con el ejecutable');
+
+  // Y el orden de los pasos: el contacto tiene que quedar pegado al pedido antes
+  // del guardado que decide el nombre, no despues.
+  $guardar = $acciones['Activity_0eek2xm']['successors'][0]['id'] ?? '';
+  $contactoPaso = $acciones['Activity_01wk5lh']['successors'][0]['id'] ?? '';
+  comprobar($resultados, "en $que el contacto se pega antes de guardar",
+    $contactoPaso === 'Activity_0eek2xm' && $guardar !== 'Activity_01wk5lh',
+    $contactoPaso === 'Activity_0eek2xm' ? 'crear, contacto, guardar' : 'GUARDA ANTES DE PEGAR EL CONTACTO');
+}
+
+// Y la comprobacion general de la misma trampa, para los treinta y dos procesos.
+// Un proceso de ECA vive en dos ficheros y el editor regenera uno desde el otro,
+// asi que un parche puesto solo en el que se ejecuta dura hasta el siguiente clic
+// de cualquiera. No hace falta comparar los ficheros enteros: basta con que los
+// dos conozcan los mismos pasos. Si el dibujo tiene un paso de menos, ese paso se
+// evapora en cuanto alguien guarde.
+$descuadrados = [];
+foreach (\Drupal::configFactory()->listAll('eca.eca.') as $nombreEca) {
+  $proceso = substr($nombreEca, strlen('eca.eca.'));
+  $enEjecutable = array_keys(\Drupal::config($nombreEca)->get('actions') ?? []);
+  $dibujoProceso = (string) \Drupal::config('eca.model.' . $proceso)->get('modeldata');
+  if ($dibujoProceso === '') {
+    continue;
+  }
+  $xmlProceso = new DOMDocument();
+  if (!@$xmlProceso->loadXML($dibujoProceso)) {
+    $descuadrados[] = $proceso . ' (el dibujo no es XML valido)';
+    continue;
+  }
+  $buscadorProceso = new DOMXPath($xmlProceso);
+  $enDibujo = [];
+  foreach ($buscadorProceso->query('//*[@*[local-name()="modelerTemplate"]]') as $paso) {
+    foreach ($paso->attributes as $atributo) {
+      if ($atributo->localName === 'modelerTemplate' && str_starts_with($atributo->value, 'org.drupal.action.')) {
+        $enDibujo[] = $paso->getAttribute('id');
+      }
+    }
+  }
+  $soloEjecutable = array_diff($enEjecutable, $enDibujo);
+  $soloDibujo = array_diff($enDibujo, $enEjecutable);
+  if ($soloEjecutable || $soloDibujo) {
+    $descuadrados[] = $proceso . ': ' . ($soloEjecutable ? 'solo se ejecuta ' . implode(',', $soloEjecutable) : '')
+      . ($soloEjecutable && $soloDibujo ? '; ' : '')
+      . ($soloDibujo ? 'solo dibujado ' . implode(',', $soloDibujo) : '');
+  }
+}
+comprobar($resultados, 'ninguna ECA con el dibujo desfasado', !$descuadrados,
+  $descuadrados ? implode(' | ', $descuadrados) : count(\Drupal::configFactory()->listAll('eca.eca.')) . ' procesos, dibujo y ejecutable de acuerdo');
+
+// Y que nadie se haya hecho su propio contador otra vez.
+$listaCompra = file_get_contents(DRUPAL_ROOT . '/modules/custom/tec_production/src/Form/PurchaseListForm.php');
+comprobar($resultados, 'la lista de la compra no se hace su numero',
+  !str_contains($listaCompra, 'function nextOrderNumber'),
+  str_contains($listaCompra, 'function nextOrderNumber') ? 'SE LO VUELVE A HACER' : 'lo pide al gancho');
 
 // -----------------------------------------------------------------------------
 // Resumen.

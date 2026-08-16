@@ -7,6 +7,7 @@ dependencies:
     - eck.eck_type.tec_crm.tec_contact_person
     - field.field.tec_crm.tec_contact_person.field_tec_address
     - field.field.tec_crm.tec_contact_person.field_tec_contact_type
+    - field.field.tec_crm.tec_contact_person.field_tec_customer_code
     - field.field.tec_crm.tec_contact_person.field_tec_email
     - field.field.tec_crm.tec_contact_person.field_tec_incoterm
     - field.field.tec_crm.tec_contact_person.field_tec_name
@@ -14,7 +15,6 @@ dependencies:
     - field.field.tec_crm.tec_contact_person.field_tec_phone
     - field.field.tec_crm.tec_contact_person.field_tec_purchase_currency
     - field.field.tec_crm.tec_contact_person.field_tec_supplier_active
-    - field.field.tec_crm.tec_contact_person.field_tec_supplier_code
     - field.field.tec_crm.tec_contact_person.field_tec_website
     - field.field.tec_crm.tec_contact_person.field_tec_works_at
   module:
@@ -116,11 +116,11 @@ content:
 hidden:
   changed: true
   field_tec_contact_type: true
+  field_tec_customer_code: true
   field_tec_incoterm: true
   field_tec_payment_terms: true
   field_tec_purchase_currency: true
   field_tec_supplier_active: true
-  field_tec_supplier_code: true
   field_tec_website: true
   field_tec_works_at: true
   langcode: true
