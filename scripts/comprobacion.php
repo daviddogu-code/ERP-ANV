@@ -1402,6 +1402,39 @@ comprobar($resultados, 'y el javascript solo pone el pie si lo recibe',
   str_contains($javascriptPie, 'function vatRate()') && str_contains($javascriptPie, "return [['Grand Total', subtotal, true]];"),
   'sin porcentaje, ventas se queda como estaba');
 
+// Y que las dos pantallas sigan llamando igual a lo mismo. La misma columna se
+// llamaba "Unit of Purchase (UoP)" en el borrador y "Unit" en la ficha, el coste
+// era "Cost by UoP" y "Cost per UoP", y la cantidad "Quantity" y "Qty.". Quien
+// mira las dos seguidas tenia que traducir, y traducir es donde se equivoca uno.
+$rotulosDe = function (string $pantalla) use ($vistaIva): array {
+  $rotulos = [];
+  foreach ($vistaIva->getDisplay($pantalla)['display_options']['fields'] ?? [] as $campo) {
+    if (empty($campo['exclude'])) {
+      $rotulos[] = (string) ($campo['label'] ?? '');
+    }
+  }
+  return $rotulos;
+};
+$rotulosBorrador = $rotulosDe('page_1');
+$rotulosFicha = $rotulosDe('block_2');
+comprobar($resultados, 'las dos pantallas de compra llaman igual a lo mismo',
+  $rotulosBorrador && array_slice($rotulosFicha, 0, count($rotulosBorrador)) === $rotulosBorrador,
+  implode(' | ', $rotulosBorrador));
+
+// Received va detras de todas esas, porque se mira cuando llega la mercancia y
+// no mientras se lee el pedido.
+comprobar($resultados, 'y Received va al final, con su marca detras',
+  array_slice($rotulosFicha, count($rotulosBorrador)) === ['Received', ''],
+  implode(' | ', array_slice($rotulosFicha, count($rotulosBorrador))));
+
+// La cabecera ya dice Quantity; encima de cada casilla es ruido. La regla existia
+// pero con un solo selector, y ese solo cogia la pantalla de ventas.
+$cssBorrador = (string) \Drupal::config('asset_injector.css.tec_excel_lover_orders')->get('code');
+comprobar($resultados, 'la casilla de cantidad va corta y sin rotulo encima',
+  str_contains($cssBorrador, '.views-field-form-field-field-tec-quantity-1 label')
+    && str_contains($cssBorrador, '.views-field-form-field-field-tec-quantity-1 input'),
+  'en las dos pantallas de borrador');
+
 // -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------

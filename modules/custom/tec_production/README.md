@@ -571,7 +571,44 @@ a coin apart on the way to the supplier.
 - Test: `scripts/se-suma-el-iva.php` — a Thai supplier and a foreign one, both
   screens read as a person reads them, the rate reaching the purchase draft and
   not the sales one, and the proforma proved untouched.
-- Guardian: section 9, seven checks.
+- Guardian: section 9, ten checks.
+
+### The draft and the order page read alike (16 August 2026)
+They were the same information written two ways. The same column was **Unit of
+Purchase (UoP)** on the draft and **Unit** on the order page; the cost was **Cost
+by UoP** and **Cost per UoP**; the quantity, **Quantity** and **Qty.** Anyone
+looking at both had to translate, and translating is where people slip.
+
+Both now read: `Item | Picture | Material name | Quantity | Purchase UoM |
+Purchase Cost | Sub total`, and the order page continues with `Received` and its
+*closed short* marker, which belong after everything else because they are what
+gets looked at once goods arrive, not while the order is being read.
+
+Money is written the same way too, which took one non-obvious fix. The baht
+symbol is not put there by the view: it is part of the field, and the view merely
+honours it. But **Sub total on the order page is not a field** — it is a sum the
+view works out, `@field_tec_quantity * @field_tec_cost` — so there it has to be
+written in by hand. It was printing `3,998.5` next to a `฿ 799.70`.
+
+Worth knowing, and not changed: that makes the order page the only screen whose
+line total is recalculated from the current cost rather than read from the total
+ECA stamped on the line. The footer sums the stamped ones. Today they agree; if a
+material's purchase cost is ever edited after an order is raised, the column and
+the footer below it would disagree on the same page.
+
+Two presentation fixes on the draft, both in
+`asset_injector.css.tec_excel_lover_orders`:
+
+- The quantity box was the full width of its cell for the sake of four digits.
+- **Quantity** was printed above every box, which the column heading already
+  says. The rule that hid it had been there all along but caught only the sales
+  draft: Views suffixes the second copy of a field with `-1`, and the purchase
+  draft is the second.
+
+- Built by `scripts/las-dos-pantallas-de-compra-se-parecen.php`, which refuses to
+  reorder rather than guess if the screen has gained or lost a column.
+- Guardian: in section 9 — the two screens' headings compared name by name,
+  `Received` last, and the two CSS rules still there.
 
 ### Company settings, and the settings that had no screen (16 August 2026)
 `/admin/config/tec/company`, `src/Form/CompanySettingsForm.php`. Two things on it:

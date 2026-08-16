@@ -13,8 +13,21 @@ code: |-
     display: none;
   }*/
 
-  .views-field-form-field-field-tec-quantity label {
+  /* La cabecera de la columna ya dice Quantity; repetirlo encima de cada casilla
+     es ruido. La regla existia desde siempre pero con un solo selector, y ese solo
+     cogia la pantalla de ventas: Views le pone un -1 detras a la segunda copia del
+     campo, y la de compras es la segunda. */
+  .views-field-form-field-field-tec-quantity label,
+  .views-field-form-field-field-tec-quantity-1 label {
       display: none;
+  }
+
+  /* Cuatro cifras no necesitan el ancho entero de la celda, y a ancho entero la
+     casilla era lo mas gordo de la fila. */
+  .views-field-form-field-field-tec-quantity input,
+  .views-field-form-field-field-tec-quantity-1 input {
+      width: 5rem;
+      max-width: 100%;
   }
 
   #edit-actions {

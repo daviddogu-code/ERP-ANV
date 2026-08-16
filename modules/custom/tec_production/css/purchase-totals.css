@@ -2,21 +2,25 @@
  * @file
  * The foot of a purchase order: subtotal, VAT and what is owed.
  *
- * Sits to the right under the line items, the way the single total it replaced
- * did, so the page does not visibly rearrange itself for orders that gained a
- * VAT line and orders that did not.
+ * Laid out to match the draft, where the same three lines are rows inside the
+ * line-items table: full width, the wording right-aligned against the figure,
+ * and the figure hard against the right edge. It is a separate table here
+ * because the server draws it and the draft's is written by javascript, so the
+ * lining up is done by giving both the same width and the same cell padding
+ * rather than by sharing a table.
  */
 
 .tec-vat-totals {
-  margin: 0 0 1rem auto;
-  width: auto;
-  min-width: 16rem;
+  width: 100%;
+  margin: 0 0 1rem;
   border: 0;
 }
 
 .tec-vat-totals td {
   border: 0;
-  padding: 0.15rem 0 0.15rem 1.5rem;
+  /* The theme's own table padding when there is one, so the figures end where
+     the column above them ends. */
+  padding: 0.2rem var(--bs-table-cell-padding-x, 0.5rem);
   white-space: nowrap;
 }
 
@@ -24,7 +28,10 @@
   text-align: right;
 }
 
+/* Only as wide as the figure needs, which pushes the wording up against it and
+   leaves the rest of the width to the empty space on the left. */
 .tec-vat-totals__amount {
+  width: 1%;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }

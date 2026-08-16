@@ -1778,6 +1778,55 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-16 (cierre) — El borrador y la ficha de compra dejan de escribir lo mismo de dos maneras
+
+El dueño pidió cuatro arreglos de aspecto y salieron seis, porque al ir a igualar las dos pantallas
+apareció que **no eran la misma cosa escrita igual**. La misma columna se llamaba *Unit of Purchase
+(UoP)* en el borrador y *Unit* en la ficha; el coste era *Cost by UoP* y *Cost per UoP*; la cantidad,
+*Quantity* y *Qty.* Quien mira las dos seguidas tiene que traducir, y traducir es donde se equivoca uno.
+
+Las dos leen ahora `Item | Picture | Material name | Quantity | Purchase UoM | Purchase Cost | Sub
+total`, y la ficha sigue con `Received` y su marca de *closed short*. Esas dos van al final porque son
+lo que se mira cuando llega la mercancía, no mientras se lee el pedido.
+
+#### El dinero, que fue lo único que no era obvio
+
+El símbolo del baht no lo pone la vista: lo lleva el propio campo en su definición y la vista solo lo
+respeta. Pero **Sub total en la ficha no es un campo**, es una cuenta que hace la propia vista
+—`@field_tec_quantity * @field_tec_cost`—, así que ahí hay que escribirlo a mano. Salía `3,998.5` al
+lado de un `฿ 799.70`, con la columna llamándose igual en la otra pantalla. Ahora las dos dicen
+`฿ 3,998.50`. De paso, al coste del borrador le faltaba la coma de los millares.
+
+**Y una cosa que conviene saber y no se ha tocado.** Eso hace de la ficha la única pantalla que
+recalcula el total de la línea a partir del coste de hoy, en vez de leer el total que ECA le estampó.
+El pie suma los estampados. Hoy coinciden; el día que alguien corrija el coste de compra de un
+material después de haber emitido un pedido, **la columna y el pie de la misma página dirían cosas
+distintas**. Arreglarlo es cambiar la ficha para que use el mismo campo que las otras dos pantallas, y
+no se ha hecho porque el dueño pidió expresamente ir de uno en uno.
+
+#### Los dos arreglos del borrador
+
+- La casilla de la cantidad ocupaba el ancho entero de su celda y era lo más gordo de la fila para
+  meter cuatro cifras. Pasa a `5rem`, algo menos de un tercio.
+- Encima de cada casilla ponía *Quantity*, que ya lo dice la cabecera. La regla que lo tapaba
+  **existía desde siempre** y solo cogía la pantalla de ventas: Views le pone un `-1` detrás a la
+  segunda copia de un campo, y la de compras es la segunda.
+
+#### El pie, alineado como el del borrador
+
+En el borrador las tres líneas son filas dentro de la tabla, así que ocupan todo el ancho y la cifra
+cae en la última columna. El de la ficha era una cajita pegada a la derecha. Ahora ocupa el ancho
+entero, con el rótulo pegado a la cifra y la cifra al borde, y usa el relleno de celda del propio tema
+(`--bs-table-cell-padding-x`) para que acabe donde acaba la columna de arriba.
+
+Con `Received` al final, las cifras del pie caen bajo esa columna y no bajo *Sub total*. Si se
+prefiere lo segundo, la manera es poner `Received` **antes** de *Sub total*; no hay forma honesta de
+alinear una tabla con otra columna que no sea la última.
+
+- Hecho por `scripts/las-dos-pantallas-de-compra-se-parecen.php`, que se niega a reordenar en vez de
+  adivinar si la pantalla ha ganado o perdido una columna desde que se escribió la lista.
+- Guardián: tres comprobaciones nuevas en la sección 9. 103 de 103.
+
 ### 2026-08-16 (cierre) — El pie del pedido de compra: base, IVA y lo que de verdad se paga
 
 El dueño lo vio él solo: creó un pedido a POLYTEC, proveedor tailandés registrado, y dijo que **no

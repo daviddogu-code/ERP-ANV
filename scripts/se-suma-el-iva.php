@@ -70,7 +70,8 @@ $leido = function (string $html): string {
   return preg_replace('/\s+/u', ' ', $texto);
 };
 
-$dinero = fn(float $cantidad): string => BAHT . number_format($cantidad, 2);
+// Con el espacio detras del simbolo, que es como sale en todas estas pantallas.
+$dinero = fn(float $cantidad): string => BAHT . ' ' . number_format($cantidad, 2);
 
 try {
   echo "\nPreparando dos proveedores y sus pedidos\n";

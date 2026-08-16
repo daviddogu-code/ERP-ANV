@@ -60,8 +60,9 @@ class VatTotals extends AreaPluginBase {
           ['data' => $label, 'class' => ['tec-vat-totals__label']],
           // Escaped rather than typed, because this file has no business
           // depending on surviving a trip through an editor that guesses at
-          // encodings, and several in this project have not.
-          ['data' => "\u{0E3F}" . number_format($amount, 2), 'class' => ['tec-vat-totals__amount']],
+          // encodings, and several in this project have not. The space after it
+          // is what every other figure on these screens has.
+          ['data' => "\u{0E3F} " . number_format($amount, 2), 'class' => ['tec-vat-totals__amount']],
         ],
       ];
     }
