@@ -1040,12 +1040,13 @@ Sin prisa y sin orden fijo entre ellas.
      «Un número por pedido, y uno solo» en la sección Hecho, incluida la mina que se descubrió por
      el camino: el parche del código corto vivía solo en el fichero que se ejecuta y no en el dibujo
      que edita la pantalla, así que estaba a un clic de desaparecer.
-  3. **Los dos caminos discrepan en el precio de la línea.** El flujo viejo `process_kryibry`
-     copia en el precio el `field_tec_price` del material, que es el **coste de consumo**,
-     mientras que el total lo calcula `process_fpvka81` con el `field_tec_cost`, que es el
-     **coste de compra**. O sea que en los pedidos creados por el flujo viejo el precio que se
-     lee y el total no cuadran. El botón nuevo pone el coste de compra, que es el que manda en
-     el total. Arreglarlo es cambiar una línea de la ECA.
+  3. ~~**Los dos caminos discrepan en el precio de la línea.**~~ **RESUELTO la noche del 16 de agosto
+     de 2026**, dentro del trabajo de congelar el precio. `process_kryibry` copiaba en el precio de la
+     línea el `field_tec_price` del material, que es el **coste de consumo**, mientras que el total lo
+     calculaba `process_fpvka81` con el `field_tec_cost`, el **coste de compra**: en los pedidos del
+     flujo viejo el precio que se leía y el total no cuadraban. Ahora la línea nace con el coste de
+     compra y su importe se calcula con **su propio precio**, no con el coste que tenga el material
+     hoy. Ver la entrada «Un pedido emitido vale lo que valía el día que se hizo» en la sección Hecho.
   4. **El pedido de compra no tiene estado de borrador.** `field_tec_po_status` admite un solo
      valor, `open`, y ese estado es justamente el que el tablero de stock cuenta como mercancía
      en camino. O sea que en cuanto se pulsa el botón, lo pedido cuenta como que viene, aunque
@@ -1071,6 +1072,41 @@ Sin prisa y sin orden fijo entre ellas.
   Manager y Executive, **no el supervisor de planta**, porque crear un pedido de compra
   compromete dinero; y la imagen del icono está en `sites/default/private`, que está fuera de
   git igual que los otros doce, así que hay que subirla al servidor a mano o el icono sale roto.
+- **Ventas: alinear las tres pantallas y ponerles el IVA.** Apuntado el 17 de agosto de 2026, después
+  de repasar cómo quedó ventas mientras se ordenaba compras. Son dos trabajos separables.
+
+  El primero es barato y calca uno ya hecho. Las tres pantallas de venta cuentan lo mismo de tres
+  maneras, que es la enfermedad que compras tenía la mañana del 16 de agosto:
+
+  ```
+  borrador   Item | Quantity | Picture | Product name | Product material | Color | Size | Price | Item total
+  ficha      (sin rótulo) | Product name | Product material | Color | Size | Qty. | Sales price | Item total
+  proforma   Item | Picture | Qty. | Product name | Color | Size | Price | Amount
+  ```
+
+  La cantidad es `Quantity` en una y `Qty.` en las otras dos, y va en la posición segunda, sexta y
+  tercera; el precio, `Price`, `Sales price` y `Price`; el importe, `Item total`, `Item total` y
+  `Amount`. La ficha no lleva ni contador ni foto, y la proforma no lleva el material. Sirven de
+  plantilla `las-dos-pantallas-de-compra-se-parecen.php` y `el-impreso-se-lee-como-el-borrador.php`.
+
+  El segundo es el IVA, y está entero. Las dos pantallas de compra llevan el pie `Subtotal / VAT /
+  Total` con el manejador `tec_purchase_vat_totals`; las tres de venta siguen con el `Grand Total` del
+  `attachment_1` compartido. Cuando se decidió el alcance el 16 de agosto se eligió «compras» a
+  propósito, pero el dueño ya dijo cómo tiene que ser en ventas: **el porcentaje sale del país del
+  cliente y se estampa al crear el pedido**, editable después, igual que en compras. `Vat::breakdown()`
+  y el manejador de Views no distinguen de qué lado vienen, así que el trabajo es el campo en el pedido
+  de venta, el gancho que lo estampa desde la ficha del cliente, y colgar el pie en las tres pantallas.
+
+  Tres cosas que **no** hay que llevar, porque ya funcionan igual en los dos lados: la numeración
+  (`OrderNumber` conoce las ventas y las compras, con el mismo formato y el mismo contador que no
+  retrocede), el precio congelado (ventas nunca tuvo el fallo: su ECA siempre multiplicó por el precio
+  de la línea) y el filtro de líneas sin cantidad, que la ficha y la proforma ya tienen y el borrador no
+  —y así debe ser, porque el borrador es donde se teclean las cantidades—. Un detalle feo de paso: la
+  ficha de ventas lo hace con **dos** filtros sobre el mismo campo, `!= 0` y `not empty`, donde compras
+  usa uno solo `> 0`.
+
+  Recibir no tiene equivalente y no lo tendrá por esta vía: el espejo de recibir mercancía es enviarla,
+  y aquí el pedido de venta sale de producción, que ya tiene sus pantallas de cola y de parte de trabajo.
 - **Avance automático del estado del pedido** cuando "Remaining" llega a cero. Decidido
   dejarlo desconectado de momento; se puede conectar más adelante sin rehacer nada.
 - **Packing lists.**
@@ -1777,6 +1813,52 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-17 — Un número entregado no vuelve
+
+Lo preguntó el dueño con un caso concreto: si borro `POLYTE 26-012` y creo otro pedido ahora mismo,
+¿qué número le toca? La respuesta era `POLYTE 26-012` otra vez, y esa es la respuesta equivocada. El
+proveedor puede tener el primero guardado en PDF, y dos documentos distintos con el mismo número dejan
+de ser un número.
+
+Pasaba porque el contador no se guardaba en ninguna parte: se deducía contando los pedidos que existían
+de ese contacto y ese año, y sumando uno. Contar tiene dos defectos, y el segundo es peor que el
+primero. Uno, que al borrar la cuenta baja, así que el número vuelve a estar libre. Y dos, que **una
+cuenta no es un máximo**: con huecos en la serie, la cuenta podía aterrizar dentro de uno y repartir un
+número de mitad de año. Con `001, 002, 003, 009` la cuenta da cuatro, el candidato es el `005`, está
+libre, y ahí se paraba.
+
+Ahora el número más alto entregado se **recuerda**, por contacto y año, en un almacén de clave y valor
+—`tec_production.order_number`—, y ese apunte solo sube. Se leen dos cosas y gana la mayor: lo apuntado
+y lo que de verdad esté en uso. La segunda no sobra: siembra a la primera, de modo que no hubo nada que
+migrar, y cura el contador si alguien renombra o importa pedidos por detrás. Ninguna de las dos puede
+hacerlo retroceder.
+
+El bucle que sube hasta encontrar un nombre libre **se queda**. El contador responde a «¿esto se ha
+entregado ya?» y el bucle a «¿este nombre está libre ahora mismo?», que son preguntas distintas: un
+título escrito a mano puede ocupar un número que el contador nunca repartió.
+
+Un detalle de diseño que conviene saber: **pedir un número lo gasta**. No hay forma de asomarse al
+siguiente sin tomarlo, a propósito, porque una vista previa que no gastara se repartiría dos veces en
+cuanto dos pantallas la enseñaran. Quien quiera enseñar un número, que cree el pedido y lea su título.
+Está escrito en el propio método para que nadie lo llame por curiosidad, y por eso el guardián comprueba
+el apunte leyendo, no pidiendo.
+
+- La clase es la de siempre, `OrderNumber`, y sigue siendo el único sitio donde se decide un número.
+- `scripts/el-numero-gastado-no-vuelve.php` siembra el apunte desde lo que ya hay. En rigor no hacía
+  falta, porque se siembra solo; hace falta para un caso: si se borran **todos** los pedidos de un
+  proveedor antes de que su contador exista, no queda de dónde deducir y la serie volvería a empezar en
+  `001`. Solo sube y se puede repetir. **Al desplegar en el servidor hay que correrlo con `--aplicar`**,
+  porque esto vive en la base de datos y no viaja con la configuración.
+- La prueba `scripts/se-numeran-los-pedidos.php` gana la sección que importa: se crea un pedido, se
+  borra, y el siguiente no hereda su número; y con todos borrados tampoco empieza de cero. De paso se le
+  quitó una asignatura pendiente: esperaba `KJ 26-004` porque KJ tenía tres pedidos el día que se
+  escribió, y KJ tiene dieciséis, así que llevaba tiempo fallando por un hecho del mundo y no del código.
+  Ahora comprueba lo que de verdad importa, que dos seguidos van uno detrás de otro. Y **fotografía los
+  contadores al empezar y los devuelve al acabar**, porque desde hoy cada pedido que crea gasta un número
+  de un proveedor real y borrarlo ya no lo devuelve.
+- Guardián: dos comprobaciones nuevas, que el número entregado se apunta y que el apunte va por delante
+  de lo repartido en todas las series. 117 de 117.
 
 ### 2026-08-16 (noche) — «Algo se ha roto»: había dos calculadoras y solo una se enteró del cambio
 

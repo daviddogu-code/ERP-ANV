@@ -1194,6 +1194,42 @@ comprobar($resultados, 'la lista de la compra no se hace su numero',
   !str_contains($listaCompra, 'function nextOrderNumber'),
   str_contains($listaCompra, 'function nextOrderNumber') ? 'SE LO VUELVE A HACER' : 'lo pide al gancho');
 
+// El numero entregado se recuerda, no se deduce. Deducirlo contando hacia que un
+// numero se pudiera recuperar: se borraba el ultimo pedido, la cuenta bajaba, y
+// el siguiente nacia con el numero que el proveedor ya tenia impreso. Y contar
+// tampoco es lo mismo que mirar el maximo: con huecos en la serie, la cuenta
+// podia aterrizar dentro de uno y repartir un numero de mitad de ano.
+$numerador = file_get_contents(DRUPAL_ROOT . '/modules/custom/tec_production/src/OrderNumber.php');
+comprobar($resultados, 'el numero entregado se apunta y no se olvida',
+  str_contains($numerador, 'keyValue(self::LEDGER)') && str_contains($numerador, '$ledger->set($key'),
+  \Drupal\tec_production\OrderNumber::LEDGER);
+
+// Y el apunte no puede quedarse por debajo de lo que hay repartido, o el pedido
+// siguiente pisaria uno vivo. Se comprueba serie por serie, contra los titulos
+// que existen de verdad.
+$contadorPedidos = \Drupal::keyValue(\Drupal\tec_production\OrderNumber::LEDGER);
+$seriesCortas = [];
+$cuantasSeries = 0;
+$masAlto = [];
+foreach ($etm->getStorage('tec_order')->loadMultiple() as $pedidoSerie) {
+  if (!\Drupal\tec_production\OrderNumber::handles($pedidoSerie->bundle())
+    || !preg_match('/^(.*-)(\d+)$/', (string) $pedidoSerie->label(), $trozos)) {
+    continue;
+  }
+  $claveSerie = \Drupal\tec_production\OrderNumber::ledgerKey($pedidoSerie->bundle(), $trozos[1]);
+  $masAlto[$claveSerie] = max($masAlto[$claveSerie] ?? 0, (int) $trozos[2]);
+}
+foreach ($masAlto as $claveSerie => $enUso) {
+  $cuantasSeries++;
+  $apuntado = (int) $contadorPedidos->get($claveSerie, 0);
+  if ($apuntado < $enUso) {
+    $seriesCortas[] = sprintf('%s (apuntado %d, en uso %d)', $claveSerie, $apuntado, $enUso);
+  }
+}
+comprobar($resultados, 'y va por delante de lo repartido en todas las series',
+  !$seriesCortas,
+  $seriesCortas ? implode('; ', $seriesCortas) : $cuantasSeries . ' series al dia');
+
 // -----------------------------------------------------------------------------
 // 7. El IVA sale de la ficha del proveedor y se queda en el pedido.
 // -----------------------------------------------------------------------------

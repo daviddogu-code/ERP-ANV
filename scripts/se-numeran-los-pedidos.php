@@ -38,6 +38,15 @@ $crm_storage = $etm->getStorage('tec_crm');
 $flag_service = \Drupal::service('flag');
 $year = date('y');
 
+// Since 17 August 2026 a number handed out is remembered, so that deleting an
+// order does not put its number back in circulation. That makes this test
+// expensive to run carelessly: every order it creates burns a real number for
+// a real supplier, and deleting the order afterwards no longer gives it back.
+// So the whole ledger is photographed here and put back at the end, and the
+// run leaves the site's counters exactly where it found them.
+$ledger = \Drupal::keyValue(OrderNumber::LEDGER);
+$ledger_before = $ledger->getAll();
+
 $fallos = 0;
 $basura = ['tec_order' => [], 'tec_crm' => [], 'tec_line_item' => []];
 
@@ -97,12 +106,19 @@ try {
   $comprobar('venta 3, cliente A', "A {$year}-002", (string) $pedido('tec_sales_order', $a)->label());
 
   echo "\n=== Las compras usan el mismo contador, por proveedor ===\n";
-  // KJ already carries 001 to 003 from the orders that existed before, so a new
-  // one has to land on 004. That is the check that the counter reads what has
-  // been handed out rather than starting from scratch.
+  // This used to expect "KJ 26-004" because KJ had three orders the day it was
+  // written. KJ has sixteen now and the test had been failing on a fact about
+  // the world rather than about the code. What matters is that a purchase order
+  // carries its supplier's code and continues that supplier's sequence, so that
+  // is what is asked: two in a row, one after the other.
   $kj = $crm_storage->load(31);
   if ($kj) {
-    $comprobar('compra a KJ, que ya tenia tres', "KJ {$year}-004", (string) $pedido('tec_purchase_order', $kj)->label());
+    $primero_kj = (string) $pedido('tec_purchase_order', $kj)->label();
+    $segundo_kj = (string) $pedido('tec_purchase_order', $kj)->label();
+    $numero_kj = (int) substr($primero_kj, -3);
+
+    $comprobar('la compra lleva el codigo del proveedor', TRUE, str_starts_with($primero_kj, "KJ {$year}-"));
+    $comprobar('y la siguiente va justo detras', "KJ {$year}-" . str_pad((string) ($numero_kj + 1), 3, '0', STR_PAD_LEFT), $segundo_kj);
   }
   else {
     echo "  [dato] la ficha de KJ no esta, me lo salto\n";
@@ -117,6 +133,31 @@ try {
   $primero = $order_storage->load($basura['tec_order'][0]);
   $primero->set('title', 'PRUEBA hueco')->save();
   $comprobar('con un hueco por medio, sigue subiendo', "A {$year}-003", (string) $pedido('tec_sales_order', $a)->label());
+
+  echo "\n=== Un numero entregado no vuelve, aunque se borre el pedido ===\n";
+  // The owner asked it as a question on 17 August 2026: delete POLYTE 26-012 and
+  // make another one, what number does it get? It used to get 26-012 again, and
+  // the supplier could well be holding the first one on paper. Now the number is
+  // spent the moment it is handed out.
+  $z = $ficha('ZTEST');
+  $comprobar('el primero de un proveedor nuevo', "ZTEST {$year}-001", (string) $pedido('tec_purchase_order', $z)->label());
+
+  $segundo = $pedido('tec_purchase_order', $z);
+  $comprobar('el segundo va detras', "ZTEST {$year}-002", (string) $segundo->label());
+
+  $segundo->delete();
+  $comprobar('borrado el segundo, el siguiente no lo hereda', "ZTEST {$year}-003", (string) $pedido('tec_purchase_order', $z)->label());
+
+  // And the harder version of the same thing: with every order gone there is
+  // nothing left to count, so anything that worked it out from what exists would
+  // start over at 001.
+  foreach ($order_storage->loadMultiple($order_storage->getQuery()->accessCheck(FALSE)
+    ->condition('type', 'tec_purchase_order')
+    ->condition('title', "ZTEST {$year}-", 'STARTS_WITH')
+    ->execute()) as $suyo) {
+    $suyo->delete();
+  }
+  $comprobar('y sin ninguno vivo, tampoco empieza de cero', "ZTEST {$year}-004", (string) $pedido('tec_purchase_order', $z)->label());
 
   echo "\n=== Los borradores no gastan numero ===\n";
   // A draft order is a staging area that gets thrown away. Burning a number on
@@ -206,6 +247,14 @@ finally {
     $storage->delete($entities);
     echo sprintf("  %-16s borrados %d\n", $entity_type, count($entities));
   }
+
+  // The counters go back to where they were found, or this test would quietly
+  // advance the real numbering of every supplier it touched each time it ran.
+  $ledger->deleteAll();
+  if ($ledger_before) {
+    $ledger->setMultiple($ledger_before);
+  }
+  echo sprintf("  %-16s devueltos %d\n", 'contadores', count($ledger_before));
 
   $account_switcher->switchBack();
 }

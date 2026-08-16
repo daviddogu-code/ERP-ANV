@@ -398,15 +398,42 @@ a deleted order's number got issued again. Neither had a year filter, so the
 counter would never have restarted in January — the `26-` in the name came from
 the date while the number behind it ran on forever.
 
-**How the counter works now.** It counts names of the exact shape already handed
-out (`KJ 26-` as a title prefix), adds one, and then climbs until the name is
-actually free. Counting names rather than orders ties the number to what has been
-issued, so it survives an order changing hands or having its date corrected, and
-it restarts by itself because the year is part of what is counted. The climb is
-what makes it safe rather than merely likely: counting alone hands out a number a
-deleted order already used. Two orders created in the same instant could still
-race; serialising that would mean a lock on every order to protect against
-something one person clicking one button cannot cause.
+**How the counter works now.** The highest number ever handed out for a contact
+and year is **remembered**, in the key-value store `tec_production.order_number`,
+and that record only ever rises. One above it is the next number, and then it
+climbs until the name is actually free.
+
+It was worked out rather than remembered until 17 August 2026, by counting the
+orders that existed. The owner found the hole by asking a plain question: delete
+`POLYTE 26-012`, make another, what does it get? It got `POLYTE 26-012` again,
+while the supplier may still be holding the first one as a PDF. Counting has a
+second, stranger fault too, because **a count is not a maximum**: with holes in a
+sequence the count can land inside one and reissue a number from the middle of the
+year. `001, 002, 003, 009` counts four, offers `005`, finds it free, and stops.
+
+Two things are read and the higher wins: the remembered height, and the highest
+number actually in use. The second is not redundant — it seeds the first the first
+time a contact is numbered, so nothing had to be migrated, and it heals the counter
+if orders are renamed or imported behind its back. Neither can make it go backwards.
+
+The climb stays. The counter answers *has this been handed out*, the climb answers
+*is this name free right now*, and a title typed by hand can occupy a number the
+counter never issued. Two orders created in the same instant can still read the
+same height; the climb keeps them from sharing a name, the higher of the two gets
+written, and if it did not the scan would put it right on the next order. That is
+why no lock is taken for something one person clicking one button cannot cause.
+
+**Asking spends.** There is deliberately no way to peek at the next number without
+taking it: a preview that did not spend would be shown twice the moment two screens
+showed it. Anything that wants to display a number should create the order and read
+its title — which is why the guardian checks the ledger by reading it, never by
+calling `next()`.
+
+The ledger lives in the database, not in configuration, so it does not travel with
+a config export. On a fresh deployment it seeds itself from the orders that are
+there; run `scripts/el-numero-gastado-no-vuelve.php --aplicar` anyway, because
+self-seeding cannot help if every order of a contact is deleted before their
+counter has ever existed.
 
 Draft orders (`tec_draft_order`) are deliberately not numbered. They are a staging
 area that gets thrown away, and burning a number on one would leave a hole in a
