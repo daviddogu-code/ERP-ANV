@@ -7,86 +7,82 @@ dependencies:
 id: draft_for_ace_company_view
 label: 'Draft for Ace company view'
 code: |-
-  jQuery(document).ready(function() {
-      // Function to format numbers with commas as thousands separators
-      function formatNumberWithCommas(number) {
-          return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  jQuery(document).ready(function () {
+      // The column every figure here is about: the line total. It is what the row
+      // shows, what the grand total adds up and what ends up on the paper, so it
+      // is the one that has to be right.
+      var TOTAL = '.views-field-field-tec-line-item-total-number';
+
+      // Two draft screens share this script and they do not name their columns
+      // alike. A sales line carries its own price and its quantity box is the
+      // first in the view; a purchase line is priced from the material's purchase
+      // cost and its quantity box is the second, so Views suffixes the class with
+      // -1. Rather than work it out from the address, each row is asked which of
+      // the two it happens to have.
+      var PRICE = '.views-field-field-tec-price, .views-field-field-tec-cost';
+      var QTY = '.views-field-form-field-field-tec-quantity input, .views-field-form-field-field-tec-quantity-1 input';
+
+      function money(amount) {
+          return '\u0E3F ' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
       }
 
-      // Function to update the total for a row
+      // Writes the line total into its cell and hands it back.
       function updateRowTotal(row) {
-          var priceText = row.find('.views-field-field-tec-price').text().trim();
-          //console.log('Price text:', priceText);
-
-          // Check if the price is empty
-          if (!priceText) {
-              row.find('.views-field-field-tec-line-item-total-number strong').text('฿ 0.00');
-             // console.log('Price is empty, returning 0');
+          // The cell holds the figure in a strong on some screens and bare on
+          // others. Whichever it is, it is the thing to write into.
+          var cell = row.find(TOTAL).find('strong');
+          if (!cell.length) {
+              cell = row.find(TOTAL);
+          }
+          if (!cell.length) {
               return 0;
           }
 
-          var price = parseFloat(priceText.replace(/[^\d.-]/g, ''));
-         // console.log('Parsed price:', price);
+          var price = parseFloat(row.find(PRICE).first().text().replace(/[^\d.-]/g, ''));
+          var quantity = parseFloat(row.find(QTY).first().val());
 
-          var quantityText = row.find('.views-field-form-field-field-tec-quantity input').val().trim();
-         // console.log('Quantity text:', quantityText);
-
-          // Check if quantity is empty
-          if (!quantityText) {
-              row.find('.views-field-field-tec-line-item-total-number strong').text('฿ 0.00');
-             // console.log('Quantity is empty, returning 0');
-              return 0;
-          }
-
-          var quantity = parseFloat(quantityText);
-          //console.log('Parsed quantity:', quantity);
-
+          // A line with no quantity typed in yet is worth nothing, not an error.
           if (isNaN(price) || isNaN(quantity)) {
-             // console.log('Invalid price or quantity');
-              row.find('.views-field-field-tec-line-item-total-number strong').text('฿ 0.00');
+              cell.text(money(0));
               return 0;
           }
 
           var total = price * quantity;
-          //console.log('Row total:', total);
-
-          row.find('.views-field-field-tec-line-item-total-number strong').text('฿ ' + formatNumberWithCommas(total.toFixed(2)));
+          cell.text(money(total));
           return total;
       }
 
-      // Function to calculate the grand total and append it to the table
       function updateGrandTotal() {
-          var grandTotal = 0;
+          jQuery('.views-table').each(function () {
+              var table = jQuery(this);
+              var grandTotal = 0;
 
-          // Iterate over each row to calculate the grand total
-          jQuery('.views-table tbody tr').each(function() {
-              var row = jQuery(this);
-              var rowTotal = updateRowTotal(row);
-              grandTotal += rowTotal;
+              table.find('tbody tr').not('.grand-total-row').each(function () {
+                  grandTotal += updateRowTotal(jQuery(this));
+              });
+
+              var row = table.find('.grand-total-row');
+              if (!row.length) {
+                  row = jQuery('<tr class="grand-total-row"><td class="views-align-right"><strong>Grand Total</strong></td><td class="views-align-right"><strong class="grand-total-value"></strong></td></tr>');
+                  table.find('tbody').append(row);
+              }
+
+              // Counted off the table rather than hardcoded. The number of columns
+              // is exactly the sort of thing that changes, and when it did, the
+              // old fixed span of eight left this row hanging off the edge.
+              var columns = table.find('thead th').length || table.find('tbody tr').first().find('td').length;
+              row.find('td').first().attr('colspan', Math.max(1, columns - 1));
+              row.find('.grand-total-value').text(money(grandTotal));
           });
-
-          // Check if the grand total row exists, if not create it
-          var grandTotalRow = jQuery('.grand-total-row');
-          if (grandTotalRow.length === 0) {
-              grandTotalRow = jQuery('<tr class="grand-total-row"><td colspan="8" class="views-align-right"><strong>Grand Total</strong></td><td class="views-align-right"><strong class="grand-total-value"></strong></td></tr>');
-              jQuery('.views-table tbody').append(grandTotalRow);
-          }
-
-          // Update the grand total value
-          grandTotalRow.find('.grand-total-value').text('฿ ' + formatNumberWithCommas(grandTotal.toFixed(2)));
-          //console.log('Grand total:', grandTotal);
       }
 
       // input covers mouse-wheel on number fields; keyup/change cover keyboard.
-      jQuery(document).on('input keyup change', '.views-field-form-field-field-tec-quantity input', function() {
-          //console.log("Input changed");
+      jQuery(document).on('input keyup change', QTY, function () {
           updateGrandTotal();
       });
 
-      // Initial calculation of grand total on page load
       updateGrandTotal();
   });
-     
 noscript: ''
 noscriptRegion: {  }
 jquery: false
