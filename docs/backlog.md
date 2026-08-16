@@ -1853,9 +1853,36 @@ guardado. **Arreglar solo la multiplicación habría sido peor que no tocar nada
   precio por su cantidad**. Una sola que no cuadre significa que algo ha vuelto a escribir importes por
   su cuenta. 111 de 111.
 
-**Lo que no se ha tocado.** El impreso conserva sus nombres y su orden de siempre (`Qty. | Material name
-| Price | Unit`), distintos de los de las otras dos. Es el papel que sale a la calle y no me parecía
-cosa de cambiarlo de refilón; queda dicho por si se quiere igualar.
+**El impreso.** Se quedó fuera de esta tanda con sus nombres de siempre, y el dueño lo pidió igualado
+al verlo en la tabla comparativa. Está en la entrada siguiente.
+
+### 2026-08-16 (noche) — El impreso del pedido, también
+
+Quedaba la tercera manera de escribir lo mismo. El borrador y la ficha ya se habían igualado; el papel
+que sale al proveedor seguía con `Qty.`, `Price` y `Unit`, y —lo que se ve menos y confunde más— con
+**otro orden**: la cantidad delante del material y el precio delante de la unidad. Eran dos cambios de
+sitio, no solo tres rótulos, y eso solo se vio al poner las tres pantallas en una tabla:
+
+```
+antes   Item | Picture | Qty. | Material name | Price | Unit | Sub total
+ahora   Item | Picture | Material name | Quantity | Purchase UoM | Purchase Cost | Sub total
+```
+
+No gana ni pierde ninguna columna: son las mismas siete, dichas igual y puestas donde las otras dos. De
+paso, `Purchase Cost` sale alineado a la derecha; estaba sin alinear, así que en la misma tabla el
+precio caía a la izquierda y el `Sub total` a la derecha.
+
+`Purchase UoM` se queda **sin** alinear, que es como está en las otras dos. Centrarlo en el papel
+quedaría mejor, pero la gracia de todo esto es que las tres se lean igual, no que el impreso vaya por su
+cuenta aunque sea para mejor.
+
+- Hecho por `scripts/el-impreso-se-lee-como-el-borrador.php`. Antes de mover nada comprueba que ninguna
+  columna acabe leyendo a otra que quede por detrás: Views solo deja a un campo leer los que se
+  declararon antes que él, y cuando eso se rompe **no revienta** —sale la columna en blanco y nadie se
+  entera hasta que lo ve un proveedor—. Es lo que pasaría con `Picture`, que se dibuja leyendo las dos
+  columnas ocultas de la imagen.
+- Guardián: una comprobación más en la sección 9, que compara el impreso entero contra el borrador,
+  columna a columna. 112 de 112.
 
 ### 2026-08-16 (cierre) — El borrador y la ficha de compra dejan de escribir lo mismo de dos maneras
 

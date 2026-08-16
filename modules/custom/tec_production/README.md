@@ -614,6 +614,26 @@ Two presentation fixes on the draft, both in
 - Guardian: in section 9 — the two screens' headings compared name by name,
   `Received` last, and the two CSS rules still there.
 
+**The printout followed the same night.** `po/%/print` still said `Qty.`,
+`Price` and `Unit`, and — less visible and more confusing — was in a different
+order: quantity before the material, price before the unit. Two moves, not three
+renames, which only became apparent with the three screens side by side in a
+table. It now reads exactly as the draft does, same seven columns in the same
+places, and `Purchase Cost` is right-aligned; it had no alignment at all, so
+price sat left and `Sub total` right in the same table.
+
+`Purchase UoM` is deliberately left unaligned, which is how it is on the other
+two. Centring it would look better on paper, and the point of this is that the
+three read alike rather than that the printout goes its own way.
+
+- `scripts/el-impreso-se-lee-como-el-borrador.php`. Before moving anything it
+  checks that no column would end up reading one placed after it: Views only
+  lets a field read fields declared before it, and when that breaks it does not
+  error — the column comes out blank and nobody notices until a supplier does.
+  `Picture` is drawn from the two hidden image columns, so it is the one at risk.
+- Guardian: one more check in section 9, the printout compared against the draft
+  column by column.
+
 ### An issued purchase order is worth what it was worth (16 August 2026)
 Raise an order in January for 100 at 10. In February the supplier puts the
 material up to 15. In March, open the January order: it said 15, and 1,500.

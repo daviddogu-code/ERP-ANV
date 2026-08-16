@@ -1402,10 +1402,11 @@ comprobar($resultados, 'y el javascript solo pone el pie si lo recibe',
   str_contains($javascriptPie, 'function vatRate()') && str_contains($javascriptPie, "return [['Grand Total', subtotal, true]];"),
   'sin porcentaje, ventas se queda como estaba');
 
-// Y que las dos pantallas sigan llamando igual a lo mismo. La misma columna se
-// llamaba "Unit of Purchase (UoP)" en el borrador y "Unit" en la ficha, el coste
-// era "Cost by UoP" y "Cost per UoP", y la cantidad "Quantity" y "Qty.". Quien
-// mira las dos seguidas tenia que traducir, y traducir es donde se equivoca uno.
+// Y que las tres pantallas sigan llamando igual a lo mismo. La misma columna se
+// llamaba "Unit of Purchase (UoP)" en el borrador, "Unit" en la ficha y "Unit"
+// en el impreso; el coste era "Cost by UoP", "Cost per UoP" y "Price"; la
+// cantidad, "Quantity" y "Qty.". Quien mira dos seguidas tenia que traducir, y
+// traducir es donde se equivoca uno.
 $rotulosDe = function (string $pantalla) use ($vistaIva): array {
   $rotulos = [];
   foreach ($vistaIva->getDisplay($pantalla)['display_options']['fields'] ?? [] as $campo) {
@@ -1426,6 +1427,14 @@ comprobar($resultados, 'las dos pantallas de compra llaman igual a lo mismo',
 comprobar($resultados, 'y Received va al final, con su marca detras',
   array_slice($rotulosFicha, count($rotulosBorrador)) === ['Received', ''],
   implode(' | ', array_slice($rotulosFicha, count($rotulosBorrador))));
+
+// El impreso no es una pantalla mas: es el papel que se manda al proveedor, y
+// tenia ademas otro orden, con la cantidad delante del material y el precio
+// delante de la unidad. Aqui se compara entero, columna a columna, porque en
+// este no sobra ninguna: son las mismas siete del borrador.
+$rotulosImpreso = $rotulosDe('page_3');
+comprobar($resultados, 'y el papel que se manda al proveedor, tambien',
+  $rotulosImpreso === $rotulosBorrador, implode(' | ', $rotulosImpreso));
 
 // La cabecera ya dice Quantity; encima de cada casilla es ruido. La regla existia
 // pero con un solo selector, y ese solo cogia la pantalla de ventas.
