@@ -179,6 +179,59 @@ final class Purchasing {
   }
 
   /**
+   * The day each purchase order's goods actually turned up.
+   *
+   * Not a field, and deliberately so. Receiving already writes a stock
+   * transaction that points back at the line it came in on, and that
+   * transaction is dated, so the arrival date is sitting in the warehouse's own
+   * history. Writing it a second time onto the order would let the two
+   * disagree, and the copy on the order is the one nobody could check.
+   *
+   * A delivery that came in two lorries leaves two dates. This returns the last
+   * of them, which is the day the order stopped being something to chase.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   * @param array $orders
+   *   Purchase orders, keyed however the caller likes.
+   *
+   * @return int[]
+   *   Unix timestamp of the last arrival, keyed by order id. Orders where
+   *   nothing has arrived yet are absent, not zero.
+   */
+  public static function deliveredOn(EntityTypeManagerInterface $entityTypeManager, array $orders): array {
+    $order_of_line = [];
+    foreach ($orders as $order) {
+      foreach ($order->get('field_tec_line_items') as $item) {
+        if ($item->target_id) {
+          $order_of_line[(int) $item->target_id] = (int) $order->id();
+        }
+      }
+    }
+    if (!$order_of_line) {
+      return [];
+    }
+
+    $storage = $entityTypeManager->getStorage('tec_inventory');
+    $ids = $storage->getQuery()
+      ->condition('type', 'tec_inventory_transaction')
+      ->condition('field_tec_po_line', array_keys($order_of_line), 'IN')
+      ->accessCheck(FALSE)
+      ->execute();
+
+    $dates = [];
+    foreach ($storage->loadMultiple($ids) as $transaction) {
+      $oid = $order_of_line[(int) $transaction->get('field_tec_po_line')->target_id] ?? NULL;
+      if ($oid === NULL) {
+        continue;
+      }
+      $dates[$oid] = max($dates[$oid] ?? 0, (int) $transaction->get('created')->value);
+    }
+
+    return $dates;
+  }
+
+  /**
    * A conversion factor, falling back to 1.
    *
    * Every material is supposed to carry both factors since Oscar's optional

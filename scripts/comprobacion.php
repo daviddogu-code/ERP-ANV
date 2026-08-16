@@ -1609,6 +1609,107 @@ foreach ($almacenLineas->loadMultiple($idsLineas) as $lineaPrecio) {
 comprobar($resultados, 'todas las lineas de compra valen su precio por su cantidad',
   !$descuadradas, $descuadradas ? implode('; ', array_slice($descuadradas, 0, 5)) : count($idsLineas) . ' lineas');
 
+titulo('11. Lo que esta de camino se persigue desde el ERP');
+
+// La pantalla /supplier-orders/queue sustituye una hoja de Google que se
+// rellenaba a mano al lado del ERP. Lo unico que anadio a la base de datos son
+// tres campos; todo lo demas ya se sabia. Lo que se vigila aqui es que sigan
+// siendo tres y que ninguno se convierta en una segunda version de algo.
+$gestorCampos = \Drupal::service('entity_field.manager');
+$camposDeCompra = $gestorCampos->getFieldDefinitions('tec_order', 'tec_purchase_order');
+foreach ([
+  'field_tec_po_queue_status' => 'donde esta la mercancia',
+  'field_tec_expected_delivery' => 'cuando dijeron que llegaria',
+  'field_tec_supplier_invoice' => 'la factura del proveedor',
+] as $campoCola => $paraQue) {
+  comprobar($resultados, "el pedido de compra guarda $paraQue",
+    isset($camposDeCompra[$campoCola]), $campoCola);
+}
+
+// El cuarto estado de la hoja, "Delivered", no se guarda: se lee de los
+// movimientos de almacen. Si vuelve a la lista de valores, alguien podra decir
+// que un pedido llego sin que entre una sola unidad en el stock, y la lista de
+// la compra dejara de reponer un material que nunca vino.
+$estadosCola = isset($camposDeCompra['field_tec_po_queue_status'])
+  ? ($camposDeCompra['field_tec_po_queue_status']->getFieldStorageDefinition()->getSetting('allowed_values') ?: [])
+  : [];
+comprobar($resultados, "'Delivered' no se puede teclear en ninguna parte",
+  $estadosCola && !array_key_exists('delivered', $estadosCola), implode(', ', array_keys($estadosCola)));
+
+$conEntregaEscrita = \Drupal::entityQuery('tec_order')
+  ->condition('type', 'tec_purchase_order')
+  ->condition('field_tec_po_queue_status', 'delivered')
+  ->accessCheck(FALSE)
+  ->count()
+  ->execute();
+comprobar($resultados, 'y ningun pedido lo lleva escrito', (int) $conEntregaEscrita === 0,
+  $conEntregaEscrita . ' pedidos');
+
+// Una factura lleva precios y numero fiscal de un tercero. En el sistema de
+// ficheros publico se la descarga cualquiera que acierte la direccion.
+$almacenFactura = isset($camposDeCompra['field_tec_supplier_invoice'])
+  ? $camposDeCompra['field_tec_supplier_invoice']->getFieldStorageDefinition()->getSetting('uri_scheme')
+  : '';
+comprobar($resultados, 'las facturas van al almacen privado',
+  $almacenFactura === 'private', $almacenFactura ?: 'no hay campo');
+
+// Y no salen en el papel que se le manda al proveedor: son notas internas de
+// seguimiento, no parte del pedido.
+foreach (['default' => 'la ficha', 'pdf' => 'el pdf'] as $pantallaCola => $comoSeLlamaCola) {
+  $escondidos = \Drupal::config('core.entity_view_display.tec_order.tec_purchase_order.' . $pantallaCola)->get('hidden') ?: [];
+  $asomando = array_diff(
+    ['field_tec_po_queue_status', 'field_tec_expected_delivery', 'field_tec_supplier_invoice'],
+    array_keys(array_filter($escondidos))
+  );
+  comprobar($resultados, "el seguimiento no asoma en $comoSeLlamaCola del pedido",
+    !$asomando, implode(', ', $asomando));
+}
+
+// La puerta. Aqui no valen las pestanas -DXPR las tira encima de la cabecera y
+// el bloque que las pinta es solo para administradores-, asi que la entrada es
+// el menu principal y si desaparece la pantalla queda inalcanzable.
+comprobar($resultados, 'la pantalla tiene ruta',
+  (bool) \Drupal::service('router.route_provider')->getRoutesByNames(['tec_production.purchase_queue']));
+comprobar($resultados, 'y una entrada en el menu principal, que las pestanas no se ven en este tema',
+  \Drupal::service('plugin.manager.menu.link')->hasDefinition('tec_production.purchase_queue'));
+
+foreach (['tec_manager', 'tec_executive'] as $rolCompras) {
+  $rolCargado = \Drupal\user\Entity\Role::load($rolCompras);
+  comprobar($resultados, "$rolCompras puede entrar a control de compras",
+    $rolCargado && $rolCargado->hasPermission('access tec purchase queue'));
+}
+
+// Y la integridad de fondo: lo recibido en una linea tiene que tener detras un
+// movimiento de almacen. Si no lo tiene, alguien escribio la cantidad a mano y
+// el stock no subio, con lo cual la pantalla dice que llego y la estanteria
+// dice que no.
+$sinMovimiento = [];
+$lineasRecibidas = \Drupal::entityTypeManager()->getStorage('tec_line_item');
+$idsRecibidas = $lineasRecibidas->getQuery()
+  ->condition('type', 'tec_po_line_item')
+  ->condition('field_tec_quantity_received', 0, '>')
+  ->accessCheck(FALSE)
+  ->execute();
+if ($idsRecibidas) {
+  $conMovimiento = \Drupal::entityQuery('tec_inventory')
+    ->condition('type', 'tec_inventory_transaction')
+    ->condition('field_tec_po_line', $idsRecibidas, 'IN')
+    ->accessCheck(FALSE)
+    ->execute();
+  $apuntadas = [];
+  foreach (\Drupal::entityTypeManager()->getStorage('tec_inventory')->loadMultiple($conMovimiento) as $movimientoCola) {
+    $apuntadas[(int) $movimientoCola->get('field_tec_po_line')->target_id] = TRUE;
+  }
+  foreach ($idsRecibidas as $idRecibida) {
+    if (!isset($apuntadas[(int) $idRecibida])) {
+      $sinMovimiento[] = $idRecibida;
+    }
+  }
+}
+comprobar($resultados, 'todo lo recibido dejo su entrada en el almacen',
+  !$sinMovimiento,
+  $sinMovimiento ? 'lineas ' . implode(', ', array_slice($sinMovimiento, 0, 5)) : count($idsRecibidas) . ' lineas');
+
 // -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------

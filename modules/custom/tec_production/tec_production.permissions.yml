@@ -18,6 +18,10 @@ access tec purchase list:
   title: 'Access the purchase list'
   description: 'See what is below its reorder point and create purchase orders from it.'
 
+access tec purchase queue:
+  title: 'Access purchase control'
+  description: 'Chase orders that have been placed and have not arrived: move their delivery progress, set the day they are expected and file the supplier invoice.'
+
 administer tec company settings:
   title: 'Administer company settings'
   description: 'Change the VAT rate and which screen each home page icon opens. Separate from Drupal''s own site configuration permission so that whoever runs the company can change the rate without being handed the whole site.'

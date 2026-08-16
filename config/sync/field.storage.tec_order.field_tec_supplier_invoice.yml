@@ -1,0 +1,23 @@
+uuid: 91fde826-964f-4ba6-8cd0-35142705f230
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - file
+id: tec_order.field_tec_supplier_invoice
+field_name: field_tec_supplier_invoice
+entity_type: tec_order
+type: file
+settings:
+  target_type: file
+  display_field: false
+  display_default: false
+  uri_scheme: private
+module: file
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

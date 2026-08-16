@@ -478,6 +478,83 @@ the published-only filter that caused the repeats.
   renumbers per contact and per year from each order's own creation date, is
   idempotent, and does nothing without `--de-verdad`.
 
+### Purchase control (phase 7) — 17 August 2026
+`/supplier-orders/queue`, permission `access tec purchase queue` (*manager* and
+*executive*). It replaces a Google Sheet kept by hand beside the ERP: every
+purchase order was retyped into it after being created here, a coloured status
+was moved along as the supplier answered the phone, and the row was deleted when
+the goods reached the factory. Two lists of the same orders, and the one people
+actually read was the one the ERP knew nothing about.
+
+It is dressed as that sheet on purpose — dark green heading, alternating stripes,
+coloured pills — because the person who will use it has read the sheet every
+morning for years.
+
+**Three fields were added and no more.** The rest of the sheet the ERP already
+knew: the order number, the supplier, who created it and when.
+`field_tec_po_queue_status`, `field_tec_expected_delivery`,
+`field_tec_supplier_invoice`. All three are **hidden in the order's view display
+and in the PDF**: they are internal chasing notes, not part of what the supplier
+is sent.
+
+**Two columns are stored nowhere.** The delivery date comes from the stock
+movements receiving wrote — they already point at the line they arrived on and
+carry a date — through `Purchasing::deliveredOn()`. Days is a subtraction.
+
+**"Delivered" is derived, not stored, and that is the decision worth keeping.**
+The owner asked for it to be set automatically on receipt, and the obvious build
+was to have the Receive form write it. That would mean a dropdown with
+"Delivered" in it, and someone could pick it without a single unit entering
+stock — after which the purchase list would refuse to reorder material that never
+came. So the field allows **three** values, the ones a human knows and the ERP
+cannot infer, and the fourth is read off the lines like everything else derived
+here. It appears by itself, it cannot be typed, and the Receive form needed no
+change at all.
+
+**Which orders appear, in two rules.**
+1. While there is something to chase. `Purchasing::receiptState()` of `cancelled`
+   — nothing outstanding and nothing ever received — is not a queue entry whether
+   the order is open or closed. That silently keeps out the thirteen half-written
+   orders with no quantities that clutter `/supplier-orders`.
+2. Until the invoice is filed, which is the owner's rule: the goods arrived weeks
+   ago, but the paperwork is what finishes it. **With one condition the owner did
+   not ask for**: only once everything has actually arrived. Invoices come at
+   month end, so in practice they follow the goods; but the day a supplier
+   invoices ahead of a part-delivery, letting paperwork hide an order that still
+   owes material is how the missing half gets forgotten. The upload dialog says so
+   when it happens.
+
+**It is a form, not a View, and that is a reversal of the plan.** Views sorts in
+SQL, and two of these columns are not in SQL — including Days, which is the column
+that says who to phone first. Sorting happens in PHP over the assembled rows, which
+is affordable while the list is the dozens of orders in flight rather than the
+whole history, and it means **all nine headings sort**. Blanks sink whichever way
+the arrow points: an order with no promised date is not the earliest or the latest,
+it is the one nobody has pinned down. It also puts this screen in the same shape as
+every other control screen here — `/o/queue`, `/stock`, `/purchase`, receiving.
+
+**The invoice** goes to the **private** filesystem: it carries a third party's
+prices and tax number, and in the public one anyone who guesses the path downloads
+it without logging in. It uploads through a modal (`InvoiceUploadForm`) that
+accepts PDFs and photos and deliberately does **not** set `capture`: with capture a
+phone opens straight into the camera and there is no way to attach a PDF already on
+it. Offering both serves the desk and the delivery door from one screen.
+
+**The door is the main menu, not a tab** — for the reason the Receive button
+exists: DXPR lifts the tab strip over the sticky header and the block that prints
+it is limited to the administrator role.
+
+- Fields: `scripts/crear-los-campos-de-la-cola-de-compras.php`.
+- **On deployment run `scripts/encender-el-control-de-compras.php --aplicar`**: it
+  grants the permission and seeds the starting state of the orders that already
+  exist. A field default only applies to new entities, so without it today's
+  orders open with an empty dropdown.
+- Test: `scripts/lo-que-esta-de-camino-se-ve.php` builds the five cases that
+  actually occur — nothing received and overdue, part received, all received, all
+  received and invoiced, and half-written with no quantities — and asserts which
+  three show and which two do not.
+- Guardian: section 11.
+
 ### VAT: one fact per supplier, one rate for the company (16 August 2026)
 Three situations that look different are the same question. A supplier abroad
 charges no Thai VAT. A small Thai supplier below the registration threshold

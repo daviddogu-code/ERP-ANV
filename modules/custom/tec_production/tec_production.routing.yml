@@ -84,6 +84,31 @@ tec_production.company_settings:
   requirements:
     _permission: 'administer tec company settings'
 
+# Under /supplier-orders and not under /purchase because it is the same family
+# as the list of orders it chases, not a second version of the buying screen.
+tec_production.purchase_queue:
+  path: '/supplier-orders/queue'
+  defaults:
+    _form: '\Drupal\tec_production\Form\PurchaseQueueForm'
+    _title: 'Purchase Control'
+  requirements:
+    _permission: 'access tec purchase queue'
+
+tec_production.po_invoice:
+  path: '/tec_order/{tec_order}/invoice'
+  defaults:
+    _form: '\Drupal\tec_production\Form\InvoiceUploadForm'
+    _title: 'File invoice'
+  requirements:
+    # Same trick as the receive form: the custom check is what keeps sales
+    # orders out, and Drupal then hides any link pointing here.
+    _custom_access: '\Drupal\tec_production\Form\InvoiceUploadForm::access'
+    tec_order: \d+
+  options:
+    parameters:
+      tec_order:
+        type: 'entity:tec_order'
+
 tec_production.stock_adjust:
   path: '/stock/{taxonomy_term}/adjust'
   defaults:

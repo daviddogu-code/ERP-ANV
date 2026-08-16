@@ -59,6 +59,16 @@ receipt_state:
     theme:
       css/receipt-state.css: {}
 
+purchase_queue:
+  css:
+    theme:
+      css/purchase-queue.css: {}
+  js:
+    js/purchase-queue.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
 purchase_totals:
   css:
     theme:

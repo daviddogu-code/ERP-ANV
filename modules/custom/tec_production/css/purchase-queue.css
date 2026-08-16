@@ -1,0 +1,243 @@
+/* Purchase Control (/supplier-orders/queue).
+
+   Deliberately dressed as the Google Sheet it replaces: dark green heading row,
+   alternating stripes, coloured status pills. The people who will use this have
+   read that sheet every morning for years, and a screen that looks like it is
+   one they can use on the first day without being taught. The colours are the
+   ones Sheets itself offers, so the match is not approximate. */
+
+.tec-pq__summary {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3f6fb;
+  border: 1px solid #dbe4f0;
+  border-radius: 6px;
+  color: #444;
+  font-size: 0.82rem;
+  max-width: 82rem;
+}
+
+.tec-pq__wrap {
+  overflow-x: auto;
+  max-width: 82rem;
+}
+
+.tec-pq__table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 0.82rem;
+  background: #fff;
+}
+
+.tec-pq__table th,
+.tec-pq__table td {
+  padding: 0.35rem 0.5rem;
+  white-space: nowrap;
+  vertical-align: middle;
+  border-bottom: 1px solid #e2e2e2;
+}
+
+/* The heading row of the sheet. The theme puts its own colours on table
+   headings, hence the weight of the selector and the !important on the link:
+   an admin theme that paints links blue makes white-on-green unreadable. */
+.tec-pq__table thead th,
+.tec-pq__table thead th.tec-pq__h {
+  background: #38761d;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  border-bottom: none;
+  text-transform: none;
+}
+
+.tec-pq__table thead th a {
+  color: #fff !important;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.45);
+}
+
+.tec-pq__table thead th a:hover {
+  border-bottom-color: #fff;
+}
+
+/* The caret only appears on the column actually sorted, pointing the way the
+   rows run. A caret on every heading tells you nothing. */
+.tec-pq__h--sorted a::after {
+  margin-left: 0.3rem;
+  font-size: 0.7em;
+}
+
+.tec-pq__h--asc a::after {
+  content: "\25B2";
+}
+
+.tec-pq__h--desc a::after {
+  content: "\25BC";
+}
+
+.tec-pq__table tbody tr:nth-child(even) {
+  background: #f6f9f4;
+}
+
+.tec-pq__table tbody tr:hover {
+  background: #eef4ea;
+}
+
+/* Past the day the supplier promised. Left border rather than a red row: the
+   status pills carry the colour on this screen and a red wash would fight
+   them. */
+.tec-pq__row--late td:first-child {
+  box-shadow: inset 3px 0 0 #cc0000;
+}
+
+.tec-pq__row--late .tec-pq__days {
+  color: #cc0000;
+  font-weight: 700;
+}
+
+.tec-pq__order a {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tec-pq__none {
+  color: #aaa;
+}
+
+.tec-pq__num {
+  text-align: right;
+}
+
+/* Status: a dropdown that reads as a pill, and a plain pill once the goods are
+   in and there is nothing left to choose. */
+.tec-pq__pill,
+.tec-pq__select select,
+.tec-pq__status select {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.5;
+  min-height: 0;
+  height: auto;
+  width: auto;
+  max-width: 11rem;
+  background-image: none;
+  appearance: auto;
+}
+
+.tec-pq__status .form-item {
+  margin: 0;
+}
+
+.tec-pq__pill--delivered,
+.tec-pq__status select.tec-pq__select--delivered {
+  background: #d9ead3;
+  color: #38761d;
+  border-color: #b6d7a8;
+}
+
+.tec-pq__status select.tec-pq__select--on_process {
+  background: #fff2cc;
+  color: #7f6000;
+  border-color: #ffe599;
+}
+
+.tec-pq__status select.tec-pq__select--ready_to_pick_up {
+  background: #cfe2f3;
+  color: #0b5394;
+  border-color: #9fc5e8;
+}
+
+.tec-pq__status select.tec-pq__select--on_the_way {
+  background: #fce5cd;
+  color: #b45f06;
+  border-color: #f9cb9c;
+}
+
+/* The expected day is typed into the table, so the input has to stop looking
+   like a form and start looking like a cell. */
+.tec-pq__expected .form-item {
+  margin: 0;
+}
+
+.tec-pq__expected input {
+  padding: 0.15rem 0.3rem;
+  font-size: 0.78rem;
+  min-height: 0;
+  height: auto;
+  width: 9.5rem;
+  border: 1px solid #d3d3d3;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.tec-pq__expected input:focus {
+  border-color: #38761d;
+  outline: 2px solid #d9ead3;
+}
+
+.tec-pq__invoice {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid #c8c8c8;
+  border-radius: 4px;
+  background: #fafafa;
+  font-size: 0.76rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tec-pq__invoice:hover {
+  background: #38761d;
+  border-color: #38761d;
+  color: #fff;
+}
+
+/* An invoice already filed on an order that is still owed material. Rare, and
+   the screen keeps the row until the rest arrives, so it needs to be visibly
+   done rather than pending. */
+.tec-pq__invoice--filed {
+  background: #d9ead3;
+  border-color: #b6d7a8;
+  color: #38761d;
+}
+
+/* The upload dialog. */
+.tec-invoice__head {
+  margin-bottom: 0.75rem;
+}
+
+.tec-invoice__order {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.tec-invoice__supplier {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.tec-invoice__existing,
+.tec-invoice__warning {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+
+.tec-invoice__existing {
+  background: #f3f6fb;
+  border: 1px solid #dbe4f0;
+  color: #444;
+}
+
+.tec-invoice__warning {
+  background: #fdf6e7;
+  border: 1px solid #ecd9a6;
+  color: #6b4e00;
+}

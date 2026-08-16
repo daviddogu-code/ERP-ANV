@@ -1,3 +1,14 @@
+# Beside "Supplier Orders" in the main menu, and not as a tab on it. Tabs are
+# the obvious answer and they do not work in this theme: DXPR lifts the tab
+# strip out of the flow and drops it over the sticky header, and the block that
+# prints it is limited to the administrator role. See README, "Receiving".
+tec_production.purchase_queue:
+  title: 'Purchase Control'
+  description: 'Orders placed and not yet arrived: where they are, when they were promised and how long they have taken.'
+  route_name: tec_production.purchase_queue
+  menu_name: main
+  weight: 3
+
 tec_production.admin_tec:
   title: 'TEC'
   description: 'Settings for the ERP that belong to the company rather than to one screen.'

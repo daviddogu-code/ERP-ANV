@@ -1,0 +1,21 @@
+uuid: 9a819890-65fe-4b54-a2f1-57f6091992c0
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_purchase_order
+    - field.storage.tec_order.field_tec_expected_delivery
+  module:
+    - datetime
+id: tec_order.tec_purchase_order.field_tec_expected_delivery
+field_name: field_tec_expected_delivery
+entity_type: tec_order
+bundle: tec_purchase_order
+label: 'Expected delivery day'
+description: 'The day the supplier said it would arrive. Written by hand, and corrected on the purchase control screen when the supplier changes their mind, which is where it gets looked at.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: datetime

@@ -1,0 +1,27 @@
+uuid: 55991321-87ec-4a79-9867-8c904416b167
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_purchase_order
+    - field.storage.tec_order.field_tec_supplier_invoice
+  module:
+    - file
+id: tec_order.tec_purchase_order.field_tec_supplier_invoice
+field_name: field_tec_supplier_invoice
+entity_type: tec_order
+bundle: tec_purchase_order
+label: Invoice
+description: "The supplier's invoice, scanned or photographed. Uploading it is what takes the order off the purchase control screen: the goods arrived weeks ago, but the paperwork is what finishes it."
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:file'
+  handler_settings: {  }
+  file_directory: 'supplier-invoices/[date:custom:Y]'
+  file_extensions: 'pdf jpg jpeg png heic webp'
+  max_filesize: ''
+  description_field: false
+field_type: file

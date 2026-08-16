@@ -1,0 +1,30 @@
+uuid: 95d1889b-e3ed-4dfe-aa7d-805fe013f1d3
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - options
+id: tec_order.field_tec_po_queue_status
+field_name: field_tec_po_queue_status
+entity_type: tec_order
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: on_process
+      label: 'On process'
+    -
+      value: ready_to_pick_up
+      label: 'Ready to pick up'
+    -
+      value: on_the_way
+      label: 'On the way'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

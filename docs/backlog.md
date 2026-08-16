@@ -1814,6 +1814,86 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-17 — Control de compras: la hoja de Google se muda al ERP
+
+Quien vigila los pedidos de compra lo llevaba en una hoja de Google al lado del ERP. Copiaba a mano
+cada pedido después de crearlo aquí, movía un color según lo que le contara el proveedor por teléfono,
+y borraba la fila cuando la mercancía llegaba a la fábrica. Dos listas de los mismos pedidos, y **la
+que la gente miraba de verdad era la que el ERP no conocía**.
+
+Ahora está en `/supplier-orders/queue`, con la misma pinta que la hoja —cabecera verde oscuro, filas
+alternas, pastillas de color— porque quien la va a usar lleva años leyendo esa hoja cada mañana y una
+pantalla que se le parece se usa el primer día sin que nadie la enseñe.
+
+**De todo lo que había en la hoja, al ERP solo hubo que añadirle tres datos.** El resto ya lo sabía:
+el número del pedido, el proveedor, quién lo creó y cuándo. Los tres nuevos son dónde está la
+mercancía, qué día dijo el proveedor que llegaría, y la factura.
+
+Y dos columnas **no se guardan en ninguna parte**, se deducen:
+
+- La **fecha de llegada** sale de los movimientos de almacén que escribió la recepción, que ya apuntan
+  a la línea de la que vinieron y llevan su fecha. Guardarla otra vez en el pedido sería dejar que las
+  dos discreparan, y la copia del pedido es la que nadie puede comprobar.
+- Los **días** son una resta.
+
+**El cuarto estado de la hoja, «Delivered», tampoco se guarda, y esa fue la decisión de fondo.** El
+dueño pidió que se pusiera solo al recibir la mercancía, y la forma más obvia era que la recepción lo
+escribiera. Pero entonces habría un desplegable con «Delivered» dentro, y alguien podría marcarlo sin
+que entrase una sola unidad en el stock: la lista de la compra dejaría de reponer un material que
+nunca vino. Así que el campo guarda **tres** estados —los tres que una persona sí sabe y el ERP no
+puede adivinar— y la pantalla lee el cuarto de las líneas, como el resto de cosas derivadas de este
+módulo. Sale solo, no se puede teclear, y no hizo falta tocar el formulario de recibir.
+
+**Qué sale en la pantalla, en dos reglas.** Un pedido está mientras haya algo que perseguir: nada
+pendiente y nada recibido nunca significa que no hay nada que perseguir —un pedido a medio escribir sin
+cantidades, o uno cerrado corto antes de que saliera nada—, así que no aparece, esté abierto o cerrado.
+Eso se lleva por delante los **trece pedidos vacíos** que llevan semanas ensuciando `/supplier-orders`
+sin que haya que decidir todavía qué hacer con ellos. Y se va cuando se archiva la factura, que es la
+regla del dueño: la mercancía llegó hace semanas, pero el papeleo es lo que lo termina.
+
+A esa segunda regla se le puso **una condición que el dueño no pidió**: solo se va si además ha llegado
+todo. Las facturas llegan a fin de mes, así que en la práctica vienen después de la mercancía; pero el
+día que un proveedor facture por delante de una entrega parcial, dejar que el papel esconda un pedido
+que todavía debe material es exactamente cómo se olvida la mitad que falta. Cuando pasa, la ventanita
+lo avisa al subir la factura.
+
+Lo demás, por orden de importancia:
+
+- **Se ordena por las nueve columnas, incluidas las dos que no existen en la base de datos.** Por eso
+  la pantalla es un formulario propio y no una vista de Views, en contra de lo que se dijo al
+  planificarlo: Views ordena por SQL, y los días y la fecha de llegada no están en SQL. Justo la
+  columna que dice a quién hay que llamar primero sería la única que no se podría ordenar. Se ordena en
+  PHP, que sale barato mientras la lista sean las decenas de pedidos en vuelo y no el histórico. Y de
+  paso es como están hechas las otras pantallas de control de esta casa: `/o/queue`, `/stock`,
+  `/purchase` y recibir.
+- **Los huecos se hunden siempre**, se ordene hacia arriba o hacia abajo. Un pedido sin fecha prometida
+  no es «el más temprano» ni «el más tardío», es el que nadie ha concretado.
+- **La factura va al almacén privado**, no al público. Lleva precios y número fiscal de un tercero, y
+  en el público se la descarga cualquiera que acierte la dirección. Se sube en una ventanita, acepta
+  PDF y fotos, y **no fuerza la cámara** a propósito: con `capture` el móvil abre directo la cámara y
+  ya no hay forma de adjuntar el PDF que uno tiene guardado. Ofreciendo las dos, la misma pantalla vale
+  para el escritorio y para la puerta de descarga.
+- **La puerta es el menú principal, no una pestaña.** Las pestañas son la respuesta obvia y en este
+  tema no se ven: DXPR saca la tira de pestañas del flujo y la tira encima de la cabecera pegajosa, y
+  el bloque que las pinta está limitado al rol de administrador. Ya pasó con el botón de recibir.
+- Permiso propio, `access tec purchase queue`, para *manager* y *executive*. Compras no es producción.
+- **Los tres campos van escondidos en la ficha del pedido y en el PDF.** Son notas internas de
+  seguimiento; el papel que se le manda al proveedor no cambia. El guardián lo vigila.
+- Al teclear en la tabla y pinchar luego una cabecera para ordenar, el navegador **avisa antes de
+  perder lo escrito**. Ordenar es un enlace y se lleva la página por delante.
+
+Ficheros: `PurchaseQueueForm`, `InvoiceUploadForm`, `Purchasing::deliveredOn()`,
+`css/purchase-queue.css`, `js/purchase-queue.js`.
+`scripts/crear-los-campos-de-la-cola-de-compras.php` abre los tres huecos.
+**Al desplegar hay que correr `scripts/encender-el-control-de-compras.php --aplicar`**, que da el
+permiso y siembra el estado de partida de los pedidos que ya existen: el valor por defecto solo vale
+para los nuevos, y sin eso los de hoy abrirían con el desplegable en blanco.
+Prueba: `scripts/lo-que-esta-de-camino-se-ve.php`, con los cinco casos que se dan de verdad.
+Guardián: sección 11, trece comprobaciones. **130 de 130.**
+
+Queda pendiente, y es corto: **esconder las líneas sin cantidad en el formulario de recibir**, que el
+dueño apartó a propósito para no mezclarlo con esto.
+
 ### 2026-08-17 — Un número entregado no vuelve
 
 Lo preguntó el dueño con un caso concreto: si borro `POLYTE 26-012` y creo otro pedido ahora mismo,

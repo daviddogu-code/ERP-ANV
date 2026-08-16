@@ -8,9 +8,12 @@ dependencies:
     - core.base_field_override.tec_order.tec_purchase_order.uid
     - eck.eck_type.tec_order.tec_purchase_order
     - field.field.tec_order.tec_purchase_order.field_tec_customer
+    - field.field.tec_order.tec_purchase_order.field_tec_expected_delivery
     - field.field.tec_order.tec_purchase_order.field_tec_line_items
+    - field.field.tec_order.tec_purchase_order.field_tec_po_queue_status
     - field.field.tec_order.tec_purchase_order.field_tec_po_status
     - field.field.tec_order.tec_purchase_order.field_tec_priority
+    - field.field.tec_order.tec_purchase_order.field_tec_supplier_invoice
     - field.field.tec_order.tec_purchase_order.field_tec_vat_rate
     - field.field.tec_order.tec_purchase_order.field_tec_vendor
     - views.view.tec_order_sales_order_line_items
@@ -1105,5 +1108,8 @@ content:
     weight: 5
     region: content
 hidden:
+  field_tec_expected_delivery: true
+  field_tec_po_queue_status: true
+  field_tec_supplier_invoice: true
   field_tec_vat_rate: true
   langcode: true

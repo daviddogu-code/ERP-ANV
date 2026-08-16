@@ -1,0 +1,20 @@
+uuid: eef3ff34-8ccf-4e37-975d-98b27820f0ee
+langcode: en
+status: true
+dependencies:
+  module:
+    - datetime
+    - eck
+id: tec_order.field_tec_expected_delivery
+field_name: field_tec_expected_delivery
+entity_type: tec_order
+type: datetime
+settings:
+  datetime_type: date
+module: datetime
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
