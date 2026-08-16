@@ -1,0 +1,12 @@
+tec_production.admin_tec:
+  title: 'TEC'
+  description: 'Settings for the ERP that belong to the company rather than to one screen.'
+  route_name: tec_production.admin_tec
+  parent: system.admin_config
+  weight: -20
+
+tec_production.company_settings:
+  title: 'Company settings'
+  description: 'The VAT rate, and which screen each home page icon opens.'
+  route_name: tec_production.company_settings
+  parent: tec_production.admin_tec

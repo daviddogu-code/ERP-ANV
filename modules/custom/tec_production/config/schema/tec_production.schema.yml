@@ -1,0 +1,48 @@
+tec_production.settings:
+  type: config_object
+  label: 'TEC Production settings'
+  mapping:
+
+    # How much can be produced in a day, and over how long to project it. These
+    # three are edited on the queue screen itself rather than here, because that
+    # is where their effect is visible.
+    capacity_staff:
+      type: float
+      label: 'Staff hours available per day'
+    capacity_overtime:
+      type: float
+      label: 'Overtime hours available per day'
+    capacity_factor:
+      type: float
+      label: 'Efficiency factor applied to the hours'
+    days_per_month:
+      type: integer
+      label: 'Working days in a month'
+    include_open:
+      type: boolean
+      label: 'Count orders that are still open towards the load'
+
+    # Each home page icon is an ordinary node, so that it shows on the grid with
+    # the others. Viewing one redirects to the screen it stands for, and this is
+    # where the pairing lives -- see QueueTileRedirectSubscriber.
+    queue_tile_nid:
+      type: integer
+      label: 'Node of the icon that opens the production queue'
+    log_tile_nid:
+      type: integer
+      label: 'Node of the icon that opens the daily production log'
+    report_tile_nid:
+      type: integer
+      label: 'Node of the icon that opens the production report'
+    stock_tile_nid:
+      type: integer
+      label: 'Node of the icon that opens stock control'
+    purchase_tile_nid:
+      type: integer
+      label: 'Node of the icon that opens the purchase list'
+
+    # The rate, once, for the whole company. Which suppliers charge it is a
+    # separate question answered on each contact card -- see src/Vat.php.
+    vat_rate:
+      type: float
+      label: 'Standard VAT rate, as a percentage'

@@ -63,6 +63,27 @@ tec_production.po_receive:
       tec_order:
         type: 'entity:tec_order'
 
+# Settings live under Configuration rather than beside the /admin/tec screens.
+# Those are bare paths with no menu entry anywhere, so a menu link pointing into
+# that family would arrive with a breadcrumb leading nowhere. This is also the
+# place an administrator looks first, and it gives the settings that come after
+# this one -- currency, company address -- somewhere to go.
+tec_production.admin_tec:
+  path: '/admin/config/tec'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'TEC'
+  requirements:
+    _permission: 'administer tec company settings'
+
+tec_production.company_settings:
+  path: '/admin/config/tec/company'
+  defaults:
+    _form: '\Drupal\tec_production\Form\CompanySettingsForm'
+    _title: 'Company settings'
+  requirements:
+    _permission: 'administer tec company settings'
+
 tec_production.stock_adjust:
   path: '/stock/{taxonomy_term}/adjust'
   defaults:

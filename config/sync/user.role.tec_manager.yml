@@ -73,6 +73,7 @@ permissions:
   - 'access tec stock control'
   - 'access tec_products entity browser pages'
   - 'access user profiles'
+  - 'administer tec company settings'
   - 'administer users'
   - 'cancel account'
   - 'change own username'

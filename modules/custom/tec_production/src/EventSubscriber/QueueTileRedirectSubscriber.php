@@ -19,6 +19,21 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class QueueTileRedirectSubscriber implements EventSubscriberInterface {
 
+  /**
+   * Which setting holds the node of the icon that opens which screen.
+   *
+   * Public because the company settings form builds itself from this list. The
+   * pairing has to be stated once: two copies of it drift, and the way that
+   * failure shows up is an icon that quietly opens the wrong screen.
+   */
+  public const TILES = [
+    'queue_tile_nid' => 'tec_production.queue',
+    'log_tile_nid' => 'tec_production.log',
+    'report_tile_nid' => 'tec_production.report',
+    'stock_tile_nid' => 'tec_production.stock',
+    'purchase_tile_nid' => 'tec_production.purchase_list',
+  ];
+
   protected ConfigFactoryInterface $configFactory;
   protected RouteMatchInterface $routeMatch;
 
@@ -43,14 +58,7 @@ class QueueTileRedirectSubscriber implements EventSubscriberInterface {
       return;
     }
     $settings = $this->configFactory->get('tec_production.settings');
-    $map = [
-      'queue_tile_nid' => 'tec_production.queue',
-      'log_tile_nid' => 'tec_production.log',
-      'report_tile_nid' => 'tec_production.report',
-      'stock_tile_nid' => 'tec_production.stock',
-      'purchase_tile_nid' => 'tec_production.purchase_list',
-    ];
-    foreach ($map as $key => $route) {
+    foreach (self::TILES as $key => $route) {
       $tile_nid = (int) $settings->get($key);
       if ($tile_nid > 0 && (int) $node->id() === $tile_nid) {
         $event->setResponse(new RedirectResponse(Url::fromRoute($route)->toString(), 302));
