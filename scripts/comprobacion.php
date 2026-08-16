@@ -772,6 +772,85 @@ foreach ($restaurar as [$tipo, $id, $campo, $valor]) {
   }
 }
 
+// Y que las cifras de verdad se puedan escribir. Drupal valida cada casilla
+// decimal contra un paso que saca de los decimales de la columna, y esa
+// comprobacion suya esta rota: Number::validStep() mide en coma flotante el
+// resto de dividir el valor por el paso, y lo compara contra un margen fijo de
+// paso/2^24. El resto crece con el tamano del numero y el margen no, asi que a
+// partir de 10^(9 - decimales) no pasa nada, por redondo que sea. Con seis
+// decimales el techo son mil y rechazaba un coste de 799,70; con cinco son diez
+// mil y rechazaba un factor de 10000.
+//
+// El rodeo pone el paso en 'any' y comprueba la regla de verdad contando los
+// digitos detras del punto. Si algun dia Drupal lo arregla, esto lo dice.
+$pasoSigueRoto = !\Drupal\Component\Utility\Number::validStep('10000', pow(0.1, 5));
+comprobar($resultados, 'el paso de Drupal sigue roto, el rodeo hace falta',
+  $pasoSigueRoto,
+  $pasoSigueRoto ? 'techo en 10^(9-decimales)' : 'Drupal lo ha arreglado, se puede quitar el rodeo');
+
+// Lo que importa no es que el rodeo este escrito, sino que llegue a la pantalla.
+// Se construye la ficha de material de verdad y se mira casilla por casilla, asi
+// que un campo decimal nuevo queda cubierto sin tocar el guardian.
+$fichaMaterial = \Drupal::service('entity.form_builder')->getForm(
+  $etm->getStorage('taxonomy_term')->create(['vid' => 'tec_inventory'])
+);
+$sinRodeo = [];
+$sinComprobacion = [];
+$derivados = ['field_tec_price_uos', 'field_tec_price'];
+foreach (\Drupal\Core\Render\Element::children($fichaMaterial) as $nombreCampo) {
+  $casilla = $fichaMaterial[$nombreCampo]['widget'][0]['value'] ?? NULL;
+  if (!is_array($casilla) || ($casilla['#type'] ?? NULL) !== 'number') {
+    continue;
+  }
+  $almacenCampo = \Drupal\field\Entity\FieldStorageConfig::loadByName('taxonomy_term', $nombreCampo);
+  if (!$almacenCampo || $almacenCampo->getType() !== 'decimal') {
+    continue;
+  }
+  if (($casilla['#step'] ?? NULL) !== 'any') {
+    $sinRodeo[] = $nombreCampo;
+  }
+  // Los dos costes derivados no se comprueban a proposito: el servidor los
+  // recalcula al guardar, asi que juzgar lo que deje el navegador solo podria
+  // frenar un guardado por una cifra que iba a ser sustituida.
+  $valida = in_array('_admin_form_styles_check_decimals', $casilla['#element_validate'] ?? [], TRUE);
+  if (!$valida && !in_array($nombreCampo, $derivados, TRUE)) {
+    $sinComprobacion[] = $nombreCampo;
+  }
+}
+comprobar($resultados, 'toda casilla decimal del material se libra del paso',
+  $sinRodeo === [], implode(', ', $sinRodeo) ?: 'ninguna se queda con el paso roto');
+comprobar($resultados, 'y las que se teclean cuentan sus decimales',
+  $sinComprobacion === [], implode(', ', $sinComprobacion) ?: 'todas comprobadas');
+
+// Y que ninguna ficha guardada haya quedado encerrada: el valor ya estaba en la
+// base de datos y el formulario lo revalida en cada guardado, asi que subir los
+// decimales de una columna puede bloquear fichas que nadie ha tocado.
+$encerradas = [];
+foreach (\Drupal::configFactory()->listAll('field.storage.') as $nombreAlmacen) {
+  $almacenCampo = \Drupal::config($nombreAlmacen);
+  if ($almacenCampo->get('type') !== 'decimal') {
+    continue;
+  }
+  $tipoEntidad = $almacenCampo->get('entity_type');
+  $nombreCampo = $almacenCampo->get('field_name');
+  $paso = pow(0.1, (int) $almacenCampo->get('settings.scale'));
+  if (!$etm->hasDefinition($tipoEntidad)) {
+    continue;
+  }
+  $tabla = $tipoEntidad . '__' . $nombreCampo;
+  if (!$db->schema()->tableExists($tabla)) {
+    continue;
+  }
+  foreach ($db->select($tabla, 't')->fields('t', ['entity_id', $nombreCampo . '_value'])->execute() as $fila) {
+    $valor = $fila->{$nombreCampo . '_value'};
+    if (is_numeric($valor) && !\Drupal\Component\Utility\Number::validStep($valor, $paso)) {
+      $encerradas[] = $tipoEntidad . ' ' . $fila->entity_id . ': ' . $nombreCampo;
+    }
+  }
+}
+informar('fichas que Drupal solo dejaria guardar con el rodeo', count($encerradas),
+  $encerradas ? implode(', ', array_slice($encerradas, 0, 4)) : 'ninguna');
+
 // -----------------------------------------------------------------------------
 // 4. Nada roto.
 // -----------------------------------------------------------------------------
@@ -1114,6 +1193,129 @@ $listaCompra = file_get_contents(DRUPAL_ROOT . '/modules/custom/tec_production/s
 comprobar($resultados, 'la lista de la compra no se hace su numero',
   !str_contains($listaCompra, 'function nextOrderNumber'),
   str_contains($listaCompra, 'function nextOrderNumber') ? 'SE LO VUELVE A HACER' : 'lo pide al gancho');
+
+// -----------------------------------------------------------------------------
+// 7. El IVA sale de la ficha del proveedor y se queda en el pedido.
+// -----------------------------------------------------------------------------
+titulo('7. El IVA sale de la ficha del proveedor y se queda en el pedido');
+
+// Tres situaciones distintas son una sola pregunta: si ese proveedor cobra IVA
+// tailandes. El de fuera no, el tailandes pequeno sin registrar tampoco, el
+// registrado si. Asi que no hay una regla por paises con excepciones pegadas,
+// hay un dato por proveedor. Y el porcentaje vive en un solo ajuste, no en cada
+// ficha, para que el dia que el pais lo cambie se toque una vez.
+comprobar($resultados, 'el porcentaje esta en un solo ajuste',
+  \Drupal::config('tec_production.settings')->get('vat_rate') !== NULL,
+  'vat_rate = ' . var_export(\Drupal::config('tec_production.settings')->get('vat_rate'), TRUE));
+
+foreach (['tec_contact_organization', 'tec_contact_person'] as $bundleIva) {
+  comprobar($resultados, 'las fichas de ' . $bundleIva . ' dicen como tributan',
+    (bool) \Drupal\field\Entity\FieldConfig::loadByName('tec_crm', $bundleIva, \Drupal\tec_production\Vat::TREATMENT_FIELD));
+}
+
+$tratamientos = array_keys(\Drupal\tec_production\Vat::treatments());
+$permitidos = array_keys(\Drupal::config('field.storage.tec_crm.' . \Drupal\tec_production\Vat::TREATMENT_FIELD)->get('settings.allowed_values') ?? []);
+// Los valores permitidos se guardan como lista de parejas, no como mapa, asi que
+// hay que sacar el valor de cada pareja antes de comparar.
+$permitidos = $permitidos && is_numeric($permitidos[0])
+  ? array_column(\Drupal::config('field.storage.tec_crm.' . \Drupal\tec_production\Vat::TREATMENT_FIELD)->get('settings.allowed_values'), 'value')
+  : $permitidos;
+comprobar($resultados, 'las tres respuestas siguen siendo tres',
+  !array_diff($tratamientos, $permitidos) && !array_diff($permitidos, $tratamientos),
+  implode(', ', $permitidos));
+
+comprobar($resultados, 'el pedido de compra guarda el porcentaje que le toco',
+  (bool) \Drupal\field\Entity\FieldConfig::loadByName('tec_order', 'tec_purchase_order', \Drupal\tec_production\Vat::RATE_FIELD));
+
+// En ventas no, porque esto es sobre comprar. El IVA que se cobra al cliente es
+// otra conversacion y no se resuelve copiando esta.
+comprobar($resultados, 'y en ventas no, que es otra conversacion',
+  !\Drupal\field\Entity\FieldConfig::loadByName('tec_order', 'tec_sales_order', \Drupal\tec_production\Vat::RATE_FIELD),
+  'solo en compras');
+
+// La razon de copiar el porcentaje al pedido es que no se mueva nunca mas. Si
+// algun pedido se ha quedado sin el, es que se creo antes de que el campo
+// existiera, y eso no se arregla inventandole uno.
+$sinIva = [];
+$conIva = 0;
+foreach ($etm->getStorage('tec_order')->loadMultiple() as $pedidoIva) {
+  if ($pedidoIva->bundle() !== 'tec_purchase_order' || !$pedidoIva->hasField(\Drupal\tec_production\Vat::RATE_FIELD)) {
+    continue;
+  }
+  if ($pedidoIva->get(\Drupal\tec_production\Vat::RATE_FIELD)->isEmpty()) {
+    $sinIva[] = (string) $pedidoIva->label();
+  }
+  else {
+    $conIva++;
+  }
+}
+informar('pedidos de compra con su porcentaje escrito', $conIva);
+if ($sinIva) {
+  informar('pedidos de compra de antes del IVA, sin porcentaje', count($sinIva),
+    implode(', ', array_slice($sinIva, 0, 10)));
+}
+
+// Y que el 7 se pueda tocar sin linea de comandos. Nacio en un fichero de
+// configuracion sin pantalla, como los cinco nodos de los iconos de la portada,
+// y eso vale para quien construye el ERP y no sirve para quien lleva la empresa.
+$rutas = \Drupal::service('router.route_provider');
+try {
+  $pantallaAjustes = $rutas->getRouteByName('tec_production.company_settings');
+}
+catch (\Throwable $e) {
+  $pantallaAjustes = NULL;
+}
+comprobar($resultados, 'hay una pantalla para tocar el porcentaje',
+  $pantallaAjustes !== NULL,
+  $pantallaAjustes ? $pantallaAjustes->getPath() : 'NO EXISTE, solo por linea de comandos');
+
+// Con permiso propio: si pidiera el de configurar el sitio entero, cambiar el
+// IVA obligaria a ser administrador, que es justo lo que no queremos.
+$permisoAjustes = $pantallaAjustes ? ($pantallaAjustes->getRequirement('_permission') ?? '') : '';
+comprobar($resultados, 'y no obliga a ser administrador del sitio para entrar',
+  $permisoAjustes === 'administer tec company settings', $permisoAjustes ?: 'sin permiso');
+
+$conElPermiso = [];
+foreach (\Drupal\user\Entity\Role::loadMultiple() as $rolAjustes) {
+  if (!$rolAjustes->isAdmin() && $rolAjustes->hasPermission('administer tec company settings')) {
+    $conElPermiso[] = $rolAjustes->id();
+  }
+}
+comprobar($resultados, 'y alguien que no es administrador lo tiene',
+  (bool) $conElPermiso, implode(', ', $conElPermiso) ?: 'NADIE, la pantalla es inalcanzable en la practica');
+
+// Un formulario de configuracion sobre ajustes sin esquema suelta avisos, y
+// tec_production.settings no tuvo esquema durante todo un ano.
+$esquema = \Drupal::service('config.typed');
+comprobar($resultados, 'los ajustes del modulo tienen esquema',
+  $esquema->hasConfigSchema('tec_production.settings'),
+  $esquema->hasConfigSchema('tec_production.settings') ? 'las once claves' : 'SIN ESQUEMA');
+
+// Y la puerta desde la ficha, que es donde surge la pregunta.
+$estilosEnlace = file_get_contents(DRUPAL_ROOT . '/modules/custom/admin_form_styles/admin_form_styles.module');
+comprobar($resultados, 'la ficha del proveedor enlaza al porcentaje',
+  str_contains($estilosEnlace, '_admin_form_styles_attach_vat_rate_link'),
+  'debajo de VAT treatment');
+
+// Y que el gancho siga siendo quien lo pone, porque si alguien lo mueve a una
+// ECA volvemos a tener dos sitios decidiendo lo mismo.
+$moduloIva = file_get_contents(DRUPAL_ROOT . '/modules/custom/tec_production/tec_production.module');
+comprobar($resultados, 'lo pone el gancho de guardado y nadie mas',
+  str_contains($moduloIva, 'Vat::RATE_FIELD') && str_contains($moduloIva, 'Vat::forContact'),
+  'en tec_production_tec_order_presave');
+
+$fichasIva = 0;
+$proveedoresIva = 0;
+foreach ($etm->getStorage('tec_crm')->loadMultiple() as $contactoIva) {
+  if (!$contactoIva->hasField(\Drupal\tec_production\Vat::TREATMENT_FIELD) || !tec_crm_ux_entity_is_supplier($contactoIva)) {
+    continue;
+  }
+  $proveedoresIva++;
+  if (!$contactoIva->get(\Drupal\tec_production\Vat::TREATMENT_FIELD)->isEmpty()) {
+    $fichasIva++;
+  }
+}
+informar('proveedores que ya dicen como tributan', $fichasIva, 'de ' . $proveedoresIva);
 
 // -----------------------------------------------------------------------------
 // Resumen.

@@ -451,6 +451,116 @@ the published-only filter that caused the repeats.
   renumbers per contact and per year from each order's own creation date, is
   idempotent, and does nothing without `--de-verdad`.
 
+### VAT: one fact per supplier, one rate for the company (16 August 2026)
+Three situations that look different are the same question. A supplier abroad
+charges no Thai VAT. A small Thai supplier below the registration threshold
+charges none either. A registered Thai supplier charges 7%. So there is no rule
+about countries with exceptions bolted onto it; there is **one fact per
+supplier**, and it is whether they are registered and charging.
+
+That fact is `field_tec_vat_treatment` on the contact card, in the *Supplier
+purchase defaults* fieldset, on both organizations and people — a supplier here
+is sometimes a person, and currency, incoterm and payment terms are already on
+both. Three answers: *Registered for VAT, charges it*, *Thai, not registered,
+charges no VAT*, *Outside Thailand, no Thai VAT*.
+
+**Why a short list and not a tick box.** Two of the three answers mean the same
+zero, but for different reasons, and the reason is worth keeping: a small Thai
+supplier may register next year, a foreign one never will, and with a tick box
+nobody could tell them apart a year from now. It also means the small ones can be
+listed and asked, which is exactly what the seeding script does.
+
+**Why not derive it from the tax number.** Tempting — a Thai business registered
+for VAT has one, an unregistered one does not, and `field_tec_tax_nr` is already
+on the card. Dropped because a foreign supplier may well have their own country's
+number sitting in it, which would invent 7% nobody is charging, and because a
+registered supplier whose number was never typed in would quietly lose the VAT.
+For money, a fact somebody stated beats a fact inferred.
+
+**The rate is not on the supplier.** It is `vat_rate` in `tec_production.settings`,
+one number, so the day the country changes it, it is changed once and not on three
+hundred cards. Which suppliers charge it is the separate question above. It is
+edited on **Configuration → TEC → Company settings** (`/admin/config/tec/company`),
+and there is a link straight to it under the VAT treatment field on every supplier
+card, showing the rate in force: *"VAT is currently 7% — change it"*.
+
+**What the order keeps.** `field_tec_vat_rate` on `tec_purchase_order`, written by
+`hook_tec_order_presave()` at creation from the supplier's card, and editable on
+the order afterwards for a one-off. Copied rather than looked up on demand for the
+same reason the order number is: an order printed in March must still say in
+December what it said in March, whatever happened in between to the rate or to the
+supplier's registration. Anything already filled in is left alone, because that is
+somebody overriding it deliberately.
+
+Sales orders do **not** get this field. What VAT is charged to a customer is a
+different conversation and will not be solved by copying this one.
+
+`src/Vat.php` holds all of it: the three treatments, the rate, the decision for a
+given contact, and `Vat::on()` for the arithmetic — rounded there and only there,
+so a screen, a printed order and whatever comes next cannot each round it their own
+way and disagree by a satang.
+
+**A card nobody has filled in yet is treated as charging VAT.** Getting it wrong in
+that direction shows up: somebody sees VAT on an order that should not have it and
+says so. The other way round it is a number missing from a document, which nobody
+notices until the accountant does, months later.
+
+- Built by `scripts/poner-el-iva-en-las-fichas.php` (safe to run twice).
+- Seeded by `scripts/sembrar-el-iva-por-pais.php`, which reads the country code out
+  of the Address field — Thai address means charging, anywhere else means not — and
+  then prints the Thai ones for someone to go through and switch the small ones. It
+  reports only until given `--de-verdad`, and leaves alone any card already filled
+  in, so a correction survives it being run again.
+- Test: `scripts/se-pone-el-iva.php` creates a supplier of each kind, checks what
+  its order came out with, then makes the supplier stop charging VAT and proves the
+  order already raised did not move.
+- Guardian: section 7, six checks.
+
+**Not done yet, and deliberately.** Nothing shows a subtotal, the VAT and a total
+on the order screens. The rate is hidden on every order view display for now,
+because a bare line reading `VAT %: 7.00` is not what anyone wants to read; the
+figures belong together in a totals block, which is the next job.
+
+### Company settings, and the settings that had no screen (16 August 2026)
+`/admin/config/tec/company`, `src/Form/CompanySettingsForm.php`. Two things on it:
+the VAT rate, and which page each home tile opens.
+
+Both were only reachable from a command line before. That is fine for whoever
+builds the ERP and no use at all to whoever runs the company, which is the person
+who finds out the rate has changed.
+
+It sits under **Configuration** rather than beside the `/admin/tec/*` screens
+because those are bare paths with no menu entry anywhere, so a link into that
+family would arrive with a breadcrumb leading nowhere. The `/admin/config/tec`
+section also gives the settings that come next — currency, company address — a
+place to be.
+
+The permission is its own, `administer tec company settings`, held by
+`tec_manager` and `tec_executive`. Using Drupal's `administer site configuration`
+would have meant handing someone the entire site so they could change one number.
+
+**What deliberately did not move.** The three capacity settings stay on the queue
+screen. They are read next to the figures they move, and filing them behind a menu
+would be tidier and worse.
+
+**The tile pairing is stated once.** `QueueTileRedirectSubscriber::TILES` maps each
+setting to the route its icon opens; the subscriber redirects with it and the form
+builds itself from it, labelling each row with the screen's own `_title`. Two
+copies of that list would drift, and the way that failure shows up is an icon
+quietly opening the wrong screen.
+
+**`tec_production.settings` finally has a schema.** It never had one — the module
+has no `config/schema` directory before this. It did not matter while nothing wrote
+those settings through a form; a `ConfigFormBase` over schemaless config complains,
+and Drupal 11 is stricter about it than 10 was. All eleven keys are described.
+
+- Test: `scripts/se-tocan-los-ajustes.php` checks the three ways this could quietly
+  stop working — the page stops loading, the permission stops holding anyone out,
+  saving stops writing — plus that saving does not unhook the five home tiles, and
+  that the link on the supplier card quotes the live rate rather than a hardcoded
+  one. It puts the rate back as it found it, so it is safe to run on a live site.
+- Guardian: five more checks in section 7.
+
 ## Backlog / future ideas
 - Auto-advance order status from the production log: when SUM(produced) >=
   total ordered, move the order to Quality Control/Inspection (or Completed,

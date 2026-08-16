@@ -1762,9 +1762,335 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   y `scripts/que-calcula-el-javascript.php` han pasado de 17.800 a 8.900 bytes cada uno, justo la
   mitad, que es lo que ocurre al convertir un fichero de UTF-16 a UTF-8. Alguien los arregló y no los
   comprometió. Hay que mirarlos y decidir, pero el cambio parece bueno.
+- **La pantalla de ajustar stock no admite medias unidades.** Visto el 16 de agosto de 2026 al
+  repasar todas las columnas decimales. `field_tec_quantity` del movimiento de inventario guarda
+  **cuatro decimales**, pero su formulario le pone `step = '1'` a propósito, para que la ruedecita
+  del navegador suba de uno en uno. El efecto secundario es que la validación de Drupal usa ese
+  mismo paso, así que **un ajuste de 2,5 rollos se rechaza** con «is not a valid number», igual que
+  el fallo de los factores pero por el motivo contrario: allí el paso era demasiado fino y aquí es
+  demasiado grueso.
+
+  No se ha tocado porque cambia el comportamiento de una pantalla que quizá se quiere así. La
+  decisión es de una línea: o el stock se ajusta solo en unidades enteras y entonces la columna
+  sobra con cuatro decimales, o hay que admitir fracciones y el paso pasa a `any` con la misma
+  comprobación de decimales exacta que ya usa la ficha del material.
 ---
 
 ## Hecho
+
+### 2026-08-16 — El mismo fallo, un campo más allá: los factores de conversión
+
+Cuatro horas después de dar por cerrado lo del coste de consumo, el dueño estaba editando el
+material `khun` y no podía guardar. Esta vez el error decía **«Inventory to Consumption Factor is
+not a valid number»**, y el número era **10000**. Un rollo que da diez mil centímetros.
+
+#### La regla de verdad, que la entrada de esta misma mañana contaba mal
+
+La comprobación rota de Drupal es `Number::validStep()`, eso estaba bien visto. Pero el margen que
+acepta no es `paso / 2^52` sino **`paso / 2^24`**, y lo que importa no es el número de decimales por
+sí solo: es que **el resto que mide crece con el tamaño del valor mientras el margen se queda
+quieto**. De ahí sale una frontera limpia y fácil de recordar:
+
+> El formulario rechaza cualquier cifra que llegue a **10^(9 − decimales)**.
+
+| Decimales | Techo | Dónde |
+|---|---|---|
+| 2 | 10.000.000 | costes, stock, ROP — nadie lo pisa |
+| 4 | 100.000 | cantidad de movimiento, volumen |
+| 5 | **10.000** | los dos factores de conversión |
+| 6 | **1.000** | coste de consumo |
+
+Así que la frase de esta mañana —«el coste de compra, que sí se teclea, conserva su paso de 0,01»—
+era cierta pero por poco: ese campo también tiene techo, solo que está en diez millones.
+
+#### Y lo grave: nos lo hicimos nosotros
+
+Los dos factores tenían **dos decimales** hasta que el propio dueño pidió cinco, el 15 de agosto,
+porque dos no bastaban para un factor de 0,4. Ese cambio bajó su techo de diez millones a diez mil.
+
+Lo que nadie vio venir es que **no hace falta tocar una ficha para romperla**. El 10000 de `khun` ya
+estaba guardado desde antes, y el formulario revalida el campo en cada guardado, así que el material
+quedó congelado en el momento del cambio de escala: no se le podía cambiar ni el nombre. Un barrido
+con `scripts/quien-esta-bloqueado.php` encontró **tres de cinco materiales** en esa situación, dos
+por el coste de consumo —ya rodeados— y uno por el factor.
+
+El dueño tenía además otro material a punto de meter con el factor en **300000**, treinta veces por
+encima del techo. Habría dado el mismo error el primer día.
+
+#### El arreglo, esta vez sin lista de campos
+
+El rodeo de la mañana nombraba dos campos, y por eso no cubrió estos. Ahora
+`_admin_form_styles_fix_decimal_steps()` **recorre el formulario entero**: toda casilla que sea un
+número respaldado por una columna decimal recibe `step = any`, su escala en `data-tec-decimals` y,
+si es de las que se teclean, una comprobación propia.
+
+Esa comprobación es la pieza que faltaba. Quitar el paso sin más habría dejado pasar `0,123456789`
+a una columna de cinco decimales, que lo redondea al entrar **sin decir nada**. Así que la regla que
+el paso pretendía defender se comprueba de verdad, contando los dígitos detrás del punto en el texto
+que se tecleó: es la misma regla —un decimal es múltiplo de su paso exactamente cuando cabe en la
+escala— decidida sobre los caracteres en vez de sobre una división que no puede representarlos.
+
+Los dos costes derivados quedan fuera de esa comprobación a propósito, y ahí sí hace falta la lista:
+el servidor los recalcula al guardar, así que juzgar lo que deje el navegador solo podría frenar un
+guardado por una cifra que iba a ser sustituida.
+
+#### Comprobado
+
+- **`scripts/se-guarda-el-material.php`**, ampliado con los dos materiales reales: 1 rollo en 10.000
+  cm y 1 rollo en 300.000 cm. Los dos entran, con su coste por centímetro bien dividido
+  (0,016923 y 0,000564). Y una prueba en negativo: un factor con seis decimales en una columna de
+  cinco **sigue rechazándose**, ahora con un mensaje que dice qué pasa —«holds at most 5
+  decimals»— en vez de «is not a valid number».
+- **Guardián**: ya no lista escalas a mano, que es lo que dejó escapar este fallo. Construye la
+  ficha del material de verdad y mira casilla por casilla que ninguna se quede con el paso roto y
+  que las que se teclean lleven la comprobación, así que **un campo decimal nuevo queda cubierto sin
+  tocar el guardián**. Y una cifra informativa: cuántas fichas de todo el ERP solo se pueden guardar
+  gracias al rodeo. Hoy son tres.
+- **La página exacta del error**, `/taxonomy/term/3278/edit`, pedida como la pide un navegador:
+  el factor sale con `value=10000.00000 step=any decimales=5`.
+
+#### La lección
+
+Cambiar la escala de una columna **no es un cambio de formato**. Mueve un techo invisible que puede
+quedar por debajo de datos que ya existen, y las fichas afectadas no dan señal hasta que alguien
+intenta guardarlas. La próxima vez que se toquen decimales, pasar `scripts/quien-esta-bloqueado.php`
+detrás.
+
+### 2026-08-16 — «Consumption Cost is not a valid number»: no era el dato, era Drupal
+
+El dueño creó un proveedor nuevo, empezó a meter una materia prima suya, le dio a guardar y le salió
+ese error. El número del que se quejaba era **799,700000**.
+
+#### Lo que pasaba
+
+El coste de consumo guarda **seis decimales**, así que Drupal validaba el campo contra un paso de una
+millonésima. Y esa comprobación suya, `Number::validStep()`, no aguanta pasos tan pequeños: divide el
+valor entre el paso y compara el resto en coma flotante contra un margen de `paso / 2^52` —unos
+2e-22— cuando el resto que la doble precisión deja de verdad ronda 2e-13.
+
+El resultado es una frontera absurda:
+
+| Valor | Paso 0,01 | Paso 0,00001 | Paso 0,000001 |
+|---|---|---|---|
+| 100,700000 | pasa | pasa | pasa |
+| 799,700000 | pasa | pasa | **rechazado** |
+| 1.000,700000 | pasa | pasa | **rechazado** |
+| 1.611,500000 | pasa | pasa | **rechazado** |
+
+O sea que **cualquier coste de consumo por encima de unos cien con decimales era irrechazable**. Y por
+eso no había aparecido antes: el material de pruebas costaba céntimos. Apareció el primer día que
+alguien puso el precio de un rollo de tela de verdad.
+
+#### El arreglo
+
+Los dos costes derivados —inventario y consumo— **no se escriben nunca a mano**: los divide
+`tec_inventory_taxonomy_term_presave()` a partir del coste de compra y los dos factores, en cada
+guardado. Así que lo que el navegador deje en esas dos casillas se descarta y se vuelve a calcular.
+
+Es decir que esa validación estaba juzgando un número que iba a ser sustituido de todas formas. Solo
+podía dar **falsas alarmas**. Se le pone el paso en `any` a las dos, y se acabó. Lo que la columna
+admite lo sigue decidiendo su precisión y su escala, y el redondeo se sigue haciendo en un solo sitio.
+
+El coste de compra, que sí se teclea, conserva su paso de 0,01. Ahí la comprobación funciona y sirve.
+
+> **Corregido esa misma tarde.** Dos cosas de esta entrada no se sostienen: el margen es `paso /
+> 2^24` y no `paso / 2^52`, y el coste de compra **no** se quedó con su paso, porque también tiene
+> techo —diez millones— y porque nombrar campos de uno en uno fue justo lo que dejó escapar el
+> siguiente caso. La regla buena es que el formulario rechaza a partir de `10^(9 − decimales)`. Ver
+> la entrada de arriba, «El mismo fallo, un campo más allá».
+
+De paso hubo que avisar al calculador del navegador: sacaba los decimales leyendo el atributo `step`,
+y sin paso que leer habría escrito la división en crudo, `266.66666666666663`. Ahora recibe la escala
+en un atributo aparte y el `step` queda como respaldo.
+
+#### Comprobado
+
+- **`scripts/se-guarda-el-material.php`**: pide el formulario y lo envía de vuelta como hace el
+  navegador, porque el fallo entero vivía en la validación del formulario y llamar a la API de
+  entidades habría pasado de largo sin enterarse. Guarda el material de la pantalla del dueño (799,70
+  con factores 1 y 1), uno que no divide limpio (800 entre 3 y luego entre 7, que da 38,095238) y uno
+  de cinco cifras. Los tres entran.
+- **Guardián, dos comprobaciones nuevas**: que el rodeo siga puesto mientras Drupal siga rechazando
+  799,700000 —si algún día lo arreglan, la comprobación lo dice y se puede quitar el rodeo— y que no
+  aparezca **ningún campo nuevo de seis decimales** sin el mismo tratamiento, porque caería en la
+  misma trampa y no se sabría hasta que un dato pasara de cien.
+
+#### Dos trampas del propio guion de prueba, que valen para el siguiente
+
+Enviar un formulario desde un guion tiene dos minas y las dos dan síntomas engañosos:
+
+1. **`Request::create()` no interpreta los corchetes.** Un campo se llama `name[0][value]` y PHP lo
+   convierte en arrays anidados antes de que la petición llegue a Symfony; pasándolo a mano se queda
+   como una clave literal con corchetes, Drupal no encuentra nada donde mira, y contesta que **todos
+   los campos obligatorios están vacíos**. Se lee como un formulario roto y es un guion roto. Se
+   arregla dando la vuelta por `parse_str(http_build_query(...))`.
+2. **Un formulario que guarda lanza la redirección.** Dentro de una subpetición Drupal entrega el
+   `EnforcedResponseException` en lugar de devolver la respuesta. O sea que **el éxito llega como una
+   excepción**. Hay que recogerla.
+
+### 2026-08-16 — Los ajustes de la empresa tienen por fin una pantalla
+
+El IVA nació donde nacen estas cosas: en un fichero de configuración, tocable solo por línea de
+comandos. Que es perfecto para quien construye el ERP y no le sirve de nada a quien lleva la empresa,
+que es justo la persona que se entera de que el tipo ha cambiado.
+
+No estaba solo. De los once ajustes de `tec_production.settings`, únicamente tres tenían dónde
+tocarse —el panel de capacidad de `/o/queue`—. Los **cinco nodos de los iconos de la portada** llevaban
+igual de huérfanos desde que se montaron.
+
+#### Lo que se ha hecho
+
+- **`/admin/config/tec/company`**, con el porcentaje y los cinco iconos. Los iconos por autocompletado
+  de nombre: la configuración sigue guardando el número del nodo, pero nadie tiene que saberlo.
+- **Permiso propio, `administer tec company settings`**, para `tec_manager` y `tec_executive`. Pedir el
+  de configurar el sitio entero habría significado entregar el ERP completo para poder cambiar un número.
+- **Enlace bajo *VAT treatment*** en la ficha de cada proveedor, leyendo el porcentaje **en vivo**: «VAT
+  is currently 7% — change it». Ahí es donde surge la pregunta.
+- **El esquema de configuración que el módulo nunca tuvo.** No había ni carpeta `config/schema`. Daba
+  igual mientras nadie escribiera esos ajustes desde un formulario; un `ConfigFormBase` sobre
+  configuración sin esquema protesta, y Drupal 11 es más estricto que el 10. Las once claves descritas.
+
+#### Por qué en Configuración y no junto a las otras pantallas de `/admin/tec`
+
+Era lo primero que se pensó, por coherencia. Pero **esas pantallas no están en ningún menú**: son rutas
+sueltas de vistas, sin entrada en ninguna parte. Colgar ahí un enlace de menú habría dado una miga de
+pan que no lleva a ningún sitio. Bajo Configuración la jerarquía existe, es donde un administrador
+mira por instinto, y la sección `/admin/config/tec` deja sitio a lo que venga después —moneda,
+dirección de la empresa—.
+
+#### Lo que no se movió, a propósito
+
+Los tres ajustes de capacidad se quedan en la pantalla de la cola. Se leen al lado de las cifras que
+mueven, y archivarlos detrás de un menú habría quedado más ordenado y peor.
+
+#### Un detalle que evita un fallo futuro
+
+La correspondencia entre cada ajuste de icono y la pantalla que abre estaba escrita dentro del
+suscriptor que hace la redirección. Ahora es una constante pública que **usan los dos**: el suscriptor
+para redirigir y el formulario para construirse, etiquetando cada fila con el título de la propia
+pantalla. Dos copias de esa lista se habrían separado, y esa avería se manifiesta como un icono que
+abre la pantalla equivocada sin decir nada.
+
+#### Comprobado
+
+- **`scripts/se-tocan-los-ajustes.php`**: las tres maneras de que esto deje de funcionar en silencio
+  —que la página deje de cargar, que el permiso deje de cerrar, que guardar deje de escribir— más que
+  guardar **no desenganche los cinco iconos** y que el enlace de la ficha cite el porcentaje vigente y
+  no uno escrito a mano. Deja el porcentaje como lo encontró, así que se puede pasar en producción.
+- **Guardián, cinco comprobaciones más** en la sección 7. Van **88**, 0 mal.
+- **Prueba de humo**: 58 pantallas, con las dos nuevas dentro.
+
+### 2026-08-16 (cierre) — El IVA: un dato por proveedor, y el porcentaje en un solo sitio
+
+El dueño lo planteó como un problema de tres casos: los proveedores de fuera de Tailandia no llevan
+IVA, los de dentro llevan un 7%, y **algunos pequeños de dentro tampoco lo llevan** porque van por
+otro régimen y no emiten factura con IVA. Y preguntó si la salida era poner una casilla en la ficha de
+cada proveedor y rellenarla a mano.
+
+#### Los tres casos son una sola pregunta
+
+Puesto así parece una regla por países con una excepción pegada, que es la clase de cosa que envejece
+mal. Pero los tres casos contestan a lo mismo: **si ese proveedor cobra IVA**. El de fuera no, el
+tailandés pequeño tampoco, el tailandés registrado sí. Así que no hay regla de países: hay **un dato
+por proveedor**, y se rellena una vez.
+
+Eso es lo que se ha hecho, con dos matices sobre la casilla que se proponía.
+
+**No es una casilla, es una lista de tres.** Dos de las tres respuestas dan el mismo cero, pero por
+motivos distintos, y el motivo vale la pena guardarlo: un tailandés pequeño puede registrarse el año
+que viene, uno de fuera no lo hará nunca, y con una casilla marcada o sin marcar dentro de un año
+nadie sabría distinguirlos. Además, teniéndolo así se puede sacar la lista de los pequeños y
+preguntarles.
+
+**Y no se rellena a mano entera.** El campo de dirección es el del módulo Address, que guarda el
+código de país y no una línea de texto, así que se puede sembrar de golpe: dirección en Tailandia,
+«cobra IVA»; dirección fuera, «extranjero». Lo que queda a mano es solo repasar los tailandeses y
+marcar los pequeños, que son unos pocos. Una tarde de revisión, no meter datos desde cero.
+
+#### Y el porcentaje no va en la ficha
+
+El 7 no está en ningún proveedor: está en `vat_rate`, dentro de `tec_production.settings`, una vez.
+El día que el país lo cambie se toca un número y no trescientas fichas. **Qué proveedores lo cobran**
+y **cuánto es** son dos preguntas distintas y ahora viven en dos sitios distintos, que es lo que
+permite contestar a la segunda sin volver a hacer la primera.
+
+#### Lo que se descartó, y por qué
+
+Sacarlo del número de identificación fiscal era tentador, porque un negocio tailandés registrado lo
+tiene y uno sin registrar no, y el campo ya está en la ficha. Se descartó por los dos extremos: un
+proveedor extranjero puede tener ahí el número de su propio país, y eso inventaría un 7% que nadie
+está cobrando; y un proveedor registrado al que nunca se le escribió el número perdería el IVA sin
+que se note. Para dinero, un dato que alguien ha afirmado vale más que un dato deducido.
+
+#### Lo que se ha hecho
+
+- **`modules/custom/tec_production/src/Vat.php`**, clase nueva con todo dentro: las tres respuestas, el
+  porcentaje, la decisión para un proveedor dado, y la cuenta. Se redondea ahí y solo ahí, para que una
+  pantalla, un pedido impreso y lo que venga después no puedan redondear cada uno a su manera y
+  discrepar en un satang.
+- **`field_tec_vat_treatment`** en las fichas de contacto, dentro del recuadro *Supplier purchase
+  defaults*, en **organización y persona**: aquí un proveedor a veces es una persona, y moneda,
+  incoterm y forma de pago ya estaban en las dos. Añadido a la lista de campos que se esconden cuando
+  el contacto no es proveedor.
+- **`field_tec_vat_rate`** en el pedido de compra, escrito por el gancho de guardado al crearlo y
+  editable después para un caso suelto.
+- **El sembrado**, `scripts/sembrar-el-iva-por-pais.php`, que informa y no toca nada hasta que se le
+  pasa `--de-verdad`, respeta las fichas ya rellenadas, y acaba imprimiendo la lista de tailandeses
+  para repasar.
+
+#### Por qué el pedido se queda con su porcentaje
+
+Se copia al pedido en vez de consultarlo al proveedor cada vez que se enseña, por el mismo motivo que
+el número: **un pedido impreso en marzo tiene que seguir diciendo en diciembre lo que decía en marzo**,
+pase lo que pase entretanto con el porcentaje o con el registro del proveedor. Si el proveedor deja de
+cobrar IVA en octubre, los pedidos de antes no se reescriben. Eso está probado explícitamente.
+
+Y solo en compras. Qué IVA se le cobra al cliente es otra conversación y no se resuelve copiando esta.
+
+#### Una ficha en blanco cobra IVA
+
+Mientras nadie rellene el campo, el sistema supone que ese proveedor cobra. Equivocarse en esa
+dirección se ve: alguien mira un pedido de compra, ve un IVA que no debería estar y lo dice. Al revés
+es un número que falta en un documento, y eso no lo nota nadie hasta que lo nota el contable, meses
+después.
+
+#### Comprobado
+
+- **`scripts/se-pone-el-iva.php`**: crea un proveedor de cada tipo, mira con qué porcentaje sale su
+  pedido, y luego hace que el proveedor deje de cobrar IVA para demostrar que el pedido ya emitido no
+  se mueve. También que un porcentaje escrito a mano no se sobreescribe, que la cuenta redondea al
+  satang, y que el campo está en compras y no en ventas. Catorce comprobaciones, todas bien.
+- **Guardián, sección 7 nueva**, seis comprobaciones: que el porcentaje siga en un solo ajuste, que las
+  tres respuestas sigan siendo tres, que el campo esté en compras y no en ventas, y que sea el gancho
+  de guardado quien lo pone y no una ECA. Van **81** comprobaciones, 0 mal.
+- **Prueba de humo**: las 56 pantallas siguen cargando.
+
+#### El estado del sembrado ahora mismo
+
+Cero. Hay **un solo proveedor** en el sistema, `KJ`, y no tiene dirección, así que no hay país del que
+deducir nada y su ficha se ha quedado en blanco. La maquinaria está puesta y probada para cuando entren
+los proveedores de verdad; ese día se pasa el guion y queda hecho.
+
+Los **16 pedidos de compra que ya existían** no tienen porcentaje, porque se crearon antes de que el
+campo existiera. El guardián lo cuenta como dato y no como fallo. No se les ha inventado uno.
+
+#### Lo que falta, y a propósito
+
+**Ninguna pantalla enseña todavía base, IVA y total.** El porcentaje está oculto en todas las vistas
+del pedido, porque una línea suelta que diga `VAT %: 7.00` no es lo que nadie quiere leer: las tres
+cifras van juntas en un bloque de totales, y eso es el trabajo siguiente.
+
+#### Dos cambios que aparecieron en la exportación y no son de nadie
+
+Al exportar salieron tocadas dos pantallas de pedido de compra que este trabajo no pretendía tocar.
+Las dos se miraron antes de dejarlas pasar y ninguna cambia comportamiento:
+
+- En la pantalla del PDF aparecieron dos banderas, *borrar pedido* y *cancelar pedido de venta*, dentro
+  de `content`. Drupal ya las metía ahí en memoria cada vez que cargaba esa pantalla, así que lo único
+  nuevo es que ahora está escrito. No salen en el papel porque esa pantalla usa Display Suite con
+  regiones nombradas y esas dos no están en ninguna.
+- En la pantalla del pedido, `items_per_page` del bloque de líneas pasó de `none` a `0`. La vista no
+  pagina —su paginador es `type: none`—, así que «lo que diga la vista» y «todas» son la misma cosa.
 
 ### 2026-08-16 (noche) — Un número por pedido, y uno solo: `KJ 26-001`
 

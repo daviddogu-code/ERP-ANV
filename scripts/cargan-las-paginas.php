@@ -37,6 +37,8 @@ if (!$rutas) {
       '/production/log',
       '/production/report',
       // Administracion, que es donde se nota un modulo mal subido.
+      '/admin/config/tec',
+      '/admin/config/tec/company',
       '/admin/modules',
       '/admin/reports/status',
       '/admin/reports/dblog',
