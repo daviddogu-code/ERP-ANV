@@ -862,6 +862,20 @@ catch (\Throwable $e) {
   comprobar($resultados, 'la puerta de recibir existe', FALSE, 'no hay ruta');
 }
 
+// Que la puerta exista no sirve de nada si no hay por donde entrar. El boton vive
+// en attachment_6 de la vista de lineas, al lado de Edit order y Print/PDF, y no
+// en la pestana del tema: DXPR la pinta flotando sobre la cabecera, ilegible, y
+// su bloque solo lo ve el rol administrador. Cualquiera que retoque esa vista por
+// la pantalla de administracion puede llevarse el boton por delante sin notarlo.
+$condicional = \Drupal::config('views.view.tec_order_sales_order_line_items')
+  ->get('display.attachment_6.display_options.fields.views_conditional_field') ?? [];
+comprobar($resultados, 'la ficha del pedido abierto ofrece el boton de recibir',
+  str_contains($condicional['then'] ?? '', '/receive'),
+  isset($condicional['then']) ? 'en attachment_6' : 'no hay campo condicional');
+comprobar($resultados, 'y el pedido cerrado no lo ofrece',
+  !str_contains($condicional['or'] ?? '', '/receive') && str_contains($condicional['or'] ?? '', '/print'),
+  'cerrado solo imprime');
+
 // Y la comprobacion que de verdad importa: ningun pedido abierto sin nada
 // pendiente. Uno asi es justo el fallo que se arreglo -sigue contando como que
 // viene de camino aunque ya no venga nada- y solo puede aparecer si el cierre

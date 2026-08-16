@@ -225,9 +225,18 @@ people to buy things that were already on the shelf.
 
 - `/tec_order/{id}/receive` (permission `access tec stock control` — receiving
   is a stock movement with paperwork, so it rides on the board's permission
-  instead of inventing one). Reached from the **Receive** tab on an open
-  purchase order, or from the order number shown next to `Ordered (UoP)` on
-  `/stock`, which is the shortcut for whoever signs the delivery note.
+  instead of inventing one). Reached from the **Receive** button on an open
+  purchase order, next to `Edit order` and `Print/PDF`, or from the order number
+  shown next to `Ordered (UoP)` on `/stock`, which is the shortcut for whoever
+  signs the delivery note.
+- It is a **button and not the tab** it started as. The tab exists — it is a
+  local task on `entity.tec_order.canonical` — but nobody can use it: DXPR lifts
+  the tab strip out of the flow (`position: absolute`, centred, moved up its own
+  full height, in `css/components/tabs.css`) and drops it over the sticky header,
+  where it is unreadable, and the block that prints it is restricted to the
+  `administrator` role, so the people who sign delivery notes would never see it
+  at all. The tab is left in place because it costs nothing; the button is the
+  door.
 - Quantities are typed in **purchase units**, and the screen shows live what
   that becomes in **inventory units** (`field_tec_units` ×). That preview is
   there because the multiplication is the only thing on this screen that can
@@ -271,6 +280,11 @@ people to buy things that were already on the shelf.
   - The purchase order's line table (`tec_order_sales_order_line_items`,
     `block_2`) gained `Received` and a `closed short` marker behind the
     quantity.
+  - The buttons under that table (`attachment_6` of the same view) went through
+    the same views_conditional treatment as the supplier list: open shows
+    **edit, receive, print**, closed shows **print** only. Until then a closed
+    order still offered edit on its own page while the supplier list already
+    refused it.
   - In the supplier's order list (`tec_supplier_orders`, `block_3`) the edit
     and print buttons live inside a views_conditional that only fires when the
     status is `Open`. With one status that never showed; with two, a closed
@@ -283,9 +297,17 @@ people to buy things that were already on the shelf.
   off short, and more than ordered arrives on the other — and checks the
   conversion by computing it separately from the material's factor. It undoes
   everything it creates, including the stock levels the ECA moved.
-- The fields were created by `scripts/crear-los-campos-de-la-recepcion.php` and
-  the view changes by `scripts/poner-lo-recibido-en-las-pantallas.php`; both are
-  safe to run twice.
+  - It counts **buttons, not occurrences of the URL**. The first version looked
+    for the address anywhere in the page, found it in the invisible tab, and
+    passed a feature nobody could reach. It also only looks inside
+    `div.btn-default`, because Drupal computes a route's local tasks once per
+    process with the access result baked in, so a test that renders the same
+    page before and after closing the order sees a tab that a real request
+    would not.
+- The fields were created by `scripts/crear-los-campos-de-la-recepcion.php`, the
+  view changes by `scripts/poner-lo-recibido-en-las-pantallas.php` and the button
+  by `scripts/poner-el-boton-de-recibir-en-la-ficha.php`; all three are safe to
+  run twice.
 
 ## Backlog / future ideas
 - Auto-advance order status from the production log: when SUM(produced) >=

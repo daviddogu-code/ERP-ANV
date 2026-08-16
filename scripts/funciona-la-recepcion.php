@@ -101,6 +101,38 @@ $campos = function (string $html): array {
 };
 
 /**
+ * Cuenta los botones de una ficha que llevan a una direccion.
+ *
+ * Busca solo dentro de los botones, no en todo el HTML, y por dos razones.
+ *
+ * La primera es que el texto pelado da falsos positivos. La direccion tambien
+ * sale en la pestana del tema, y esa pestana no es una puerta para nadie: DXPR
+ * la saca del flujo de la pagina y la deja flotando encima de la cabecera, donde
+ * es ilegible, y su bloque solo lo ve el rol administrador.
+ *
+ * La segunda es que Drupal calcula las pestanas de una ruta una sola vez por
+ * proceso: LocalTaskManager las guarda en memoria con el permiso ya resuelto. En
+ * una peticion de verdad eso da igual, porque cada peticion es un proceso nuevo,
+ * pero esta prueba pinta la misma ficha antes y despues de cerrar el pedido, asi
+ * que la pestana se queda pegada y mentiria.
+ */
+$botones = function (string $html, string $destino): int {
+  $documento = new \DOMDocument();
+  libxml_use_internal_errors(TRUE);
+  $documento->loadHTML($html);
+  libxml_clear_errors();
+
+  $encontrados = 0;
+  foreach ((new \DOMXPath($documento))->query('//div[contains(@class, "btn-default")]//a[@href]') as $enlace) {
+    $destino_enlace = $enlace->getAttribute('href');
+    if ($destino_enlace === $destino || str_starts_with($destino_enlace, $destino . '?')) {
+      $encontrados++;
+    }
+  }
+  return $encontrados;
+};
+
+/**
  * Los nombres con corchetes hay que anidarlos o no llegan al nucleo.
  */
 $anidar = function (array $datos): array {
@@ -253,13 +285,19 @@ $mirar('trae la conversion en pantalla', str_contains($html, 'tec-receive__into'
 $base = $campos($html);
 $mirar('trae la ficha de seguridad', isset($base['form_token']) || isset($base['form_build_id']));
 
-// Una pestana que no se ve es una funcion que no existe: sin este enlace, la
-// unica forma de recibir seria teclear la direccion a mano.
+// Una puerta que no se ve es una funcion que no existe. Y la pestana del tema no
+// sirve de puerta: DXPR la saca del flujo de la pagina y la deja flotando sobre
+// la cabecera, ilegible, y encima su bloque tiene una condicion de rol que solo
+// deja pasar a administrator. Asi que lo que se exige es el boton de la ficha,
+// al lado de Edit order y Print/PDF.
+//
+// La primera version de esta comprobacion buscaba el texto de la direccion en el
+// HTML. Lo encontraba en la pestana invisible y daba el visto bueno a una
+// funcion a la que no habia manera de llegar, asi que ahora se exige un enlace.
 $ficha = $pedir('/tec_order/' . $pedido->id());
-$mirar('la ficha del pedido ensena la pestana de recibir',
-  $ficha->getStatusCode() === 200 && str_contains($ficha->getContent(), $direccion),
-  'codigo ' . $ficha->getStatusCode()
-);
+$mirar('la ficha del pedido abierto carga', $ficha->getStatusCode() === 200, 'codigo ' . $ficha->getStatusCode());
+$puertas = $botones($ficha->getContent(), $direccion);
+$mirar('y ofrece un boton para recibir', $puertas > 0, $puertas . ' botones a la recepcion');
 
 echo "\n";
 echo "Primera entrega: 4 de 10 de la primera linea, nada de la segunda\n";
@@ -389,7 +427,15 @@ echo str_repeat('-', 78) . "\n";
 
 $ficha = $pedir('/tec_order/' . $pedido->id());
 $mirar('la ficha del pedido carga', $ficha->getStatusCode() === 200, 'codigo ' . $ficha->getStatusCode());
-$mirar('y su tabla de lineas cuenta lo recibido', str_contains($ficha->getContent(), 'Received'));
+$html_ficha = $ficha->getContent();
+$mirar('y su tabla de lineas cuenta lo recibido', str_contains($html_ficha, 'Received'));
+
+// Los tres botones de la ficha salen del mismo condicional sobre el estado, asi
+// que cerrado tiene que decir lo mismo que la lista de proveedores: la copia para
+// contabilidad se queda, y lo que cambia el pedido se va.
+$mirar('cerrado, la ficha conserva el boton de imprimir', $botones($html_ficha, '/po/' . $pedido->id() . '/print') > 0);
+$mirar('cerrado, la ficha pierde el de editar', $botones($html_ficha, '/po/draft/' . $pedido->id()) === 0);
+$mirar('cerrado, la ficha pierde el de recibir', $botones($html_ficha, $direccion) === 0);
 
 $impresa = $pedir('/po/' . $pedido->id() . '/print');
 $mirar('la ficha impresa sigue en pie', $impresa->getStatusCode() === 200, 'codigo ' . $impresa->getStatusCode());

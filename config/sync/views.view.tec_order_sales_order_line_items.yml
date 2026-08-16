@@ -25,6 +25,7 @@ dependencies:
     - field.storage.tec_order.field_tec_customer
     - field.storage.tec_order.field_tec_line_items
     - field.storage.tec_order.field_tec_order_status
+    - field.storage.tec_order.field_tec_po_status
     - field.storage.tec_order.field_tec_vendor
     - field.storage.tec_product.field_product_name
     - field.storage.tec_product.field_tec_brand
@@ -1846,19 +1847,19 @@ display:
     position: 11
     display_options:
       fields:
-        nothing:
-          id: nothing
-          table: views
-          field: nothing
-          relationship: none
+        field_tec_po_status:
+          id: field_tec_po_status
+          table: tec_order__field_tec_po_status
+          field: field_tec_po_status
+          relationship: field_tec_order
           group_type: group
           admin_label: ''
-          plugin_id: custom
+          plugin_id: field
           label: ''
-          exclude: false
+          exclude: true
           alter:
-            alter_text: true
-            text: "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/draft/{{ raw_arguments.id }}?destination=/tec_order/{{ raw_arguments.id }}\">\r\n            <img src=\"/sites/default/files/000-edit-16.png\" alt=\"Edit order\"> Edit order\r\n        </a>\r\n    </strong>\r\n</div>\r\n\r\n<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/{{ raw_arguments.id }}/print\" target=\"_blank\">\r\n            <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print/PDF\"> Print/PDF\r\n        </a>\r\n    </strong>\r\n</div>"
+            alter_text: false
+            text: ''
             make_link: false
             path: ''
             absolute: false
@@ -1894,7 +1895,143 @@ display:
           empty: ''
           hide_empty: false
           empty_zero: false
-          hide_alter_empty: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: list_default
+          settings: {  }
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        id:
+          id: id
+          table: tec_order_field_data
+          field: id
+          relationship: field_tec_order
+          group_type: group
+          admin_label: ''
+          entity_type: tec_order
+          entity_field: id
+          plugin_id: field
+          label: ''
+          exclude: true
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: number_integer
+          settings:
+            thousand_separator: ''
+            prefix_suffix: false
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        views_conditional_field:
+          id: views_conditional_field
+          table: views_conditional
+          field: views_conditional_field
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: views_conditional_field
+          label: ''
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          if: field_tec_po_status
+          condition: eq
+          equalto: Open
+          then: "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/draft/{{ id }}?destination=/tec_order/{{ id }}\">\r\n            <img src=\"/sites/default/files/000-edit-16.png\" alt=\"Edit order\"> Edit order\r\n        </a>\r\n    </strong>\r\n</div>\r\n\r\n<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/tec_order/{{ id }}/receive\">\r\n            <img src=\"/sites/default/files/000-ok-16.png\" alt=\"Receive\"> Receive\r\n        </a>\r\n    </strong>\r\n</div>\r\n\r\n<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/{{ id }}/print\" target=\"_blank\">\r\n            <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print/PDF\"> Print/PDF\r\n        </a>\r\n    </strong>\r\n</div>"
+          then_translate: true
+          or: "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/{{ id }}/print\" target=\"_blank\">\r\n            <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print/PDF\"> Print/PDF\r\n        </a>\r\n    </strong>\r\n</div>"
+          or_translate: true
+          strip_tags: false
       pager:
         type: some
         options:
@@ -1978,10 +2115,12 @@ display:
     cache_metadata:
       max-age: -1
       contexts:
+        - 'languages:language_content'
         - 'languages:language_interface'
         - url
         - user.roles
-      tags: {  }
+      tags:
+        - 'config:field.storage.tec_order.field_tec_po_status'
   attachment_8:
     id: attachment_8
     display_title: 'Excel lover purchase order buttons attachment'

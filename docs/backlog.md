@@ -1413,6 +1413,23 @@ tiempo. Se pueden borrar del repositorio.
 
 Nada de esto corre prisa, pero conviene que esté escrito para que no se descubra por sorpresa.
 
+- **Las pestañas de Drupal no se leen en este sitio, y solo las ve el administrador.** Dos cosas
+  independientes que se suman. La primera es de DXPR: en `css/components/tabs.css` saca la barra de
+  pestañas del flujo con `position: absolute` y la sube su altura entera con `translate(-50%,-100%)`,
+  así que aterriza encima de la cabecera pegajosa y queda ilegible. La segunda es del bloque
+  `dxpr_theme_local_tasks`, que tiene una condición de visibilidad por rol y solo deja pasar a
+  `administrator`; para los demás roles no hay barra de pestañas en absoluto, ni View ni Edit ni
+  Delete.
+
+  Consecuencia práctica: **cualquier función que se cuelgue de una pestaña es invisible**. Ya pasó una
+  vez, con `Receive`, y costó seis horas de trabajo que nadie podía usar. Mientras esto siga así, todo
+  lo que tenga que encontrar una persona va en un botón dentro de la pantalla, no en una pestaña.
+
+  Arreglarlo es CSS de un tema de contribución, así que la sobrescritura tendría que vivir en un módulo
+  propio para que no se la lleve la próxima actualización. Lo del rol es un clic en la administración
+  de bloques, pero antes hay que decidir si se quiere que los demás roles vean las pestañas de editar y
+  borrar.
+
 - ~~**`tec_gui`: un tipo de entidad abandonado que deja el informe de estado en rojo.**~~ **Retirado
   el 15 de agosto de 2026**, entero: el tipo de entidad, sus trece tablas, los dos campos que le
   apuntaban, las dos banderas, el selector, el modo de vista y los veintinueve permisos. Ver la
@@ -1744,6 +1761,66 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-16 (mañana) — «¿Dónde sale Receive?»: la función estaba, la puerta no se veía
+
+El dueño abrió el pedido `26-1` para probar la recepción recién construida y preguntó lo que no
+debería haber tenido que preguntar: **«¿dónde sale Receive?»**. Y tenía razón: en esa pantalla no
+salía.
+
+La pestaña existía y funcionaba. Estaba declarada como tarea local sobre la ficha del pedido, junto a
+las de View, Edit y Delete que trae ECK, y el bloque que las imprime estaba activo. Lo que pasa es que
+**DXPR saca la barra de pestañas del flujo de la página**: posición absoluta, centrada, y subida su
+propia altura entera con un `translate(-50%,-100%)` que está en `css/components/tabs.css`. La deja
+flotando por encima del borde superior del contenido, que en este sitio es justo donde está la
+cabecera pegajosa. En la captura del dueño se ve: ese rectángulo pálido que tapa CUSTOMERS y
+SUPPLIERS **es** la barra de pestañas, ilegible.
+
+Y encima hay un segundo motivo, peor que el primero: el bloque tiene una **condición de visibilidad
+por rol, solo `administrator`**. Lukpla, coo y manager no habrían visto esa pestaña nunca, ni la de
+recibir ni las de ECK, aunque tuviesen permiso para recibir. Es decir, la pestaña no servía de puerta
+precisamente para la gente que firma albaranes.
+
+#### El fallo de fondo era la comprobación, no el tema
+
+La prueba de punta a punta daba esto por bueno. Buscaba el texto `/tec_order/776/receive` en el HTML
+de la ficha, lo encontraba —está ahí, dentro de la pestaña invisible— y pintaba BIEN. **Presencia en
+el marcado no es lo mismo que visible para una persona**, y esa distinción es justo la que tenía que
+haber cazado. Una función a la que no hay manera de llegar pasó el examen.
+
+Ahora la prueba cuenta **botones**, no apariciones de la dirección: busca etiquetas de enlace dentro
+de `div.btn-default`, que es lo único que alguien puede pulsar.
+
+Ese cambio destapó una trampa de las pruebas que conviene tener anotada. Al exigir que el pedido
+cerrado **no** ofrezca recibir, la comprobación falló, y no por un fallo del código: en una petición
+de verdad la pestaña desaparece sola, porque el acceso a la ruta la deniega. Lo que ocurre es que
+**Drupal calcula las tareas locales de una ruta una sola vez por proceso** —`LocalTaskManager` las
+guarda en memoria con el permiso ya resuelto, en `$taskData`— y esta prueba pinta la misma ficha antes
+y después de cerrar el pedido dentro del mismo proceso. Vaciar los cachés de render no lo arregla,
+porque no es un caché de render. Se comprobó lanzando la misma página en un proceso limpio con el
+pedido ya cerrado: ni un enlace.
+
+#### Lo que se ha hecho
+
+- **El botón `Receive` vive donde la gente ya mira**: al lado de `Edit order` y `Print/PDF`, que salen
+  de `attachment_6` de la vista de líneas. No depende del CSS del tema y lo ven todos los roles. El
+  icono es el visto (`000-ok-16.png`), que de los que hay es el que mejor lee para «dar por bueno lo
+  que ha llegado».
+- **Los tres botones pasan por un condicional sobre el estado**, el mismo patrón que ya usaban
+  `attachment_5` con los pedidos de venta y la lista de proveedores con los de compra: abierto enseña
+  editar, recibir e imprimir; cerrado conserva imprimir y pierde los otros dos. Esto arregla de paso
+  una incoherencia que venía de antes: **un pedido cerrado seguía ofreciendo editar en su propia
+  ficha**, aunque la lista de proveedores ya se lo negaba desde la noche anterior.
+- **La pestaña se queda donde está.** No molesta y para un administrador con pantalla ancha sigue
+  siendo un atajo. Arreglar el CSS de un tema de contribución para que se lea es otra faena, y no la
+  de hoy.
+- **El guardián tiene dos centinelas nuevos** sobre la configuración de esa vista: que la rama de
+  abierto ofrezca la recepción y que la de cerrado solo imprima. Cualquiera que retoque la vista por
+  la pantalla de administración puede llevarse el botón por delante sin notarlo, y eso es exactamente
+  lo que acaba de pasar durante seis horas por otro camino.
+
+Comprobado: la prueba de punta a punta pasa entera, el guardián 56 de 56 y la prueba de humo 58
+páginas.
+
 ### 2026-08-16 — El círculo de la compra se cierra: recibir mercancía, al modo de Odoo
 
 Faltaba la puerta de entrada. Se podía pedir —`/purchase` propone, el botón escribe el pedido, la
@@ -1783,6 +1860,8 @@ Los tres principios que comparten Odoo y SAP, y que son los que se han copiado:
   terminar.
 - **La pantalla de recibir**, en `/tec_order/{id}/receive`, con pestaña propia en la ficha del pedido
   y atajo desde el número de `Ordered (UoP)` del tablero, que es donde mira quien firma el albarán.
+  (Esa pestaña resultó ser invisible; a la mañana siguiente se cambió por un botón. Está contado en la
+  ficha de arriba.)
   Se teclea en unidad de compra y **la pantalla enseña, mientras se teclea, en qué se convierte en
   unidad de almacén**. Esa vista previa es lo más importante del formulario: la multiplicación por el
   factor es lo único que puede fallar sin dar la cara, porque mete en el almacén un número creíble y
