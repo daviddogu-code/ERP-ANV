@@ -596,6 +596,10 @@ ECA stamped on the line. The footer sums the stamped ones. Today they agree; if 
 material's purchase cost is ever edited after an order is raised, the column and
 the footer below it would disagree on the same page.
 
+> Closed the same night, and it was worse than this paragraph says: the stored
+> total was being rewritten too. See *An issued purchase order is worth what it
+> was worth* below.
+
 Two presentation fixes on the draft, both in
 `asset_injector.css.tec_excel_lover_orders`:
 
@@ -609,6 +613,63 @@ Two presentation fixes on the draft, both in
   reorder rather than guess if the screen has gained or lost a column.
 - Guardian: in section 9 — the two screens' headings compared name by name,
   `Received` last, and the two CSS rules still there.
+
+### An issued purchase order is worth what it was worth (16 August 2026)
+Raise an order in January for 100 at 10. In February the supplier puts the
+material up to 15. In March, open the January order: it said 15, and 1,500.
+
+Not as a display slip — **the stored total was rewritten too**. The ECA that
+totals a purchase line multiplied quantity by whatever the material cost *at that
+moment*, and it runs on every save. Anything touching the line repriced a closed
+order, and **receiving goods saves the line**, so a lorry arriving in April was
+enough to change the price of a January order with nobody touching it.
+
+The odd part is that the flow already assumed the opposite: it computes nothing
+unless the line has a price of its own — there is a condition at the entrance
+checking exactly that. Somebody built the gate for the line's price and then
+multiplied by something else inside. Sales never had the problem:
+`process_lvy385w` always multiplied by `[entity:field_tec_price:value]`.
+
+**The real fault was one step further back.** Twenty-nine lines carried a price
+that was not a purchase price at all: `0.02` on a material bought at 80, `0.30`
+on one bought at 45. Not noise — exactly 80 ÷ 4000 and 45 ÷ 150, each material's
+two conversion factors. `process_kryibry`, which creates an order from a supplier
+card, stamped `[inventoryItem:field_tec_price]`, and on a material
+**`field_tec_price` is the cost per consumption unit**; the purchase cost is
+`field_tec_cost`. The step was called *Set Sales price* inside a purchase flow.
+
+Nobody had noticed because recalculating from the material covered it up. The
+moment the line's price starts to count, that 800 order would have become 2 baht
+on its next save — so fixing the multiplication alone would have been worse than
+leaving it alone.
+
+What changed:
+
+- `process_fpvka81` multiplies by `[entity:field_tec_price:value]`, like sales.
+- `process_kryibry` stamps `[inventoryItem:field_tec_cost]`. `PurchaseListForm`,
+  which builds its lines in PHP rather than ECA, was already right.
+- **Both BPMN models as well as both executables.** Open the modeller and save
+  and the executable is regenerated from the drawing; leaving the old token there
+  leaves the trap re-armed.
+- `Purchase Cost` on both screens reads the line's price. `Sub total` on the
+  order page is now the stored total, which the printout and the footer already
+  read. All three purchase screens finally read the same two fields.
+
+Existing lines were repaired by
+`scripts/arreglar-los-precios-de-las-lineas.php` (dry run by default, `-- aplicar`
+to commit) on two rules: a line with a total already shown takes price = total ÷
+quantity, honouring the money the order has been showing since it was raised; a
+line with no total is a half-written draft and takes today's purchase cost. All
+seven of the first kind landed **exactly** on the material's purchase cost, and
+no order changed value.
+
+- Test: `scripts/el-precio-no-se-mueve.php` walks that January-to-April story
+  with those figures, receipt included, checking all three screens and the
+  footer. Its material has a consumption cost a hundred times smaller than its
+  purchase cost on purpose: confuse the two again and the first figure shows it.
+- Guardian: section 10 — both tokens, both drawings, the purchase list form, that
+  no purchase screen reads the current material cost, and the one that actually
+  matters: **every stored line is worth its own price times its own quantity**.
 
 ### Company settings, and the settings that had no screen (16 August 2026)
 `/admin/config/tec/company`, `src/Form/CompanySettingsForm.php`. Two things on it:

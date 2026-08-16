@@ -1436,6 +1436,88 @@ comprobar($resultados, 'la casilla de cantidad va corta y sin rotulo encima',
   'en las dos pantallas de borrador');
 
 // -----------------------------------------------------------------------------
+// 10. Un pedido emitido vale lo que valia el dia que se hizo.
+// -----------------------------------------------------------------------------
+titulo('10. Un pedido emitido vale lo que valia el dia que se hizo');
+
+// El importe de una linea de compra se recalculaba en cada guardado con el coste
+// que tuviera el material en ese momento, no con el precio con el que la linea
+// nacio. Subir un coste reescribia todos los pedidos viejos que llevaran ese
+// material, y recibir mercancia guarda la linea, asi que bastaba con que llegara
+// el camion. Ventas nunca tuvo ese problema: siempre multiplico por su precio.
+$multiplica = (string) (\Drupal::config('eca.eca.process_fpvka81')->get('actions')['Activity_020nm9h']['configuration']['value'] ?? '');
+comprobar($resultados, 'el importe de la linea de compra sale de su propio precio',
+  $multiplica === '[entity:field_tec_price:value]', $multiplica ?: 'no esta el paso');
+
+$multiplicaVenta = (string) (\Drupal::config('eca.eca.process_lvy385w')->get('actions')['Activity_020nm9h']['configuration']['value'] ?? '');
+comprobar($resultados, 'y el de la de venta igual, como siempre',
+  $multiplicaVenta === '[entity:field_tec_price:value]', $multiplicaVenta ?: 'no esta el paso');
+
+// Quien crea el pedido desde una ficha de proveedor estampaba en la linea el
+// coste por unidad de consumo del material en lugar del de compra. De ahi salian
+// precios de 0,02 en lineas de un material que se compra a 80.
+$estampa = (string) (\Drupal::config('eca.eca.process_kryibry')->get('actions')['Activity_00es7rw']['configuration']['field_value'] ?? '');
+comprobar($resultados, 'la linea nace con el coste de compra del material',
+  $estampa === '[inventoryItem:field_tec_cost]', $estampa ?: 'no esta el paso');
+
+// El dibujo tiene que decir lo mismo: si alguien abre el modelador y guarda, el
+// ejecutable se vuelve a generar desde el y la trampa se rearma sola.
+foreach ([
+  'process_fpvka81' => '[entity:field_tec_price:value]',
+  'process_kryibry' => '[inventoryItem:field_tec_cost]',
+] as $procesoPrecio => $debeDecir) {
+  comprobar($resultados, 'y el dibujo de ' . $procesoPrecio . ' tambien lo dice',
+    str_contains((string) \Drupal::config('eca.model.' . $procesoPrecio)->get('modeldata'), $debeDecir),
+    $debeDecir);
+}
+
+// La lista de la compra crea sus lineas por PHP, no por ECA, asi que tiene su
+// propio sitio donde equivocarse de campo.
+$listaCompra = file_get_contents(DRUPAL_ROOT . '/modules/custom/tec_production/src/Form/PurchaseListForm.php');
+comprobar($resultados, 'la lista de la compra estampa ese mismo coste',
+  str_contains($listaCompra, "'field_tec_price' => \$this->number(\$material, 'field_tec_cost')"),
+  'PurchaseListForm');
+
+// Y ninguna de las dos pantallas de compra puede volver a leer el coste de hoy,
+// que es por donde entraba la contradiccion: la fila decia una cosa y el pie,
+// que suma los importes guardados, decia otra.
+$vistaPrecio = \Drupal\views\Entity\View::load('tec_order_sales_order_line_items');
+$leenElMaterial = [];
+foreach (['page_1' => 'el borrador', 'block_2' => 'la ficha', 'page_3' => 'el impreso'] as $pantallaPrecio => $comoSeLlamaPrecio) {
+  $camposPrecio = $vistaPrecio->getDisplay($pantallaPrecio)['display_options']['fields'] ?? [];
+  if (isset($camposPrecio['field_tec_cost']) || str_contains(json_encode($camposPrecio), '@field_tec_cost')) {
+    $leenElMaterial[] = $comoSeLlamaPrecio;
+  }
+}
+comprobar($resultados, 'ninguna pantalla de compra lee ya el coste de hoy del material',
+  !$leenElMaterial, implode(', ', $leenElMaterial));
+
+// Lo anterior es como esta montado. Esto es si de verdad cuadra: cada linea
+// guardada tiene que valer su precio por su cantidad. Una sola que no cuadre
+// significa que algo ha vuelto a escribir importes por su cuenta.
+$descuadradas = [];
+$almacenLineas = \Drupal::entityTypeManager()->getStorage('tec_line_item');
+$idsLineas = $almacenLineas->getQuery()->accessCheck(FALSE)->condition('type', 'tec_po_line_item')->execute();
+foreach ($almacenLineas->loadMultiple($idsLineas) as $lineaPrecio) {
+  $cantidadPrecio = (float) ($lineaPrecio->get('field_tec_quantity')->value ?? 0);
+  $importePrecio = $lineaPrecio->get('field_tec_line_item_total_number')->isEmpty()
+    ? NULL : (float) $lineaPrecio->get('field_tec_line_item_total_number')->value;
+  if ($importePrecio === NULL || $cantidadPrecio <= 0) {
+    continue;
+  }
+  $suyoPrecio = $lineaPrecio->get('field_tec_price')->isEmpty()
+    ? NULL : (float) $lineaPrecio->get('field_tec_price')->value;
+  if ($suyoPrecio === NULL || abs($importePrecio - round($suyoPrecio * $cantidadPrecio, 2)) > 0.02) {
+    $descuadradas[] = sprintf('linea %s (%s x %s != %s)', $lineaPrecio->id(),
+      $suyoPrecio === NULL ? 'sin precio' : number_format($suyoPrecio, 2),
+      rtrim(rtrim(number_format($cantidadPrecio, 2, '.', ''), '0'), '.'),
+      number_format($importePrecio, 2));
+  }
+}
+comprobar($resultados, 'todas las lineas de compra valen su precio por su cantidad',
+  !$descuadradas, $descuadradas ? implode('; ', array_slice($descuadradas, 0, 5)) : count($idsLineas) . ' lineas');
+
+// -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------
 $mal = array_filter($resultados, fn($r) => !$r['bien']);

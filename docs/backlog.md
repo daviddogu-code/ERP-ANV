@@ -1778,6 +1778,85 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-16 (noche) — Un pedido emitido vale lo que valía el día que se hizo
+
+El dueño lo planteó como un cuento de tres fechas, y era exactamente el caso que rompía:
+
+> 1 de enero, pedido 001, cien unidades a 10 → 1.000. El 1 de febrero el proveedor sube el material de
+> 10 a 15. El 1 de marzo, pedido 002, cien unidades → 1.500. **El 5 de marzo entro en el 001: ¿qué
+> veo?**
+
+Hasta anoche veía 15 y 1.500. Y no como un fallo de pantalla: **el importe guardado también cambiaba**.
+La ECA que calcula el total de una línea de compra multiplicaba la cantidad por el coste que tuviera el
+material *en ese momento*, y lo hace en cada guardado. Cualquier cosa que tocara la línea reescribía el
+precio de un pedido cerrado, y **recibir mercancía guarda la línea**: bastaba con que llegara el camión
+en abril para que el pedido de enero cambiara de precio solo, sin que nadie lo tocara.
+
+#### Lo curioso es que el propio dibujo ya daba por hecho lo contrario
+
+La ECA no calcula nada si la línea no tiene precio propio: hay una condición puesta a la entrada que lo
+comprueba. Alguien montó la puerta para el precio de la línea y luego, dentro, multiplicó por otra cosa.
+Y **ventas nunca tuvo el problema**: `process_lvy385w` siempre multiplicó por `[entity:field_tec_price]`.
+Compras era la única de las dos que miraba al material, lo que encaja con lo que el dueño ya sospechaba
+de este módulo: copiado de ventas y dejado a medias.
+
+#### El fallo de origen, que estaba una casilla más atrás
+
+Al mirar los datos apareció algo peor que la deriva. **Veintinueve líneas llevaban escrito un precio que
+no era un precio de compra**: 0,02 en un material que se compra a 80, 0,30 en uno de 45. No eran restos
+raros, eran exactos: 80 ÷ 4000 y 45 ÷ 150, los dos factores de conversión de cada material.
+
+El culpable es `process_kryibry`, el que crea el pedido desde la ficha de un proveedor. Estampaba en la
+línea `[inventoryItem:field_tec_price]`, y en un material **`field_tec_price` es el coste por unidad de
+consumo**, no el de compra —el de compra es `field_tec_cost`—. El paso se llamaba, literalmente, *Set
+Sales price* dentro de un flujo de compras. Copia y pega de ventas sin releer.
+
+Nadie lo había notado porque el importe se recalculaba desde el material y tapaba el disparate. En
+cuanto el precio de la línea pasa a mandar, ese pedido de 800 habría pasado a valer 2 baht al siguiente
+guardado. **Arreglar solo la multiplicación habría sido peor que no tocar nada.**
+
+#### Lo que se ha hecho
+
+- **La cuenta** (`process_fpvka81`) multiplica por `[entity:field_tec_price:value]`, como ventas.
+- **El nacimiento** (`process_kryibry`) estampa `[inventoryItem:field_tec_cost]`, el de compra. El paso
+  pasa a llamarse *Set Purchase cost*. La lista de la compra, que crea sus líneas por PHP y no por ECA,
+  ya lo hacía bien.
+- **Los dos dibujos**, además de los dos ejecutables. Si alguien abre el modelador y guarda, el
+  ejecutable se regenera desde el dibujo: dejarlo con el token viejo es dejar la trampa rearmada.
+- **Las dos pantallas.** *Purchase Cost* lee el precio de la línea y ya no el coste de hoy del material.
+  El *Sub total* de la ficha deja de ser una multiplicación de la propia vista y pasa a ser el importe
+  guardado, que es lo que ya leían el impreso y el pie. Esto cierra el cabo que quedó abierto en la
+  entrada de abajo: las tres pantallas de compra leen ahora los mismos dos campos.
+- De paso se fue una columna oculta del borrador, una multiplicación cuya fórmula entera era
+  `@field_tec_cost` y a la que no miraba nadie.
+
+#### Las líneas viejas, arregladas según lo que hubiera de donde tirar
+
+`scripts/arreglar-los-precios-de-las-lineas.php`, con copia de seguridad delante y pasada en seco antes:
+
+- **Con importe ya enseñado (7 líneas):** el precio pasa a ser importe ÷ cantidad. Se respeta el dinero
+  que el pedido lleva enseñando desde que se hizo, que es lo único que se firmó y lo único que vio el
+  proveedor. Las siete cayeron **exactas** en el coste de compra del material, que es la confirmación
+  más limpia de que el campo guardaba el coste de consumo y nada más.
+- **Sin importe (22 líneas):** borradores a medio escribir, sin cantidad y sin nada enseñado nunca. Se
+  les pone el coste de compra de hoy, que es el que se aplicaría si alguien los terminara esta tarde.
+- **18 ya estaban bien**, y **ningún pedido cambió de valor**.
+
+#### Cómo se sabe que sigue así
+
+- `scripts/el-precio-no-se-mueve.php` recorre el cuento del dueño con sus mismas cifras, incluida la
+  llegada de la mercancía en abril, y comprueba las tres pantallas y el pie. El material de la prueba
+  tiene un coste de consumo cien veces menor que el de compra a propósito: si alguien vuelve a
+  confundirlos, se ve en la primera cifra.
+- Guardián, sección 10: los dos tokens, los dos dibujos, la lista de la compra, que ninguna pantalla de
+  compra lea ya el coste de hoy, y —lo que de verdad importa— que **todas las líneas guardadas valgan su
+  precio por su cantidad**. Una sola que no cuadre significa que algo ha vuelto a escribir importes por
+  su cuenta. 111 de 111.
+
+**Lo que no se ha tocado.** El impreso conserva sus nombres y su orden de siempre (`Qty. | Material name
+| Price | Unit`), distintos de los de las otras dos. Es el papel que sale a la calle y no me parecía
+cosa de cambiarlo de refilón; queda dicho por si se quiere igualar.
+
 ### 2026-08-16 (cierre) — El borrador y la ficha de compra dejan de escribir lo mismo de dos maneras
 
 El dueño pidió cuatro arreglos de aspecto y salieron seis, porque al ir a igualar las dos pantallas
@@ -1803,6 +1882,10 @@ El pie suma los estampados. Hoy coinciden; el día que alguien corrija el coste 
 material después de haber emitido un pedido, **la columna y el pie de la misma página dirían cosas
 distintas**. Arreglarlo es cambiar la ficha para que use el mismo campo que las otras dos pantallas, y
 no se ha hecho porque el dueño pidió expresamente ir de uno en uno.
+
+> Cerrado esa misma noche, y era más gordo de lo que pone aquí: no es que la ficha *enseñara* otra
+> cifra, es que el importe **guardado** también se reescribía. Ver la entrada de arriba, «Un pedido
+> emitido vale lo que valía el día que se hizo».
 
 #### Los dos arreglos del borrador
 
