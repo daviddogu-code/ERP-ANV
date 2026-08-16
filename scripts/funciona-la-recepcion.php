@@ -133,6 +133,37 @@ $botones = function (string $html, string $destino): int {
 };
 
 /**
+ * Las celdas de la fila que una lista dedica a un pedido.
+ *
+ * Devuelve el texto de cada celda con las direcciones de sus enlaces pegadas
+ * detras, que es lo que hace falta para preguntar de una vez por lo que se lee y
+ * por lo que se puede pulsar. Se busca la fila por el enlace a la ficha, exacto y
+ * no por parecido, porque "contiene /tec_order/75" tambien encontraria el 750.
+ */
+$fila = function (string $html, int $pedido): array {
+  $documento = new \DOMDocument();
+  libxml_use_internal_errors(TRUE);
+  $documento->loadHTML($html);
+  libxml_clear_errors();
+
+  $xpath = new \DOMXPath($documento);
+  $filas = $xpath->query('//tr[.//a[@href="/tec_order/' . $pedido . '"]]');
+  if (!$filas->length) {
+    return [];
+  }
+
+  $celdas = [];
+  foreach ($xpath->query('.//td', $filas->item(0)) as $celda) {
+    $enlaces = [];
+    foreach ($xpath->query('.//a/@href', $celda) as $href) {
+      $enlaces[] = $href->nodeValue;
+    }
+    $celdas[] = trim(preg_replace('/\s+/', ' ', $celda->textContent)) . ' ' . implode(' ', $enlaces);
+  }
+  return $celdas;
+};
+
+/**
  * Los nombres con corchetes hay que anidarlos o no llegan al nucleo.
  */
 $anidar = function (array $datos): array {
@@ -282,6 +313,14 @@ if ($respuesta->getStatusCode() !== 200) {
 $html = $respuesta->getContent();
 $mirar('trae las dos lineas', substr_count($html, 'tec-receive__qty') === 2, substr_count($html, 'tec-receive__qty') . ' casillas');
 $mirar('trae la conversion en pantalla', str_contains($html, 'tec-receive__into'));
+
+// Y la casilla de dar por perdido lo que falta, con la hoja que la hace visible.
+// Sin esa hoja la casilla existe en el HTML y no se ve en pantalla: Bootstrap la
+// pinta del color que le dice DXPR, que es casi el del fondo, asi que la columna
+// entera parecia vacia y el dueno pregunto si faltaba algo. Existir en el HTML no
+// es estar en la pantalla.
+$mirar('trae la casilla de cerrar la linea', substr_count($html, 'tec-receive__nomore') === 2, substr_count($html, 'tec-receive__nomore') . ' casillas');
+$mirar('y la hoja que la hace visible', str_contains($html, 'dxpr-checkbox-fix.css'));
 $base = $campos($html);
 $mirar('trae la ficha de seguridad', isset($base['form_token']) || isset($base['form_build_id']));
 
@@ -361,6 +400,18 @@ if (str_contains($html_tablero, 'data-tid="' . $datos_a['tid'] . '"')) {
 else {
   printf("         %s no lo pide ninguna orden en cola, asi que no tiene fila en el tablero\n", $datos_a['nombre']);
 }
+
+// Y la lista de pedidos a proveedores, que es la pantalla de quien persigue las
+// entregas. Hasta hoy preguntaba por el estado de los pedidos de venta, que un
+// pedido de compra no tiene, asi que la columna del estado salia vacia siempre y
+// el lapiz de editar no aparecia nunca.
+$lista = $pedir('/supplier-orders');
+$mirar('la lista de pedidos a proveedores carga', $lista->getStatusCode() === 200, 'codigo ' . $lista->getStatusCode());
+$celdas = implode(' || ', $fila($lista->getContent(), (int) $pedido->id()));
+$mirar('el pedido tiene su fila en la lista', $celdas !== '');
+$mirar('la lista dice que esta abierto', str_contains($celdas, 'Open'));
+$mirar('y que la entrega va a medias', str_contains($celdas, 'Partially received'), substr($celdas, 0, 120));
+$mirar('y ofrece el lapiz mientras esta abierto', str_contains($celdas, '/po/draft/' . $pedido->id()));
 
 echo "\n";
 echo "Segunda entrega: 5 mas y se cierra lo que falta, y 5 de los 4 pedidos\n";
@@ -445,9 +496,19 @@ $mirar('la ficha impresa sigue en pie', $impresa->getStatusCode() === 200, 'codi
 // que conserve el de imprimir, porque es la copia para contabilidad, y que
 // pierda el de editar, que en un pedido terminado no se quiere tocar a la ligera.
 $construccion = views_embed_view('tec_supplier_orders', 'block_3', $proveedor);
-$lista = (string) \Drupal::service('renderer')->renderInIsolation($construccion);
-$mirar('un pedido cerrado conserva el boton de imprimir', str_contains($lista, '/po/' . $pedido->id() . '/print'));
-$mirar('y pierde el de editar', !str_contains($lista, '/po/draft/' . $pedido->id()));
+$bloque = (string) \Drupal::service('renderer')->renderInIsolation($construccion);
+$mirar('un pedido cerrado conserva el boton de imprimir', str_contains($bloque, '/po/' . $pedido->id() . '/print'));
+$mirar('y pierde el de editar', !str_contains($bloque, '/po/draft/' . $pedido->id()));
+
+// La misma pregunta en la lista general, que ademas tiene que haber cambiado de
+// palabra en la columna de la entrega sin que nadie guarde nada: no hay campo
+// detras, se cuenta de las lineas cada vez.
+$lista = $pedir('/supplier-orders');
+$celdas = implode(' || ', $fila($lista->getContent(), (int) $pedido->id()));
+$mirar('la lista dice que ya esta cerrado', str_contains($celdas, 'Closed'), substr($celdas, 0, 120));
+$mirar('y que la entrega esta completa', str_contains($celdas, 'Fully received'));
+$mirar('cerrado, la lista conserva el de imprimir', str_contains($celdas, '/po/' . $pedido->id() . '/print'));
+$mirar('cerrado, la lista pierde el lapiz', !str_contains($celdas, '/po/draft/' . $pedido->id()));
 
 echo "\n";
 echo "Recogiendo\n";

@@ -876,6 +876,38 @@ comprobar($resultados, 'y el pedido cerrado no lo ofrece',
   !str_contains($condicional['or'] ?? '', '/receive') && str_contains($condicional['or'] ?? '', '/print'),
   'cerrado solo imprime');
 
+// La lista de pedidos a proveedores tiene que preguntar por el estado de compra.
+// Llevaba desde el dia que se hizo preguntando por field_tec_order_status, que es
+// el de los pedidos de VENTA: la pantalla esta filtrada a pedidos de compra, asi
+// que la columna del estado salia vacia el cien por cien de las veces y el mismo
+// campo inexistente decidia los botones, de modo que el lapiz de editar tampoco
+// aparecia nunca. Como es un copiar y pegar facil de repetir, se vigila.
+$lista = \Drupal::config('views.view.tec_supplier_orders')->get('display.default.display_options.fields') ?? [];
+comprobar($resultados, 'la lista de proveedores lee el estado de compra',
+  isset($lista['field_tec_po_status']) && !isset($lista['field_tec_order_status']),
+  isset($lista['field_tec_order_status']) ? 'PREGUNTA POR EL DE VENTAS' : 'field_tec_po_status');
+comprobar($resultados, 'y sus botones tambien',
+  ($lista['views_conditional_field']['if'] ?? '') === 'field_tec_po_status_1'
+  && str_contains($lista['nothing']['alter']['text'] ?? '', '/po/draft/'),
+  (string) ($lista['views_conditional_field']['if'] ?? 'no hay condicional'));
+
+// La columna de la entrega, que es la que distingue "no ha llegado nada" de "ha
+// llegado la mitad". No hay campo detras: sale de un manejador propio que llama a
+// Purchasing::receiptState(), asi que se comprueban las dos cosas, que el
+// manejador exista y que las dos listas lo usen.
+$manejadores = \Drupal::service('plugin.manager.views.field')->getDefinitions();
+comprobar($resultados, 'el manejador de la entrega existe',
+  isset($manejadores['tec_purchase_receipt_state']), 'tec_purchase_receipt_state');
+foreach ([
+  'views.view.tec_supplier_orders' => 'display.default.display_options.fields',
+  'views.view.tec_orders_orders' => 'display.block_3.display_options.fields',
+] as $vista => $donde) {
+  $campos = \Drupal::config($vista)->get($donde) ?? [];
+  comprobar($resultados, 'la columna de la entrega en ' . substr($vista, strlen('views.view.')),
+    ($campos['tec_receipt_state']['plugin_id'] ?? '') === 'tec_purchase_receipt_state',
+    isset($campos['tec_receipt_state']) ? 'puesta' : 'FALTA');
+}
+
 // Y la comprobacion que de verdad importa: ningun pedido abierto sin nada
 // pendiente. Uno asi es justo el fallo que se arreglo -sigue contando como que
 // viene de camino aunque ya no venga nada- y solo puede aparecer si el cierre

@@ -22,6 +22,7 @@ dependencies:
     - eck
     - flag
     - options
+    - tec_production
     - user
     - views_bootstrap
     - views_conditional
@@ -98,6 +99,68 @@ display:
           settings:
             thousand_separator: ''
             prefix_suffix: false
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        field_tec_po_status_1:
+          id: field_tec_po_status_1
+          table: tec_order__field_tec_po_status
+          field: field_tec_po_status
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: ''
+          exclude: true
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: list_default
+          settings: {  }
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -236,10 +299,10 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_order_status:
-          id: field_tec_order_status
-          table: tec_order__field_tec_order_status
-          field: field_tec_order_status
+        field_tec_po_status:
+          id: field_tec_po_status
+          table: tec_order__field_tec_po_status
+          field: field_tec_po_status
           relationship: none
           group_type: group
           admin_label: ''
@@ -248,7 +311,7 @@ display:
           exclude: false
           alter:
             alter_text: true
-            text: '<div class="{{ field_tec_order_status }}">{{ field_tec_order_status }}</div>'
+            text: '<div class="{{ field_tec_po_status }}">{{ field_tec_po_status }}</div>'
             make_link: false
             path: ''
             absolute: false
@@ -298,6 +361,55 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        tec_receipt_state:
+          id: tec_receipt_state
+          table: tec_order_field_data
+          field: tec_receipt_state
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: tec_purchase_receipt_state
+          label: Delivery
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
         field_tec_priority:
           id: field_tec_priority
           table: tec_order__field_tec_priority
@@ -628,13 +740,62 @@ display:
           field: nothing
           relationship: none
           group_type: group
-          admin_label: 'Link to Draft order'
+          admin_label: 'Buttons for an open purchase order'
           plugin_id: custom
           label: ''
           exclude: true
           alter:
             alter_text: true
-            text: " <a class=\"tec-control\" href=\"/o/draft/{{ id }}\" title=\"Edit order\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>"
+            text: " <a class=\"tec-control\" href=\"/po/draft/{{ id }}?destination=/supplier-orders\" title=\"Edit order\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>\r\n\r\n<a class=\"tec-control\" href=\"/po/{{ id }}/print\" target=\"blank\" title=\"Print/PDF\">\r\n    <img src=\"/sites/default/files/000-print-16.png\">\r\n  </a>"
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: false
+        nothing_1:
+          id: nothing_1
+          table: views
+          field: nothing
+          relationship: none
+          group_type: group
+          admin_label: 'Buttons for a closed purchase order'
+          plugin_id: custom
+          label: ''
+          exclude: true
+          alter:
+            alter_text: true
+            text: "<a class=\"tec-control\" href=\"/po/{{ id }}/print\" target=\"blank\" title=\"Print/PDF\">\r\n    <img src=\"/sites/default/files/000-print-16.png\">\r\n  </a>"
             make_link: false
             path: ''
             absolute: false
@@ -720,12 +881,12 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          if: field_tec_order_status
+          if: field_tec_po_status_1
           condition: eq
           equalto: Open
           then: '{{ nothing }}'
           then_translate: true
-          or: ''
+          or: '{{ nothing_1 }}'
           or_translate: true
           strip_tags: false
       pager:
@@ -874,6 +1035,8 @@ display:
             changed: changed
             edit_tec_order: edit_tec_order
             link_flag: link_flag
+            field_tec_po_status: field_tec_po_status
+            tec_receipt_state: tec_receipt_state
           default: changed
           info:
             id:
@@ -944,6 +1107,20 @@ display:
               separator: ''
               empty_column: false
               responsive: ''
+            field_tec_po_status:
+              sortable: false
+              default_sort_order: asc
+              align: views-align-left
+              separator: ''
+              empty_column: false
+              responsive: ''
+            tec_receipt_state:
+              sortable: false
+              default_sort_order: asc
+              align: views-align-left
+              separator: ''
+              empty_column: false
+              responsive: ''
           override: true
           sticky: false
           summary: ''
@@ -999,7 +1176,7 @@ display:
         - url.query_args
         - user.roles
       tags:
-        - 'config:field.storage.tec_order.field_tec_order_status'
+        - 'config:field.storage.tec_order.field_tec_po_status'
         - 'config:field.storage.tec_order.field_tec_priority'
         - 'config:field.storage.tec_order.field_tec_vendor'
   block_1:
@@ -3956,6 +4133,6 @@ display:
         - url.query_args
         - user.roles
       tags:
-        - 'config:field.storage.tec_order.field_tec_order_status'
+        - 'config:field.storage.tec_order.field_tec_po_status'
         - 'config:field.storage.tec_order.field_tec_priority'
         - 'config:field.storage.tec_order.field_tec_vendor'

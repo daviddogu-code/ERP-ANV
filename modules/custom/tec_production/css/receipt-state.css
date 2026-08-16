@@ -1,0 +1,28 @@
+/* The Delivery column on the purchase order lists. Attached by the views field
+   handler, so it only loads on the lists that actually show the column. */
+
+.tec-receipt {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* Nothing has turned up yet: the one worth chasing the supplier about. */
+.tec-receipt--none {
+  color: #8a6d00;
+}
+
+/* Part of it is in the warehouse and part is still owed. */
+.tec-receipt--partial {
+  color: #1a58c4;
+  font-weight: 600;
+}
+
+.tec-receipt--full {
+  color: #1a7f37;
+}
+
+/* Closed without a single thing arriving. */
+.tec-receipt--cancelled {
+  color: #888;
+  font-style: italic;
+}

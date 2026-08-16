@@ -1746,20 +1746,72 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   y `scripts/que-calcula-el-javascript.php` han pasado de 17.800 a 8.900 bytes cada uno, justo la
   mitad, que es lo que ocurre al convertir un fichero de UTF-16 a UTF-8. Alguien los arregló y no los
   comprometió. Hay que mirarlos y decidir, pero el cambio parece bueno.
-- **En `/supplier-orders` el botón de editar probablemente no sale nunca.** Visto el 16 de agosto de
-  2026 al revisar los campos condicionales por el estado nuevo del pedido de compra. Esa pantalla
-  filtra por `tec_purchase_order`, pero su condicional pregunta por `field_tec_order_status`, que es
-  el estado de los pedidos de **venta**, no `field_tec_po_status`. Si los pedidos de compra no llevan
-  ese campo, la condición no se cumple nunca y el botón no aparece jamás.
-
-  No se ha tocado porque no era el encargo de esa noche y porque nadie se ha quejado —lo que sugiere
-  que la pantalla que se usa de verdad es el bloque del CRM del proveedor, `block_3`, que sí pregunta
-  por el campo correcto y que quedó arreglado ese día. Comprobarlo es abrir `/supplier-orders` y ver
-  si hay lápiz en las filas.
-
 ---
 
 ## Hecho
+
+### 2026-08-16 (tarde) — «¿Dónde están los estados?»: en ningún sitio, y por eso no se veían
+
+El dueño preguntó por los estados de los pedidos de compra y dijo que no era capaz de verlos. No era
+cosa de no encontrarlos: **no estaban**.
+
+`/supplier-orders` tenía una columna titulada **Order status** vacía en todas las filas, y no por
+falta de datos. Preguntaba por `field_tec_order_status`, que es el estado de los pedidos de **venta**.
+Un pedido de compra no tiene ese campo, y la pantalla está filtrada a pedidos de compra, así que la
+columna salía vacía el cien por cien de las veces desde el día que se hizo. El mismo campo inexistente
+alimentaba el condicional de los botones de la fila, así que **el lápiz de editar no aparecía nunca**,
+y el enlace que había detrás apuntaba a `/o/draft`, el borrador de un pedido de venta, que tampoco era
+el sitio. Tres síntomas y una sola causa: ese display se copió de una lista de pedidos de venta y
+nadie terminó de cambiarle las preguntas. Estaba anotado como deuda técnica la noche anterior con un
+«probablemente no sale nunca»; era un «no sale nunca», y ya está cobrado.
+
+#### Lo que se ha hecho
+
+- **La columna lee `field_tec_po_status`**, y hay una segunda copia escondida, `field_tec_po_status_1`,
+  para el condicional. Hace falta porque views_conditional compara con lo que el campo *pinta*, y el
+  visible pinta `<div class="Open">Open</div>` y no `Open`. Es el mismo truco que ya usaba el bloque
+  del CRM del proveedor, que era el único sitio donde esto funcionaba bien.
+- **Vuelve el lápiz** en los pedidos abiertos, apuntando a `/po/draft/{id}` con la propia lista como
+  destino, y de paso llega el de imprimir, que en esta pantalla no había. Cerrado conserva imprimir y
+  pierde editar, igual que en la ficha y en el bloque del proveedor.
+- **Columna nueva, `Delivery`**, en `/supplier-orders` y en la pestaña de pedidos de la ficha del
+  proveedor: *Nothing received*, *Partially received*, *Fully received*, *Cancelled*. Existe porque
+  `Open` a secas no le dice a quien persigue a los proveedores a quién perseguir: un pedido del que no
+  ha llegado nada y otro del que ya está la mitad en la estantería se leían igual.
+- **No hay campo detrás ni columna en la base.** Es un manejador de vista propio,
+  `ReceiptState.php`, que llama a `Purchasing::receiptState()` por fila: la misma función que usan el
+  tablero y el guardián, para que las pantallas no puedan contradecirse. No añade nada a la consulta y
+  no se puede ordenar por ella. Sus etiquetas de caché incluyen las **líneas** y no solo el pedido,
+  porque guardar una línea invalida la línea, y sin eso la palabra se quedaría vieja en el caché.
+- Solo se ha tocado el display por defecto; los tres bloques tienen su propia lista de campos. El
+  estilo sí es compartido, así que ahí **solo se ha añadido**: quitar la entrada del estado de ventas
+  le habría estropeado la alineación al bloque de pedidos de venta.
+
+#### Y el segundo hallazgo del día, que era más gordo
+
+Preguntó también si debajo de **Nothing more expected** tenía que haber una casilla. Sí, y estaba: en
+el HTML, con su `<input type="checkbox">` y su etiqueta. Lo que no estaba era **visible**.
+
+Bootstrap 5 no dibuja la casilla del navegador, dibuja la suya: `.form-check-input` pone
+`appearance: none` y la pinta con `--bs-border-color` sobre un relleno de `--bs-body-bg`. DXPR apunta
+`--bs-border-color` a su `--dxt-color-graylighter`, que en la paleta de este sitio anda por `#ededed`,
+y `--bs-body-bg` al fondo de la página, que es blanco. **Todas las casillas del sitio eran un cuadrado
+blanco de trece píxeles con un borde que no se ve**, incluidas las del tablero de stock con las que se
+decide qué se compra. No era un fallo del formulario de recibir; ese solo fue donde se notó, porque
+allí la columna entera parecía vacía.
+
+Arreglado en una hoja de estilo de todo el sitio, `css/dxpr-checkbox-fix.css`, colgada desde
+`tec_production_page_attachments()` al lado del arreglo de la cabecera. Solo toca la casilla **sin
+marcar**: la marcada Bootstrap la rellena con el color de acento y le dibuja un visto blanco, y eso
+siempre se leyó bien.
+
+Y es la segunda vez en dos días que muerde la misma distinción: **estar en el marcado no es estar en
+la pantalla**. La primera fue la pestaña que nadie podía leer. Así que la prueba de punta a punta
+ahora exige, además de que la casilla exista, que la hoja que la hace visible esté en la página.
+
+Comprobado: la prueba de punta a punta pasa entera con doce comprobaciones nuevas sobre la lista, el
+guardián 61 de 61 con cinco centinelas nuevos, y la prueba de humo sin páginas rotas.
+
 
 ### 2026-08-16 (mañana) — «¿Dónde sale Receive?»: la función estaba, la puerta no se veía
 

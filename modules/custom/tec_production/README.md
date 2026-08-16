@@ -292,6 +292,70 @@ people to buy things that were already on the shelf.
     closed orders keep **print** (the copy for accounts) and lose **edit**.
   - The material's stock history needed nothing: the mutation note already
     reads `Received on PO 26-2, delivery note 4471-B`.
+
+### The purchase order lists say the status (16 August 2026)
+Asked for by the owner, who could not find the statuses anywhere on screen. He was
+right: they were nowhere.
+
+- `/supplier-orders` had a column headed **Order status** that was empty in every
+  row, and not for lack of data. Its `default` display asked for
+  `field_tec_order_status`, the status of a **sales** order. A purchase order does
+  not have that field, and the page is filtered to purchase orders, so the column
+  was empty a hundred per cent of the time from the day it was made. The same
+  missing field fed the views_conditional behind the row buttons, so the edit
+  pencil never appeared either, and the link behind it pointed at `/o/draft`, the
+  sales order editor. Three symptoms, one cause: the display was copied from a
+  sales order list and nobody finished changing the questions.
+- The column now reads `field_tec_po_status`, and there is a second hidden copy,
+  `field_tec_po_status_1`, for the conditional — views_conditional compares
+  against what a field *prints*, and the visible one prints
+  `<div class="Open">Open</div>`, not `Open`. Same trick `block_3` already used.
+  Open rows get **edit + print**, closed rows **print** only, and the pencil goes
+  to `/po/draft/{id}` with the list as its destination.
+- New column **Delivery**, on `/supplier-orders` and on the supplier's own
+  Purchase orders tab (`tec_orders_orders`, `block_3`): *Nothing received*,
+  *Partially received*, *Fully received*, *Cancelled*. It exists because `Open`
+  alone does not tell whoever chases suppliers what to chase — an order where
+  nothing has turned up and one where half is already on the shelf read the same.
+- It is a **views field plugin of our own**,
+  `Plugin/views/field/ReceiptState.php` (`tec_purchase_receipt_state`, exposed on
+  `tec_order_field_data` by `tec_production.views.inc`), because there is no field
+  to point a normal column at: it calls `Purchasing::receiptState()` per row, the
+  same function the board and the guardian use, so the lists cannot end up
+  disagreeing with them. It adds nothing to the query and it cannot be sorted on.
+  Its cache tags include the **lines**, not just the order: saving a line
+  invalidates the line, and without that the word would go stale in the render
+  cache.
+- Only the `default` display was touched; the three blocks have their own field
+  lists. The style **is** shared, so entries were only added to its column map,
+  never removed: taking out the sales status entry would have cost `block_1` its
+  alignment.
+- Done by `scripts/arreglar-la-lista-de-pedidos-de-compra.php`, safe to run twice.
+
+### Checkboxes were invisible, site wide (16 August 2026)
+Found because the receive form's **Nothing more expected** column looked empty and
+the owner asked whether a checkbox was missing. It was not missing: it was there
+in the HTML, unstyled into thin air.
+
+Bootstrap 5 draws its own box rather than the browser's — `.form-check-input` sets
+`appearance: none` and paints the box with `--bs-border-color` on a fill of
+`--bs-body-bg`. DXPR points `--bs-border-color` at `--dxt-color-graylighter`,
+about `#ededed` in this site's palette, and `--bs-body-bg` at the page background,
+which is white. Every unchecked checkbox on the site was a 13-pixel white square
+with a border nobody can see, including the ones on the stock board that decide
+what gets bought.
+
+`css/dxpr-checkbox-fix.css`, attached site wide from
+`tec_production_page_attachments()` next to the header fix, gives the unchecked
+box a `#767676` border. Only the unchecked state: Bootstrap's checked state fills
+the box and draws a white tick, and that always read fine. The receive form adds a
+little on top, because Bootstrap lays the box out with a float and a negative
+margin that make sense down a column of labelled fields and none in a table cell
+where the header is the label.
+
+The test now asserts the stylesheet is on the page. Existing in the HTML is not
+the same as being on the screen, and this is the second time that distinction has
+bitten this feature — the first was the tab nobody could read.
 - End-to-end test: `scripts/funciona-la-recepcion.php` walks a real delivery
   with both of its surprises — part of one line arrives, the rest is written
   off short, and more than ordered arrives on the other — and checks the

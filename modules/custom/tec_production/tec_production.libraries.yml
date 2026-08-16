@@ -54,7 +54,17 @@ receive:
     - core/drupal
     - core/once
 
+receipt_state:
+  css:
+    theme:
+      css/receipt-state.css: {}
+
 dxpr_gin_header_fix:
   css:
     theme:
       css/dxpr-gin-header-fix.css: {}
+
+dxpr_checkbox_fix:
+  css:
+    theme:
+      css/dxpr-checkbox-fix.css: {}

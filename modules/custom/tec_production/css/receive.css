@@ -78,6 +78,25 @@
   color: #888;
 }
 
+/* The box that writes off what is never going to arrive. Bootstrap lays it out
+   with a float and a negative margin pulling it into the wrapper's padding,
+   which makes sense down a column of labelled fields and none at all in a table
+   cell, where the header is the label. Its border comes from
+   css/dxpr-checkbox-fix.css: without that it is white on white. */
+.tec-receive__table td .form-check {
+  min-height: 0;
+  margin: 0;
+  padding-left: 0;
+}
+
+.tec-receive__table td .tec-receive__nomore {
+  float: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  cursor: pointer;
+}
+
 .tec-receive__closed {
   color: #6b4e00;
   font-weight: 600;

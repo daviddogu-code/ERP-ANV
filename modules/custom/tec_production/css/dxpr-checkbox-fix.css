@@ -1,0 +1,32 @@
+/* Site-wide fix: make Drupal checkboxes and radios visible again.
+ *
+ * Bootstrap 5 draws its own box instead of the browser's: `.form-check-input`
+ * sets `appearance: none` and then paints the box with `--bs-border-color` on a
+ * fill of `--bs-body-bg`. DXPR points `--bs-border-color` at its own
+ * `--dxt-color-graylighter`, which in this site's palette is around #ededed, and
+ * `--bs-body-bg` at the page background, which is white. The result is a 13-pixel
+ * white square with a border you cannot see on a white page.
+ *
+ * It was found on the goods receipt form, where a whole column looked empty and
+ * the one control that closes a short delivery had no visible checkbox. But it
+ * was never about that form: it is every checkbox on the site, including the ones
+ * on the stock board that decide what gets bought.
+ *
+ * Only the unchecked box is touched. Bootstrap's checked state already fills the
+ * box with the accent colour and draws a white tick, and that reads fine. The
+ * selector carries three classes and pseudo-classes on purpose, so it wins over
+ * `.form-check .form-check-input` without needing `!important`: module CSS loads
+ * before theme CSS, so on equal specificity the theme would win.
+ */
+
+.form-check-input:not(:checked):not(:indeterminate) {
+  background-color: #fff;
+  border-color: #767676;
+}
+
+/* Same box, greyed out: still has to be visible, just clearly not usable. */
+.form-check-input:disabled:not(:checked),
+.form-check-input[readonly]:not(:checked) {
+  background-color: #f0f0f0;
+  border-color: #b4b4b4;
+}

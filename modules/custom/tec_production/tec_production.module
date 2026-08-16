@@ -14,6 +14,11 @@ function tec_production_page_attachments(array &$attachments) {
   // Site-wide fix: keep the DXPR sticky header below the Gin admin toolbar
   // (see css/dxpr-gin-header-fix.css). Harmless on pages without DXPR.
   $attachments['#attached']['library'][] = 'tec_production/dxpr_gin_header_fix';
+
+  // Site-wide fix: give unchecked checkboxes a border you can see. Bootstrap
+  // paints them with a DXPR colour that is nearly the page background (see
+  // css/dxpr-checkbox-fix.css). Harmless anywhere the box is already visible.
+  $attachments['#attached']['library'][] = 'tec_production/dxpr_checkbox_fix';
 }
 
 /**
