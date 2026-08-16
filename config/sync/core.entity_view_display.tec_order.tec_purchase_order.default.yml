@@ -11,6 +11,7 @@ dependencies:
     - field.field.tec_order.tec_purchase_order.field_tec_line_items
     - field.field.tec_order.tec_purchase_order.field_tec_po_status
     - field.field.tec_order.tec_purchase_order.field_tec_priority
+    - field.field.tec_order.tec_purchase_order.field_tec_vat_rate
     - field.field.tec_order.tec_purchase_order.field_tec_vendor
     - views.view.tec_order_sales_order_line_items
   module:
@@ -898,7 +899,7 @@ third_party_settings:
               provider: views
               context_mapping: {  }
               views_label: ''
-              items_per_page: none
+              items_per_page: 0
             weight: 0
             additional:
               bootstrap_styles:
@@ -1104,4 +1105,5 @@ content:
     weight: 5
     region: content
 hidden:
+  field_tec_vat_rate: true
   langcode: true

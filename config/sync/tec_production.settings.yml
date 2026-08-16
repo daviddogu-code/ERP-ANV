@@ -1,7 +1,7 @@
 _core:
   default_config_hash: kcPMAWmkgi5vjFKe_6Rws_C0Vfe6UJeTHLqIDA48-BM
 capacity_staff: 42.6
-capacity_overtime: 0
+capacity_overtime: 0.0
 capacity_factor: 1.5
 days_per_month: 30
 include_open: true
@@ -10,3 +10,4 @@ log_tile_nid: 12
 report_tile_nid: 13
 stock_tile_nid: 14
 purchase_tile_nid: 15
+vat_rate: 7.0

@@ -24,25 +24,46 @@ function tec_production_page_attachments(array &$attachments) {
 /**
  * Implements hook_ENTITY_TYPE_presave() for tec_order.
  *
- * Names sales and purchase orders "CODE YY-NNN" the moment they are created.
+ * Stamps a new order with the two things it must not be left to decide for
+ * itself: its number, and the VAT rate it was raised under.
  *
- * Here and nowhere else. Before this, three places built order numbers -- two
- * ECA processes and the purchase list -- and all three could hand out a number
- * another order already had. Whoever creates an order now does not get a say in
- * what it is called, which is the point: the title of an order is its number,
- * and a number nobody controls centrally is not a number.
- *
- * Only on creation. Renaming an order later would change what is printed on a
- * document already sent to a supplier, and the whole reason for the number is
- * that both sides can refer to the same one.
+ * Both only happen on creation, and for the same reason. These two end up
+ * printed on a document that is sent to somebody outside the company, and a
+ * document that quietly says something different next month is worse than no
+ * document. What a purchase order says is what was agreed on the day.
  */
 function tec_production_tec_order_presave($order) {
-  if (!$order->isNew() || !\Drupal\tec_production\OrderNumber::handles($order->bundle())) {
+  if (!$order->isNew()) {
     return;
   }
-  $name = \Drupal\tec_production\OrderNumber::forOrder($order);
-  if ($name !== '') {
-    $order->set('title', $name);
+
+  // The number. Here and nowhere else: before this, three places built order
+  // numbers -- two ECA processes and the purchase list -- and all three could
+  // hand out a number another order already had. Whoever creates an order does
+  // not get a say in what it is called, which is the point, because the title
+  // of an order is its number and a number nobody controls is not a number.
+  if (\Drupal\tec_production\OrderNumber::handles($order->bundle())) {
+    $name = \Drupal\tec_production\OrderNumber::forOrder($order);
+    if ($name !== '') {
+      $order->set('title', $name);
+    }
+  }
+
+  // The VAT rate, from the supplier's card. Copied rather than looked up on
+  // demand so that a supplier registering for VAT in October cannot rewrite
+  // what was printed in March. Anything already filled in is left alone: that
+  // is somebody deliberately overriding it for a one-off, which is allowed.
+  $rate_field = \Drupal\tec_production\Vat::RATE_FIELD;
+  if ($order->bundle() === 'tec_purchase_order'
+    && $order->hasField($rate_field)
+    && $order->get($rate_field)->isEmpty()) {
+
+    $supplier_field = \Drupal\tec_production\OrderNumber::contactField($order->bundle());
+    $supplier = $supplier_field && $order->hasField($supplier_field) && !$order->get($supplier_field)->isEmpty()
+      ? $order->get($supplier_field)->entity
+      : NULL;
+
+    $order->set($rate_field, \Drupal\tec_production\Vat::forContact($supplier));
   }
 }
 

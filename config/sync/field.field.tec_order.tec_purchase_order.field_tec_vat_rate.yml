@@ -1,0 +1,23 @@
+uuid: fd64aac7-87d2-4e2d-bb38-61a21aae8f8a
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_purchase_order
+    - field.storage.tec_order.field_tec_vat_rate
+id: tec_order.tec_purchase_order.field_tec_vat_rate
+field_name: field_tec_vat_rate
+entity_type: tec_order
+bundle: tec_purchase_order
+label: 'VAT %'
+description: 'The rate this order was raised under. Filled in from the supplier when the order is created. Change it only for a one-off; changing it does not change the supplier.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

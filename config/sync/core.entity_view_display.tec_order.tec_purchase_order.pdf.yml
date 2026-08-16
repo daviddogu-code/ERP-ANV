@@ -9,6 +9,7 @@ dependencies:
     - field.field.tec_order.tec_purchase_order.field_tec_line_items
     - field.field.tec_order.tec_purchase_order.field_tec_po_status
     - field.field.tec_order.tec_purchase_order.field_tec_priority
+    - field.field.tec_order.tec_purchase_order.field_tec_vat_rate
     - field.field.tec_order.tec_purchase_order.field_tec_vendor
   module:
     - ds
@@ -135,6 +136,16 @@ content:
     third_party_settings: {  }
     weight: 3
     region: top
+  flag_tec_delete_order:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 10
+    region: content
+  flag_tec_order_cancel_sales_order:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 10
+    region: content
   langcode:
     type: editablefields_formatter
     label: above
@@ -167,5 +178,6 @@ content:
     weight: 9
     region: second_below
 hidden:
+  field_tec_vat_rate: true
   flag_tec_order_accounting_verified: true
   flag_tec_order_checkout_excel: true

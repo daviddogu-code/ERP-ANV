@@ -1,0 +1,21 @@
+uuid: 1778f357-74e1-4581-8097-cad20d61f94c
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - field.storage.tec_crm.field_tec_vat_treatment
+  module:
+    - options
+id: tec_crm.tec_contact_organization.field_tec_vat_treatment
+field_name: field_tec_vat_treatment
+entity_type: tec_crm
+bundle: tec_contact_organization
+label: 'VAT treatment'
+description: 'Whether this supplier charges Thai VAT. Copied onto each purchase order when it is created, and can be changed there for a one-off.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

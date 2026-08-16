@@ -1,0 +1,30 @@
+uuid: fc760661-a9e7-4beb-92d2-a3dab29d5110
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - options
+id: tec_crm.field_tec_vat_treatment
+field_name: field_tec_vat_treatment
+entity_type: tec_crm
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: standard
+      label: 'Registered for VAT, charges it'
+    -
+      value: local_exempt
+      label: 'Thai, not registered, charges no VAT'
+    -
+      value: foreign
+      label: 'Outside Thailand, no Thai VAT'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

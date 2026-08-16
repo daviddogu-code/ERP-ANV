@@ -15,6 +15,7 @@ dependencies:
     - field.field.tec_crm.tec_contact_person.field_tec_phone
     - field.field.tec_crm.tec_contact_person.field_tec_purchase_currency
     - field.field.tec_crm.tec_contact_person.field_tec_supplier_active
+    - field.field.tec_crm.tec_contact_person.field_tec_vat_treatment
     - field.field.tec_crm.tec_contact_person.field_tec_website
     - field.field.tec_crm.tec_contact_person.field_tec_works_at
   module:
@@ -336,6 +337,21 @@ third_party_settings:
                 third_party_settings: {  }
             weight: 7
             additional: {  }
+          944743f0-df79-4c41-afbd-3150dcbae19d:
+            uuid: 944743f0-df79-4c41-afbd-3150dcbae19d
+            region: content
+            configuration:
+              id: 'field_block:tec_crm:tec_contact_person:field_tec_vat_treatment'
+              label_display: '0'
+              context_mapping:
+                entity: layout_builder.entity
+              formatter:
+                type: list_default
+                label: inline
+                settings: {  }
+                third_party_settings: {  }
+            weight: 8
+            additional: {  }
         third_party_settings: {  }
       -
         layout_id: layout_onecol
@@ -452,6 +468,13 @@ content:
       format_custom_true: ''
     third_party_settings: {  }
     weight: 25
+    region: content
+  field_tec_vat_treatment:
+    type: list_default
+    label: inline
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
     region: content
   field_tec_website:
     type: string

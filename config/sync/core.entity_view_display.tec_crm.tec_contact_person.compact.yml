@@ -15,6 +15,7 @@ dependencies:
     - field.field.tec_crm.tec_contact_person.field_tec_phone
     - field.field.tec_crm.tec_contact_person.field_tec_purchase_currency
     - field.field.tec_crm.tec_contact_person.field_tec_supplier_active
+    - field.field.tec_crm.tec_contact_person.field_tec_vat_treatment
     - field.field.tec_crm.tec_contact_person.field_tec_website
     - field.field.tec_crm.tec_contact_person.field_tec_works_at
   module:
@@ -121,6 +122,7 @@ hidden:
   field_tec_payment_terms: true
   field_tec_purchase_currency: true
   field_tec_supplier_active: true
+  field_tec_vat_treatment: true
   field_tec_website: true
   field_tec_works_at: true
   langcode: true
