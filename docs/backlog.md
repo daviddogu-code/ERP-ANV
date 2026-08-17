@@ -4,7 +4,7 @@
 > Escrito en español porque el lector principal es el dueño del proyecto.
 > Las otras notas de `docs/` están en inglés y son documentación técnica; esta no.
 >
-> Última actualización: 2026-08-13.
+> Última actualización: 2026-08-18.
 
 ## Cómo usar este archivo
 
@@ -147,6 +147,36 @@ preparado para cuando se retome:
 - **Guardar los diez códigos de recuperación de Namecheap** fuera del móvil, en Drive o
   impresos. Namecheap no permite dos métodos de 2FA a la vez, así que si se pierde el
   teléfono esos códigos son la única forma de entrar en el dominio.
+- **Esconder las líneas sin cantidad en el formulario de recibir.** Lo pidió el dueño el 17 de agosto
+  con un caso concreto: en `/tec_order/866` la línea de PA-55 no sale porque su cantidad es 0, y eso
+  está bien, pero en `/tec_order/866/receive` sí sale. Apartado a propósito desde entonces, y de paso
+  quedó medido: **la línea de código son cinco minutos y el resto no.**
+
+  **Qué regla se usa, ya decidido.** La ficha tiene esa regla escrita como filtro de Views,
+  `field_tec_quantity_value > 0` en el bloque *Purchase order block*
+  (`views.view.tec_order_sales_order_line_items.yml:4826`), y es por eso que la línea no salía allí.
+  Recibir debe usar **ese mismo criterio y no otro**. Si usara «no queda nada por llegar» esconderá
+  también las líneas ya servidas del todo, y entonces el albarán de papel tendría cinco líneas y la
+  pantalla dos, justo cuando lo que se está haciendo es cotejar uno con otra.
+
+  **Lo que de verdad cuesta es el pedido cuyas líneas son todas cero.** Al esconderlas la tabla se
+  queda vacía, y entonces el mensaje de tabla vacía dice *"This purchase order has no lines"*
+  (`ReceiveForm.php:143`), que es mentira —líneas tiene, cantidad no—, y `validateForm()`
+  (`ReceiveForm.php:306`) exige una cantidad o una casilla marcada, así que ese formulario **solo
+  puede acabar en un error**. Hay que reescribir el mensaje y decidir si el botón Receive debe
+  aparecer siquiera en un pedido así. La cola ya lo resuelve por su lado, porque un pedido sin nada
+  que perseguir no sale en pantalla; la ficha sí lleva ahí.
+
+  **Y por qué se pudo aparcar sin riesgo.** Esconder filas no puede estropear una recepción:
+  `submitForm()` recorre lo que llega del formulario (`ReceiveForm.php:332`), así que una línea que no
+  está simplemente no existe para el guardado, y `report()` vuelve a leer el pedido de la base de
+  datos para decidir si queda algo por llegar. El riesgo es cosmético.
+
+  **Hacerlo junto al detalle feo de la sección 6**: la misma regla está escrita dos veces en Views con
+  dos redacciones que además no son equivalentes, porque una cantidad negativa pasa el `!= 0` y no
+  pasa el `> 0`. Si el formulario añade una tercera en PHP van tres. Lo ordenado es que la pregunta
+  «¿esta línea cuenta?» viva junto a `Purchasing::outstanding()` y que las tres pantallas la
+  consulten.
 
 ## 3. Antes de que entren los empleados
 
@@ -387,11 +417,11 @@ ficha de material, y no por los campos sin mapear, sino por tres campos obligato
 ni se pueden rellenar. El detalle y el porqué están más abajo, en la sección del sistema de unidades
 opcionales de Óscar.
 
-**El importador de escandallos está peor, y en un punto concreto.** `tec_bom_items_importer` recibe
+**El importador de BoM está peor, y en un punto concreto.** `tec_bom_items_importer` recibe
 ficheros de tres columnas —`ID, Material, Requires`—, uno por producto y talla. Tiene orígenes
 declarados para `Material` y para `Requires` y **ninguno de los dos está conectado**: el nombre del
 material acaba solo dentro del título que se genera con una regla de `feeds_tamper`
-(`[material1]-[parent:imported]`), y **la cantidad se pierde**. O sea que importa escandallos sin
+(`[material1]-[parent:imported]`), y **la cantidad se pierde**. O sea que importa BoM sin
 material y sin cantidad. Trae además dos trampas: `update_non_existent: _delete`, con lo que toda
 fila que falte en el fichero borra su elemento, y la clave única es la columna `ID`, que en los
 ficheros de Primo **venía vacía en todas las filas** — con clave única vacía, las veinticuatro filas
@@ -426,7 +456,7 @@ importadores y seiscientos CSV a mano. No es que esté roto: es que el diseño n
 misma huella de las fichas 5 y 6 de arriba, el intento que se quedó a medias.
 
 Cuando se retome, la forma correcta es un cargador propio que construya el árbol entero de una
-pasada —producto, variaciones de color, variaciones de talla y escandallo—, con modo de prueba en
+pasada —producto, variaciones de color, variaciones de talla y BoM—, con modo de prueba en
 seco antes de escribir, porque son del orden de trescientas fichas por producto y referencias en los
 dos sentidos que hay que dejar cuadradas. Y antes de escribir una línea, comprobar si **duplicar
 producto ya resuelve el caso**: los dos procesos de ECA que duplican (`process_llpx4tp` y
@@ -559,7 +589,7 @@ daño que no da error y se descubre meses después en un coste raro.
 `field_tec_package_units` vale 1, recalcula el precio como coste de línea por `field_tec_units`
 ("Custom UoP found" en el registro). Con los interruptores siempre vacíos **las dos ramas están
 muertas**, así que hoy el total de una línea de pedido de compra es cantidad × coste de compra del
-material, sin conversión ninguna. Es la explicación de la sospecha sobre los costes: si el escandallo
+material, sin conversión ninguna. Es la explicación de la sospecha sobre los costes: si el BoM
 consume en unidades de uso y se aplica el coste del rollo entero, el coste de producción está
 inflado por el factor de conversión. Para eso existe "Consumption Cost", que **sí lo calcula alguien,
 pero solo dentro del navegador**. Ver más abajo, en el paso 5: lo hace un JavaScript del formulario, así
@@ -733,7 +763,7 @@ navegador: que los dos números se muevan mientras se teclea el coste de compra.
 
 **Y el campo de consumo pasa a 12 cifras con 6 decimales**, porque con dos ya estaba en el límite: el
 material de prueba guarda 0,02 y uno un poco más barato daría 0,008, que se guardaba como 0,01, un 25%
-de error en todos los escandallos.
+de error en todos los BoM.
 
 ##### La puerta que Drupal deja para esto no sirve para campos configurables
 
@@ -844,7 +874,7 @@ importar. Es la pieza que falta y no es grande: son dos divisiones.
 
 Un detalle a decidir con eso: los dos campos guardan **dos decimales**. Con el material de prueba el
 coste por centímetro sale 0,02, que ya está en el límite. Un material más barato daría 0,008 y se
-guardaría como 0,01, un 25% de error arrastrado a todos los escandallos. Si el coste de consumo va a
+guardaría como 0,01, un 25% de error arrastrado a todos los BoM. Si el coste de consumo va a
 usarse para costear producción, ese campo necesita cuatro decimales.
 
 ##### La prueba de humo, ocho pantallas más
@@ -1612,7 +1642,7 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
   agosto durante la prueba funcional. **Hecha la mitad el 15 de agosto de 2026: ya no se puede
   borrar. Falta la otra mitad, que el proceso aguante.**
 
-  Cuando una línea de pedido tiene en su escandallo un material que ya no existe, el proceso de ECA
+  Cuando una línea de pedido tiene en su BoM un material que ya no existe, el proceso de ECA
   que calcula el total arranca, se para en seco al intentar cargar ese material y **deja puesta la
   bandera de bloqueo**. No da error ni aviso: el total simplemente deja de actualizarse, y como la
   bandera se queda puesta, esa línea no vuelve a recalcular nunca más aunque se arregle el material.
@@ -1813,6 +1843,185 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-18 — Borrar dejaba restos en tres sitios, y a uno de ellos no se llegaba desde ninguna pantalla
+
+El árbol del producto tiene cuatro pisos —producto, color, talla y las líneas de BoM de cada talla—
+y el borrado solo se llevaba el del medio.
+
+**La rutina de ECA tiene dos acciones de borrar y las dos dicen «borrar la talla».** Así que borrar
+un producto mataba las tallas de sus colores y dejaba los colores de pie: sin tallas y apuntando a un
+producto que ya no contesta. Y las líneas de BoM no se las llevaba nadie, nunca. Esas son las peores,
+porque a una línea de BoM solo se llega a través de su talla, de modo que en cuanto la talla
+desaparece la línea no la vuelve a ver nadie desde ninguna pantalla, pero sigue ocupando su sitio en
+la tabla y contando en los recuentos.
+
+De un solo producto de prueba borrado el 14 de agosto quedaron los dos restos, y los dos aparecieron
+esta semana sin buscarlos: el color 888 había sobrevivido al producto 887, y las líneas 29700 y 29701
+a la talla 889. Borradas las tres cosas.
+
+**El tercer resto es más callado y por eso más peligroso.** Drupal no quita el número del hijo de la
+lista del padre cuando el hijo se borra. En pantalla no se nota, porque una vista se salta lo que no
+puede cargar. Pero la rutina de borrado de ECA recorre esas listas y se para en la primera entrada
+que no carga, así que basta un número muerto en medio de la lista de un color para que todas las
+tallas que van detrás se salven del borrado. Un resto invisible fabricando restos nuevos.
+
+**La cascada vive ahora en el código y está entera:** un producto se lleva sus colores, un color sus
+tallas y una talla sus líneas de BoM. Y no se fía de la lista del padre: además de recorrerla,
+pregunta quién apunta hacia arriba, porque un hijo que falta de la lista existe igual y sería
+justamente el que dejaría atrás. La rutina de ECA sigue instalada, porque además de borrar redirige a
+la lista de productos, pero ya no encuentra nada que hacer. Al borrar un hijo se le quita también su
+número de la lista del padre, salvo cuando el padre se está yendo también, que es lo normal en una
+cascada y no tiene sentido guardar una lista que está a punto de desaparecer.
+
+Lo único que la cascada se niega a llevarse es una línea de BoM que otra talla esté usando. Hoy nadie
+comparte líneas —duplicar una talla las copia en vez de apuntar a las mismas— pero una línea de dos
+tallas no es una contradicción, y enterarse por las malas costaría un BoM de verdad.
+
+**Y una escopeta cargada que llevaba meses en el cajón.** El guion que borra el juego de datos de
+prueba hace un tercer barrido para recoger líneas sueltas, y decidía si una línea estaba suelta
+preguntándole a su campo `field_tec_size_variation`. Ese campo no es el lazo con la talla: es el buzón
+del importador, solo lleva algo cuando la línea entró por una importación, y está vacío en todas las
+que nacen en el formulario o al duplicar, que son todas las de verdad. El guion habría leído ese vacío
+como «esta línea no tiene talla» y se habría llevado por delante el BoM entero del sitio. Ahora las
+dos clases de línea se preguntan igual, desde el lado del padre: ¿hay alguien que la tenga en su
+lista?
+
+**De vocabulario:** «escandallo» desaparece del proyecto y se queda «BoM», que es lo que dicen las
+pantallas. Ochenta y ocho apariciones en trece guiones y en este diario. El dueño no conocía la
+palabra, y una palabra que hay que explicar cada vez no sirve para nombrar nada.
+
+- Prueba nueva: `borrar-no-deja-restos.php`, que monta un árbol entero y lo desmonta de abajo arriba.
+  Dieciséis comprobaciones entre borrar una talla, un color y un producto, incluida una talla que su
+  color no tiene apuntada, que es la que antes se salvaba.
+- Guardián: la sección 13 pasa a seis comprobaciones. Entran que ninguna línea de BoM se quede sin
+  talla, que nadie apunte hacia arriba a una ficha que ya no existe y que ninguna lista de padre
+  guarde un número muerto. Las tres miran referencias rotas, que es lo que el guardián no sabía ver:
+  preguntaba si un campo estaba vacío, no si apuntaba a algo que ya no está. 145 en total.
+
+### 2026-08-17 (noche) — La talla que no sabía de quién era: un 404, un duplicado mudo y una columna que decía el número dos veces
+
+El dueño se puso a probar a mano la cadena de ventas y producción, y en veinte minutos salieron tres
+fallos que no se parecían en nada. Los tres eran el mismo.
+
+**La columna que decía el número dos veces.** Al escribir `0.25` en «Production requires», la pantalla
+enseñaba `0.2500 · 0.25`. La columna enseña el texto original al lado del número formateado cuando el
+texto es una fórmula, y decidía si lo era comparando dos cadenas: `"0.2500"` no es `"0.25"`, así que
+lo enseñaba siempre. Ahora la pregunta es si el texto es un número. Las fórmulas se quedan, y se
+quedan a propósito: en un documento de corte, `1 / (1/12)` da doce y `1 / 0.0833` da 12,004802.
+
+**El 404 al guardar.** Reordenar las líneas del BoM y guardar aterrizaba en `/tec_product/`, sin
+número detrás de la barra. El lápiz de editar construye esa dirección con `field_tec_product`, el
+atajo que cada color y cada talla guardan directo a su producto, y estaba vacío.
+
+**El duplicado que no duplicaba.** El icono de copiar una talla no hacía nada y se convertía en
+«Unflag this item». Ese icono no es un botón, es una bandera: al pulsarla un proceso de ECA la
+escucha, fabrica la copia y baja la bandera él mismo, y bajarla es el paso seis. El proceso arrancó
+cuatro veces y murió dos en el paso dos y dos en el tres, que es donde carga el producto y el color de
+la talla. Los dos campos estaban vacíos.
+
+**Por qué no se oyó nada, que es lo importante de esta noche.** ECA le pide permiso a una acción antes
+de ejecutarla, y la acción que carga una referencia responde *acceso denegado* cuando no hay nada que
+cargar. No una excepción, no un aviso: denegado. Así que ECA corta la rama y no escribe una línea. En
+el registro quedaron cuatro arranques y nada más. Esa forma de fallar no es de duplicar: es de las
+once cosas de este ERP que funcionan con banderas.
+
+**Y por qué los campos estaban vacíos.** Los rellenaban procesos que escuchan solo el `insert` y solo
+actúan si el enlace al padre ya está puesto en ese instante. Una talla nacida dentro del formulario
+anidado se guarda antes que el color que la va a contener, así que pierde la ventana y nadie vuelve a
+por ella. Las dos tallas del único producto del sitio llevaban así desde que se crearon.
+
+Ahora se preguntan dos veces. El guardado de la propia ficha lo pregunta otra vez, sin depender del
+orden en que se creen las cosas; y el guardado del padre ata a todos los hijos que le falte el enlace,
+que es el primer momento en que la respuesta existe. Con eso, duplicar funciona: la copia se lleva el
+color, el producto, el precio, el código de barras y el BoM entero, con sus cantidades y con el texto
+tal como se escribió —el `1/12` sigue siendo `1/12` en la copia, no un `0,0833`.
+
+- Guiones: `quien-se-quedo-sin-producto.php` para mirar y `nadie-pierde-el-hilo-con-su-producto.php`
+  para arreglar, con ensayo en seco y relanzable.
+- Pruebas nuevas: `la-talla-no-pierde-su-producto.php` y `se-puede-duplicar-una-talla.php`, esta
+  última pulsando la bandera de verdad y creando las fichas en el orden real, hijo primero y padre
+  después.
+- Guardián: sección 13 nueva, y una sección 14 que vigila que ninguna bandera de las que hacen de
+  botón se quede puesta en reposo. Una puesta significa siempre lo mismo, que su proceso empezó y no
+  llegó al final, y hasta ahora eso no se veía por ningún sitio. Vigila diez: las siete que son
+  botones y las tres cerraduras internas.
+- De paso: el color 888 fuera, y las marcas dejan de contarse como dato fijo y pasan a contarse como
+  contenido, porque el dueño crea marcas nuevas y el campo es obligatorio para dar de alta un
+  producto.
+
+### 2026-08-17 (tarde) — Un pedido de compra tiene un estado, y las cuatro pantallas lo dicen igual
+
+Nueve peticiones del dueño después de estrenar el control de compras. Cuatro eran de acabado, una
+era un fallo de cuentas y las otras cuatro eran, en realidad, la misma: **el estado de un pedido no
+significaba lo mismo en dos pantallas seguidas**.
+
+**Los días estaban mal por uno, todos los días.** `KJ 26-001` se hizo el 14 y el 17 decía 2. La resta
+mezclaba la medianoche de hoy con la hora exacta en que se creó el pedido: del 14 a las once de la
+mañana al 17 a las cero horas hay dos días y trece horas, y el suelo se quedaba con el 2. Ahora los
+dos extremos bajan a su medianoche antes de restar, que es lo que cualquiera entiende por «cuántos
+días lleva esto». Se redondea en vez de truncar, por si algún día esto corre donde cambian la hora.
+
+**El estado, que era el fondo del asunto.** Un pedido servido entero y esperando la factura decía
+*Closed* en `/supplier-orders`, *Closed* en su ficha, *Closed* en el impreso y *Delivered* en la
+pantalla de control. Ninguna mentía: las tres primeras enseñaban la bandera de abierto o cerrado, que
+responde a otra pregunta. Pero quien miraba dos pantallas obtenía dos respuestas, y ese es el tipo de
+cosa que hace que la gente deje de fiarse de una pantalla y vuelva a su hoja de cálculo.
+
+Ahora hay una sola función, `Purchasing::progress()`, y siete lecturas:
+
+| Lectura | De dónde sale |
+|---|---|
+| Open | nadie ha dicho nada todavía |
+| On process / Ready to pick up / On the way | lo único que teclea una persona |
+| Delivered | todas las líneas recibidas |
+| Closed | recibido entero **y** la factura archivada |
+| Cancelled | cerrado sin que llegara nada |
+
+Las dos mitades hacen falta para *Closed*, por lo mismo que la cola no suelta un pedido a medio
+servir aunque llegue su factura.
+
+**Y *Cancelled* no es solo «nada pendiente y nada recibido».** Leído desde las líneas, un borrador que
+alguien empezó esta mañana es idéntico a un pedido que se dio por perdido. Lo que los separa es la
+bandera de abierto o cerrado, y esa es la razón por la que esa bandera sigue mereciendo la pena, junto
+con los botones, que la siguen y deben seguirla: si un pedido se puede editar es otra pregunta.
+
+**Open dejó de venir de fábrica.** El campo nació con «On process» de valor por defecto y el guion de
+encendido lo sembró además en los once pedidos que ya existían. Las dos cosas se deshicieron al día
+siguiente: un pedido hecho esta mañana no lo ha perseguido nadie, y una pantalla donde todas las filas
+ya afirman que alguien está en ello es una pantalla donde el día que alguien esté de verdad no se
+nota. No se añadió ningún valor para decirlo; Open es el hueco.
+
+**El desplegable ya no es un desplegable.** La columna se lee por color y un `<select>` nativo no pinta
+sus opciones igual en dos navegadores: Safari las ignora. Así que la pastilla y su lista son elementos
+nuestros, con el teclado escrito a mano, que es lo que un `<select>` regala. Los colores viven en una
+sola hoja compartida por las cuatro pantallas. Y rotaron como pidió el dueño: *On process* naranja,
+*Ready to pick up* amarillo, *On the way* azul.
+
+**Fuera el botón de guardar.** Cada celda se manda sola en cuanto se toca, igual que las casillas de
+`/stock`. Lo que contesta el servidor no es un «recibido» sino el estado recalculado: si mientras la
+página estaba abierta alguien recibió la mercancía, la fila se corrige sola en vez de seguir ofreciendo
+una opción que ya no existe.
+
+**Lo demás:** columna *Delivery* a la derecha de *Status*, que es la única que sabe decir «ha llegado
+la mitad»; el nombre del proveedor lleva a su ficha, que es donde está el teléfono; y un botón de
+recibir en las filas donde se puede recibir. En las demás no sale: se le pregunta a la propia ruta en
+vez de repetir sus reglas, porque un botón que lleva a un «no puedes» es peor que ningún botón.
+
+**Un fallo que se llevó por delante la ficha entera, y solo lo vio la prueba.** Al convertir el bloque
+del estado en la ficha, se le copió la configuración del anterior tal cual. Un `field_block` declara
+dos contextos y un `extra_field_block` solo uno, así que el `view_mode` sobrante tiraba
+`/tec_order/943` con «Assigned contexts were not satisfied». Nunca llegó al navegador porque la prueba
+de punta a punta pide la ficha. Vigilado desde entonces en la sección 12.
+
+- Guiones: `el-estado-empieza-en-open.php` y `el-estado-se-lee-igual-en-todas-partes.php`, los dos con
+  ensayo en seco y los dos relanzables.
+- La prueba `lo-que-esta-de-camino-se-ve.php` pasó de cinco casos a siete: entraron el borrador
+  abierto sin cantidades y el cerrado sin nada recibido, que son los dos que se leen igual desde las
+  líneas y significan cosas distintas.
+- Guardián: sección 12, nueve comprobaciones. Y una corrección en el recuento de ficheros, que se
+  ponía en rojo porque abrir la ventanita de subir factura y cerrarla deja un fichero temporal
+  detrás; ahora cuenta los permanentes e informa de los que esperan al barrido.
 
 ### 2026-08-17 — Control de compras: la hoja de Google se muda al ERP
 
@@ -3175,7 +3384,7 @@ problemas.
 **De camino, por qué la talla de prueba tiene ese nombre tan raro, y esto interesa para el
 importador.** El dueño vio *"PRUEBA producto - Black - XXS"* en la columna Sizes y no encontraba ese
 texto en el vocabulario de tallas. No está: el vocabulario tiene solo las tallas de verdad, y ese
-texto es el **título de una *Size variation***, que es la ficha donde vive el escandallo. Lo escriben
+texto es el **título de una *Size variation***, que es la ficha donde vive el BoM. Lo escriben
 dos procesos de ECA —`process_qlf96jn` al insertar y `process_ocmwa9c` al actualizar— y su receta es
 solo el nombre de la talla: *"XXS"*. Pero el de insertar lleva la condición **"solo si el título llega
 vacío"**, y el de actualizar solo lo reescribe **si cambia la talla**. Al fabricar el juego de pruebas
@@ -3341,7 +3550,7 @@ cifra de referencia falle no significa que algo esté roto: significa que hay qu
 
 ### 2026-08-14 — Los 104 CSV y Excel de las importaciones de ensayo, fuera, y dos importadores huérfanos al descubierto
 
-Decisión del dueño: los listados de materias primas y los escandallos que se subieron entre marzo de
+Decisión del dueño: los listados de materias primas y los BoM que se subieron entre marzo de
 2024 y julio de 2025 eran todos ensayos y se borran. Fuera **104 fichas** de hoja de cálculo, 1,9 MB,
 más **10 archivos sueltos** en `private://feeds` que ya no tenían ficha en la base y que nadie se
 había llevado. Quedan **69 ficheros** en todo el ERP: 39 fuentes tipográficas, 28 imágenes y 2 hojas
@@ -3370,7 +3579,7 @@ fichas que nadie pidió no es limpiar, es decidir por otro.
 diagnosticarlo". Los ficheros sirvieron para eso antes de irse: se leyeron por dentro, se comparó lo
 que traen con lo que la configuración espera, y salieron cuatro cosas —tres campos conectados de
 quince, una columna que se llama distinto en el fichero y en el importador, el proveedor que viene
-vacío en el Excel y obligatorio en la especificación, y un importador de escandallos que no conecta
+vacío en el Excel y obligatorio en la especificación, y un importador de BoM que no conecta
 ni el material ni la cantidad—. Todo eso está escrito arriba, en la sección del importador.
 
 Antes de esto había una copia completa de las dos carpetas de ficheros, hecha una hora antes para el
@@ -3412,7 +3621,7 @@ un 200 por HTTP con su tamaño correcto.
 
 **El reparto de los 315.** Se quedan 32 que tienen usos, entre ellos los once iconos de la portada y
 los iconos de la aplicación móvil. Se quedan **141 que no son fotos**: las fuentes del tema, dos
-hojas de estilo y un montón de CSV y Excel de las importaciones de escandallo de 2024. Esos CSV se
+hojas de estilo y un montón de CSV y Excel de las importaciones de BoM de 2024. Esos CSV se
 fueron una hora después, en la entrada de arriba. Y se fueron las 142 fotos.
 
 **Las siete fotografías que no eran basura.** Entre las candidatas había fotografía de producto de
@@ -3575,7 +3784,7 @@ motivos distintos y los dos reutilizables:
 **Y por fin se ha podido probar de verdad.** Comprobar que un aviso ha dejado de salir no se puede
 hacer leyendo el código: hay que pedir la pantalla. Desde la limpieza no había ningún pedido con el
 que pedirla, así que `scripts/probar-el-parche.php` **se fabrica uno**: material, talla con
-escandallo, pedido de venta y dos líneas, una a propósito **sin cantidad**, que es el caso que
+BoM, pedido de venta y dos líneas, una a propósito **sin cantidad**, que es el caso que
 disparaba los avisos. Después pide `/o/draft/<pedido>` y `/o/pf/<pedido>/print`, mira el registro y lo
 borra todo. Resultado: las dos pantallas responden 200 y el registro se queda **exactamente a cero**.
 
@@ -3864,7 +4073,7 @@ configuración dice qué *puede* apuntar, no qué apunta. Hicieron falta dos gui
 cosas que no estaban en el plan: **catorce registros de producción**, **cuarenta y siete
 importaciones** y **treinta y una redirecciones** del servidor viejo. Ninguna aparecía en la
 lista original. Los dieciséis pasos finales se ejecutaron en cascada, de las hojas al tronco:
-producción, escandallos de línea, escandallos, movimientos, líneas, pedidos, variaciones,
+producción, BoM de línea, BoM, movimientos, líneas, pedidos, variaciones,
 productos, fichas de CRM, materiales, nodos, redirecciones y por último los vocabularios.
 
 **El fallo de la bandera silenciosa no se activó ni una vez.** Era el riesgo serio: en este ERP,
@@ -3896,7 +4105,7 @@ materiales— y `field_tec_suppliers` estaba **vacío en los 869**. Se iba a dec
 decidieron los datos. El resto del retrato: solo ocho campos rellenos en todo el catálogo, precio
 en 50 materiales, coste en 15, plazo de entrega en 3, SKU en ninguno.
 
-**La comprobación del ERP cambió de oficio.** Vigilaba recuentos —4.773 escandallos, 869
+**La comprobación del ERP cambió de oficio.** Vigilaba recuentos —4.773 BoM, 869
 materiales, 18 pedidos—, y contra una base vacía eso no avisa de nada. Ahora vigila que los
 **dieciséis tipos de contenido sigan declarados** en las seis entidades, que los vocabularios que
 se quedan tengan lo que tenían, y que los automatismos reaccionen. Esa última parte era la única
@@ -3909,10 +4118,10 @@ Fabricar esos datos enseñó dos cosas sobre el ERP que no estaban escritas en n
 
 - **Una línea de pedido con precio y cantidad no calcula nada, y hace bien.** El primer maniquí
   llevaba solo eso, y el total salía vacío. Parecía un fallo grave. No lo es: el proceso solo
-  escucha el evento de actualizar, y todo lo que calcula gira alrededor del escandallo de la
+  escucha el evento de actualizar, y todo lo que calcula gira alrededor del BoM de la
   talla. Una línea que no cuelga de una talla no es un caso real y el proceso la deja en paz. Con
   la talla puesta, cambiar la cantidad a 6 con precio 12,50 da **75,00** al primer intento.
-- **Al guardar una línea, ECA crea por su cuenta un escandallo de línea y lo engancha.** Nadie lo
+- **Al guardar una línea, ECA crea por su cuenta un BoM de línea y lo engancha.** Nadie lo
   pide y no se ve en ninguna pantalla. La primera sonda dejó uno huérfano y la comprobación
   siguiente habría fallado por encontrar contenido donde debía haber cero, sin pista de por qué.
   Ahora se va a buscar y se borra.
@@ -3952,7 +4161,7 @@ dentro están los 1.382 ficheros. Se ha archivado en vez de borrar por lo que sa
 con lo actual, que es el motivo de no fiarse de la nota que decía "restos ya superados".
 
 **Había siete ficheros que no existían en ningún otro sitio.** No eran basura: eran una función
-entera del inventario. Un selector propio de materiales para el escandallo —el plugin
+entera del inventario. Un selector propio de materiales para el BoM —el plugin
 `tec_inventory:bom_material`, su controlador, su JavaScript, su enrutado y sus servicios— más un
 `menu-accent.css`. Nunca estuvieron en Git: el primer commit del repositorio, del 9 de agosto, se
 llama precisamente *"Baseline snapshot before tec_inventory redesign"* y no los contiene, así que
@@ -4071,7 +4280,7 @@ algún día se quiere apagar, es un `drush pm:uninstall update` y bajar la cifra
 porque `update` deja de contar como herramienta temporal y pasa a ser un módulo más; la lista
 `MODULOS_TEMPORALES` se queda vacía pero el mecanismo se deja puesto, que en la próxima subida hará
 falta otra vez. Y tres cifras de contenido suben —18 pedidos de venta, 101 líneas y 202 elementos de
-escandallo— porque son **los pedidos 755 y 756 creados a mano anoche** para comprobar que la pantalla
+BoM— porque son **los pedidos 755 y 756 creados a mano anoche** para comprobar que la pantalla
 de líneas volvía a abrir, con ocho líneas cada uno. Se actualizan a propósito: una cifra que falla
 siempre por un motivo conocido deja de servir para avisar de nada.
 
@@ -4231,7 +4440,7 @@ y se niega a cerrar nada si alguna tuviera valor.
 **Una herramienta que mentía, corregida.** Un script propio dijo que `feeds_tamper` no tenía
 ninguna transformación configurada, y estuvo a punto de desinstalarse. Estaba mal: miraba en la
 raíz de la configuración del tipo de importación, y Feeds Tamper las guarda bajo
-`third_party_settings`. Sí había una, y es la que construye el título de las líneas de escandallo
+`third_party_settings`. Sí había una, y es la que construye el título de las líneas de BoM
 al importar. Se corrigió el script antes de seguir, porque una herramienta de diagnóstico que da
 un falso negativo es peor que no tener ninguna.
 
@@ -4315,7 +4524,7 @@ Es un modo de fallo silencioso que no da error por ningún lado. Merece una revi
   `scripts/arreglar-quicktabs.php`.
 
 **Comprobado al terminar:** 35 de 35 en la comprobación funcional (los seis automatismos siguen
-disparando: título de escandallo, copia de cantidad, enganche a la talla, movimiento de inventario,
+disparando: título de BoM, copia de cantidad, enganche a la talla, movimiento de inventario,
 título de color y recálculo del total de línea), 31 de 31 páginas cargando, y `config/sync` al día
 con los seis objetos que cambiaron.
 
@@ -4346,7 +4555,7 @@ el bloqueo es la etiqueta, no el código:
 
 - **`simple_popup_views` 8.x-1.2**, de noviembre de 2022. El proyecto figura como "mantenido
   activamente" pero no publica nada desde entonces. Es el visor de fotos de ocho vistas:
-  productos, inventario, líneas de pedido, patrones y los dos escandallos. Molesta perderlo, pero
+  productos, inventario, líneas de pedido, patrones y los dos BoM. Molesta perderlo, pero
   no toca lógica de negocio.
 - **`pdf_serialization` 2.2.0**, de septiembre de 2023, y este es peor: drupal.org lo marca como
   **`unsupported`**. Genera los PDF de las órdenes de compra. Ya le llevamos dos parches.
@@ -4770,7 +4979,7 @@ regenerados.
 
 **Y se probó la restauración, que no es lo mismo que probar que el fichero se lee.** El volcado
 se cargó entero en una base de datos aparte y se compararon los recuentos: **449 tablas en ambas,
-y cero diferencias** en escandallos, líneas, pedidos, materiales, usuarios y procesos de ECA. Las
+y cero diferencias** en BoM, líneas, pedidos, materiales, usuarios y procesos de ECA. Las
 únicas tres entradas de configuración que faltaban eran las que crea `upgrade_status`, instalado
 después del volcado. La base de datos de prueba se borró al terminar.
 
@@ -4862,7 +5071,7 @@ Después de quitar 43 módulos y tocar los procesos de ECA, la pregunta era simp
 lo mismo que antes? **Sí.** Se probaron seis automatismos creando entidades de verdad y
 comprobando si reaccionaban. Los seis funcionan:
 
-- Un artículo de escandallo nuevo **se pone el título solo** a partir del material.
+- Un artículo de BoM nuevo **se pone el título solo** a partir del material.
 - Al modificarlo, **copia la cantidad** al campo de entrada.
 - Si lleva talla, **se engancha solo a la variación de talla** (la talla pasó de 24 a 25).
 - Un movimiento de inventario **se engancha solo al material** (pasó de 2 a 3 movimientos).
@@ -4874,7 +5083,7 @@ Todo lo creado durante la prueba se borró después, y la comprobación final lo
 **La prueba de que no se ha perdido nada.** Se cargó la copia de las 02:58 —anterior a que se
 tocara el primer módulo— en una base de datos aparte y se compararon los recuentos de todas las
 tablas de contenido contra las de ahora: **cero diferencias**. Los 4.773 artículos de
-escandallo, los 178 elementos de escandallo de línea, las 85 líneas de venta, los 869
+BoM, los 178 elementos de BoM de línea, las 85 líneas de venta, los 869
 materiales, los 315 ficheros, los 7 usuarios y hasta las banderas, todo igual. La base de datos
 de pruebas se eliminó al terminar.
 
@@ -4888,13 +5097,13 @@ bloqueo se queda puesta**. Esa bandera existe para que el proceso no entre en bu
 guardarse a sí mismo, y mientras esté puesta ese proceso no volverá a ejecutarse nunca para esa
 línea. Falla en silencio y se queda averiado para siempre.
 
-La causa: la línea 1567 tiene 24 elementos de escandallo, y **cuatro de ellos apuntan a
+La causa: la línea 1567 tiene 24 elementos de BoM, y **cuatro de ellos apuntan a
 materiales que ya no existen** (los términos 2321, 2456 y 2524). El proceso recorre el
-escandallo, intenta cargar el material fantasma, no lo encuentra y muere ahí.
+BoM, intenta cargar el material fantasma, no lo encuentra y muere ahí.
 
-Y el alcance es mayor de lo que parecía: **2.439 de los 4.773 artículos de escandallo apuntan a
+Y el alcance es mayor de lo que parecía: **2.439 de los 4.773 artículos de BoM apuntan a
 materiales borrados**, 88 materiales fantasma en total, más 12 movimientos de inventario y 8
-elementos de escandallo de línea. Alguien borró esos 88 materiales en su día sin limpiar las
+elementos de BoM de línea. Alguien borró esos 88 materiales en su día sin limpiar las
 2.459 referencias que apuntaban a ellos.
 
 **No es cosa nuestra, y está demostrado.** En la copia de las 02:58, anterior a toda la
@@ -4922,7 +5131,7 @@ Al leerlos apareció lo que de verdad pasaba: **la IA ya estaba muerta desde hac
 que nadie lo había rematado.**
 
 - En los dos procesos que estaban encendidos, `process_p2q045n` (poner los datos de un artículo
-  de escandallo) y `process_uhiwdqa` (importar artículos de escandallo), la acción de IA seguía
+  de BoM) y `process_uhiwdqa` (importar artículos de BoM), la acción de IA seguía
   en el fichero pero **no la apuntaba nadie**: le habían cortado todas las conexiones de
   entrada. Alguien incluso las había renombrado a mano a "(disabled)" y "(disabled — local
   parse)". Ese "local parse" sugiere que el cálculo se sustituyó por uno hecho en el propio
