@@ -188,6 +188,25 @@ preparado para cuando se retome:
   verdad ahí dentro. Descubierto el 18 de agosto al mirar el registro de un duplicado que sí
   funcionó.
 
+- **Limpiar los setenta ficheros que git da por modificados sin estarlo.** Descubierto el 18 de agosto
+  al ir a confirmar el trabajo de la noche: `git status` lista unos setenta ficheros como cambiados
+  —`.gitignore`, los cuatro parches, dos guiones `.ps1` y sesenta y tantos `.php`— pero `git diff`
+  de cualquiera de ellos sale **vacío**. No hay ningún cambio real dentro, así que ninguno se metió en
+  los commits de esa noche; el problema es que ensucian la lista y hay que separar el ruido a mano
+  cada vez que se mira qué queda por confirmar.
+
+  Es cosa de finales de línea, pero **no está diagnosticado del todo y conviene no darlo por sabido**.
+  Git avisa de que *"in the working copy of '.gitignore', LF will be replaced by CRLF the next time
+  Git touches it"*, o sea que `core.autocrlf` está en `true` en esta máquina. Eso explica los ficheros
+  sin extensión reconocida, como `.gitignore` y los `.ps1`, que no tienen regla en `.gitattributes`.
+  Lo que no explica es por qué salen también los `.php` y los `.yml`, que ahí sí están declarados
+  `text eol=lf`.
+
+  La vía es `git add --renormalize .` y mirar qué queda preparado: si no aparece nada, era solo
+  índice y basta con confirmarlo; si aparece contenido de verdad, entonces hay algo que revisar antes
+  de guardar nada. Media hora contando la lectura, y mejor hacerlo cuando no haya trabajo a medias
+  encima, porque toca setenta ficheros de golpe y se come cualquier diff que haya pendiente.
+
 ## 3. Antes de que entren los empleados
 
 Esto va en dos fases, decidido el 12 de agosto. **Primero entra solo Lukpla, y no a trabajar
