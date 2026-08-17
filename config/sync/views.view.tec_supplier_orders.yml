@@ -299,19 +299,19 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_po_status:
-          id: field_tec_po_status
-          table: tec_order__field_tec_po_status
-          field: field_tec_po_status
+        tec_progress:
+          id: tec_progress
+          table: tec_order_field_data
+          field: tec_progress
           relationship: none
           group_type: group
           admin_label: ''
-          plugin_id: field
+          plugin_id: tec_purchase_progress
           label: 'Order status'
           exclude: false
           alter:
-            alter_text: true
-            text: '<div class="{{ field_tec_po_status }}">{{ field_tec_po_status }}</div>'
+            alter_text: false
+            text: ''
             make_link: false
             path: ''
             absolute: false
@@ -340,7 +340,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: true
+          element_label_colon: false
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -348,19 +348,6 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          click_sort_column: value
-          type: list_default
-          settings: {  }
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         tec_receipt_state:
           id: tec_receipt_state
           table: tec_order_field_data
@@ -1035,7 +1022,7 @@ display:
             changed: changed
             edit_tec_order: edit_tec_order
             link_flag: link_flag
-            field_tec_po_status: field_tec_po_status
+            tec_progress: tec_progress
             tec_receipt_state: tec_receipt_state
           default: changed
           info:
@@ -1107,7 +1094,7 @@ display:
               separator: ''
               empty_column: false
               responsive: ''
-            field_tec_po_status:
+            tec_progress:
               sortable: false
               default_sort_order: asc
               align: views-align-left
@@ -3427,19 +3414,19 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_po_status:
-          id: field_tec_po_status
-          table: tec_order__field_tec_po_status
-          field: field_tec_po_status
+        tec_progress:
+          id: tec_progress
+          table: tec_order_field_data
+          field: tec_progress
           relationship: none
           group_type: group
           admin_label: ''
-          plugin_id: field
+          plugin_id: tec_purchase_progress
           label: 'Order status'
           exclude: false
           alter:
-            alter_text: true
-            text: '<div class="{{ field_tec_po_status }}">{{ field_tec_po_status }}</div>'
+            alter_text: false
+            text: ''
             make_link: false
             path: ''
             absolute: false
@@ -3468,7 +3455,7 @@ display:
           element_class: ''
           element_label_type: ''
           element_label_class: ''
-          element_label_colon: true
+          element_label_colon: false
           element_wrapper_type: ''
           element_wrapper_class: ''
           element_default_classes: true
@@ -3476,19 +3463,6 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          click_sort_column: value
-          type: list_default
-          settings: {  }
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_priority:
           id: field_tec_priority
           table: tec_order__field_tec_priority
@@ -4035,6 +4009,10 @@ display:
         operator: AND
         groups:
           1: AND
+      style:
+        options:
+          columns: null
+          info: null
       defaults:
         empty: false
         pager: false

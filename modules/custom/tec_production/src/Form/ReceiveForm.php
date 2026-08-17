@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\tec_production\Purchasing;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -159,11 +160,42 @@ class ReceiveForm extends FormBase {
     $form['actions']['cancel'] = [
       '#type' => 'link',
       '#title' => $this->t('Cancel'),
-      '#url' => $tec_order->toUrl(),
+      '#url' => $this->cancelUrl($tec_order),
       '#attributes' => ['class' => ['button']],
     ];
 
     return $form;
+  }
+
+  /**
+   * Where Cancel goes: back where the person came from, when they said so.
+   *
+   * Receiving is reached from the purchase control screen as well as from the
+   * order itself. The destination that returns them to the queue after a receipt
+   * has to return them when they change their mind too, or the two ways out of
+   * this form lead to two different places.
+   *
+   * The parameter is read straight from the query on purpose. Going through
+   * getRedirectDestination()->get() would look tidier, but that method answers
+   * with the current page when there is no destination to answer with, and that
+   * would leave Cancel pointing at the form it is meant to leave.
+   *
+   * Only our own paths are followed. A destination is a query parameter, so
+   * anyone can put anything in one, and a Cancel button that leaves the site is
+   * a way to dress a stranger's page as part of the ERP.
+   */
+  protected function cancelUrl(EntityInterface $order): Url {
+    $destination = (string) $this->getRequest()->query->get('destination', '');
+    if ($destination !== '' && str_starts_with($destination, '/') && !str_starts_with($destination, '//')) {
+      try {
+        return Url::fromUserInput($destination);
+      }
+      catch (\InvalidArgumentException) {
+        // Not a path we can build: fall back to the order.
+      }
+    }
+
+    return $order->toUrl();
   }
 
   /**

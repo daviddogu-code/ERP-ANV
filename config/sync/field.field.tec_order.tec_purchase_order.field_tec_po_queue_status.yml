@@ -12,12 +12,10 @@ field_name: field_tec_po_queue_status
 entity_type: tec_order
 bundle: tec_purchase_order
 label: 'Delivery progress'
-description: 'Where the goods are while they are on their way. Moved by hand on the purchase control screen, except the last one: "Delivered" is written by the Receive form when the goods actually arrive, because saying they arrived without putting them into stock would be a lie the rest of the ERP would believe. Not the same as Order status, which is what the warehouse reads to know whether anything is still coming.'
+description: 'Where the goods are while they are on their way, which nothing in the ERP can work out on its own. Moved by hand on the purchase control screen, and empty until somebody moves it: an order nobody has chased yet reads Open. The three states that finish an order -- Delivered, Closed and Cancelled -- are not in here on purpose. They are read off the receipts, the invoice and the open/closed flag, so nobody can claim one of them without the facts behind it.'
 required: false
 translatable: true
-default_value:
-  -
-    value: on_process
+default_value: {  }
 default_value_callback: ''
 settings: {  }
 field_type: list_string

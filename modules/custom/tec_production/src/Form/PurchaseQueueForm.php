@@ -31,49 +31,24 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   order with no quantities, or one closed short before anything shipped -- so
  *   it never shows up, whether it is open or closed.
  *
- *   And it leaves when the invoice is filed, which is the owner's rule: the
- *   goods arrived weeks ago, but the paperwork is what finishes it. With one
- *   condition the owner did not ask for and that is worth the extra line: only
- *   once everything has actually arrived. Invoices turn up at the end of the
- *   month, so in practice they come after the goods; but on the day a supplier
- *   invoices ahead of a part-delivery, letting the paperwork hide an order that
- *   still owes material is how the missing half gets forgotten.
+ *   And it leaves when it reaches Closed, which is goods in and invoice filed.
+ *   That is the owner's rule: the goods arrived weeks ago, but the paperwork is
+ *   what finishes it. Requiring both halves is what stops an invoice that turns
+ *   up before a part-delivery from hiding an order that still owes material.
  *
- * Two of the columns are not stored anywhere. The delivery date comes from the
- * stock movements that receiving wrote, and the days are arithmetic. Sorting
- * still works on both because the rows are sorted here in PHP rather than by
- * the database, which is affordable while this list is the few dozen orders in
- * flight and not the whole history.
+ * Nothing on this screen has a Save button. Every change posts to
+ * PurchaseQueueController the moment it is made, the same way the checkboxes on
+ * /stock do, because a list that is edited a cell at a time between phone calls
+ * is a list where somebody eventually closes the tab first.
+ *
+ * Three of the columns are not stored anywhere. The delivery date comes from
+ * the stock movements that receiving wrote, the days are arithmetic, and the
+ * status is Purchasing::progress(). Sorting still works on all three because
+ * the rows are sorted here in PHP rather than by the database, which is
+ * affordable while this list is the few dozen orders in flight and not the
+ * whole history.
  */
 class PurchaseQueueForm extends FormBase {
-
-  /**
-   * Where the goods can be while they travel, in the order it normally happens.
-   *
-   * The order matters twice: it is the order of the dropdown, and it is what
-   * the Status column sorts by, so sorting gathers everything that has not left
-   * the supplier yet. Alphabetical would put "On the way" above "On process"
-   * and mean nothing.
-   *
-   * Three, where the sheet had four. The fourth is below.
-   */
-  const STATES = [
-    'on_process' => 'On process',
-    'ready_to_pick_up' => 'Ready to pick up',
-    'on_the_way' => 'On the way',
-  ];
-
-  /**
-   * Arrived: shown, sorted on, and never stored.
-   *
-   * The sheet's fourth colour, and the only one that is a fact rather than a
-   * report. The goods are here when there are stock movements saying they are,
-   * so this is read off the lines like everything else derived in this module.
-   * A dropdown entry would let someone mark an order delivered without a single
-   * unit entering stock, and the purchase list would then refuse to reorder
-   * material that never came.
-   */
-  const ARRIVED = 'delivered';
 
   /**
    * Which column the list sorts by when nobody has said otherwise.
@@ -84,17 +59,40 @@ class PurchaseQueueForm extends FormBase {
   const DEFAULT_SORT = 'expected';
 
   /**
-   * Every column can be sorted on, including the two that are not stored.
+   * Every column can be sorted on, including the ones that are not stored.
    */
   const SORTABLE = [
     'order',
     'supplier',
     'status',
+    'delivery',
     'created',
     'author',
     'expected',
     'delivered',
     'days',
+  ];
+
+  /**
+   * Links that open beside this screen instead of replacing it.
+   *
+   * The order and the supplier are things you look up while working down the
+   * list -- a price, a phone number -- and losing the list to read one of them
+   * means finding your place again afterwards.
+   *
+   * Receiving is deliberately not one of these and goes the other way, back to
+   * the queue when it is done: see receiveCell().
+   */
+  const NEW_TAB = ['target' => '_blank', 'rel' => 'noopener'];
+
+  /**
+   * How much has arrived, in the words the supplier list already uses.
+   */
+  const DELIVERY = [
+    'none' => 'Nothing received',
+    'partial' => 'Partially received',
+    'full' => 'Fully received',
+    'cancelled' => 'Cancelled',
   ];
 
   protected EntityTypeManagerInterface $entityTypeManager;
@@ -133,12 +131,13 @@ class PurchaseQueueForm extends FormBase {
     $this->sortRows($rows, $sort_by, $direction);
 
     $form['#attached']['library'][] = 'tec_production/purchase_queue';
+    $form['#attached']['library'][] = 'tec_production/receipt_state';
     $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
 
     $waiting = 0;
     $late = 0;
     foreach ($rows as $row) {
-      if ($row['status'] !== self::ARRIVED) {
+      if ($row['coming']) {
         $waiting++;
       }
       if ($row['overdue']) {
@@ -153,7 +152,7 @@ class PurchaseQueueForm extends FormBase {
         count($rows),
         '1 order in flight.',
         '@count orders in flight.'
-      ) . ' ' . $this->t('@waiting still to arrive, @late past their promised day.', [
+      ) . ' ' . $this->t('@waiting still to arrive, @late past their promised day. Changes save on their own.', [
         '@waiting' => $waiting,
         '@late' => $late,
       ]),
@@ -165,11 +164,13 @@ class PurchaseQueueForm extends FormBase {
         $this->sortHeader('order', $this->t('Order #'), $sort_by, $direction),
         $this->sortHeader('supplier', $this->t('Suppliers Name'), $sort_by, $direction),
         $this->sortHeader('status', $this->t('Status'), $sort_by, $direction),
+        $this->sortHeader('delivery', $this->t('Delivery'), $sort_by, $direction),
         $this->sortHeader('created', $this->t('Created'), $sort_by, $direction),
         $this->sortHeader('author', $this->t('Created By'), $sort_by, $direction),
         $this->sortHeader('expected', $this->t('Expected delivery day'), $sort_by, $direction),
         $this->sortHeader('delivered', $this->t('Delivered date'), $sort_by, $direction),
         $this->sortHeader('days', $this->t('Days'), $sort_by, $direction),
+        ['data' => $this->t('Receive'), 'class' => ['tec-pq__h']],
         ['data' => $this->t('Invoice'), 'class' => ['tec-pq__h']],
       ],
       '#empty' => $this->t('Nothing on order. Everything that was bought has arrived and been invoiced.'),
@@ -180,7 +181,6 @@ class PurchaseQueueForm extends FormBase {
 
     foreach ($rows as $row) {
       $oid = $row['id'];
-      $arrived = $row['status'] === self::ARRIVED;
 
       $element = [
         '#attributes' => [
@@ -188,44 +188,24 @@ class PurchaseQueueForm extends FormBase {
             'tec-pq__row',
             $row['overdue'] ? 'tec-pq__row--late' : '',
           ]),
+          'data-order' => $oid,
         ],
       ];
       $element['order'] = [
         '#type' => 'link',
         '#title' => $row['label'],
         '#url' => Url::fromRoute('entity.tec_order.canonical', ['tec_order' => $oid]),
+        '#attributes' => self::NEW_TAB,
         '#wrapper_attributes' => ['class' => ['tec-pq__order']],
       ];
-      $element['supplier'] = [
-        '#markup' => $row['supplier'] === '' ? '<span class="tec-pq__none">—</span>' : $row['supplier'],
+      $element['supplier'] = $this->supplierCell($row);
+      $element['status'] = $this->statusCell($row);
+      $element['delivery'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#value' => self::DELIVERY[$row['delivery']] ?? $row['delivery'],
+        '#attributes' => ['class' => ['tec-receipt', 'tec-receipt--' . $row['delivery']]],
       ];
-
-      // Delivered is shown, never offered. It is the receipt's word, and the
-      // way to take it back is to correct the receipt, not to retype it here.
-      if ($arrived) {
-        $element['status'] = [
-          '#type' => 'html_tag',
-          '#tag' => 'span',
-          '#value' => $this->t('Delivered'),
-          '#attributes' => [
-            'class' => ['tec-pq__pill', 'tec-pq__pill--delivered'],
-            'title' => $this->t('Everything ordered has been received.'),
-          ],
-          '#wrapper_attributes' => ['class' => ['tec-pq__status']],
-        ];
-      }
-      else {
-        $element['status'] = [
-          '#type' => 'select',
-          '#title' => $this->t('Delivery progress'),
-          '#title_display' => 'invisible',
-          '#options' => self::STATES,
-          '#default_value' => $row['status'],
-          '#attributes' => ['class' => ['tec-pq__select', 'tec-pq__select--' . $row['status']]],
-          '#wrapper_attributes' => ['class' => ['tec-pq__status']],
-        ];
-      }
-
       $element['created'] = ['#markup' => $this->day($row['created'])];
       $element['author'] = ['#markup' => $row['author']];
       $element['expected'] = [
@@ -245,6 +225,7 @@ class PurchaseQueueForm extends FormBase {
         '#markup' => '<span class="tec-pq__days">' . $row['days'] . '</span>',
         '#wrapper_attributes' => ['class' => ['tec-pq__num']],
       ];
+      $element['receive'] = $this->receiveCell($oid, $row);
       $element['invoice'] = [
         '#type' => 'link',
         '#title' => $row['invoice'] ? $this->t('Filed') : $this->t('Upload'),
@@ -267,62 +248,179 @@ class PurchaseQueueForm extends FormBase {
       $form['table'][$oid] = $element;
     }
 
-    if ($rows) {
-      $form['actions'] = ['#type' => 'actions'];
-      $form['actions']['save'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Save changes'),
-        '#button_type' => 'primary',
-      ];
-    }
-
     return $form;
   }
 
   /**
-   * {@inheritdoc}
+   * No-op: every cell saves itself through PurchaseQueueController
+   * (POST /supplier-orders/queue/save). There is no Save button.
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $storage = $this->entityTypeManager->getStorage('tec_order');
-    $saved = 0;
+  }
 
-    foreach (($form_state->getValue('table') ?: []) as $oid => $values) {
-      $order = $storage->load($oid);
-      if (!$order || $order->bundle() !== 'tec_purchase_order') {
-        continue;
-      }
-      $touched = FALSE;
-
-      // A row that has arrived shows a pill instead of a dropdown, so nothing
-      // comes back for it and nothing is written. Checking against the three
-      // storable states is also what keeps a hand-made post from inventing a
-      // fourth one.
-      if (isset($values['status'], self::STATES[$values['status']])
-        && $order->get('field_tec_po_queue_status')->value !== $values['status']) {
-        $order->set('field_tec_po_queue_status', $values['status']);
-        $touched = TRUE;
-      }
-
-      $expected = trim((string) ($values['expected'] ?? ''));
-      $expected = $expected === '' ? NULL : $expected;
-      if (($order->get('field_tec_expected_delivery')->value ?: NULL) !== $expected) {
-        $order->set('field_tec_expected_delivery', $expected);
-        $touched = TRUE;
-      }
-
-      if ($touched) {
-        $order->save();
-        $saved++;
-      }
+  /**
+   * The supplier, linked to their card.
+   *
+   * Whoever chases these orders needs the phone number, and the phone number is
+   * on the card. Before this the name was plain text and getting to the card
+   * meant opening the order first.
+   *
+   * The name is capped in CSS rather than cut here, so the registered suffix is
+   * still in the page for anyone searching it, and the tooltip carries it whole.
+   */
+  protected function supplierCell(array $row): array {
+    if ($row['supplier'] === '') {
+      return ['#markup' => '<span class="tec-pq__none">—</span>'];
+    }
+    if (!$row['supplier_url'] instanceof Url) {
+      return [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#value' => $row['supplier'],
+        '#attributes' => [
+          'class' => ['tec-pq__supplier'],
+          'title' => $row['supplier'],
+        ],
+      ];
     }
 
-    $this->messenger()->addStatus($saved
-      ? $this->formatPlural($saved, '1 order updated.', '@count orders updated.')
-      : $this->t('Nothing had changed.'));
+    return [
+      '#type' => 'link',
+      '#title' => $row['supplier'],
+      '#url' => $row['supplier_url'],
+      '#attributes' => self::NEW_TAB + [
+        'class' => ['tec-pq__supplier'],
+        'title' => $row['supplier'],
+      ],
+    ];
+  }
 
-    $form_state->setRedirect('tec_production.purchase_queue', [], [
-      'query' => array_intersect_key($this->getRequest()->query->all(), ['order' => '', 'sort' => '']),
+  /**
+   * The status: a pill you can open, or a pill you cannot.
+   *
+   * Only the three manual steps are ever offered, and Open is not among them
+   * because Open is the absence of a choice, not a choice. Delivered, Closed
+   * and Cancelled are facts read off the data, so they render as plain pills
+   * with no way to argue with them: taking Delivered back means correcting the
+   * receipt, which is where the claim was made.
+   *
+   * This is a hand-built listbox rather than a select because a native dropdown
+   * cannot be relied on to paint its options -- Safari ignores the colours
+   * entirely -- and the colours are the whole point of the column.
+   */
+  protected function statusCell(array $row): array {
+    $progress = $row['status'];
+    $label = Purchasing::PROGRESS[$progress] ?? $progress;
+
+    if (!in_array($progress, Purchasing::PROGRESS_MANUAL, TRUE) && $progress !== 'open') {
+      return [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#value' => $label,
+        '#attributes' => [
+          'class' => ['tec-po-status', 'tec-po-status--' . $progress],
+          'title' => $this->statusWhy($progress),
+        ],
+        '#wrapper_attributes' => ['class' => ['tec-pq__status']],
+      ];
+    }
+
+    $cell = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['tec-pq__menu'],
+        'data-value' => $progress,
+      ],
+      '#wrapper_attributes' => ['class' => ['tec-pq__status']],
+    ];
+    $cell['trigger'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'button',
+      '#value' => $label,
+      '#attributes' => [
+        'type' => 'button',
+        'class' => ['tec-po-status', 'tec-po-status--' . $progress, 'tec-pq__trigger'],
+        'aria-haspopup' => 'listbox',
+        'aria-expanded' => 'false',
+      ],
+    ];
+    $cell['list'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['tec-pq__list'],
+        'role' => 'listbox',
+        'tabindex' => '-1',
+        'aria-label' => $this->t('Delivery progress'),
+        'hidden' => TRUE,
+      ],
+    ];
+    foreach (Purchasing::PROGRESS_MANUAL as $value) {
+      $cell['list'][$value] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => Purchasing::PROGRESS[$value],
+        '#attributes' => [
+          'class' => ['tec-pq__opt', 'tec-po-status', 'tec-po-status--' . $value],
+          'role' => 'option',
+          'tabindex' => '-1',
+          'data-value' => $value,
+          'aria-selected' => $progress === $value ? 'true' : 'false',
+        ],
+      ];
+    }
+
+    return $cell;
+  }
+
+  /**
+   * Why a status cannot be changed, for the tooltip on the pills that are read
+   * off the data rather than chosen.
+   */
+  protected function statusWhy(string $progress) {
+    $why = [
+      'delivered' => $this->t('Everything ordered has been received. File the invoice to finish it.'),
+      'closed' => $this->t('Received in full and the invoice is filed.'),
+      'cancelled' => $this->t('Closed without anything ever arriving.'),
+    ];
+
+    return $why[$progress] ?? '';
+  }
+
+  /**
+   * A way straight to the receiving screen, where there is one.
+   *
+   * Asking the route rather than repeating its rules is deliberate. Receiving
+   * is only open on an open purchase order and only for whoever may move stock,
+   * and a button that leads to a page the person cannot open is worse than no
+   * button: they click it, get told off, and stop trusting the screen.
+   *
+   * The button comes back here instead of opening in a new tab. Receiving is not
+   * a thing you look up, it is a thing that changes this screen: a second tab
+   * would leave the one in front of you showing the state before the goods
+   * arrived. Coming back, the row answers by itself -- Delivered with its date
+   * and the invoice waiting, or still open with what is left to come.
+   *
+   * The destination is read off the request rather than written out, so whoever
+   * had sorted by promised day is returned to that order and not to the default.
+   */
+  protected function receiveCell(int $oid, array $row): array {
+    $url = Url::fromRoute('tec_production.po_receive', ['tec_order' => $oid], [
+      'query' => $this->getRedirectDestination()->getAsArray(),
     ]);
+    if (!$url->access()) {
+      return ['#markup' => '<span class="tec-pq__none">—</span>'];
+    }
+
+    return [
+      '#type' => 'link',
+      '#title' => $this->t('Receive'),
+      '#url' => $url,
+      '#attributes' => [
+        'class' => ['tec-pq__receive'],
+        'title' => $this->t('Book in what has arrived of @order', ['@order' => $row['label']]),
+      ],
+      '#wrapper_attributes' => ['class' => ['tec-pq__receive-cell']],
+    ];
   }
 
   /**
@@ -339,21 +437,25 @@ class PurchaseQueueForm extends FormBase {
     }
 
     $open = [];
-    $states = [];
+    $delivery = [];
+    $progress = [];
     foreach ($storage->loadMultiple($ids) as $order) {
       $state = Purchasing::receiptState($order);
       // Nothing outstanding and nothing ever received: there is nothing to
-      // chase, so it is not a queue entry no matter what its status says.
+      // chase, whether it was written off or nobody ever filled it in.
       if ($state === 'cancelled') {
         continue;
       }
-      // Everything arrived and the invoice is filed. This is what empties the
-      // screen without anybody deleting rows.
-      if ($state === 'full' && !$order->get('field_tec_supplier_invoice')->isEmpty()) {
+      $reading = Purchasing::progress($order);
+      // Goods in and invoice filed. This is what empties the screen without
+      // anybody deleting rows.
+      if ($reading === 'closed') {
         continue;
       }
-      $open[(int) $order->id()] = $order;
-      $states[(int) $order->id()] = $state;
+      $oid = (int) $order->id();
+      $open[$oid] = $order;
+      $delivery[$oid] = $state;
+      $progress[$oid] = $reading;
     }
     if (!$open) {
       return [];
@@ -361,6 +463,7 @@ class PurchaseQueueForm extends FormBase {
 
     $arrivals = Purchasing::deliveredOn($this->entityTypeManager, $open);
     $today = strtotime('today');
+    $rank = array_flip(array_keys(Purchasing::PROGRESS));
     $rows = [];
 
     foreach ($open as $oid => $order) {
@@ -369,46 +472,62 @@ class PurchaseQueueForm extends FormBase {
       $created = (int) $order->get('created')->value;
       $delivered = $arrivals[$oid] ?? NULL;
       $expected = $order->get('field_tec_expected_delivery')->value ?: NULL;
-      // Everything ordered has been received: the goods are in the building and
-      // no dropdown gets a say in it. Otherwise it is whatever the person
-      // chasing the order last said, defaulting to the first step.
-      $status = $states[$oid] === 'full'
-        ? self::ARRIVED
-        : ($order->get('field_tec_po_queue_status')->value ?: array_key_first(self::STATES));
+      $status = $progress[$oid];
+      $coming = $status === 'open' || in_array($status, Purchasing::PROGRESS_MANUAL, TRUE);
 
-      // Days is how long this order has been alive: until it lands it keeps
-      // counting, and after it lands it stops at what the supplier took.
-      $days = (int) floor((($delivered ?: $today) - $created) / 86400);
       $due = $expected ? strtotime($expected) : NULL;
-
       $invoice = $order->get('field_tec_supplier_invoice')->entity;
 
       $rows[] = [
         'id' => $oid,
         'label' => $order->label() ?: ('#' . $oid),
         'supplier' => $supplier ? (string) $supplier->label() : '',
+        'supplier_url' => $supplier && $supplier->hasLinkTemplate('canonical') ? $supplier->toUrl() : NULL,
         'status' => $status,
+        'delivery' => $delivery[$oid],
+        'coming' => $coming,
         'invoice' => $invoice ? (string) $invoice->getFilename() : NULL,
         'created' => $created,
         'author' => $author ? (string) $author->getDisplayName() : (string) $this->t('Unknown'),
         'expected' => $expected,
         'delivered' => $delivered,
-        'days' => max(0, $days),
-        'overdue' => $status !== self::ARRIVED && $due !== NULL && $due < $today,
+        'days' => $this->daysBetween($created, $delivered ?: $today),
+        'overdue' => $coming && $due !== NULL && $due < $today,
         'sort' => [
           'order' => $order->label() ?: ('#' . $oid),
           'supplier' => $supplier ? (string) $supplier->label() : '',
-          'status' => array_flip(array_keys(self::STATES))[$status] ?? count(self::STATES),
+          'status' => $rank[$status] ?? count($rank),
+          'delivery' => array_search($delivery[$oid], array_keys(self::DELIVERY), TRUE),
           'created' => $created,
           'author' => $author ? (string) $author->getDisplayName() : '',
           'expected' => $due,
           'delivered' => $delivered,
-          'days' => $days,
+          'days' => $this->daysBetween($created, $delivered ?: $today),
         ],
       ];
     }
 
     return $rows;
+  }
+
+  /**
+   * Whole days between two moments, counted the way a calendar counts them.
+   *
+   * Both ends are dropped to midnight first. Subtracting the raw timestamps is
+   * what this did until 17 August 2026, and it was wrong by a day most of the
+   * time: an order placed on the 14th at eleven in the morning, read on the
+   * 17th, gave two days and nineteen hours, and the floor threw the answer away
+   * as 2. What anyone means by "how many days has this taken" is how many dates
+   * have turned over, which is 3.
+   *
+   * Rounding rather than flooring the division covers the hour a daylight
+   * saving change would add or remove. Thailand does not have one, but this
+   * function should not be the reason a site somewhere else is out by a day.
+   */
+  protected function daysBetween(int $from, int $to): int {
+    $days = (int) round((strtotime('today', $to) - strtotime('today', $from)) / 86400);
+
+    return max(0, $days);
   }
 
   /**

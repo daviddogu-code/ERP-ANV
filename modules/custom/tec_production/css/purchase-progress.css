@@ -1,0 +1,71 @@
+/* The purchase order status pill, wherever a status is shown.
+
+   One stylesheet on purpose. This pill appears on the supplier list, on the
+   order card, on the supplier's own tab, on the printout and on the purchase
+   control screen, and the whole point of Purchasing::progress() is that those
+   five agree. Five copies of the colours would let them stop agreeing on the
+   day somebody tweaked one of them.
+
+   The colours are the ones Google Sheets offers, because this replaces a sheet
+   that the people using it have read every morning for years. */
+
+.tec-po-status {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/* Nobody has said anything yet. Hollow and dashed, so it reads as an empty
+   slot waiting to be filled rather than as a state somebody chose. */
+.tec-po-status--open {
+  background: #fff;
+  color: #777;
+  border-color: #c9c9c9;
+  border-style: dashed;
+}
+
+.tec-po-status--on_process {
+  background: #fce5cd;
+  color: #b45f06;
+  border-color: #f9cb9c;
+}
+
+.tec-po-status--ready_to_pick_up {
+  background: #fff2cc;
+  color: #7f6000;
+  border-color: #ffe599;
+}
+
+.tec-po-status--on_the_way {
+  background: #cfe2f3;
+  color: #0b5394;
+  border-color: #9fc5e8;
+}
+
+.tec-po-status--delivered {
+  background: #d9ead3;
+  color: #38761d;
+  border-color: #b6d7a8;
+}
+
+/* Finished: goods in, invoice filed. Filled rather than tinted, because it is
+   the only state that means there is nothing left to do. */
+.tec-po-status--closed {
+  background: #38761d;
+  color: #fff;
+  border-color: #38761d;
+}
+
+/* Written off. Struck through so it cannot be mistaken for a live order at a
+   glance, which grey alone does not manage next to the hollow Open pill. */
+.tec-po-status--cancelled {
+  background: #e8e8e8;
+  color: #8a8a8a;
+  border-color: #dcdcdc;
+  text-decoration: line-through;
+}

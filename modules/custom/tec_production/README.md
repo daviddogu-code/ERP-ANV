@@ -507,9 +507,18 @@ was to have the Receive form write it. That would mean a dropdown with
 "Delivered" in it, and someone could pick it without a single unit entering
 stock — after which the purchase list would refuse to reorder material that never
 came. So the field allows **three** values, the ones a human knows and the ERP
-cannot infer, and the fourth is read off the lines like everything else derived
-here. It appears by itself, it cannot be typed, and the Receive form needed no
-change at all.
+cannot infer, and the rest are read off the lines like everything else derived
+here. They appear by themselves, they cannot be typed, and the Receive form
+needed no change at all.
+
+**Open is the absence of an answer, not a value.** The field shipped with
+"On process" as its default and the deployment script seeded it into the eleven
+orders that already existed. Both were undone the next day
+(`scripts/el-estado-empieza-en-open.php`): a purchase order raised this morning
+has not been chased yet, and a screen where every row already claims somebody is
+on it is a screen where the day somebody really is on it goes unnoticed. Nothing
+was added to the field to say so — `Purchasing::progress()` reads the empty value
+as Open.
 
 **Which orders appear, in two rules.**
 1. While there is something to chase. `Purchasing::receiptState()` of `cancelled`
@@ -528,10 +537,27 @@ change at all.
 SQL, and two of these columns are not in SQL — including Days, which is the column
 that says who to phone first. Sorting happens in PHP over the assembled rows, which
 is affordable while the list is the dozens of orders in flight rather than the
-whole history, and it means **all nine headings sort**. Blanks sink whichever way
-the arrow points: an order with no promised date is not the earliest or the latest,
-it is the one nobody has pinned down. It also puts this screen in the same shape as
-every other control screen here — `/o/queue`, `/stock`, `/purchase`, receiving.
+whole history, and it means **nine of the eleven headings sort**. Blanks sink
+whichever way the arrow points: an order with no promised date is not the earliest
+or the latest, it is the one nobody has pinned down. It also puts this screen in
+the same shape as every other control screen here — `/o/queue`, `/stock`,
+`/purchase`, receiving.
+
+**No Save button.** Every cell POSTs to `PurchaseQueueController` as it is
+changed, the same arrangement `/stock` has had since it was built, because this
+list is edited a row at a time between phone calls and a button at the bottom is
+how a morning's worth of answers gets lost to a closed tab. The reply carries the
+recomputed status rather than an acknowledgement: an order received while the page
+sat open comes back Delivered whatever was picked, and the row corrects itself
+instead of offering a choice that no longer holds. Only the two writable things
+can be posted, and the endpoint refuses any status a person is not allowed to set.
+
+**The status dropdown is hand-built, and that is not decoration.** The column is
+read by colour, and a native `<select>` cannot be relied on to paint the options
+inside it — Safari ignores them and the browsers that honour them disagree about
+how. So the trigger and the list are elements we own, at the cost of writing the
+keyboard handling a `<select>` gives away. Colours live in one stylesheet,
+`purchase-progress.css`, shared with every other screen that shows a status.
 
 **The invoice** goes to the **private** filesystem: it carries a third party's
 prices and tax number, and in the public one anyone who guesses the path downloads
@@ -546,14 +572,54 @@ it is limited to the administrator role.
 
 - Fields: `scripts/crear-los-campos-de-la-cola-de-compras.php`.
 - **On deployment run `scripts/encender-el-control-de-compras.php --aplicar`**: it
-  grants the permission and seeds the starting state of the orders that already
-  exist. A field default only applies to new entities, so without it today's
-  orders open with an empty dropdown.
-- Test: `scripts/lo-que-esta-de-camino-se-ve.php` builds the five cases that
-  actually occur — nothing received and overdue, part received, all received, all
-  received and invoiced, and half-written with no quantities — and asserts which
-  three show and which two do not.
-- Guardian: section 11.
+  grants the permission.
+- Then `scripts/el-estado-empieza-en-open.php --aplicar`, which takes the default
+  off the field and clears what the first version of the deployment seeded.
+- Test: `scripts/lo-que-esta-de-camino-se-ve.php` builds the seven cases that
+  actually occur and asserts what each one says and whether it shows.
+- Guardian: sections 11 and 12.
+
+### One purchase status, read in four places (17 August 2026)
+A purchase order that had arrived in full and was waiting on its invoice read
+**Closed** on `/supplier-orders`, **Closed** on its card, **Closed** on the
+printout and **Delivered** on the control screen. None of them was lying — the
+first three printed the stored open/closed flag, which answers a different
+question — but anyone who looked at two of them got two answers.
+
+`Purchasing::progress()` is now the only place that decides, and it returns one of
+seven:
+
+| Reading | Where it comes from |
+|---|---|
+| Open | nobody has said anything yet |
+| On process / Ready to pick up / On the way | the one thing a person types |
+| Delivered | every line received |
+| Closed | received in full **and** the invoice filed |
+| Cancelled | closed without anything ever arriving |
+
+Both halves are required for Closed, for the same reason the queue keeps a
+part-delivered order after its invoice arrives.
+
+**Cancelled is not just "nothing outstanding and nothing received".** Read from the
+lines alone, a draft somebody started this morning looks identical to an order
+that was given up on. The stored open/closed flag is what separates them, and it
+is the reason that flag is still worth having — along with the buttons, which
+follow it and should: whether an order can still be edited is a different question
+from what to tell the person chasing it.
+
+Four screens read it: `/supplier-orders` and the supplier's own tab through the
+`tec_purchase_progress` Views field, the order card through an extra field placed
+in Layout Builder, and the PDF through the same extra field in Display Suite —
+where it also stopped being an *editable* field, which had no business being
+inside a document sent to a supplier.
+
+- Run `scripts/el-estado-se-lee-igual-en-todas-partes.php --aplicar`.
+- **A `field_block` and an `extra_field_block` are not the same block with another
+  name.** The second declares only the `entity` context, so carrying the
+  `view_mode` mapping over from the first — the natural thing to do when converting
+  one into the other — takes the whole card down with "Assigned contexts were not
+  satisfied". Guardian section 12 watches for it.
+- Guardian: section 12.
 
 ### VAT: one fact per supplier, one rate for the company (16 August 2026)
 Three situations that look different are the same question. A supplier abroad

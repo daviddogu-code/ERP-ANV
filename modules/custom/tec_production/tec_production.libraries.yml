@@ -59,6 +59,11 @@ receipt_state:
     theme:
       css/receipt-state.css: {}
 
+purchase_progress:
+  css:
+    theme:
+      css/purchase-progress.css: {}
+
 purchase_queue:
   css:
     theme:
@@ -68,6 +73,8 @@ purchase_queue:
   dependencies:
     - core/drupal
     - core/once
+    - core/drupal.message
+    - tec_production/purchase_progress
 
 purchase_totals:
   css:

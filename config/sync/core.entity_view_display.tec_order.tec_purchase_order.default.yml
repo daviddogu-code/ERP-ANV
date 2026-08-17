@@ -673,20 +673,12 @@ third_party_settings:
             uuid: 90083344-bf3d-49d9-aa69-15f6aa964204
             region: blb_region_col_1
             configuration:
-              id: 'field_block:tec_order:tec_purchase_order:field_tec_po_status'
+              id: 'extra_field_block:tec_order:tec_purchase_order:tec_progress'
               label: 'Order status'
               label_display: '0'
               provider: layout_builder
               context_mapping:
                 entity: layout_builder.entity
-                view_mode: view_mode
-              formatter:
-                type: list_default
-                label: above
-                settings: {  }
-                third_party_settings:
-                  field_formatter_class:
-                    class: ''
             weight: 0
             additional:
               bootstrap_styles:

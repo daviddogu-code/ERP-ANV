@@ -503,11 +503,17 @@ $mirar('un pedido cerrado conserva el boton de imprimir', str_contains($bloque, 
 $mirar('y pierde el de editar', !str_contains($bloque, '/po/draft/' . $pedido->id()));
 
 // La misma pregunta en la lista general, que ademas tiene que haber cambiado de
-// palabra en la columna de la entrega sin que nadie guarde nada: no hay campo
-// detras, se cuenta de las lineas cada vez.
+// palabra en las dos columnas sin que nadie guarde nada: no hay campo detras, se
+// cuentan de las lineas cada vez.
+//
+// Y dice "Delivered", no "Closed", que es lo que decia hasta el 17 de agosto. El
+// pedido esta cerrado -no quedan lineas por servir- pero para quien lo persigue
+// eso no es el final: falta la factura. Cerrar del todo son las dos cosas, y esa
+// es la lectura que dan ahora las cuatro pantallas.
 $lista = $pedir('/supplier-orders');
 $celdas = implode(' || ', $fila($lista->getContent(), (int) $pedido->id()));
-$mirar('la lista dice que ya esta cerrado', str_contains($celdas, 'Closed'), substr($celdas, 0, 120));
+$mirar('la lista dice que la mercancia esta dentro', str_contains($celdas, 'Delivered'), substr($celdas, 0, 120));
+$mirar('y no la da por cerrada, que falta la factura', !str_contains($celdas, 'Closed'));
 $mirar('y que la entrega esta completa', str_contains($celdas, 'Fully received'));
 $mirar('cerrado, la lista conserva el de imprimir', str_contains($celdas, '/po/' . $pedido->id() . '/print'));
 $mirar('cerrado, la lista pierde el lapiz', !str_contains($celdas, '/po/draft/' . $pedido->id()));

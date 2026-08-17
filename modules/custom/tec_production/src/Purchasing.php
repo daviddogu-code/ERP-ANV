@@ -92,6 +92,92 @@ final class Purchasing {
   }
 
   /**
+   * The seven readings of a purchase order, in the order they happen.
+   *
+   * This is the one answer to "what is going on with this order", and every
+   * screen that shows a status shows this: the supplier list, the order card,
+   * the supplier's own tab, the printout and the purchase control screen. Until
+   * this existed each of them read a different thing and they contradicted each
+   * other, which is how an order could be Closed on one page and Partially
+   * received on the next.
+   *
+   * Only the three in the middle are stored. Open is the absence of them,
+   * Delivered comes from the receipts, Closed from the invoice and Cancelled
+   * from a written-off order. The order of the list is the order of the story,
+   * and it is what the Status column sorts by, so sorting gathers everything
+   * that has not left the supplier yet; alphabetical would put "On the way"
+   * above "On process" and mean nothing.
+   */
+  public const PROGRESS = [
+    'open' => 'Open',
+    'on_process' => 'On process',
+    'ready_to_pick_up' => 'Ready to pick up',
+    'on_the_way' => 'On the way',
+    'delivered' => 'Delivered',
+    'closed' => 'Closed',
+    'cancelled' => 'Cancelled',
+  ];
+
+  /**
+   * The three a person is allowed to choose.
+   *
+   * Where the goods are between the supplier's yard and the factory door is the
+   * one thing the ERP cannot work out on its own, so it is the one thing a
+   * person types. The other four are facts and are read off the data: offering
+   * Delivered in a dropdown would let someone mark an order arrived without a
+   * single unit entering stock, and the purchase list would then refuse to
+   * reorder material that never came.
+   */
+  public const PROGRESS_MANUAL = ['on_process', 'ready_to_pick_up', 'on_the_way'];
+
+  /**
+   * Where a purchase order has got to, in one word.
+   *
+   * Nothing here is stored beyond the three manual steps, so the reading cannot
+   * drift from the orders it describes. The precedence is the whole design:
+   *
+   *   Cancelled  closed with nothing ever received, so it never happened.
+   *   Closed     everything arrived and the invoice is filed. Both halves are
+   *              required: an invoice that turns up before a part-delivery must
+   *              not be able to finish an order that still owes material.
+   *   Delivered  everything arrived, the paperwork has not.
+   *   The three  whatever the person chasing it last said.
+   *   Open       nobody has said anything yet.
+   *
+   * Note what Cancelled is not. An order with no quantities on any line reads
+   * the same as a written-off one from the lines alone -- nothing outstanding,
+   * nothing received -- but one is abandoned and the other is a draft somebody
+   * started this morning. The stored open/closed flag is what tells them apart,
+   * and it is the reason that flag is still worth having.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $order
+   *   A purchase order.
+   *
+   * @return string
+   *   One of the keys of self::PROGRESS.
+   */
+  public static function progress($order): string {
+    $state = self::receiptState($order);
+    $closed = $order->hasField('field_tec_po_status')
+      && $order->get('field_tec_po_status')->value === self::CLOSED_STATUS;
+
+    if ($state === 'cancelled') {
+      return $closed ? 'cancelled' : 'open';
+    }
+    if ($state === 'full') {
+      $invoiced = $order->hasField('field_tec_supplier_invoice')
+        && !$order->get('field_tec_supplier_invoice')->isEmpty();
+      return $invoiced ? 'closed' : 'delivered';
+    }
+
+    $said = $order->hasField('field_tec_po_queue_status')
+      ? (string) $order->get('field_tec_po_queue_status')->value
+      : '';
+
+    return in_array($said, self::PROGRESS_MANUAL, TRUE) ? $said : 'open';
+  }
+
+  /**
    * What is still to come per material, broken down by purchase order.
    *
    * The breakdown exists so the stock board can offer the order itself: seeing

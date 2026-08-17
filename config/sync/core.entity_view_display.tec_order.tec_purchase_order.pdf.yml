@@ -36,7 +36,7 @@ third_party_settings:
       top:
         - langcode
         - title
-        - field_tec_po_status
+        - tec_progress
         - field_tec_vendor
         - field_tec_priority
       first_above:
@@ -108,19 +108,8 @@ content:
     third_party_settings: {  }
     weight: 7
     region: middle
-  field_tec_po_status:
-    type: editablefields_formatter
-    label: above
-    settings:
-      form_mode: default
-      behaviour: inline
-      bypass_access: false
-      fallback_access: false
-      display_mode_access: ''
-      fallback_edit: false
-      display_mode_edit: ''
-      fields_ajax_trigger: ''
-      fields_ajax_trigger_event: change
+  tec_progress:
+    settings: {  }
     third_party_settings: {  }
     weight: 2
     region: top

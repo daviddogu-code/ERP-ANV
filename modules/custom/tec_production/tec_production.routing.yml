@@ -94,6 +94,15 @@ tec_production.purchase_queue:
   requirements:
     _permission: 'access tec purchase queue'
 
+tec_production.purchase_queue_save:
+  path: '/supplier-orders/queue/save'
+  defaults:
+    _controller: '\Drupal\tec_production\Controller\PurchaseQueueController::save'
+  methods: [POST]
+  requirements:
+    _permission: 'access tec purchase queue'
+    _csrf_request_header_token: 'TRUE'
+
 tec_production.po_invoice:
   path: '/tec_order/{tec_order}/invoice'
   defaults:

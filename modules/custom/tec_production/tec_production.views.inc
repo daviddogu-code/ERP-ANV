@@ -23,6 +23,20 @@ function tec_production_views_data_alter(array &$data): void {
     ],
   ];
 
+  // The one status. Hung off the order table for the same reason as the one
+  // above: four of its seven readings are worked out rather than stored, so
+  // there is no column to point a normal field at. Every listing that shows a
+  // status uses this, which is what stops two screens describing the same
+  // order differently.
+  $data['tec_order_field_data']['tec_progress'] = [
+    'title' => t('Status'),
+    'help' => t('Where a purchase order has got to: Open, the three steps somebody sets by hand, then Delivered, Closed or Cancelled. Worked out from the receipts and the invoice, never stored.'),
+    'field' => [
+      'id' => 'tec_purchase_progress',
+      'click sortable' => FALSE,
+    ],
+  ];
+
   // On the global table rather than on the order, because it belongs at the
   // foot of a page and not in a row, and because the displays that use it list
   // line items: the order is the argument, not the subject of the rows.

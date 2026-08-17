@@ -22,6 +22,78 @@ function tec_production_page_attachments(array &$attachments) {
 }
 
 /**
+ * Implements hook_entity_extra_field_info().
+ *
+ * Puts the one purchase status where a display can place it.
+ *
+ * The order card and the printout used to show the stored open/closed flag,
+ * which answers a different question from the one people were reading it for:
+ * an order can be open and half in the warehouse, or closed because the missing
+ * half was written off. Meanwhile the supplier list and the purchase control
+ * screen had richer answers of their own and the three did not agree.
+ *
+ * There is no field to point at, because four of the seven readings are worked
+ * out rather than stored, so it comes in as an extra field. Display Suite and
+ * Layout Builder both place these like any other, which is what lets the card
+ * and the PDF use it without either of them learning anything new.
+ */
+function tec_production_entity_extra_field_info() {
+  $extra = [];
+  $extra['tec_order']['tec_purchase_order']['display']['tec_progress'] = [
+    'label' => t('Status'),
+    'description' => t('Where the order has got to: Open, the three steps set by hand, then Delivered, Closed or Cancelled. Worked out from the receipts and the invoice.'),
+    'weight' => 0,
+    'visible' => FALSE,
+  ];
+
+  return $extra;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view() for tec_order.
+ *
+ * Draws the status pill wherever a display has asked for it.
+ */
+function tec_production_tec_order_view(array &$build, $entity, $display, $view_mode) {
+  if ($entity->bundle() !== 'tec_purchase_order') {
+    return;
+  }
+
+  // Layout Builder keeps its components in sections instead of in the display's
+  // content, and getComponent() only answers from there for things that carry a
+  // formatter, which an extra field never does. So on those displays it always
+  // says no, and asking it would mean the card never draws the pill at all.
+  //
+  // Building it unconditionally is safe there and only there: Layout Builder
+  // leaves a placeholder for each extra field and afterwards either moves this
+  // into it or throws it away. On an ordinary display the question is real --
+  // nothing would remove an unwanted field -- and getComponent() answers it
+  // properly.
+  if (!$display->getThirdPartySetting('layout_builder', 'enabled') && !$display->getComponent('tec_progress')) {
+    return;
+  }
+
+  $progress = \Drupal\tec_production\Purchasing::progress($entity);
+  $build['tec_progress'] = [
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#value' => \Drupal\tec_production\Purchasing::PROGRESS[$progress] ?? $progress,
+    '#attributes' => ['class' => ['tec-po-status', 'tec-po-status--' . $progress]],
+    '#attached' => ['library' => ['tec_production/purchase_progress']],
+  ];
+
+  // The reading comes from the lines, and saving a line invalidates the line
+  // rather than the order that holds it. Without this the card would keep
+  // showing "Nothing received" after a delivery was booked in.
+  foreach ($entity->get('field_tec_line_items')->referencedEntities() as $line) {
+    $build['tec_progress']['#cache']['tags'] = array_merge(
+      $build['tec_progress']['#cache']['tags'] ?? [],
+      $line->getCacheTags()
+    );
+  }
+}
+
+/**
  * Implements hook_views_pre_render().
  *
  * Hands the purchase draft the VAT rate of the order it is editing.

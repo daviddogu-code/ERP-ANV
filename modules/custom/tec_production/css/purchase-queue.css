@@ -17,15 +17,33 @@
   max-width: 82rem;
 }
 
+/* This box is the window, not the table: it takes whatever width the page
+   gives it and scrolls what does not fit. It had a cap of 82rem, and the cap
+   was the reason a single row changing from Open to Ready to pick up pushed
+   the last column out of sight. The other two boards built in this style
+   (/o/queue and /stock) leave their container at the page width and cap only
+   the summary above, which is prose and does read better narrow.
+
+   The bottom padding is not spacing, it is room for the status menu. A box
+   that scrolls sideways clips what sticks out of it in both directions, so the
+   dropdown opened from the last row would be cut off or would grow a second
+   scrollbar. Leaving the height of the menu underneath the table is cheaper
+   than teaching it to open upwards. */
 .tec-pq__wrap {
   overflow-x: auto;
-  max-width: 82rem;
+  padding-bottom: 8rem;
 }
 
+/* The table measures its own columns and stops there. With width 100% it would
+   stretch to fill a wide monitor and scatter the columns with gaps; with
+   max-content alone a short table would end mid-page and leave the green
+   heading stripe hanging. The pair gives both: never wider than it needs,
+   never narrower than the window. */
 .tec-pq__table {
   border-collapse: separate;
   border-spacing: 0;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   font-size: 0.82rem;
   background: #fff;
 }
@@ -102,6 +120,44 @@
   white-space: nowrap;
 }
 
+/* The supplier's card is where the phone number is, which is what chasing an
+   order actually needs. Underlined on hover only, so eleven rows of underlines
+   do not turn the column into noise.
+
+   The cap is the widest thing on this screen brought under control: a legal
+   name like "POLYTEC ASIA COMPANY LIMITED บริษัท..." was being drawn in full on
+   every row and costing the table more width than any other column. Twelve rem
+   keeps the trading name and drops the registered suffix, and the whole of it
+   is still in the tooltip.
+
+   Two details that are not decoration. The cap lives on the link because
+   max-width is ignored on a table cell in auto layout, the same lesson as
+   production-queue.css. And it is inline-block rather than block so the dotted
+   underline stops at the end of the name: on a supplier called KJ, a block
+   would trail the line across the empty rest of the column. */
+.tec-pq__supplier {
+  display: inline-block;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* The dotted line is the promise of a card behind the name, so it is only for
+   the names that have one. A supplier with no card gets the same cap and no
+   invitation to click. */
+a.tec-pq__supplier {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted #b8b8b8;
+}
+
+a.tec-pq__supplier:hover {
+  color: #38761d;
+  border-bottom-color: #38761d;
+}
+
 .tec-pq__none {
   color: #aaa;
 }
@@ -110,53 +166,112 @@
   text-align: right;
 }
 
-/* Status: a dropdown that reads as a pill, and a plain pill once the goods are
-   in and there is nothing left to choose. */
-.tec-pq__pill,
-.tec-pq__select select,
-.tec-pq__status select {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 11px;
-  border: 1px solid transparent;
-  font-size: 0.76rem;
-  font-weight: 600;
-  line-height: 1.5;
-  min-height: 0;
-  height: auto;
-  width: auto;
-  max-width: 11rem;
-  background-image: none;
-  appearance: auto;
-}
+/* Status: a dropdown we draw ourselves.
 
+   The colours come from purchase-progress.css, which every screen showing a
+   status shares. What is here is only the opening and closing, and the reason
+   it is not a <select> is in the JavaScript: a native dropdown will not paint
+   the options inside it the same way twice across browsers, and this column is
+   read by colour. */
 .tec-pq__status .form-item {
   margin: 0;
 }
 
-.tec-pq__pill--delivered,
-.tec-pq__status select.tec-pq__select--delivered {
-  background: #d9ead3;
+/* Drupal wraps a container in its own form classes, and the theme gives those a
+   margin. In a table row that margin is a gap under every pill. */
+.tec-pq__menu,
+.tec-pq__list {
+  margin: 0;
+}
+
+.tec-pq__menu {
+  position: relative;
+  display: inline-block;
+}
+
+.tec-pq__trigger {
+  cursor: pointer;
+  font-family: inherit;
+  max-width: 11rem;
+  text-align: left;
+}
+
+/* The caret marks the ones that can be opened, so the pills that are read off
+   the data are visibly not a question. */
+.tec-pq__trigger::after {
+  content: "\25BE";
+  margin-left: 0.35rem;
+  font-size: 0.85em;
+  opacity: 0.6;
+}
+
+.tec-pq__trigger:focus-visible {
+  outline: 2px solid #38761d;
+  outline-offset: 1px;
+}
+
+.tec-pq__list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 3px);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  border-radius: 7px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+}
+
+.tec-pq__opt {
+  cursor: pointer;
+  text-align: left;
+}
+
+.tec-pq__opt:hover,
+.tec-pq__opt:focus-visible {
+  outline: 2px solid #38761d;
+  outline-offset: 1px;
+}
+
+/* The one already in force keeps a tick, because three coloured rows with the
+   current one merely highlighted is not enough to tell them apart. */
+.tec-pq__opt[aria-selected="true"]::after {
+  content: "\2713";
+  margin-left: 0.4rem;
+  font-weight: 700;
+}
+
+/* Saved, or not. Nothing else says a change went through now that there is no
+   Save button and no page reload. */
+.tec-pq__table td.is-saved {
+  box-shadow: inset 0 0 0 2px #38761d;
+  transition: box-shadow 0.2s;
+}
+
+.tec-pq__table td.is-save-error {
+  box-shadow: inset 0 0 0 2px #cc0000;
+}
+
+.tec-pq__receive {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid #b6d7a8;
+  border-radius: 4px;
+  background: #eaf4e5;
   color: #38761d;
-  border-color: #b6d7a8;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.tec-pq__status select.tec-pq__select--on_process {
-  background: #fff2cc;
-  color: #7f6000;
-  border-color: #ffe599;
-}
-
-.tec-pq__status select.tec-pq__select--ready_to_pick_up {
-  background: #cfe2f3;
-  color: #0b5394;
-  border-color: #9fc5e8;
-}
-
-.tec-pq__status select.tec-pq__select--on_the_way {
-  background: #fce5cd;
-  color: #b45f06;
-  border-color: #f9cb9c;
+.tec-pq__receive:hover {
+  background: #38761d;
+  border-color: #38761d;
+  color: #fff;
 }
 
 /* The expected day is typed into the table, so the input has to stop looking
