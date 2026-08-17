@@ -20,7 +20,7 @@
  *    camino normal, si la tendra.
  * 3. Los iconos de las portadas, por su ficha y no por su contador.
  * 4. Lo que no es una foto: las fuentes del tema, dos hojas de estilo y el
- *    monton de CSV y Excel de las importaciones de escandallo. Eso es otra
+ *    monton de CSV y Excel de las importaciones de BoM. Eso es otra
  *    conversacion y no se toca.
  *
  * Antes de borrar, las fotografias que valen algo se copian a una carpeta con

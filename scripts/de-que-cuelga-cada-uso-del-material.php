@@ -7,7 +7,7 @@
  *   php vendor\bin\drush.php scr scripts/de-que-cuelga-cada-uso-del-material.php
  *
  * El aviso que impide borrar un material lista lo que le apunta, pero listarlo
- * por su nombre no sirve de nada: los escandallos y las lineas de pedido se
+ * por su nombre no sirve de nada: los BoM y las lineas de pedido se
  * llaman igual que el material, asi que salen tres lineas diciendo 'khun' y el
  * que lo lee sigue sin saber en que producto ni en que pedido esta metido.
  *

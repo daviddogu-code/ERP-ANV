@@ -8,7 +8,7 @@
  * calcular. Este guion monta la cadena entera de una sola vez:
  *
  *   marca -> cliente -> producto -> variacion de color -> talla
- *   talla -> escandallo con materiales dentro
+ *   talla -> BoM con materiales dentro
  *   pedido de venta -> linea de pedido que apunta a la talla
  *
  * Todo lo que crea lleva PRUEBA en el nombre, para poder encontrarlo y borrarlo
@@ -131,7 +131,7 @@ $variacionColor->set('field_tec_size_variations', [$variacionTalla->id()]);
 $variacionColor->save();
 
 echo "\n";
-echo "El escandallo:\n";
+echo "El BoM:\n";
 
 // Se meten dos materiales para que las vistas de calculo tengan que sumar y no
 // solo copiar una fila. El segundo se crea aqui si no hay mas que uno.
@@ -171,15 +171,15 @@ if (count($materiales) < 2) {
   $materiales[$segundo->id()] = $segundo;
 }
 
-// Cantidad que pide el escandallo de cada material, por pieza fabricada.
+// Cantidad que pide el BoM de cada material, por pieza fabricada.
 $cantidades = [2.5, 4];
 $partidas = [];
 $i = 0;
 foreach ($materiales as $material) {
   $cantidad = $cantidades[$i] ?? 1;
-  $partida = $anotar('partida de escandallo', $gestor->getStorage('tec_inventory')->create([
+  $partida = $anotar('partida de BoM', $gestor->getStorage('tec_inventory')->create([
     'type' => 'tec_bom_item',
-    'title' => 'PRUEBA escandallo - ' . $material->label(),
+    'title' => 'PRUEBA BoM - ' . $material->label(),
     'field_tec_inventory' => $material->id(),
     'field_tec_quantity' => $cantidad,
     'field_tec_size_variation' => $variacionTalla->id(),
@@ -238,7 +238,7 @@ foreach ($partidas as $idPartida) {
   $coste = (float) $material->get('field_tec_cost')->value;
   $factorCompra = (float) $material->get('field_tec_units')->value;
   $factorConsumo = (float) $material->get('field_tec_split_into')->value;
-  // El escandallo pide unidades de consumo. Para comprar hay que subir los dos
+  // El BoM pide unidades de consumo. Para comprar hay que subir los dos
   // escalones: consumo a inventario y inventario a compra.
   $enInventario = $factorConsumo > 0 ? $total / $factorConsumo : 0;
   $enCompra = $factorCompra > 0 ? $enInventario / $factorCompra : 0;
@@ -253,7 +253,7 @@ foreach ($partidas as $idPartida) {
 }
 
 // Se deja escrito el inventario de lo creado, porque al guardar la linea de
-// pedido ECA fabrica por su cuenta una copia del escandallo con el nombre del
+// pedido ECA fabrica por su cuenta una copia del BoM con el nombre del
 // material, sin el PRUEBA delante, y buscando solo por nombre no se encontraria.
 $inventario = dirname(__DIR__) . '/scripts/tmp-juego-de-pruebas.json';
 file_put_contents($inventario, json_encode($creado, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));

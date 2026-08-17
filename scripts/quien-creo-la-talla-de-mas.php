@@ -10,7 +10,7 @@
  * comprobacion cuadre seria tirar trabajo del dueno a la basura, asi que primero
  * hay que saber de donde viene.
  *
- * Lo que se mira: quien la firma, cuando, si la referencia algun escandallo o
+ * Lo que se mira: quien la firma, cuando, si la referencia algun BoM o
  * alguna variacion, y que dice el registro a esa hora.
  *
  * Ya contesto: el registro dice "Created new term 20 oz" desde
@@ -65,7 +65,7 @@ echo str_repeat('=', 82) . "\n";
 echo " La usa alguien\n";
 echo str_repeat('=', 82) . "\n\n";
 
-// Una talla que ya cuelga de un producto o de un escandallo es un dato en uso, y
+// Una talla que ya cuelga de un producto o de un BoM es un dato en uso, y
 // eso zanja la discusion: no se toca.
 $usos = 0;
 foreach (['tec_product', 'tec_inventory', 'tec_line_item'] as $tipo) {

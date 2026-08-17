@@ -3,9 +3,9 @@
 /**
  * Borra los CSV y Excel de las importaciones de prueba.
  *
- * Son los listados de materias primas y los escandallos que se subieron entre
+ * Son los listados de materias primas y los BoM que se subieron entre
  * marzo de 2024 y julio de 2025 para probar los dos importadores: un fichero de
- * 857 materias con dieciocho columnas, y escandallos uno por producto y talla.
+ * 857 materias con dieciocho columnas, y BoM uno por producto y talla.
  * Todo aquello era ensayo, y se borra.
  *
  * Lo que NO toca, aunque tampoco sean fotos: las fuentes tipograficas del tema y

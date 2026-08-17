@@ -42,7 +42,7 @@ $material = $etm->getStorage('taxonomy_term')->create([
 $material->save();
 $creadas[] = ['taxonomy_term', $material->id()];
 
-// La talla con su escandallo: sin esto el proceso de ECA que calcula el total no
+// La talla con su BoM: sin esto el proceso de ECA que calcula el total no
 // se despierta, y entonces la prueba no estaria pidiendo lo mismo que un pedido
 // de verdad.
 $talla = $etm->getStorage('tec_product')->create([
@@ -185,7 +185,7 @@ print $deLaSuma === 0
 // 4. Se borra todo.
 // -----------------------------------------------------------------------------
 // Al reves del orden de creacion, y quitando primero las banderas y los
-// escandallos de linea que ECA crea por su cuenta al guardar una linea.
+// BoM de linea que ECA crea por su cuenta al guardar una linea.
 print "  --- 4. se borra lo fabricado ---\n\n";
 
 $dePropina = [];
@@ -205,7 +205,7 @@ foreach ($lineas as $linea) {
 foreach ($etm->getStorage('tec_inventory')->loadMultiple($dePropina) as $sobra) {
   $sobra->delete();
 }
-printf("      lineas y %d escandallos de linea que creo ECA\n", count($dePropina));
+printf("      lineas y %d BoM de linea que creo ECA\n", count($dePropina));
 
 foreach (array_reverse($creadas) as [$tipo, $id]) {
   foreach ($etm->getStorage('flagging')->loadByProperties(['entity_id' => $id]) as $bandera) {

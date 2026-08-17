@@ -13,7 +13,7 @@
  * decimales que le escribas, los guarda redondeados y no avisa. Un factor es un
  * divisor, asi que un redondeo ahi no descuadra un dato, parte por la mitad
  * todas las cantidades que se calculen con el, en la lista de compra, en el
- * tablero de stock y en los escandallos.
+ * tablero de stock y en los BoM.
  *
  * Cambiar los decimales no se puede desde la pantalla: Drupal los bloquea en
  * cuanto el campo tiene datos, y guardar la configuracion por la via normal

@@ -22,10 +22,10 @@
  *     campo `order_id` es obligatorio y apunta a un pedido; si los pedidos se
  *     van antes, quedan catorce registros con una referencia obligatoria al
  *     vacio.
- *   - Las 47 importaciones de escandallo van antes que las variaciones de
+ *   - Las 47 importaciones de BoM van antes que las variaciones de
  *     talla, porque las referencian (45 filas).
  *   - Los materiales van AL FINAL de todo el contenido. Son lo unico a lo que
- *     apunta media base de datos: 2.553 filas de escandallo, movimientos y
+ *     apunta media base de datos: 2.553 filas de BoM, movimientos y
  *     lineas de compra. Borrarlos antes es dispararse en el pie con el fallo
  *     conocido que deja la bandera de bloqueo puesta y rompe el recalculo en
  *     silencio.
@@ -172,9 +172,9 @@ try {
   // --- Los pasos, en el orden que fija el grafo ---------------------------
   paso($informe, $etm, 1, 'registros de produccion', 'tec_production_entry', NULL, $deVerdad);
   paso($informe, $etm, 2, 'registros de importacion de feeds', 'feeds_import_log', NULL, $deVerdad);
-  paso($informe, $etm, 3, 'importaciones de escandallo', 'feeds_feed', ['tec_bom_items_importer'], $deVerdad);
-  paso($informe, $etm, 4, 'escandallo de lineas de pedido', 'tec_inventory', ['tec_line_item_bom_item'], $deVerdad);
-  paso($informe, $etm, 5, 'escandallo de productos', 'tec_inventory', ['tec_bom_item'], $deVerdad);
+  paso($informe, $etm, 3, 'importaciones de BoM', 'feeds_feed', ['tec_bom_items_importer'], $deVerdad);
+  paso($informe, $etm, 4, 'BoM de lineas de pedido', 'tec_inventory', ['tec_line_item_bom_item'], $deVerdad);
+  paso($informe, $etm, 5, 'BoM de productos', 'tec_inventory', ['tec_bom_item'], $deVerdad);
   paso($informe, $etm, 6, 'movimientos de inventario', 'tec_inventory', ['tec_inventory_transaction'], $deVerdad);
   paso($informe, $etm, 7, 'lineas de pedido', 'tec_line_item', NULL, $deVerdad);
   paso($informe, $etm, 8, 'pedidos y ordenes de compra', 'tec_order', NULL, $deVerdad);
