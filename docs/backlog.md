@@ -45,7 +45,7 @@ por error algo que estaba puesto a propósito.
   ese precio ha desaparecido porque ese día se crearon aquí las tres cuentas de los empleados
   —`lukpla`, `coo` y `manager`—, así que viajan con la base. Lo único que hay que hacer al llegar es
   ponerles la contraseña. Aun así, antes hay que pasar `drush config:status` **en el servidor** y
-  contar los procesos de ECA, que allí deben ser **36** antes de desplegar y **32** después. La
+  contar los procesos de ECA, que allí deben ser **36** antes de desplegar y **30** después. La
   explicación de por qué bajan cuatro está unas líneas más abajo, en la comprobación de los
   procesos.
 
@@ -1872,6 +1872,53 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-18 (madrugada) — Renombrar un producto no le cambiaba el nombre, y nadie podía verlo
+
+Venía de una pregunta del dueño sobre los duplicados: *¿qué pasa con el nombre de la variación y del
+producto duplicados? Recuerdo que en el pasado tuvimos problemas cuando cambiábamos el nombre de la
+variación duplicada.* Se miró, y el recuerdo era bueno: el fallo existía, seguía ahí y era más ancho
+de lo que él recordaba.
+
+**En los tres pisos del árbol el nombre no se teclea, se deduce.** El del producto sale de
+`field_product_name`, el del color de su término de color y el de la talla de su término de talla. Y
+en los tres el campo que guarda el nombre de verdad —el `title`— **está escondido en el formulario**.
+Esa es la parte que hace el fallo difícil: una ficha con dos nombres distintos no se distingue de una
+sana mirándola, porque la pantalla enseña el campo y no el nombre.
+
+**Los tres automatismos que rellenaban el nombre compartían una regla, y la regla tenía un agujero:**
+actuar al nacer, o solo mientras el nombre esté vacío. Una copia nace con el nombre del original ya
+puesto, así que queda fuera del alcance de esa regla **para siempre**. La variación 816 vivió meses
+con el término White y el nombre Black.
+
+El del producto era peor todavía. Su nombre se calcula **solo al nacer** y no hay ningún proceso de
+actualización detrás, así que renombrar un producto separaba los dos nombres sin vuelta atrás. Se
+comprobó creando uno, renombrándolo y mirando: campo `PRUEBA nombre nuevo`, ficha llamada `PRUEBA
+Nombre Viejo`. Y apareció una tercera versión que nadie esperaba: **una talla que nazca con nombre
+puesto tampoco mira su término**. No muerde hoy porque las tallas nacen sin nombre desde el
+formulario, pero es la misma trampa esperando.
+
+**Y se escapa fuera del producto, que es lo que lo hace caro.** El nombre de una línea de pedido se
+estampa desde `[productLoaded:title]` por un camino y desde `[productLoaded:field_product_name]` por
+otro. Un producto con dos nombres sale con uno en un documento y con otro en el siguiente, sin nada
+que diga cuál de los dos es el de ahora. Un albarán y una proforma del mismo producto podían no
+llamarse igual.
+
+**El arreglo es el mismo sitio y la misma forma que el del color de anoche**: el guardado recalcula
+los tres nombres, en cada guardado, venga la ficha de donde venga. Sustituye a tres reglas distintas
+en tres procesos distintos por una sola, y deja los procesos de ECA como estaban, haciendo trabajo
+repetido pero inofensivo. Al renombrar un producto se le aplica también **la mayúscula inicial en cada
+palabra** que ya le ponía al crearlo, decisión del dueño, para que el catálogo no acabe escrito de dos
+maneras según si el nombre es el original o uno posterior.
+
+**No había nada que reparar.** Se barrieron las nueve fichas que existen —un producto, dos colores,
+seis tallas— y ninguna tenía dos nombres. Esto se arregla antes de que muerda, y solo se ha llegado a
+tiempo porque el ERP es nuevo y nadie había renombrado un producto todavía. Con trescientos productos
+en marcha, encontrar cuáles se llaman mal habría sido el trabajo, no el arreglo.
+
+Queda vigilado en el guardián, que sube a 147 comprobaciones, y probado en
+`scripts/el-nombre-no-se-queda-atras.php`, que renombra un producto, un color y una talla y mira que
+el nombre visible siga a los tres. Las seis afirmaciones fallaban en dos sitios antes del cambio.
 
 ### 2026-08-18 (madrugada) — Los tres botones de duplicar, probados por fin, y un código de barras que no debe viajar
 
