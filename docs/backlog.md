@@ -126,12 +126,13 @@ preparado para cuando se retome:
 
   **La cifra que hay que esperar cambió, y conviene tenerlo claro antes de contar, porque si no
   este control se lee al revés.** El servidor sigue en **36**, porque allí no se ha desplegado nada.
-  Local está en **32**: el 14 de agosto se borraron cuatro procesos que hacían el trabajo del
+  Local está en **30**. El 14 de agosto se borraron cuatro procesos que hacían el trabajo del
   sistema de unidades opcionales de Óscar y que sobraban al erradicarlo —`rxuimsq`, `uix9n5i`,
-  `pehrnr8` e `idtd6ah`—. O sea que al desplegar la cuenta **baja a propósito de 36 a 32**, y eso es
-  la señal de que ha ido bien, no de que se haya perdido nada. Lo que este control busca es lo otro:
-  una bajada que nadie ha pedido. La comprobación del ERP ya exige 32, así que si algún día se pierde
-  un proceso por el camino, salta ahí.
+  `pehrnr8` e `idtd6ah`—, y el 18 de agosto los dos últimos clones apagados, `darq39m` e `icpsbgv`.
+  O sea que al desplegar la cuenta **baja a propósito de 36 a 30**, y eso es la señal de que ha ido
+  bien, no de que se haya perdido nada. Lo que este control busca es lo otro: una bajada que nadie ha
+  pedido. La comprobación del ERP ya exige 30, así que si algún día se pierde un proceso por el
+  camino, salta ahí.
 - **Preparar dónde apunta lo que vea**, aunque sea una hoja de cálculo compartida. Por chat
   se evapora en tres días.
 - **Darle un encargo concreto**, empezando por compras, en vez de un "míralo a ver qué te
@@ -177,6 +178,15 @@ preparado para cuando se retome:
   pasa el `> 0`. Si el formulario añade una tercera en PHP van tres. Lo ordenado es que la pregunta
   «¿esta línea cuenta?» viva junto a `Purchasing::outstanding()` y que las tres pantallas la
   consulten.
+- **Limpiar los mensajes de registro de los procesos de duplicar.** Un solo clic de duplicar un color
+  escribe veintiséis líneas en el registro, y la mitad salen con el hueco sin rellenar:
+  `%token__entity`, `List: %token__bomOriginal`, `The size name is: [size:name]`. Están escritos con
+  una sintaxis de plantilla que ese sitio no entiende, así que imprimen el nombre del hueco en lugar
+  de su contenido. Hay incluso uno que dice «Finished running: TEC Color variation: Set data values
+  on Insert» mientras informa del nombre de una talla, que es un copiar y pegar de otro proceso. No
+  rompe nada y por eso lleva ahí desde siempre; el problema es el día que haya que buscar un fallo de
+  verdad ahí dentro. Descubierto el 18 de agosto al mirar el registro de un duplicado que sí
+  funcionó.
 
 ## 3. Antes de que entren los empleados
 
@@ -1843,6 +1853,67 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-18 (madrugada) — Los tres botones de duplicar, probados por fin, y un código de barras que no debe viajar
+
+El dueño duplicó a mano el color Black del guante, que es el material de prueba más completo que hay
+en el sitio: tres tallas y cuatro líneas de BoM en cada una. Un clic tuvo que fabricar **dieciséis
+fichas**, y las fabricó todas en seis segundos.
+
+Salió entero. Las fracciones llegaron escritas como fracciones —`1/4`, `1/30`, `1/35`, `1/12`, con su
+decimal calculado al lado— y los números normales igual. Los precios, los enlaces atados por los dos
+lados, la bandera bajada. Y lo que no se ve en pantalla y era el riesgo de verdad: **las doce líneas
+son nuevas, no las del original**. Si el proceso hubiera apuntado a las mismas, las dos copias se
+verían idénticas y el día que alguien cambiara una cantidad en una habría cambiado la de la otra sin
+enterarse.
+
+Después se borró la copia, y se llevó sus tres tallas y sus doce líneas, y limpió su número de la
+lista del producto. Es la cascada de unas horas antes, esta vez sobre datos de verdad y no sobre el
+árbol de mentira de la prueba automática.
+
+**El código de barras deja de copiarse.** Lo decidió el dueño al ver el informe, y es de cajón: un
+código identifica una cosa, así que dos cosas con el mismo no identifican ninguna. Viajaba en los
+tres botones —duplicar talla, duplicar color y duplicar producto—, que es lo que hace peligrosos estos
+cambios: arreglar uno solo deja el fallo saliendo por los otros dos caminos, y entonces parece
+aleatorio.
+
+**Y hay una trampa en cómo se toca un proceso de ECA.** Cada uno vive en dos ficheros: `eca.eca.X`,
+que es lo que se ejecuta, y `eca.model.X`, que es el dibujo que se edita en pantalla. El editor
+regenera el primero desde el segundo, así que un cambio puesto solo en el ejecutable dura hasta que
+alguien abra el diagrama y le dé a guardar. Sería un fallo que reaparece meses después sin que nadie
+haya tocado nada. El guardián ya vigilaba esto desde el trabajo de la numeración, y ha confirmado que
+los treinta procesos tienen dibujo y ejecutable de acuerdo.
+
+**El paso no se ha quitado: se ha quedado sin nada que escribir y se llama ahora «Leave the Barcode
+empty».** Quitar una caja obliga a reconectar la flecha y a mover las coordenadas del dibujo en tres
+diagramas, que es trabajo delicado para nada; y una caja que dice la regla en voz alta es
+documentación en el sitio donde el siguiente va a mirar. Además así es más fuerte: no es que no
+copie, es que garantiza el campo vacío pase lo que pase antes.
+
+**Fuera los dos clones apagados**, `darq39m` e `icpsbgv`, copias de la versión 1.4 de duplicar color y
+duplicar producto que alguien dejó al editar la 1.5. Parecían inofensivos porque no se disparaban,
+pero llevaban dentro la versión vieja de las reglas —de hecho, después del cambio del código de
+barras eran los dos únicos sitios del ERP donde seguía copiándose—, así que encender uno por error era
+volver meses atrás. Los procesos de ECA pasan de 32 a 30, y el despliegue al servidor bajará de 36 a
+30 en vez de a 32. La historia de esos ficheros está en git, que es donde van las copias de
+seguridad.
+
+**Y el tercer botón, que no se había probado nunca.** Duplicar un producto es el mayor de los tres:
+recorre colores, las tallas de cada color y el BoM de cada talla. La prueba nueva monta un producto
+con dos colores, cuatro tallas y ocho líneas, pulsa la bandera y comprueba las quince fichas de la
+copia una por una: que cada color cuelgue del producto nuevo y no del viejo, que cada talla apunte a
+su color nuevo, que no se comparta ni una sola pieza entre los dos árboles, y que los cuatro códigos
+de barras lleguen vacíos. Luego borra el producto copiado y el original y mira que no quede nada de
+los dos.
+
+- Guiones nuevos: `que-copio-el-duplicado.php`, que imprime de quién es hijo cada ficha y avisa si una
+  línea de BoM cuelga de dos tallas, que es el fallo que en pantalla no se distingue de un duplicado
+  correcto; `se-fue-entero-el-duplicado.php`, que borra y cuenta lo que queda; y
+  `se-puede-duplicar-un-producto.php`, la prueba del tercer botón.
+- Una observación medida, para cuando el catálogo crezca: un solo clic de duplicar color despertó unas
+  veinte veces al proceso que reacciona al guardar una talla, porque cada campo que se pone es un
+  guardado y cada guardado lo vuelve a llamar. Con tres tallas se nota en seis segundos y da igual.
+  Con un producto de diez colores por ocho tallas, aquí es donde va a doler.
 
 ### 2026-08-18 — Borrar dejaba restos en tres sitios, y a uno de ellos no se llegaba desde ninguna pantalla
 
