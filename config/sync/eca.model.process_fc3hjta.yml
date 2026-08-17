@@ -814,7 +814,7 @@ modeldata: |
         <bpmn2:outgoing>Flow_0wl2nd9</bpmn2:outgoing>
       </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_0clj5eu" sourceRef="Activity_0e3j3fi" targetRef="Activity_1icufjn" />
-      <bpmn2:task id="Activity_1tzz7oj" name="Set the Barcode" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
+      <bpmn2:task id="Activity_1tzz7oj" name="Leave the Barcode empty" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
         <bpmn2:extensionElements>
           <camunda:properties>
             <camunda:property name="pluginid" value="eca_set_field_value" />
@@ -835,7 +835,7 @@ modeldata: |
             <camunda:string>no</camunda:string>
           </camunda:field>
           <camunda:field name="field_value">
-            <camunda:string>[size:field_tec_barcode_nr]</camunda:string>
+            <camunda:string></camunda:string>
           </camunda:field>
           <camunda:field name="object">
             <camunda:string>sizeCreated</camunda:string>

@@ -318,10 +318,10 @@ actions:
         condition: ''
   Activity_1lcizem:
     plugin: eca_set_field_value
-    label: 'Set the Barcode'
+    label: 'Leave the Barcode empty'
     configuration:
       field_name: field_tec_barcode_nr
-      field_value: '[entity:field_tec_barcode_nr]'
+      field_value: ''
       method: 'set:clear'
       strip_tags: false
       trim: false

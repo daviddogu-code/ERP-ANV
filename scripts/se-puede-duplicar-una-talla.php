@@ -175,9 +175,12 @@ if ($copia) {
   $mirar('se lleva el precio',
     (float) ($copia->get('field_tec_price')->value ?? 0) === 123.45,
     (string) ($copia->get('field_tec_price')->value ?? 'vacio'));
-  $mirar('y el codigo de barras',
-    (string) ($copia->get('field_tec_barcode_nr')->value ?? '') === 'PRUEBA-8888',
-    (string) ($copia->get('field_tec_barcode_nr')->value ?? 'vacio'));
+  // El codigo de barras es lo unico que no se copia, y a proposito: identifica
+  // una cosa, asi que dos cosas con el mismo no identifican ninguna. La copia
+  // nace sin el y se le pone a mano.
+  $mirar('pero no el codigo de barras, que identifica a una sola talla',
+    (string) ($copia->get('field_tec_barcode_nr')->value ?? '') === '',
+    (string) ($copia->get('field_tec_barcode_nr')->value ?? '') ?: 'vacio');
 
   // Lo que de verdad se viene a copiar: el BoM entero, con sus
   // cantidades y con el texto original de cada una.
