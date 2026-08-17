@@ -1980,6 +1980,52 @@ foreach ($etm->getStorage('flagging')->loadMultiple() as $puesta) {
 comprobar($resultados, 'ningun proceso de bandera se ha quedado a medias',
   $colgadas === [], $colgadas ? implode(', ', $colgadas) : 'ninguna puesta');
 
+titulo('15. Ninguna ficha del arbol del producto tiene dos nombres');
+
+// En los tres pisos el nombre no se teclea, se deduce: el del producto de
+// field_product_name, el del color de su termino de color y el de la talla de
+// su termino de talla. Y en los tres el titulo esta escondido en el formulario,
+// asi que una ficha con dos nombres no se distingue de una sana mirandola.
+//
+// Se nota fuera, y tarde. El titulo de una linea de pedido se estampa desde
+// [productLoaded:title] por un camino y desde [productLoaded:field_product_name]
+// por otro, asi que el mismo producto sale con un nombre en un documento y con
+// otro en el siguiente, sin nada que diga cual de los dos es el de ahora.
+//
+// Los tres procesos de ECA que rellenaban estos titulos compartian una regla
+// -actuar al nacer, o solo mientras el titulo este vacio- y una copia nace con
+// el titulo del original ya puesto, o sea fuera del alcance de esa regla para
+// siempre. La variacion 816 vivio meses con el termino White y el titulo Black.
+// El producto era peor: su titulo se ponia al nacer y no habia ningun proceso
+// de actualizacion detras, asi que renombrarlo separaba los dos nombres sin
+// vuelta atras. Desde el 18 de agosto de 2026 los tres se recalculan en cada
+// guardado.
+$dosNombres = [];
+foreach ([
+  'tec_product' => 'field_product_name',
+  'tec_color_variation' => 'field_tec_colors',
+  'tec_size_variation' => 'field_tec_size',
+] as $pisoArbol => $campoNombre) {
+  foreach ($almacenVariacion->loadMultiple($almacenVariacion->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', $pisoArbol)
+    ->exists($campoNombre)
+    ->execute()) as $fichaNombre) {
+    $deberia = $pisoArbol === 'tec_product'
+      ? (string) $fichaNombre->get($campoNombre)->value
+      : (string) ($fichaNombre->get($campoNombre)->entity?->label() ?? '');
+    if ($deberia !== '' && trim((string) $fichaNombre->label()) !== trim($deberia)) {
+      $dosNombres[] = $pisoArbol . ' ' . $fichaNombre->id()
+        . ': "' . $fichaNombre->label() . '" contra "' . $deberia . '"';
+    }
+  }
+}
+comprobar($resultados, 'todas se llaman como dice el dato del que sale su nombre',
+  $dosNombres === [], $dosNombres ? implode(', ', $dosNombres) : 'todas');
+
+comprobar($resultados, 'y el presave que los mantiene al dia sigue puesto',
+  function_exists('_tec_inventory_name_from_source'));
+
 // -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------
