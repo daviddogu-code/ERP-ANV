@@ -13,7 +13,7 @@
  * lo deja como estaba.
  *
  * El 14 de agosto de 2026 cambio de fondo. Hasta esa noche vigilaba recuentos:
- * 4.773 elementos de escandallo, 869 materiales, 18 pedidos. Esa noche se borro
+ * 4.773 elementos de BoM, 869 materiales, 18 pedidos. Esa noche se borro
  * todo el contenido de pruebas, y una comprobacion que solo sepa contar
  * contenido no sirve para nada contra una base vacia.
  *
@@ -48,7 +48,7 @@ const REFERENCIA_TIPOS = [
 
 // Las seis entidades de contenido quedaron a cero el 14 de agosto de 2026, y
 // esa misma noche dejaron de estarlo: hubo que fabricar un juego de pruebas
-// -proveedor, material, producto, color, talla, escandallo, pedido de venta y
+// -proveedor, material, producto, color, talla, BoM, pedido de venta y
 // pedido de compra- para poder comprobar que las vistas de calculo daban bien
 // los numeros despues de sacarles el sistema de unidades de Oscar. Sin datos no
 // hay manera de comprobar una formula.
@@ -81,13 +81,20 @@ const CONTENIDO_CON_JUEGO = [
 // asi que esos si siguen dando veredicto. Y bien que hacen: fue el recuento de
 // tipos de material el que delato el termino "vcvcvcx" que se colo al teclear
 // en el formulario del material.
-const VOCABULARIOS_DE_CONTENIDO = ['tec_inventory'];
+//
+// Las marcas se pasaron a esta lista el 17 de agosto de 2026. Estaban contadas
+// como referencia de cuando el vocabulario se habia vaciado y se pensaba
+// retirarlo, pero la marca volvio a ser obligatoria para crear un producto, asi
+// que ahora nace una cada vez que entra una linea de producto nueva. El aviso
+// que lo delato fue "tec_brands: 2 (se esperaban 1)", y la de mas era "Rise
+// Fight Gear", creada a mano y perfectamente legitima. Se comprobo antes de
+// mover la linea, porque una marca de mas tambien puede ser una errata.
+const VOCABULARIOS_DE_CONTENIDO = ['tec_inventory', 'tec_brands'];
 
-// Los vocabularios. Los tres primeros se vaciaron a proposito; `tec_brands` y
-// `tec_patterns` siguen existiendo vacios porque retirarlos es un cambio de
-// configuracion aparte: los dos procesos de duplicar producto copian sus
-// campos, y hay que desmontarlos antes. Cuando se retiren, estas dos lineas se
-// van con ellos.
+// Los vocabularios. Los tres primeros se vaciaron a proposito. `tec_patterns`
+// sigue existiendo vacio porque retirarlo es un cambio de configuracion aparte:
+// los dos procesos de duplicar producto copian su campo, y hay que desmontarlos
+// antes. Cuando se retire, esa linea se va con el.
 //
 // Los dos terminos de material y la marca son del juego de pruebas de la noche del
 // 14 de agosto, igual que las cifras de contenido de mas arriba, y se van con el.
@@ -291,7 +298,7 @@ foreach (REFERENCIA_TIPOS as $entidad => $esperados) {
 // Esta puesto el juego de pruebas? Se le pregunta a los datos, no a un interruptor:
 // se cuentan las fichas cuyo nombre empieza por PRUEBA, que es el mismo criterio con
 // el que las busca `borrar-el-juego-de-pruebas.php`. No sirve para saber cuantas son
-// -las copias de escandallo que fabrica ECA salen con el nombre del material, sin
+// -las copias de BoM que fabrica ECA salen con el nombre del material, sin
 // PRUEBA delante-, pero para saber si esta o no esta, basta.
 $conPrueba = 0;
 foreach (['tec_inventory' => 'title', 'tec_product' => 'title', 'tec_crm' => 'title', 'taxonomy_term' => 'name'] as $tipo => $campo) {
@@ -336,9 +343,23 @@ foreach ([
   'importaciones' => 'feeds_feed',
   'enlaces_menu' => 'menu_link_content',
 ] as $etiqueta => $entidad) {
-  $n = (int) $etm->getStorage($entidad)->getQuery()->accessCheck(FALSE)->count()->execute();
+  $consulta = $etm->getStorage($entidad)->getQuery()->accessCheck(FALSE);
+  // Los ficheros temporales no cuentan. Un campo de subida guarda el fichero en
+  // cuanto se elige, antes de que nadie le de a guardar, asi que abrir la
+  // ventanita de la factura y cerrarla deja uno detras. Drupal los barre el
+  // solo a las seis horas. Contarlos ponia el guardian en rojo por que alguien
+  // se lo penso dos veces, y un guardian que se enciende por eso se ignora.
+  if ($entidad === 'file') {
+    $consulta->condition('status', 1);
+  }
+  $n = (int) $consulta->count()->execute();
   comprobar($resultados, $etiqueta, $n === REFERENCIA_VARIOS[$etiqueta],
     "$n (se esperaban " . REFERENCIA_VARIOS[$etiqueta] . ")");
+}
+
+$enEspera = (int) $etm->getStorage('file')->getQuery()->accessCheck(FALSE)->condition('status', 0)->count()->execute();
+if ($enEspera) {
+  informar('ficheros temporales esperando al barrido', $enEspera, 'subidos y nunca guardados; se van solos');
 }
 
 // Cada portada tiene que decir que pantalla abre, y esa pantalla tiene que
@@ -654,14 +675,14 @@ $bom = $etm->getStorage('tec_inventory')->create([
 $bom->save();
 $creadas[] = ['tec_inventory', $bom->id()];
 $bom = $etm->getStorage('tec_inventory')->loadUnchanged($bom->id());
-comprobar($resultados, 'escandallo: titulo automatico', $bom->label() === $material->label(),
+comprobar($resultados, 'BoM: titulo automatico', $bom->label() === $material->label(),
   "'" . $bom->label() . "'");
 
 $bom->set('field_tec_quantity', 3.75);
 $bom->save();
 $bom = $etm->getStorage('tec_inventory')->loadUnchanged($bom->id());
 $copia = $bom->get('field_tec_quantity_input')->value;
-comprobar($resultados, 'escandallo: copia de cantidad', $copia !== NULL && (float) $copia > 0,
+comprobar($resultados, 'BoM: copia de cantidad', $copia !== NULL && (float) $copia > 0,
   'entrada = ' . var_export($copia, TRUE));
 
 // 3.3 - process_uhiwdqa.
@@ -683,7 +704,7 @@ $bom2->save();
 $creadas[] = ['tec_inventory', $bom2->id()];
 $talla = $etm->getStorage('tec_product')->loadUnchanged($talla->id());
 $enganchados = array_column($talla->get('field_tec_bom')->getValue(), 'target_id');
-comprobar($resultados, 'escandallo: se engancha a la talla', in_array($bom2->id(), $enganchados),
+comprobar($resultados, 'BoM: se engancha a la talla', in_array($bom2->id(), $enganchados),
   count($enganchados) . ' en la talla');
 
 // 3.4 - process_oy5yfqx.
@@ -718,12 +739,12 @@ comprobar($resultados, 'color: titulo automatico', $cv->label() !== '' && $cv->l
 // del 14 de agosto, y que conviene no volver a averiguar:
 //
 // La linea tiene que colgar de una talla. El proceso solo escucha el evento de
-// actualizar, y todo lo que calcula gira alrededor del escandallo de la talla:
+// actualizar, y todo lo que calcula gira alrededor del BoM de la talla:
 // una linea con precio y cantidad y nada mas no es un caso real, y el proceso
 // la deja en paz, con el total vacio. Por eso se reutiliza la talla del 3.3,
-// que ya tiene un escandallo colgado.
+// que ya tiene un BoM colgado.
 //
-// Y al guardar, el proceso crea por su cuenta un elemento de escandallo de
+// Y al guardar, el proceso crea por su cuenta un elemento de BoM de
 // linea y lo engancha. Nadie lo pide y no aparece en ningun sitio, asi que hay
 // que ir a buscarlo para borrarlo: si se queda, la siguiente comprobacion
 // encuentra contenido donde deberia haber cero y falla sin motivo aparente.
@@ -961,10 +982,14 @@ comprobar($resultados, 'y el pedido cerrado no lo ofrece',
 // que la columna del estado salia vacia el cien por cien de las veces y el mismo
 // campo inexistente decidia los botones, de modo que el lapiz de editar tampoco
 // aparecia nunca. Como es un copiar y pegar facil de repetir, se vigila.
+//
+// Desde el 17 de agosto la columna tampoco lee el campo crudo, sino la lectura
+// deducida; el porque esta en la seccion 11. Los botones si siguen el campo, y
+// tienen que seguirlo: si un pedido se puede editar es otra pregunta.
 $lista = \Drupal::config('views.view.tec_supplier_orders')->get('display.default.display_options.fields') ?? [];
 comprobar($resultados, 'la lista de proveedores lee el estado de compra',
-  isset($lista['field_tec_po_status']) && !isset($lista['field_tec_order_status']),
-  isset($lista['field_tec_order_status']) ? 'PREGUNTA POR EL DE VENTAS' : 'field_tec_po_status');
+  isset($lista['tec_progress']) && !isset($lista['field_tec_order_status']),
+  isset($lista['field_tec_order_status']) ? 'PREGUNTA POR EL DE VENTAS' : implode(', ', array_intersect(['tec_progress', 'field_tec_po_status'], array_keys($lista))));
 comprobar($resultados, 'y sus botones tambien',
   ($lista['views_conditional_field']['if'] ?? '') === 'field_tec_po_status_1'
   && str_contains($lista['nothing']['alter']['text'] ?? '', '/po/draft/'),
@@ -1709,6 +1734,243 @@ if ($idsRecibidas) {
 comprobar($resultados, 'todo lo recibido dejo su entrada en el almacen',
   !$sinMovimiento,
   $sinMovimiento ? 'lineas ' . implode(', ', array_slice($sinMovimiento, 0, 5)) : count($idsRecibidas) . ' lineas');
+
+// -----------------------------------------------------------------------------
+titulo('12. Un pedido de compra tiene un estado, no cuatro');
+
+// Hasta el 17 de agosto cada pantalla contestaba por su cuenta y se contradecian:
+// un pedido servido y sin factura era "Closed" en la lista, "Closed" en la ficha,
+// "Closed" en el impreso y "Delivered" en la pantalla de control. Ninguna mentia
+// -las tres primeras leian el campo open/closed, que responde a otra cosa- pero
+// quien miraba dos seguidas veia dos respuestas.
+//
+// Ahora las cuatro llaman a Purchasing::progress(). Lo que se vigila es que
+// ninguna se descuelgue, porque descolgarse no rompe nada: la pantalla sigue
+// pintando una palabra, solo que otra.
+foreach ([
+  ['views.view.tec_supplier_orders', 'default', 'la lista de proveedores'],
+  ['views.view.tec_supplier_orders', 'block_3', 'su bloque en la ficha del proveedor'],
+  ['views.view.tec_orders_orders', 'block_3', 'la pestana de pedidos del proveedor'],
+] as [$vistaEstado, $displayEstado, $comoSeLlamaEstado]) {
+  $camposEstado = \Drupal::config($vistaEstado)->get("display.$displayEstado.display_options.fields") ?? [];
+  comprobar($resultados, "$comoSeLlamaEstado lee el estado deducido",
+    ($camposEstado['tec_progress']['plugin_id'] ?? '') === 'tec_purchase_progress',
+    isset($camposEstado['field_tec_po_status']) ? 'SIGUE CON EL CAMPO CRUDO' : ($camposEstado['tec_progress']['plugin_id'] ?? 'no hay columna'));
+}
+
+$fichaEstado = \Drupal::config('core.entity_view_display.tec_order.tec_purchase_order.default');
+$bloquesFicha = [];
+foreach ($fichaEstado->get('third_party_settings.layout_builder.sections') ?: [] as $seccionEstado) {
+  foreach ($seccionEstado['components'] ?? [] as $bloqueEstado) {
+    $bloquesFicha[$bloqueEstado['configuration']['id'] ?? ''] = $bloqueEstado['configuration'];
+  }
+}
+comprobar($resultados, 'la ficha del pedido tambien',
+  isset($bloquesFicha['extra_field_block:tec_order:tec_purchase_order:tec_progress'])
+  && !isset($bloquesFicha['field_block:tec_order:tec_purchase_order:field_tec_po_status']),
+  isset($bloquesFicha['field_block:tec_order:tec_purchase_order:field_tec_po_status']) ? 'SIGUE CON EL CAMPO CRUDO' : 'extra_field_block');
+
+// Un bloque de campo anadido solo declara un contexto, la entidad. Si se le
+// asigna ademas el 'view_mode' que si lleva un bloque de campo normal -que es lo
+// que pasa al convertir uno en otro copiando su configuracion- la ficha entera
+// deja de abrirse con "Assigned contexts were not satisfied". Reventar del todo
+// suena a fallo que se ve solo, pero se vio en la prueba y no en el navegador,
+// asi que se vigila.
+$contextosFicha = $bloquesFicha['extra_field_block:tec_order:tec_purchase_order:tec_progress']['context_mapping'] ?? [];
+comprobar($resultados, 'y sin contextos de sobra, que tiran la pagina',
+  array_keys($contextosFicha) === ['entity'], implode(', ', array_keys($contextosFicha)));
+
+$impresoEstado = \Drupal::config('core.entity_view_display.tec_order.tec_purchase_order.pdf')->get('content') ?: [];
+comprobar($resultados, 'y el impreso, que ademas ya no se puede escribir dentro',
+  isset($impresoEstado['tec_progress']) && !isset($impresoEstado['field_tec_po_status']),
+  isset($impresoEstado['field_tec_po_status']) ? 'SIGUE CON EL CAMPO CRUDO, Y EDITABLE' : 'tec_progress');
+
+// Open no es un valor guardado, es la ausencia de los otros tres. El campo nacio
+// con "On process" de defecto y hubo que quitarlo: un pedido recien hecho que ya
+// dice "en proceso" hace que el dia que alguien lo mueva de verdad no se note.
+$defectoCola = \Drupal\field\Entity\FieldConfig::loadByName('tec_order', 'tec_purchase_order', 'field_tec_po_queue_status');
+comprobar($resultados, 'un pedido nuevo arranca en Open y no en el primer escalon',
+  $defectoCola && !$defectoCola->getDefaultValueLiteral(),
+  $defectoCola ? implode(', ', array_column($defectoCola->getDefaultValueLiteral(), 'value')) : 'no hay campo');
+
+comprobar($resultados, 'los tres escalones de mano son los mismos en el codigo y en el campo',
+  \Drupal\tec_production\Purchasing::PROGRESS_MANUAL === array_keys($estadosCola),
+  implode(', ', array_keys($estadosCola)));
+
+// Sin boton de guardar, la unica forma de escribir es este endpoint. Sin la
+// llave, cualquier pagina de fuera podria mover el estado de un pedido con la
+// sesion de quien la visite.
+$puertaCola = \Drupal::service('router.route_provider')->getRouteByName('tec_production.purchase_queue_save');
+comprobar($resultados, 'guardar solo se puede con permiso y con llave',
+  $puertaCola->getRequirement('_permission') === 'access tec purchase queue'
+  && $puertaCola->getRequirement('_csrf_request_header_token') === 'TRUE'
+  && $puertaCola->getMethods() === ['POST']);
+
+titulo('13. Ningun color ni ninguna talla pierde de vista a los suyos');
+
+// El arbol del producto se lee de arriba abajo para dibujar la pagina: el
+// producto lista sus colores y cada color lista sus tallas. Pero cada ficha
+// guarda ademas el camino de vuelta, la talla apunta a su color y las dos
+// apuntan al producto, y ese camino no hace falta para dibujar nada. Por eso
+// una ficha a la que le falta parece sana en pantalla durante meses.
+//
+// Se nota cuando algo sube por el arbol, y entonces se rompe de dos maneras que
+// no se parecen en nada. Sin el atajo al producto, el lapiz de editar fabrica
+// /tec_product/ sin numero detras: se guarda bien y se aterriza en un 404. Sin
+// el enlace al color, duplicar la talla lee el color de la talla, no lo
+// encuentra, y como la accion de cargar una referencia vacia responde acceso
+// denegado en vez de dar un error, ECA corta la rama sin escribir una linea. Ni
+// copia, ni aviso, y la bandera que levanto el icono no se baja nunca.
+//
+// Los rellenaban ECA que escuchan solo el insert y solo actuan si el enlace al
+// padre ya esta puesto en ese instante. Una talla nacida dentro del formulario
+// anidado, con su color aun sin cuajar, perdia la ventana y nadie volvia a por
+// ella. El 17 de agosto de 2026 las dos tallas del unico producto del sitio
+// estaban asi, y las dos averias salieron con veinte minutos de diferencia
+// nada mas empezar a probar la cadena de ventas a mano.
+//
+// Desde ese dia los rellena el presave de tec_inventory, que pregunta en cada
+// guardado y no depende del orden en que se creen las cosas. Esto vigila que no
+// haya vuelto a quedarse ninguna suelta.
+$almacenVariacion = \Drupal::entityTypeManager()->getStorage('tec_product');
+$sinAtajo = [];
+foreach (['tec_color_variation', 'tec_size_variation'] as $paqueteVariacion) {
+  foreach ($almacenVariacion->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', $paqueteVariacion)
+    ->notExists('field_tec_product')
+    ->execute() as $idVariacion) {
+    $sinAtajo[] = $paqueteVariacion . ' ' . $idVariacion;
+  }
+}
+comprobar($resultados, 'ninguna variacion se ha quedado sin su atajo al producto',
+  $sinAtajo === [], $sinAtajo ? implode(', ', $sinAtajo) : 'ninguna');
+
+$sinColor = $almacenVariacion->getQuery()
+  ->accessCheck(FALSE)
+  ->condition('type', 'tec_size_variation')
+  ->notExists('field_tec_color_variation')
+  ->execute();
+comprobar($resultados, 'ninguna talla se ha quedado sin su color',
+  $sinColor === [], $sinColor ? implode(', ', $sinColor) : 'ninguna');
+
+comprobar($resultados, 'y el presave que los ata sigue puesto',
+  function_exists('_tec_inventory_keep_product_shortcut')
+  && function_exists('_tec_inventory_keep_color_shortcut'));
+
+// Las lineas de BoM cuelgan de la talla y solo se llega a ellas por la
+// talla. Cuando se borraba una, sus lineas se quedaban en la tabla apuntando a
+// un numero que ya no contesta: invisibles desde cualquier pantalla y contando
+// en los recuentos. Desde el 18 de agosto de 2026 se van con la talla.
+$conDueno = [];
+foreach ($almacenVariacion->loadMultiple($almacenVariacion->getQuery()
+  ->accessCheck(FALSE)
+  ->condition('type', 'tec_size_variation')
+  ->execute()) as $tallaConBom) {
+  foreach ($tallaConBom->get('field_tec_bom')->getValue() as $valorBom) {
+    $conDueno[(int) $valorBom['target_id']] = TRUE;
+  }
+}
+$sinDueno = array_diff(
+  array_map('intval', \Drupal::entityTypeManager()->getStorage('tec_inventory')->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', 'tec_bom_item')
+    ->execute()),
+  array_keys($conDueno)
+);
+comprobar($resultados, 'ninguna linea de BoM se ha quedado sin talla',
+  $sinDueno === [], $sinDueno ? implode(', ', $sinDueno) : 'ninguna');
+
+// Y lo que ninguna de las de arriba ve: una referencia que no esta vacia pero
+// apunta a una ficha que ya no existe. Drupal no limpia detras de un borrado,
+// ni el enlace del hijo hacia arriba ni el numero del hijo en la lista del
+// padre. En pantalla no se nota, porque una vista se salta lo que no puede
+// cargar, pero la rutina de borrado de ECA recorre esas listas y se para en la
+// primera entrada que no carga, asi que un numero muerto en medio salva del
+// borrado a todo lo que va detras. Hasta el 18 de agosto de 2026 borrar un
+// producto dejaba sus colores de pie, y ese es el tipo de resto que quedaba.
+$existen = array_flip(array_map('intval', $almacenVariacion->getQuery()
+  ->accessCheck(FALSE)
+  ->execute()));
+$alVacio = [];
+$numerosMuertos = [];
+foreach ($almacenVariacion->loadMultiple(array_keys($existen)) as $fichaArbol) {
+  foreach (['field_tec_product', 'field_tec_color_variation'] as $campoArriba) {
+    if (!$fichaArbol->hasField($campoArriba) || $fichaArbol->get($campoArriba)->isEmpty()) {
+      continue;
+    }
+    $arriba = (int) $fichaArbol->get($campoArriba)->first()->target_id;
+    if (!isset($existen[$arriba])) {
+      $alVacio[] = $fichaArbol->bundle() . ' ' . $fichaArbol->id() . ' -> ' . $arriba;
+    }
+  }
+  foreach (['field_tec_color_variations', 'field_tec_size_variations'] as $campoLista) {
+    if (!$fichaArbol->hasField($campoLista) || $fichaArbol->get($campoLista)->isEmpty()) {
+      continue;
+    }
+    foreach ($fichaArbol->get($campoLista)->getValue() as $valorLista) {
+      if (!isset($existen[(int) $valorLista['target_id']])) {
+        $numerosMuertos[] = $fichaArbol->bundle() . ' ' . $fichaArbol->id() . ' lista ' . $valorLista['target_id'];
+      }
+    }
+  }
+}
+comprobar($resultados, 'nadie apunta hacia arriba a una ficha que ya no existe',
+  $alVacio === [], $alVacio ? implode(', ', $alVacio) : 'nadie');
+
+comprobar($resultados, 'ninguna lista de padre guarda un numero muerto',
+  $numerosMuertos === [], $numerosMuertos ? implode(', ', $numerosMuertos) : 'ninguna');
+
+titulo('14. Ninguna bandera de las que hacen de boton se queda puesta');
+
+// En este ERP varios botones no son botones: son banderas. Duplicar una talla,
+// duplicar un color, duplicar un producto, importar un BoM, cancelar o
+// borrar un pedido. Al pulsar se pone la bandera, un proceso de ECA la escucha,
+// hace el trabajo y baja la bandera el mismo. Bajarla es siempre uno de los
+// ultimos pasos, asi que una bandera puesta en reposo significa exactamente una
+// cosa: su proceso empezo y no llego al final.
+//
+// Y eso se rompe sin ruido, que es lo peor que tiene. El 17 de agosto de 2026
+// se pulso "duplicar talla" en la talla 12 oz. El segundo paso del proceso
+// carga el producto de la talla leyendo field_tec_product, y esa talla era una
+// de las dos que se habian quedado sin el atajo. Cuando la accion de cargar no
+// encuentra nada devuelve acceso denegado, no una excepcion, asi que ECA corta
+// la rama sin registrar nada. Dos intentos, dos lineas en el registro y nada
+// mas: ni copia, ni error, ni bandera bajada. Lo unico que vio el dueno fue que
+// el icono se habia convertido en "Unflag this item", que es el texto que trae
+// el modulo Flag de fabrica y no explica nada.
+//
+// Las tres cerraduras van en la misma lista. Se ponen y se quitan dentro de un
+// proceso para que no se pisen dos a la vez, asi que en reposo tampoco deberia
+// quedar ninguna: una puesta es un proceso que se dejo la puerta cerrada.
+//
+// Fuera de la lista quedan las banderas que si son un estado que alguien deja
+// puesto a proposito, como "Accounting verified", y tres cuyo proceso no se ha
+// leido entero todavia. Esas no se vigilan porque una alarma que salta cuando
+// no pasa nada es peor que no tener alarma.
+const BANDERAS_MOMENTANEAS = [
+  'tec_product_duplicate_size',
+  'tec_product_duplicate_color',
+  'tec_product_duplicate',
+  'tec_product_import_size_bom',
+  'tec_order_cancel_sales_order',
+  'tec_order_checkout_excel',
+  'tec_delete_order',
+  'tec_eca_inventory_lock',
+  'tec_eca_line_item_lock',
+  'tec_eca_product_lock',
+];
+
+$colgadas = [];
+foreach ($etm->getStorage('flagging')->loadMultiple() as $puesta) {
+  $cual = $puesta->getFlagId();
+  if (!in_array($cual, BANDERAS_MOMENTANEAS, TRUE)) {
+    continue;
+  }
+  $colgadas[] = $cual . ' sobre ' . $puesta->getFlaggableType() . ' ' . $puesta->getFlaggableId();
+}
+comprobar($resultados, 'ningun proceso de bandera se ha quedado a medias',
+  $colgadas === [], $colgadas ? implode(', ', $colgadas) : 'ninguna puesta');
 
 // -----------------------------------------------------------------------------
 // Resumen.
