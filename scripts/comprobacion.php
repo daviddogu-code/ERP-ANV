@@ -93,8 +93,9 @@ const VOCABULARIOS_DE_CONTENIDO = ['tec_inventory', 'tec_brands'];
 
 // Los vocabularios. Los tres primeros se vaciaron a proposito. `tec_patterns`
 // sigue existiendo vacio porque retirarlo es un cambio de configuracion aparte:
-// los dos procesos de duplicar producto copian su campo, y hay que desmontarlos
-// antes. Cuando se retire, esa linea se va con el.
+// duplicar producto copia su campo, y hay que desmontar ese paso antes. Eran
+// dos procesos hasta el 18 de agosto de 2026; el clon apagado `icpsbgv` ya no
+// esta. Cuando se retire el vocabulario, esa linea se va con el.
 //
 // Los dos terminos de material y la marca son del juego de pruebas de la noche del
 // 14 de agosto, igual que las cifras de contenido de mas arriba, y se van con el.
@@ -179,7 +180,14 @@ const REFERENCIA_VARIOS = [
   // Oscar: `process_rxuimsq`, que estaba encendido y aplastaba las unidades de
   // stock y de uso con la de compra en cada guardado, y sus tres clones
   // apagados `uix9n5i`, `pehrnr8` e `idtd6ah`.
-  'procesos_eca' => 32,
+  //
+  // Y 30 desde el 18 de agosto de 2026, cuando cayeron los dos ultimos clones
+  // apagados, `darq39m` y `icpsbgv`, copias de la version 1.4 de duplicar color
+  // y duplicar producto que alguien dejo al editar la 1.5. No se disparaban,
+  // pero seguian llevando dentro la version vieja de las reglas, asi que
+  // encender uno por error era volver meses atras. La historia esta en git, que
+  // es donde van las copias de seguridad.
+  'procesos_eca' => 30,
   'procesos_eca_encendidos' => 28,
   // Eran 146 hasta el 13 de agosto de 2026. Se quedaron en 145 cuando dxpr_theme
   // 8 trajo los colores del tema a sus propios ajustes y desinstalo `color`, que
@@ -1174,7 +1182,7 @@ foreach (['process_sclj26d' => 'ventas', 'process_kryibry' => 'compras'] as $pro
     $contactoPaso === 'Activity_0eek2xm' ? 'crear, contacto, guardar' : 'GUARDA ANTES DE PEGAR EL CONTACTO');
 }
 
-// Y la comprobacion general de la misma trampa, para los treinta y dos procesos.
+// Y la comprobacion general de la misma trampa, para los treinta procesos.
 // Un proceso de ECA vive en dos ficheros y el editor regenera uno desde el otro,
 // asi que un parche puesto solo en el que se ejecuta dura hasta el siguiente clic
 // de cualquiera. No hace falta comparar los ficheros enteros: basta con que los
