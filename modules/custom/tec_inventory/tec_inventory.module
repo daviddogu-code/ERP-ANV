@@ -39,27 +39,368 @@ function tec_inventory_entity_presave(EntityInterface $entity) {
 /**
  * Implements hook_ENTITY_TYPE_presave() for tec_product.
  *
- * Keep color variation titles in sync with their first Color taxonomy term.
- * The title field is hidden in the variation form and normally filled by the
- * ECA process "TEC Color variation: Set data values" — but only when empty,
- * so clones made via "Duplicate color" kept the source title forever after
- * their color term was changed (e.g. variation 816: term White, title Black).
- * Running at presave covers every path (form, IEF, ECA duplicate, scripts)
- * without extra saves or recursion.
+ * Three repairs that all exist for the same reason: the ECA processes that used
+ * to do this work only fire on insert, or only when a field is still empty, so
+ * anything created in an unexpected order stayed wrong forever. Presave asks
+ * the question again on every save, whatever created the entity, without extra
+ * saves or recursion.
+ *
+ * The first keeps color variation titles on their first Color taxonomy term.
+ * The title is hidden in the variation form and normally filled by the ECA
+ * process "TEC Color variation: Set data values" — but only when empty, so
+ * clones made via "Duplicate color" kept the source title forever after their
+ * color term was changed (e.g. variation 816: term White, title Black).
+ *
+ * The second ties a size back to its color, and the third keeps the shortcut
+ * every color and size stores straight to its product. Both fill a way back up
+ * the tree that some other part of the ERP takes for granted. The color goes
+ * first, because knowing the color is one of the ways of finding the product.
  */
 function tec_inventory_tec_product_presave(EntityInterface $entity) {
-  if ($entity->bundle() !== 'tec_color_variation') {
+  if (!$entity instanceof FieldableEntityInterface) {
     return;
   }
-  if (!$entity instanceof FieldableEntityInterface
-    || !$entity->hasField('field_tec_colors')
-    || $entity->get('field_tec_colors')->isEmpty()) {
+  if ($entity->bundle() === 'tec_color_variation') {
+    _tec_inventory_color_title_from_term($entity);
+  }
+  if ($entity->bundle() === 'tec_size_variation') {
+    _tec_inventory_keep_color_shortcut($entity);
+  }
+  if (in_array($entity->bundle(), ['tec_color_variation', 'tec_size_variation'], TRUE)) {
+    _tec_inventory_keep_product_shortcut($entity);
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_predelete() for tec_product.
+ *
+ * Takes the whole branch down: a product takes its colors, a color takes its
+ * sizes and a size takes its BoM lines.
+ *
+ * Until 18 August 2026 that job belonged to the ECA process "TEC Products:
+ * Deletion routine", and it only did the middle of it. The routine has exactly
+ * two delete actions and both say "Delete the Size", so deleting a product
+ * killed its colors' sizes and left the colors standing: childless, pointing at
+ * a product that no longer answers. Nobody took the BoM lines either, and those
+ * are worse, because a BoM line is only reachable through its size, so once the
+ * size is gone the line cannot be seen from any screen ever again. Both leaks
+ * left evidence from a single test product deleted on 14 August: color 888
+ * survived product 887, and lines 29700 and 29701 survived size 889.
+ *
+ * The cascade lives here now, and it does not trust the parent's list. It also
+ * asks who points up at the parent, because a child missing from the list still
+ * exists and would otherwise be left behind by exactly the accident this is
+ * meant to clean up after.
+ *
+ * The only thing it refuses to take is a BoM line that another size is also
+ * using. Nothing shares lines today -duplicating a size copies them rather than
+ * pointing at the same ones- but a line belonging to two sizes is not a
+ * contradiction, and finding out the hard way would cost a real BoM.
+ */
+function tec_inventory_tec_product_predelete(EntityInterface $entity) {
+  if (!$entity instanceof FieldableEntityInterface) {
+    return;
+  }
+  _tec_inventory_borrandose((int) $entity->id(), TRUE);
+
+  $cascada = [
+    'tec_product' => ['field_tec_color_variations', 'field_tec_product', 'tec_color_variation'],
+    'tec_color_variation' => ['field_tec_size_variations', 'field_tec_color_variation', 'tec_size_variation'],
+  ];
+  if (isset($cascada[$entity->bundle()])) {
+    $storage = \Drupal::entityTypeManager()->getStorage('tec_product');
+    foreach (_tec_inventory_hijos_de($entity, ...$cascada[$entity->bundle()]) as $hijo) {
+      $storage->load($hijo)?->delete();
+    }
+    return;
+  }
+
+  if (
+    $entity->bundle() !== 'tec_size_variation'
+    || !$entity->hasField('field_tec_bom')
+    || $entity->get('field_tec_bom')->isEmpty()
+  ) {
+    return;
+  }
+  $storage = \Drupal::entityTypeManager()->getStorage('tec_inventory');
+  foreach ($entity->get('field_tec_bom')->getValue() as $valor) {
+    $otra = \Drupal::entityTypeManager()->getStorage('tec_product')->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('field_tec_bom', $valor['target_id'])
+      ->condition('id', $entity->id(), '<>')
+      ->range(0, 1)
+      ->execute();
+    if ($otra) {
+      continue;
+    }
+    $storage->load($valor['target_id'])?->delete();
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete() for tec_product.
+ *
+ * Drupal does not tidy up after a deleted entity: the number stays on every
+ * list that mentioned it, pointing at nothing. On screen it looks harmless,
+ * because a view skips what it cannot load, but the ECA deletion routine walks
+ * those lists one by one and stops the moment an entry fails to load. So a
+ * single dead number in the middle of a color's size list is enough to leave
+ * every size after it alive when the color is deleted.
+ *
+ * Nothing is touched when the parent is on its way out too, which is the normal
+ * case in a cascade: there is no sense saving a list that is about to be
+ * deleted, and doing it would drag the parent through a full save while it is
+ * halfway through its own deletion.
+ */
+function tec_inventory_tec_product_delete(EntityInterface $entity) {
+  $listas = [
+    'tec_color_variation' => 'field_tec_color_variations',
+    'tec_size_variation' => 'field_tec_size_variations',
+  ];
+  if (!$entity instanceof FieldableEntityInterface || !isset($listas[$entity->bundle()])) {
+    return;
+  }
+  $lista = $listas[$entity->bundle()];
+
+  $storage = \Drupal::entityTypeManager()->getStorage('tec_product');
+  $padres = $storage->getQuery()
+    ->accessCheck(FALSE)
+    ->condition($lista, $entity->id())
+    ->execute();
+  foreach ($storage->loadMultiple($padres) as $padre) {
+    if (_tec_inventory_borrandose((int) $padre->id())) {
+      continue;
+    }
+    $padre->set($lista, array_values(array_filter(
+      $padre->get($lista)->getValue(),
+      static fn(array $valor): bool => (int) $valor['target_id'] !== (int) $entity->id()
+    )));
+    $padre->save();
+  }
+}
+
+/**
+ * Whether an entity is already on its way out.
+ */
+function _tec_inventory_borrandose(int $id, bool $marcar = FALSE): bool {
+  static $marcados = [];
+  if ($marcar) {
+    $marcados[$id] = TRUE;
+  }
+  return isset($marcados[$id]);
+}
+
+/**
+ * The children of a product or a color, by both threads at once.
+ *
+ * @return int[]
+ *   The ids on the parent's list plus any that point up at it without being on
+ *   it, which is the state the tree lands in when something is created in an
+ *   unexpected order.
+ */
+function _tec_inventory_hijos_de(FieldableEntityInterface $entity, string $lista, string $vuelta, string $paquete): array {
+  $hijos = [];
+  if ($entity->hasField($lista)) {
+    foreach ($entity->get($lista)->getValue() as $valor) {
+      $hijos[(int) $valor['target_id']] = (int) $valor['target_id'];
+    }
+  }
+  foreach (\Drupal::entityTypeManager()->getStorage('tec_product')->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', $paquete)
+    ->condition($vuelta, $entity->id())
+    ->execute() as $id) {
+    $hijos[(int) $id] = (int) $id;
+  }
+  return $hijos;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert() for tec_product.
+ */
+function tec_inventory_tec_product_insert(EntityInterface $entity) {
+  _tec_inventory_tie_children_back($entity);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for tec_product.
+ */
+function tec_inventory_tec_product_update(EntityInterface $entity) {
+  _tec_inventory_tie_children_back($entity);
+}
+
+/**
+ * Make sure everything a product or a color lists points back at it.
+ *
+ * Presave can only fill a size's way back up the tree by asking who lists it,
+ * and at the instant a size is first written nobody does yet: the nested inline
+ * form saves the children first and the color that will hold them a moment
+ * later. So the size is born with the link empty and, unless something saves it
+ * again, it stays empty forever. That is how both sizes of the only product on
+ * the site ended up orphaned in plain sight.
+ *
+ * The parent's save is the first moment the answer exists, so that is where the
+ * question gets asked. Only children that are actually missing the link get
+ * saved, which is what keeps this from turning into a cascade: fixing a size
+ * touches no colors, and a second save of the same color finds nothing to do.
+ */
+function _tec_inventory_tie_children_back(EntityInterface $entity) {
+  static $trabajando = FALSE;
+  if ($trabajando || !$entity instanceof FieldableEntityInterface) {
+    return;
+  }
+
+  $listas = [
+    'tec_product' => ['field_tec_color_variations', 'field_tec_product'],
+    'tec_color_variation' => ['field_tec_size_variations', 'field_tec_color_variation'],
+  ];
+  if (!isset($listas[$entity->bundle()])) {
+    return;
+  }
+  [$lista, $vuelta] = $listas[$entity->bundle()];
+  if (!$entity->hasField($lista) || $entity->get($lista)->isEmpty()) {
+    return;
+  }
+
+  $storage = \Drupal::entityTypeManager()->getStorage('tec_product');
+  $trabajando = TRUE;
+  try {
+    foreach ($entity->get($lista)->getValue() as $valor) {
+      $hijo = $storage->load($valor['target_id']);
+      if (
+        $hijo instanceof FieldableEntityInterface
+        && $hijo->hasField($vuelta)
+        && $hijo->get($vuelta)->isEmpty()
+      ) {
+        $hijo->set($vuelta, $entity->id());
+        $hijo->save();
+      }
+    }
+  }
+  finally {
+    $trabajando = FALSE;
+  }
+}
+
+/**
+ * Tie a size back to the color that already lists it.
+ *
+ * The bond between a color and its sizes is written twice: the color keeps them
+ * on field_tec_size_variations, and each size points back through
+ * field_tec_color_variation. Only the first half is needed to draw the product
+ * page, so a size born inside the nested inline form can live for months with
+ * the second half empty and look perfectly fine on screen.
+ *
+ * It stops looking fine the moment something walks the tree upwards. Duplicating
+ * a size reads the color off the size to give the copy the same parent, and when
+ * it finds nothing it does not complain: the action that loads a reference
+ * answers "no entity available", which ECA reads as access denied, so the branch
+ * is cut without a line in the log. No copy, no error, and the flag that the
+ * icon raised is never lowered, so the button turns into the stock "Unflag this
+ * item" and the whole thing looks like the button is broken. That is exactly
+ * what sizes 1039 and 1040 of RISE BOXING GLOVE VE SEMI did on 17 August 2026.
+ */
+function _tec_inventory_keep_color_shortcut(FieldableEntityInterface $entity) {
+  if (
+    !$entity->hasField('field_tec_color_variation')
+    || !$entity->get('field_tec_color_variation')->isEmpty()
+    || !$entity->id()
+  ) {
+    return;
+  }
+  $color = _tec_inventory_who_lists((int) $entity->id(), 'field_tec_size_variations');
+  if ($color !== NULL) {
+    $entity->set('field_tec_color_variation', $color);
+  }
+}
+
+/**
+ * Keep a color variation's title on its first Color term.
+ */
+function _tec_inventory_color_title_from_term(FieldableEntityInterface $entity) {
+  if (!$entity->hasField('field_tec_colors') || $entity->get('field_tec_colors')->isEmpty()) {
     return;
   }
   $term = $entity->get('field_tec_colors')->entity;
   if ($term && $term->label() !== '' && $entity->label() !== $term->label()) {
     $entity->set('title', $term->label());
   }
+}
+
+/**
+ * Fill the shortcut a color or size keeps straight to its product.
+ *
+ * Colors and sizes hang off their parent, but they also store field_tec_product
+ * pointing at the grandparent, and that shortcut is what the product views join
+ * on to build their links. Two ECA processes fill it, "TEC Product: Insert
+ * Color entity" and "TEC Product: Insert Size entity", but both listen only to
+ * the insert and only act when the link to the parent is already in place at
+ * that instant. A size born inside the nested inline form, where its color is
+ * still being cooked, misses the window and nothing ever comes back for it: the
+ * row keeps showing, but its edit pencil builds /tec_product/ with no number
+ * behind the slash, so saving lands on a 404.
+ *
+ * Running at presave asks the question again on every save, whatever created
+ * the entity and in whatever order, and only when the shortcut is missing.
+ */
+function _tec_inventory_keep_product_shortcut(FieldableEntityInterface $entity) {
+  if (!$entity->hasField('field_tec_product') || !$entity->get('field_tec_product')->isEmpty()) {
+    return;
+  }
+  $product = _tec_inventory_product_above($entity);
+  if ($product !== NULL) {
+    $entity->set('field_tec_product', $product);
+  }
+}
+
+/**
+ * The product a color or size hangs from, by whichever thread is still tied.
+ *
+ * @return int|null
+ *   The product id, or NULL when nothing upstream knows yet.
+ */
+function _tec_inventory_product_above(FieldableEntityInterface $entity): ?int {
+  if ($entity->bundle() === 'tec_color_variation') {
+    return $entity->id() ? _tec_inventory_who_lists((int) $entity->id(), 'field_tec_color_variations') : NULL;
+  }
+
+  $color_id = 0;
+  if ($entity->hasField('field_tec_color_variation') && !$entity->get('field_tec_color_variation')->isEmpty()) {
+    $color_id = (int) $entity->get('field_tec_color_variation')->first()->target_id;
+  }
+  elseif ($entity->id()) {
+    $color_id = (int) _tec_inventory_who_lists((int) $entity->id(), 'field_tec_size_variations');
+  }
+  if ($color_id === 0) {
+    return NULL;
+  }
+
+  $color = \Drupal::entityTypeManager()->getStorage('tec_product')->load($color_id);
+  if (
+    $color instanceof FieldableEntityInterface
+    && $color->hasField('field_tec_product')
+    && !$color->get('field_tec_product')->isEmpty()
+  ) {
+    return (int) $color->get('field_tec_product')->first()->target_id;
+  }
+
+  // The color is as lost as the size, so ask who has it on their list.
+  return _tec_inventory_who_lists($color_id, 'field_tec_color_variations');
+}
+
+/**
+ * Who keeps this entity on the given list, if anyone.
+ *
+ * @return int|null
+ *   The id of the entity listing it, or NULL.
+ */
+function _tec_inventory_who_lists(int $child, string $field): ?int {
+  $ids = \Drupal::entityTypeManager()->getStorage('tec_product')->getQuery()
+    ->accessCheck(FALSE)
+    ->condition($field, $child)
+    ->range(0, 1)
+    ->execute();
+  return $ids ? (int) reset($ids) : NULL;
 }
 
 /**
@@ -448,7 +789,9 @@ function tec_inventory_ief_production_requires_column($entity, array $variables 
   }
   if ($entity->hasField('field_tec_quantity_input') && !$entity->get('field_tec_quantity_input')->isEmpty()) {
     $input = trim((string) $entity->get('field_tec_quantity_input')->value);
-    if ($input !== '' && (empty($parts) || $parts[0] !== $input)) {
+    // A plain number is already the figure on the left, whatever its trailing
+    // zeros. Only a formula, or text nobody could parse, says anything new.
+    if ($input !== '' && !is_numeric($input)) {
       $parts[] = $input;
     }
   }
