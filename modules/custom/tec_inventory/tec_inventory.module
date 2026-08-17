@@ -45,11 +45,7 @@ function tec_inventory_entity_presave(EntityInterface $entity) {
  * the question again on every save, whatever created the entity, without extra
  * saves or recursion.
  *
- * The first keeps color variation titles on their first Color taxonomy term.
- * The title is hidden in the variation form and normally filled by the ECA
- * process "TEC Color variation: Set data values" — but only when empty, so
- * clones made via "Duplicate color" kept the source title forever after their
- * color term was changed (e.g. variation 816: term White, title Black).
+ * The first keeps every name in the tree on the field it is deduced from.
  *
  * The second ties a size back to its color, and the third keeps the shortcut
  * every color and size stores straight to its product. Both fill a way back up
@@ -60,9 +56,7 @@ function tec_inventory_tec_product_presave(EntityInterface $entity) {
   if (!$entity instanceof FieldableEntityInterface) {
     return;
   }
-  if ($entity->bundle() === 'tec_color_variation') {
-    _tec_inventory_color_title_from_term($entity);
-  }
+  _tec_inventory_name_from_source($entity);
   if ($entity->bundle() === 'tec_size_variation') {
     _tec_inventory_keep_color_shortcut($entity);
   }
@@ -315,16 +309,74 @@ function _tec_inventory_keep_color_shortcut(FieldableEntityInterface $entity) {
 }
 
 /**
- * Keep a color variation's title on its first Color term.
+ * Keep a product, color or size named after the field its name is deduced from.
+ *
+ * Nobody types these names. The product's comes from field_product_name, the
+ * color's from its Color term and the size's from its Size term, and in all
+ * three the title itself is hidden in the form, so a name left behind is
+ * invisible from the screen it belongs to.
+ *
+ * All three ECA processes that filled these titles shared one rule -act on
+ * insert, or only while the title is still empty- and a clone is born with the
+ * original's title already in place, which puts it out of reach of that rule
+ * forever. Color variation 816 lived for months with the term White and the
+ * title Black. The product is worse: its title is set from the insert only,
+ * with no update process behind it at all, so any rename left the two apart
+ * permanently.
+ *
+ * It leaks. A line item's title is stamped from [productLoaded:title] down one
+ * path and from [productLoaded:field_product_name] down another, so a product
+ * carrying two names shows one of them on one document and the other on the
+ * next, with nothing to say which is current.
+ *
+ * The product also gets the capital on every word that creation gives it, so
+ * renaming and creating leave the catalog written the same way.
  */
-function _tec_inventory_color_title_from_term(FieldableEntityInterface $entity) {
-  if (!$entity->hasField('field_tec_colors') || $entity->get('field_tec_colors')->isEmpty()) {
-    return;
+function _tec_inventory_name_from_source(FieldableEntityInterface $entity) {
+  $name = match ($entity->bundle()) {
+    'tec_product' => _tec_inventory_product_name($entity),
+    'tec_color_variation' => _tec_inventory_term_label($entity, 'field_tec_colors'),
+    'tec_size_variation' => _tec_inventory_term_label($entity, 'field_tec_size'),
+    default => NULL,
+  };
+  if ($name !== NULL && $name !== '' && $entity->label() !== $name) {
+    $entity->set('title', $name);
   }
-  $term = $entity->get('field_tec_colors')->entity;
-  if ($term && $term->label() !== '' && $entity->label() !== $term->label()) {
-    $entity->set('title', $term->label());
+}
+
+/**
+ * A product's name, capitalised the way the creation form capitalises it.
+ *
+ * @return string|null
+ *   The name, or NULL when there is nothing written to take it from.
+ */
+function _tec_inventory_product_name(FieldableEntityInterface $entity): ?string {
+  if (!$entity->hasField('field_product_name') || $entity->get('field_product_name')->isEmpty()) {
+    return NULL;
   }
+  $written = trim((string) $entity->get('field_product_name')->value);
+  if ($written === '') {
+    return NULL;
+  }
+  $name = ucwords($written);
+  if ($name !== $entity->get('field_product_name')->value) {
+    $entity->set('field_product_name', $name);
+  }
+  return $name;
+}
+
+/**
+ * The label of the first term a field points at.
+ *
+ * @return string|null
+ *   The label, or NULL when the field is empty or the term is gone.
+ */
+function _tec_inventory_term_label(FieldableEntityInterface $entity, string $field): ?string {
+  if (!$entity->hasField($field) || $entity->get($field)->isEmpty()) {
+    return NULL;
+  }
+  $term = $entity->get($field)->entity;
+  return $term ? $term->label() : NULL;
 }
 
 /**
