@@ -16,6 +16,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
 
 /**
@@ -80,6 +81,49 @@ function tec_crm_ux_apply_supplier_visibility(array &$form): void {
   }
   if (isset($form['group_supplier'])) {
     $form['group_supplier']['#states'] = $states;
+  }
+  $form['#attached']['library'][] = 'core/drupal.states';
+}
+
+/**
+ * Fields shown only when Contact type = Customer.
+ *
+ * The brand list says which brands this customer buys, and it is what the
+ * Products tab of the contact groups by. On a contact that is only a supplier
+ * it is noise, and worse, an invitation to fill it in by mistake.
+ */
+function tec_crm_ux_customer_field_names(): array {
+  return [
+    'field_tec_brands',
+  ];
+}
+
+/**
+ * #states config: show only when Customer contact type is checked.
+ */
+function tec_crm_ux_customer_visibility_states(): array {
+  return [
+    'visible' => [
+      ':input[name="field_tec_contact_type[' . TEC_CRM_UX_TYPE_CUSTOMER . ']"]' => [
+        'checked' => TRUE,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Apply customer visibility to the customer-only fields.
+ *
+ * Hiding here is only for the eyes: #states does not stop a value that is
+ * already saved from being submitted again, so nothing gets wiped by ticking
+ * off Customer. What was filled in stays filled in.
+ */
+function tec_crm_ux_apply_customer_visibility(array &$form): void {
+  $states = tec_crm_ux_customer_visibility_states();
+  foreach (tec_crm_ux_customer_field_names() as $field_name) {
+    if (isset($form[$field_name])) {
+      $form[$field_name]['#states'] = $states;
+    }
   }
   $form['#attached']['library'][] = 'core/drupal.states';
 }
@@ -170,6 +214,75 @@ function tec_crm_ux_drop_repeated_brands(FieldableEntityInterface $entity): void
 
   if (count($seen) !== $entity->get('field_tec_brands')->count()) {
     $entity->set('field_tec_brands', array_values($seen));
+  }
+}
+
+/**
+ * Implements hook_views_pre_render().
+ *
+ * Put the brand groups on the customer's Products tab in the customer's own
+ * brand order.
+ *
+ * The tab lists the products of every brand the customer buys, grouped by
+ * brand. Which brand comes first is the customer's decision: the brand list on
+ * their record is dragged by hand, and that order is stored as each brand's
+ * position in the list.
+ *
+ * Views can sort on that position -it offers the field list's delta- but not
+ * from here: reaching it means joining the brand list a second time, and that
+ * second join is not tied to the row's brand, so every product comes back once
+ * per brand the customer buys. Measured, not guessed: three products turned
+ * into six rows, and the one-click order built from a sibling query would have
+ * come out with every line duplicated.
+ *
+ * So the rows are reordered after the query instead. Two things make that safe
+ * here. The tab shows every row at once -no pager- so there is no page to sort
+ * in isolation; and the sort is stable, which is what keeps the hand-dragged
+ * product order intact inside each brand.
+ */
+function tec_crm_ux_views_pre_render(ViewExecutable $view): void {
+  if ($view->id() !== 'tec_products' || $view->current_display !== 'block_4') {
+    return;
+  }
+  $customer_id = $view->args[0] ?? NULL;
+  if (!$customer_id || !$view->result) {
+    return;
+  }
+
+  $customer = \Drupal::entityTypeManager()->getStorage('tec_crm')->load($customer_id);
+  if (!$customer instanceof FieldableEntityInterface
+    || !$customer->hasField('field_tec_brands')
+    || $customer->get('field_tec_brands')->isEmpty()) {
+    return;
+  }
+
+  $position = [];
+  foreach ($customer->get('field_tec_brands') as $delta => $item) {
+    $tid = (int) ($item->target_id ?? 0);
+    if ($tid && !isset($position[$tid])) {
+      $position[$tid] = $delta;
+    }
+  }
+
+  $keyed = [];
+  foreach ($view->result as $index => $row) {
+    $brand = 0;
+    if ($row->_entity instanceof FieldableEntityInterface && $row->_entity->hasField('field_tec_brand')) {
+      $brand = (int) ($row->_entity->get('field_tec_brand')->first()?->target_id ?? 0);
+    }
+    // A product whose brand the customer does not buy cannot normally show up
+    // here, and a product with no brand at all can: both go last.
+    $keyed[] = [$position[$brand] ?? PHP_INT_MAX, $index, $row];
+  }
+
+  // The row's original place is the tie-breaker, so products inside one brand
+  // keep the order they were dragged into.
+  usort($keyed, static fn(array $a, array $b) => [$a[0], $a[1]] <=> [$b[0], $b[1]]);
+
+  $view->result = [];
+  foreach ($keyed as $index => [, , $row]) {
+    $row->index = $index;
+    $view->result[$index] = $row;
   }
 }
 
@@ -439,6 +552,7 @@ function tec_crm_ux_contact_form_after_build(array $form, FormStateInterface $fo
   }
   // Field Group may rebuild the fieldset after form_alter; keep states alive.
   tec_crm_ux_apply_supplier_visibility($form);
+  tec_crm_ux_apply_customer_visibility($form);
   return $form;
 }
 
@@ -540,6 +654,7 @@ function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $fo
   }
 
   tec_crm_ux_apply_supplier_visibility($form);
+  tec_crm_ux_apply_customer_visibility($form);
 }
 
 /**
