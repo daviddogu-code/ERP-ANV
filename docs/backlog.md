@@ -207,18 +207,21 @@ preparado para cuando se retome:
   de guardar nada. Media hora contando la lectura, y mejor hacerlo cuando no haya trabajo a medias
   encima, porque toca setenta ficheros de golpe y se come cualquier diff que haya pendiente.
 
-- **Terminar el modelo de marcas y clientes. Empezado: el catálogo de la marca y las cuatro asperezas
-  del formulario están hechos el 19 de agosto** y contados abajo, en Hecho. Lo que queda es el cambio de
-  fondo, decidido ese mismo día a raíz de una observación del dueño: *una empresa puede comprar varias
-  marcas, y la misma marca la pueden comprar dos clientes distintos.* Hoy el ERP dice lo contrario en dos
-  sitios a la vez, y ninguno de los dos aguanta ese caso.
+- **Terminar el modelo de marcas y clientes. Van tres cosas hechas el 19 de agosto** —el catálogo de la
+  marca, las cuatro asperezas de su formulario y **la lista de marcas en la ficha del cliente, con su
+  dato mudado**— y están contadas abajo, en Hecho. La observación del dueño que lo puso todo en marcha:
+  *una empresa puede comprar varias marcas, y la misma marca la pueden comprar dos clientes distintos.*
 
-  **El orden de los bloques, y la regla que lo decide:** la relación cliente–marca tiene que existir en
-  su sitio nuevo **antes** de desaparecer de los dos viejos. De ahí sale el orden: primero la lista de
-  marcas en la ficha del cliente con sus datos migrados (no se quita nada, riesgo cero), después el corte
-  del cliente del producto con sus recableados de una sentada, luego el orden en dos niveles de las
-  proformas, y al final el catálogo en formato de líneas de pedido con el precio editable, que es la
-  pantalla más grande y la única que no bloquea a ninguna otra.
+  **Lo que queda, y la regla que ordena lo que falta:** la relación cliente–marca ya existe en su sitio
+  nuevo, así que **el camino para cortar está abierto**. Queda el corte del cliente del producto con sus
+  recableados de una sentada, después el orden en dos niveles de las proformas, y al final el catálogo en
+  formato de líneas de pedido con el precio editable, que es la pantalla más grande y la única que no
+  bloquea a ninguna otra.
+
+  **Dos cosas menores que se dejaron fuera del bloque 2 a propósito:** que la lista de marcas se esconda
+  cuando el contacto no es cliente —la maquinaria existe, es la misma del bloque de proveedor con su
+  `#states` y su javascript— y que las marcas se vean en la **ficha** del cliente y no solo en su
+  formulario.
 
   **Dos cosas medidas el 19 de agosto que conviene no volver a averiguar.** El campo de cliente del
   producto alimenta **ocho** sitios, y los dos que duelen son la pestaña Products de la ficha del cliente
@@ -234,17 +237,17 @@ preparado para cuando se retome:
   agrupadas por color, no una lista de productos. Editarlas dentro de una vista no necesita nada nuevo:
   es lo que ya hace `views_entity_form_field` con las cantidades de `/o/draft/%`.
 
-  **El producto apunta a un cliente** (`field_tec_customer` en `tec_product`, obligatorio) y **la marca
-  también** (`field_tec_customer` en el vocabulario, de un solo valor). Dos caminos para la misma
-  pregunta, que pueden contradecirse sin que nadie avise, y el de la marca además no se usa para nada:
-  es decorativo y engaña.
+  **El producto sigue apuntando a un cliente** (`field_tec_customer` en `tec_product`, obligatorio), y ese
+  es el único de los dos caminos viejos que queda: el de la marca se retiró el 19 de agosto, después de
+  mudar su dato.
 
   El modelo acordado es: **los productos van dentro de la marca, y el cliente elige qué marcas le
-  hacemos**, en su ficha y en el orden que decida el dueño. Los pasos:
+  hacemos**, en su ficha y en el orden que decida el dueño. Los pasos, con los dos primeros ya hechos:
 
-  1. Un campo nuevo en las fichas de contacto —`tec_contact_organization` y `tec_contact_person`—, de
-     varios valores y arrastrable, apuntando a marcas.
-  2. Pasar a ese campo lo que hoy diga el `field_tec_customer` de cada marca, y **retirar ese campo**.
+  1. ~~Un campo nuevo en las fichas de contacto —`tec_contact_organization` y `tec_contact_person`—, de
+     varios valores y arrastrable, apuntando a marcas.~~ Hecho el 19 de agosto.
+  2. ~~Pasar a ese campo lo que hoy diga el `field_tec_customer` de cada marca, y **retirar ese
+     campo**.~~ Hecho el 19 de agosto, con la comprobación previa de que no se perdía ningún par.
   3. Retirar el `field_tec_customer` del producto y **recablear los cuatro sitios que lo leen**: la
      vista que crea las proformas del *Excel lover*, la pestaña Products de la ficha del cliente, la
      pantalla de *Organize products* —que pasa a ser por marca— y la columna con su filtro en las
@@ -1937,6 +1940,46 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-19 (madrugada) — Quién compra cada marca se dice ya en un solo sitio, y es una lista
+
+Segundo bloque del modelo de marcas y clientes. Hasta hoy la misma pregunta estaba contestada en **dos**
+sitios, y los dos la contestaban mal por el mismo motivo: la marca tenía **una** casilla de cliente y el
+producto tenía **una** casilla de cliente. Una casilla, no una lista. O sea que *dos empresas comprando la
+misma marca no se podía escribir de ninguna manera* — la única salida era duplicar la marca, con su
+logotipo y su catálogo repetidos. Y como nada obligaba a que el cliente del producto coincidiera con el
+de su marca, los dos podían contradecirse sin que nada avisara.
+
+Ahora lo dice el cliente, en su ficha, en una lista **sin límite y arrastrable**. Se eligió ese sitio y no
+otro por una razón concreta del negocio: hay que poder apuntar las marcas de un cliente nuevo **antes de
+que exista ningún producto**, así que la relación no puede deducirse de los productos.
+
+**El orden no es un adorno.** La lista se arrastra porque de ese orden van a colgar las líneas de las
+proformas, y el orden lo pone la casa, no el alfabeto. Por eso el guardián vigila que el widget siga
+siendo el de varios valores de siempre: es el único que trae la tabla de arrastrar, y cambiarlo por un
+desplegable más bonito se llevaría el orden por delante sin dar ninguna señal. Y vigila que quepan
+todas: dejarlo en una sola devolvería el problema original sin que nada cambiara de aspecto.
+
+**La mudanza fue de un solo par** —el cliente 53 con su marca Rise Fight Gear— porque el ERP tiene dos
+marcas y un producto. La receta la hizo de todos modos leyendo los dos sitios viejos, y **solo borra el
+campo Customer de la marca si antes ha comprobado que todos los pares llegaron a su sitio nuevo**. Si
+algo no cuadra se para y no borra nada. El almacén del campo se queda, porque lo comparte el vocabulario
+de patrones, que no se toca.
+
+**Lo que la prueba comprueba no es que el campo exista** —eso lo ve cualquiera— sino las dos cosas por
+las que se cambió: que la misma marca esté en dos clientes a la vez, y que guardar Zoe antes que Aitana
+aguante el guardado en ese orden y no se ordene solo. Y una tercera de las que se escapan: que un color
+no se pueda colar como marca, porque un desplegable mal atado no se nota hasta que sale impreso.
+
+Guardián en **161 comprobaciones**, con la de fondo que mira los datos: ningún producto apunta a un
+cliente que no compra su marca. Mientras el producto siga teniendo su propio cliente los dos tienen que
+estar de acuerdo, porque un producto en desacuerdo **cambiaría de dueño el día del corte** y eso se
+descubriría después. La prueba entera está en `scripts/una-marca-la-compran-dos-clientes.php`, y
+`scripts/quien-compra-cada-marca.php` enseña de un vistazo lo que dice cada sitio.
+
+Queda fuera a propósito: que la lista se esconda cuando el contacto no es cliente —la maquinaria existe,
+es la misma del bloque de proveedor— y que las marcas se vean en la ficha del cliente, no solo en su
+formulario.
 
 ### 2026-08-19 (madrugada) — Cuatro asperezas alrededor de la marca, y una marca vacía que no tenía puerta
 
