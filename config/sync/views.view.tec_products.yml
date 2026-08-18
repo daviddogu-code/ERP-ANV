@@ -7896,7 +7896,7 @@ display:
     id: brand_catalogue
     display_title: 'Brand catalogue'
     display_plugin: embed
-    position: 12
+    position: 14
     display_options:
       title: Products
       fields:
@@ -8434,7 +8434,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: true
-          content: '<div class="text-align-center"><h4>No products in this brand yet</h4></div><div class="text-align-center"><div><strong><a href="/admin/content/tec_product/add/tec_product?destination=/taxonomy/term/{{ raw_arguments.tid }}">+ Product</a></strong></div></div>'
+          content: '<div class="text-align-center"><h4>No products in this brand yet</h4></div><div class="text-align-center"><div><strong><a href="/admin/content/tec_product/add/tec_product?brand_id={{ raw_arguments.tid }}&destination=/taxonomy/term/{{ raw_arguments.tid }}">+ Product</a></strong></div></div>'
           tokenize: true
       sorts:
         title:
@@ -8756,7 +8756,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: true
-          content: '<div class="text-align-right"><span class="btn-default"><strong><a href="/admin/content/tec_product/add/tec_product?destination=/taxonomy/term/{{ raw_arguments.tid }}">+ Product</a></strong></span></div>'
+          content: '<div class="text-align-right"><span class="btn-default"><strong><a href="/admin/content/tec_product/add/tec_product?brand_id={{ raw_arguments.tid }}&destination=/taxonomy/term/{{ raw_arguments.tid }}">+ Product</a></strong></span></div>'
           tokenize: true
       display_extenders: {  }
     cache_metadata:

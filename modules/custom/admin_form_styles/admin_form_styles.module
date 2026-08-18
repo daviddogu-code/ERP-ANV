@@ -122,6 +122,10 @@ function admin_form_styles_form_alter(&$form, $form_state, $form_id) {
     $form,
     _admin_form_styles_form_entity($form_state)
   );
+  _admin_form_styles_hide_unused_brand_form_parts(
+    $form,
+    _admin_form_styles_form_entity($form_state)
+  );
 
   // Material Types overview: editable "Show on production document" checkboxes.
   if ($form_id === 'taxonomy_overview_terms') {
@@ -324,6 +328,7 @@ function _admin_form_styles_attach_catalog_links(array &$form, $entity) {
   $catalogs = [
     'tec_product:tec_product' => [
       ['field_tec_product_type', 'tec_product_types', t('Manage product types')],
+      ['field_tec_brand', 'tec_brands', t('Manage brands')],
     ],
     'tec_product:tec_color_variation' => [
       ['field_tec_colors', 'tec_colors', t('Manage colors')],
@@ -377,6 +382,45 @@ function _admin_form_styles_attach_vat_rate_link(array &$form, $entity): void {
     $url,
     t('VAT is currently @rate% — change it', ['@rate' => $shown])
   );
+}
+
+/**
+ * Take the three blocks nobody answers out of the brand form.
+ *
+ * Relations, Weight and Revision information come free with every taxonomy form
+ * and none of the three does anything here. No vocabulary in this ERP uses
+ * hierarchy, so there is no parent to pick. The brands screen has no sort at all
+ * -`sorts: {}` in views.view.tec_brands- so the weight orders nothing; the place
+ * to order terms is the vocabulary overview, which writes that same weight by
+ * dragging and does not need the box. And `new_revision` is off in every
+ * vocabulary, so the log message is written onto a revision that never happens.
+ *
+ * Weight is a required box, and a required box that nobody can reach would
+ * normally block the form. It does not, because Drupal takes the value of an
+ * unreachable element from its default, and the default is the weight the term
+ * already has.
+ *
+ * Brands only, on purpose. The same three are just as useless on colors, sizes
+ * and materials, but hiding something everywhere is a different decision from
+ * hiding it where it was asked for.
+ *
+ * @param array $form
+ *   The form.
+ * @param mixed $entity
+ *   The entity being edited, if there is one.
+ */
+function _admin_form_styles_hide_unused_brand_form_parts(array &$form, $entity): void {
+  if (!$entity instanceof TermInterface || $entity->bundle() !== 'tec_brands') {
+    return;
+  }
+
+  // The log message is a field of its own that Drupal only moves into the
+  // Revision information group, so hiding the group would leave it behind.
+  foreach (['relations', 'revision_information', 'revision', 'revision_log_message'] as $key) {
+    if (isset($form[$key])) {
+      $form[$key]['#access'] = FALSE;
+    }
+  }
 }
 
 /**

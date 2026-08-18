@@ -6,6 +6,12 @@ dependencies:
     - eck.eck_type.tec_product.tec_product
     - field.storage.tec_product.field_tec_brand
     - taxonomy.vocabulary.tec_brands
+  module:
+    - epp
+third_party_settings:
+  epp:
+    value: '[current-page:query:brand_id]'
+    on_update: 0
 id: tec_product.tec_product.field_tec_brand
 field_name: field_tec_brand
 entity_type: tec_product

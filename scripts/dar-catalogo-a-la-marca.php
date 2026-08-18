@@ -168,7 +168,13 @@ $opciones['sorts'] = [
 ];
 
 $volver = '/taxonomy/term/{{ raw_arguments.tid }}';
-$crear = '/admin/content/tec_product/add/tec_product?destination=' . $volver;
+// `brand_id` y no `target_id`: la clave `target_id` ya esta cogida por el campo
+// de cliente del producto, que la lee para rellenarse solo. Pasarle por ahi el
+// numero de una marca intentaria escribir una marca en la casilla del cliente,
+// y aunque el modulo lo rechaza al validar, dejaria un aviso en el registro por
+// cada producto que se cree desde aqui.
+$crear = '/admin/content/tec_product/add/tec_product'
+  . '?brand_id={{ raw_arguments.tid }}&destination=' . $volver;
 
 $opciones['header'] = [
   'area_text_custom' => [
@@ -278,7 +284,12 @@ $contenido[CAMPO] = [
   'label' => 'hidden',
   'settings' => [
     'view_title' => 'hidden',
-    'always_build_output' => FALSE,
+    // Dibujarla aunque no devuelva ninguna fila. Por omision el modulo se calla
+    // cuando la vista sale vacia, y eso dejaba a una marca recien creada sin
+    // nada en su ficha: ni el aviso de que no tiene productos, ni el boton de
+    // crear el primero. La marca sin productos no es un caso raro, es el caso
+    // normal el dia que se abre.
+    'always_build_output' => TRUE,
     'empty_view_title' => 'hidden',
   ],
   'third_party_settings' => [],
