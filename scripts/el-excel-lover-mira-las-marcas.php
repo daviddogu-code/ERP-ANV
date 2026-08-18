@@ -60,44 +60,59 @@ $contactos = $gestor->getStorage('tec_crm');
 $problemas = 0;
 $creadas = [];
 
-// Todo lo que monta esta prueba se llama «PRUEBA algo», y lo primero que hace es
-// barrer lo que lleve ese nombre: si una vez se murio a medias, la de hoy empieza
-// limpia en vez de acumular clientes de mentira.
-const RASTRO = 'PRUEBA';
+// Todo lo que monta esta prueba se llama «PRUEBA excel lover algo», y lo primero
+// que hace es barrer lo que lleve ese nombre: si una vez se murio a medias, la de
+// hoy empieza limpia en vez de acumular clientes de mentira.
+//
+// El nombre es largo a proposito y esa es la leccion. Antes el rastro era solo
+// «PRUEBA», y con eso el barrido se llevo por delante el juego de pruebas
+// permanente del ERP -el que fabrica scripts/fabricar-el-juego-de-pruebas.php-,
+// que usa ese mismo prefijo y del que depende la prueba de humo para poder pedir
+// las pantallas de pedidos de venta. O sea que un barrido de limpieza borro lo que
+// otra prueba necesitaba. El prefijo largo hace imposible volver a confundirlos, y
+// que siga empezando por PRUEBA es a proposito: asi la escoba de la casa recoge
+// tambien lo de esta prueba si algun dia hace falta.
+const RASTRO = 'PRUEBA excel lover';
 
 $barrer = function () use ($gestor, $terminos, $productos, $contactos): int {
   $barridas = 0;
 
-  $ordenes = $gestor->getStorage('tec_order');
-  foreach ($ordenes->loadByProperties(['type' => 'tec_sales_order']) as $orden) {
-    if (!str_contains((string) $orden->label(), RASTRO)) {
-      continue;
-    }
-    foreach ($orden->get('field_tec_line_items')->referencedEntities() as $linea) {
-      $linea->delete();
-      $barridas++;
-    }
-    $orden->delete();
-    $barridas++;
-  }
+  /**
+   * Lo que se llama como esta prueba, y nada mas.
+   */
+  $losMios = function ($almacen, string $campo) {
+    return $almacen->loadMultiple($almacen->getQuery()
+      ->accessCheck(FALSE)
+      ->condition($campo, RASTRO, 'STARTS_WITH')
+      ->execute());
+  };
 
-  foreach ([$productos, $contactos] as $almacen) {
-    foreach ($almacen->loadMultiple($almacen->getQuery()->accessCheck(FALSE)->execute()) as $ficha) {
-      if (str_starts_with((string) $ficha->label(), RASTRO)) {
-        $ficha->delete();
+  $mios = $losMios($contactos, 'title');
+
+  // Los pedidos se buscan por su cliente y no por su nombre, porque al guardarlos
+  // la ECA de numeracion les cambia el titulo y por nombre no apareceria ninguno.
+  if ($mios !== []) {
+    $ordenes = $gestor->getStorage('tec_order');
+    $suyos = $ordenes->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('type', 'tec_sales_order')
+      ->condition('field_tec_customer', array_keys($mios), 'IN')
+      ->execute();
+    foreach ($ordenes->loadMultiple($suyos) as $orden) {
+      foreach ($orden->get('field_tec_line_items')->referencedEntities() as $linea) {
+        $linea->delete();
         $barridas++;
       }
+      $orden->delete();
+      $barridas++;
     }
   }
 
-  $viejas = $terminos->getQuery()
-    ->accessCheck(FALSE)
-    ->condition('vid', 'tec_brands')
-    ->condition('name', RASTRO . '%', 'LIKE')
-    ->execute();
-  foreach ($terminos->loadMultiple($viejas) as $termino) {
-    $termino->delete();
-    $barridas++;
+  foreach ([$losMios($productos, 'title'), $mios, $losMios($terminos, 'name')] as $tanda) {
+    foreach ($tanda as $ficha) {
+      $ficha->delete();
+      $barridas++;
+    }
   }
 
   return $barridas;
@@ -162,13 +177,13 @@ if ($barridas > 0) {
   printf("  antes barro %d fichas que dejo una prueba anterior\n", $barridas);
 }
 
-$marca = $terminos->create(['vid' => 'tec_brands', 'name' => 'PRUEBA marca del excel lover']);
+$marca = $terminos->create(['vid' => 'tec_brands', 'name' => RASTRO . ' marca']);
 $marca->save();
 $creadas[] = $marca;
 
 $deSiempre = $contactos->create([
   'type' => 'tec_contact_organization',
-  'title' => 'PRUEBA cliente de siempre',
+  'title' => RASTRO . ' cliente de siempre',
   'field_tec_customer_code' => 'ZZEL1',
   'field_tec_brands' => [['target_id' => $marca->id()]],
 ]);
@@ -177,7 +192,7 @@ $creadas[] = $deSiempre;
 
 $elOtro = $contactos->create([
   'type' => 'tec_contact_organization',
-  'title' => 'PRUEBA cliente que comparte marca',
+  'title' => RASTRO . ' cliente que comparte marca',
   'field_tec_customer_code' => 'ZZEL2',
   'field_tec_brands' => [['target_id' => $marca->id()]],
 ]);
@@ -188,7 +203,7 @@ $creadas[] = $elOtro;
 // el de siempre, para que la primera mitad tenga sentido antes del cambio.
 $producto = $productos->create([
   'type' => 'tec_product',
-  'field_product_name' => 'PRUEBA producto del excel lover',
+  'field_product_name' => RASTRO . ' producto',
   'field_tec_brand' => [['target_id' => $marca->id()]],
   'field_tec_customer' => [['target_id' => $deSiempre->id()]],
 ]);
@@ -272,7 +287,7 @@ print str_repeat('-', 70) . "\n";
 
 $ajeno = $contactos->create([
   'type' => 'tec_contact_organization',
-  'title' => 'PRUEBA cliente ajeno',
+  'title' => RASTRO . ' cliente ajeno',
   'field_tec_customer_code' => 'ZZEL3',
 ]);
 $ajeno->save();

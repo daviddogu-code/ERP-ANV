@@ -89,6 +89,10 @@ $cliente = $anotar('cliente', $gestor->getStorage('tec_crm')->create([
   'type' => 'tec_contact_organization',
   'title' => 'PRUEBA cliente',
   'field_tec_contact_type' => $tipoCliente->id(),
+  // Quien compra cada marca lo dice el cliente desde el 19 de agosto de 2026, y
+  // el producto de aqui abajo lleva esta marca. Sin esta linea el juego de
+  // pruebas nace contradiciendose y el guardian lo canta.
+  'field_tec_brands' => $marca->id(),
 ]));
 
 echo "\n";

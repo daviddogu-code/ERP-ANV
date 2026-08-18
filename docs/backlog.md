@@ -1968,6 +1968,38 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-19 — Una prueba se comió el juego de pruebas de la casa, y el aviso llegó por la prueba de humo
+
+Incidente propio, contado porque la lección vale más que el susto. La prueba nueva del pedido de un clic
+monta su propio juego y lo barre al empezar, para no acumular basura si un día se muere a medias. El
+rastro que usaba para reconocer lo suyo era la palabra **PRUEBA**… que es exactamente el prefijo que usa
+el **juego de pruebas permanente** del ERP, el que fabrica `scripts/fabricar-el-juego-de-pruebas.php`
+para que haya algo que calcular y algo que pedir. Así que el barrido de una prueba borró lo que otras
+pruebas necesitaban: la marca, el cliente, el producto con su color y su talla, y el pedido de venta con
+su línea.
+
+**Lo cazó la prueba de humo, y por una diferencia de dos.** Pasó de probar 59 pantallas a 57, y las dos
+que faltaban eran las del pedido de venta. Ese recuento parecía un detalle sin importancia cuando se
+puso; ha resultado ser el detector. El ERP no tiene ni un pedido de venta de verdad, así que **las
+pantallas de venta solo se pueden mirar si existe el juego de pruebas**: sin él, la prueba de humo las
+salta y dice que todo va bien.
+
+Reparado con las dos escobas de la casa —borrar y volver a fabricar— y sale mejor que antes: **61
+pantallas probadas y ninguna sin mirar**, porque el pedido nuevo nace con un estado válido y ahora se
+pueden pedir también las dos pantallas de borrador que antes se saltaban. De paso el juego de pruebas
+aprendió el modelo nuevo: su cliente ya dice qué marca compra, que si no nacía contradiciéndose y el
+guardián lo cantaba.
+
+**El arreglo de fondo**: el rastro de la prueba pasa a ser `PRUEBA excel lover`, largo a propósito, y el
+barrido busca los pedidos **por su cliente y no por su nombre** —al guardarlos la ECA de numeración les
+cambia el título, así que por nombre no aparecería ninguno—. Sigue empezando por PRUEBA para que la
+escoba de la casa recoja también lo de esta prueba. Y se comprobó como se tenía que comprobar: humo antes,
+prueba, humo después, mismas 61 pantallas y las mismas direcciones.
+
+Se perdieron por el camino dieciséis líneas de pedido de compra del material de prueba, de una tanda
+anterior. Eran de mentira y por la regla de la casa —todo lo que se llama PRUEBA es desechable— tocaba
+que se fueran, pero no se fueron a propósito.
+
 ### 2026-08-19 — El pedido de un clic sale ya de la marca, y de paso lo recibe quien no lo recibía
 
 Empieza el corte del campo Customer del producto, y empieza por la pieza que más miedo daba: el botón
