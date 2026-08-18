@@ -2154,6 +2154,67 @@ $conMarcas = \Drupal::entityTypeManager()->getStorage('tec_crm')->getQuery()
   ->execute();
 informar('contactos que ya dicen que marcas compran', (int) $conMarcas);
 
+titulo('18. El pedido de un clic sale de la marca');
+
+// La bandera «+ Order» de la ficha de un cliente hace de golpe un pedido con una
+// linea por cada talla de cada producto suyo. Son dos piezas que se llaman por su
+// nombre y no se enteran si la otra cambia: una ECA que la bandera dispara, y una
+// vista que la ECA consulta. Aqui se vigila el cable entre las dos, porque si se
+// suelta la bandera no da error: hace un pedido vacio, o no hace ninguno.
+$vistaLover = 'tec_order_eca_create_draft_excel_lover';
+$pantallasLover = \Drupal::config('views.view.' . $vistaLover)->get('display') ?? [];
+$argumentoLover = $pantallasLover['default']['display_options']['arguments']['id']['relationship'] ?? '';
+
+comprobar($resultados, 'la consulta que hace los pedidos busca al cliente por su marca',
+  $argumentoLover === 'reverse__tec_crm__field_tec_brands',
+  $argumentoLover !== '' ? 'busca por ' . $argumentoLover : 'no hay argumento');
+
+// El eslabon nuevo lo pone Views solo, pero lo pone porque el campo de marcas del
+// cliente existe. El dia que ese campo se retire, esta relacion desaparece y la
+// vista se queda sin camino.
+comprobar($resultados, 'y el eslabon del que cuelga sigue existiendo',
+  isset(\Drupal::service('views.views_data')->get('taxonomy_term_field_data')['reverse__tec_crm__field_tec_brands']),
+  'reverse__tec_crm__field_tec_brands');
+
+$sigueElViejo = str_contains(json_encode($pantallasLover), 'tec_product__field_tec_customer');
+comprobar($resultados, 'y ya no salta al cliente pegado al producto',
+  !$sigueElViejo, $sigueElViejo ? 'alguien ha vuelto a meterlo' : 'ni rastro');
+
+// Quien pregunta, por el otro lado del cable.
+$quienPregunta = [];
+foreach (\Drupal::configFactory()->listAll('eca.eca.') as $nombreEca) {
+  foreach (\Drupal::config($nombreEca)->get('actions') ?? [] as $paso) {
+    if (($paso['plugin'] ?? '') === 'eca_views_query'
+      && ($paso['configuration']['view_id'] ?? '') === $vistaLover) {
+      $quienPregunta[] = $nombreEca . ' / ' . ($paso['configuration']['display_id'] ?? '?');
+    }
+  }
+}
+comprobar($resultados, 'y hay una ECA preguntandole por la pantalla que es',
+  count($quienPregunta) === 1 && str_ends_with($quienPregunta[0], '/ default'),
+  $quienPregunta ? implode(', ', $quienPregunta) : 'nadie le pregunta');
+
+// La comprobacion de datos: la lista de marcas del cliente es un conjunto, y el
+// guardado deja una fila por marca. Si algo escribe por detras y cuela una
+// repetida, la vista la une dos veces y el pedido sale con cada linea duplicada.
+$conRepetidas = [];
+$almacenContactos = \Drupal::entityTypeManager()->getStorage('tec_crm');
+foreach ($almacenContactos->loadMultiple($almacenContactos->getQuery()
+  ->accessCheck(FALSE)
+  ->exists($campoMarcas)
+  ->execute()) as $contactoMarcas) {
+  $suLista = array_map(
+    fn(array $v): string => (string) $v['target_id'],
+    $contactoMarcas->get($campoMarcas)->getValue()
+  );
+  if (count($suLista) !== count(array_unique($suLista))) {
+    $conRepetidas[] = $contactoMarcas->label() . ' (' . $contactoMarcas->id() . ')';
+  }
+}
+comprobar($resultados, 'ningun cliente tiene la misma marca dos veces',
+  $conRepetidas === [],
+  $conRepetidas ? implode(', ', array_slice($conRepetidas, 0, 8)) : 'ninguna repetida');
+
 // -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------
