@@ -6,6 +6,7 @@ dependencies:
     - core.base_field_override.tec_crm.tec_contact_organization.title
     - eck.eck_type.tec_crm.tec_contact_organization
     - field.field.tec_crm.tec_contact_organization.field_tec_address
+    - field.field.tec_crm.tec_contact_organization.field_tec_brands
     - field.field.tec_crm.tec_contact_organization.field_tec_contact_type
     - field.field.tec_crm.tec_contact_organization.field_tec_customer_code
     - field.field.tec_crm.tec_contact_organization.field_tec_email
@@ -610,5 +611,6 @@ content:
 hidden:
   changed: true
   created: true
+  field_tec_brands: true
   langcode: true
   uid: true

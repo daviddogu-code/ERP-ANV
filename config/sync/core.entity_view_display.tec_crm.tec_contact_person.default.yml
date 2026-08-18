@@ -5,6 +5,7 @@ dependencies:
   config:
     - eck.eck_type.tec_crm.tec_contact_person
     - field.field.tec_crm.tec_contact_person.field_tec_address
+    - field.field.tec_crm.tec_contact_person.field_tec_brands
     - field.field.tec_crm.tec_contact_person.field_tec_contact_type
     - field.field.tec_crm.tec_contact_person.field_tec_customer_code
     - field.field.tec_crm.tec_contact_person.field_tec_email
@@ -183,4 +184,5 @@ content:
     region: content
 hidden:
   changed: true
+  field_tec_brands: true
   langcode: true
