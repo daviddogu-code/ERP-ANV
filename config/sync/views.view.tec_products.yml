@@ -10,7 +10,6 @@ dependencies:
     - field.storage.tec_product.field_tec_brand
     - field.storage.tec_product.field_tec_color_embed_vm
     - field.storage.tec_product.field_tec_colors
-    - field.storage.tec_product.field_tec_customer
     - field.storage.tec_product.field_tec_images
     - field.storage.tec_product.field_tec_pattern
     - field.storage.tec_product.field_tec_price
@@ -553,69 +552,6 @@ display:
           type: entity_reference_label
           settings:
             link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: reverse__tec_product__field_tec_color_variations
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Customer
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
           group_column: target_id
           group_columns: {  }
           group_rows: true
@@ -1367,7 +1303,6 @@ display:
             field_tec_colors: field_tec_colors
             field_tec_size: field_tec_size
             field_tec_brand: field_tec_brand
-            field_tec_customer: field_tec_customer
             field_tec_price: field_tec_price
             delete_tec_product: delete_tec_product
             field_tec_logo: field_tec_logo
@@ -1440,13 +1375,6 @@ display:
               sortable: true
               default_sort_order: asc
               align: views-align-center
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_customer:
-              sortable: true
-              default_sort_order: asc
-              align: views-align-left
               separator: ''
               empty_column: false
               responsive: ''
@@ -1578,7 +1506,6 @@ display:
         - 'config:field.storage.tec_product.field_product_name'
         - 'config:field.storage.tec_product.field_tec_brand'
         - 'config:field.storage.tec_product.field_tec_colors'
-        - 'config:field.storage.tec_product.field_tec_customer'
         - 'config:field.storage.tec_product.field_tec_images'
         - 'config:field.storage.tec_product.field_tec_pattern'
         - 'config:field.storage.tec_product.field_tec_product_type'
@@ -2026,69 +1953,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Customer
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         delete_tec_product:
           id: delete_tec_product
           table: tec_product
@@ -2278,22 +2142,6 @@ display:
                   is_secondary: false
                   hide_label: false
                   field_classes: ''
-              field_tec_customer_target_id_verf:
-                plugin_id: bef_select2
-                advanced:
-                  sort_options: false
-                  sort_options_method: alphabetical_asc
-                  sort_options_natural: true
-                  placeholder_text: '- None -'
-                  rewrite:
-                    filter_rewrite_values: ''
-                    filter_rewrite_values_key: false
-                  collapsible: false
-                  collapsible_disable_automatic_open: false
-                  open_by_default: false
-                  is_secondary: false
-                  hide_label: false
-                  field_classes: ''
               field_tec_product_type_target_id_verf:
                 plugin_id: bef_select2
                 advanced:
@@ -2430,7 +2278,6 @@ display:
             field_tec_product_type: field_tec_product_type
             field_tec_pattern: field_tec_pattern
             field_tec_brand: field_tec_brand
-            field_tec_customer: field_tec_customer
         field_tec_brand_target_id_verf:
           id: field_tec_brand_target_id_verf
           table: tec_product__field_tec_brand
@@ -2481,49 +2328,6 @@ display:
             tec_product_types: '0'
             tec_sizes: '0'
             tec_units: '0'
-          show_unpublished: 0
-        field_tec_customer_target_id_verf:
-          id: field_tec_customer_target_id_verf
-          table: tec_product__field_tec_customer
-          field: field_tec_customer_target_id_verf
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: verf
-          operator: in
-          value: {  }
-          group: 1
-          exposed: true
-          expose:
-            operator_id: field_tec_customer_target_id_verf_op
-            label: Customer
-            description: ''
-            use_operator: false
-            operator: field_tec_customer_target_id_verf_op
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: customer
-            required: false
-            remember: false
-            multiple: true
-            remember_roles:
-              authenticated: authenticated
-            reduce: 0
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-          verf_target_bundles:
-            tec_contact_organization: tec_contact_organization
-            tec_contact_person: '0'
           show_unpublished: 0
         field_tec_product_type_target_id_verf:
           id: field_tec_product_type_target_id_verf
@@ -2635,12 +2439,10 @@ display:
         - 'config:field.storage.tec_product.field_product_name'
         - 'config:field.storage.tec_product.field_tec_brand'
         - 'config:field.storage.tec_product.field_tec_color_embed_vm'
-        - 'config:field.storage.tec_product.field_tec_customer'
         - 'config:field.storage.tec_product.field_tec_pattern'
         - 'config:field.storage.tec_product.field_tec_product_type'
         - 'config:views.view.tec_products'
         - taxonomy_term_list
-        - tec_crm_list
   block_2:
     id: block_2
     display_title: 'Customer block'
@@ -3330,69 +3132,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Customer
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_price:
           id: field_tec_price
           table: tec_product__field_tec_price
@@ -3889,7 +3628,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: true
-          content: "<div class=\"text-align-center\"><h3 class=\"subtle\">No products yet.</h3></div>\r\n<br><br>\r\n<div class=\"text-align-center\"><div>\r\n<strong><a href=\"/admin/content/tec_product/add/tec_product?edit[field_tec_customer][widget][0][target_id]={{ raw_arguments.id }}?destination=/tec_crm/{{ raw_arguments.id }}\">+ Product\r\n</a></strong>\r\n</div>\r\n</div>"
+          content: "<div class=\"text-align-center\"><h4>No products yet</h4></div>\r\n<div class=\"text-align-center\">A product belongs to a brand. Add it from the brand page.<br>\r\n<strong><a href=\"/b\">Brands</a></strong></div>"
           tokenize: true
       sorts:
         weight_1:
@@ -3913,7 +3652,7 @@ display:
           id: id
           table: tec_crm_field_data
           field: id
-          relationship: field_tec_customer
+          relationship: reverse__tec_crm__field_tec_brands
           group_type: group
           admin_label: ''
           entity_type: tec_crm
@@ -3969,7 +3708,6 @@ display:
             field_tec_colors: field_tec_colors
             field_tec_size: field_tec_size
             field_tec_brand: field_tec_brand
-            field_tec_customer: field_tec_customer
             field_tec_price: field_tec_price
             delete_tec_product: delete_tec_product
             field_tec_logo: field_tec_logo
@@ -4049,13 +3787,6 @@ display:
               sortable: true
               default_sort_order: asc
               align: views-align-center
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_customer:
-              sortable: true
-              default_sort_order: asc
-              align: views-align-left
               separator: ''
               empty_column: false
               responsive: ''
@@ -4171,14 +3902,15 @@ display:
           admin_label: Brand
           plugin_id: standard
           required: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: none
+        reverse__tec_crm__field_tec_brands:
+          id: reverse__tec_crm__field_tec_brands
+          table: taxonomy_term_field_data
+          field: reverse__tec_crm__field_tec_brands
+          relationship: field_tec_brand_1
           group_type: group
-          admin_label: 'field_tec_customer: CRM'
-          plugin_id: standard
+          admin_label: 'Customers that buy the brand'
+          entity_type: taxonomy_term
+          plugin_id: entity_reverse
           required: false
       use_ajax: true
       group_by: true
@@ -4193,7 +3925,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: true
-          content: "<div class=\"text-align-right\">\r\n<span class=\"btn-default\">\r\n<strong><a href=\"/tec_crm/{{ raw_arguments.id }}/reorder?destination=/tec_crm/{{ raw_arguments.id }}\"></>Organize products\r\n</a></strong>\r\n</span>\r\n<span class=\"btn-default\">\r\n<strong><a href=\"/admin/content/tec_product/add/tec_product?target_id={{ raw_arguments.id }}&destination=/tec_crm/{{ raw_arguments.id }}\">+ Product\r\n</a></strong>\r\n</span>\r\n</div>"
+          content: "<div class=\"text-align-right\">\r\n<span class=\"btn-default\">\r\n<strong><a href=\"/tec_crm/{{ raw_arguments.id }}/reorder?destination=/tec_crm/{{ raw_arguments.id }}\">Organize products</a></strong>\r\n</span>\r\n</div>"
           tokenize: true
       display_extenders: {  }
       block_description: 'TEC Products: CRM Customer products'
@@ -4209,7 +3941,6 @@ display:
         - 'config:field.storage.tec_product.field_product_name'
         - 'config:field.storage.tec_product.field_tec_brand'
         - 'config:field.storage.tec_product.field_tec_colors'
-        - 'config:field.storage.tec_product.field_tec_customer'
         - 'config:field.storage.tec_product.field_tec_images'
         - 'config:field.storage.tec_product.field_tec_pattern'
         - 'config:field.storage.tec_product.field_tec_price'
@@ -4604,8 +4335,8 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: Brand
-          exclude: false
+          label: ''
+          exclude: true
           alter:
             alter_text: false
             text: ''
@@ -4659,69 +4390,32 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
+        field_tec_brand_1:
+          id: field_tec_brand_1
+          table: tec_product__field_tec_brand
+          field: field_tec_brand
           relationship: none
-          group_type: group
-          admin_label: ''
+          entity_type: tec_product
+          entity_field: field_tec_brand
           plugin_id: field
-          label: Customer
-          exclude: false
+          label: ''
+          exclude: true
+          type: entity_reference_entity_id
+          settings: {  }
+        por_marca:
+          id: por_marca
+          table: views
+          field: nothing
+          relationship: none
+          plugin_id: custom
+          label: ''
+          exclude: true
           alter:
-            alter_text: false
-            text: ''
+            alter_text: true
+            text: '<a href="/taxonomy/term/{{ field_tec_brand_1 }}">{{ field_tec_brand }}</a> <span class="btn-default"><strong><a href="/admin/content/tec_product/add/tec_product?brand_id={{ field_tec_brand_1 }}&destination=/tec_crm/{{ raw_arguments.id }}">+ Product</a></strong></span>'
             make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
             trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
+          element_label_colon: false
       pager:
         type: none
         options:
@@ -4757,7 +4451,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: true
-          content: "<div class=\"text-align-center\"><h4>No products yet</h4></div>\r\n<div class=\"text-align-center\"><div>\r\n<strong><a href=\"/admin/content/tec_product/add/tec_product?target_id={{ raw_arguments.id }}&destination=/tec_crm/{{ raw_arguments.id }}\">+ Product\r\n</a></strong>\r\n</div>\r\n</div>"
+          content: "<div class=\"text-align-center\"><h4>No products yet</h4></div>\r\n<div class=\"text-align-center\">A product belongs to a brand. Add it from the brand page.<br>\r\n<strong><a href=\"/b\">Brands</a></strong></div>"
           tokenize: true
       sorts:
         weight_1:
@@ -4781,7 +4475,7 @@ display:
           id: id
           table: tec_crm_field_data
           field: id
-          relationship: field_tec_customer
+          relationship: reverse__tec_crm__field_tec_brands
           group_type: group
           admin_label: ''
           entity_type: tec_crm
@@ -4864,7 +4558,11 @@ display:
       style:
         type: table
         options:
-          grouping: {  }
+          grouping:
+            -
+              field: por_marca
+              rendered: true
+              rendered_strip: false
           row_class: ''
           default_row_class: false
           columns:
@@ -4879,7 +4577,6 @@ display:
             field_tec_colors: field_tec_colors
             field_tec_size: field_tec_size
             field_tec_brand: field_tec_brand
-            field_tec_customer: field_tec_customer
             field_tec_sales_price: field_tec_sales_price
             delete_tec_product: delete_tec_product
             field_tec_logo: field_tec_logo
@@ -4960,13 +4657,6 @@ display:
               sortable: true
               default_sort_order: asc
               align: views-align-center
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_customer:
-              sortable: true
-              default_sort_order: asc
-              align: views-align-left
               separator: ''
               empty_column: false
               responsive: ''
@@ -5052,14 +4742,24 @@ display:
         filter_groups: false
         header: false
       relationships:
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
+        field_tec_brand:
+          id: field_tec_brand
+          table: tec_product__field_tec_brand
+          field: field_tec_brand
           relationship: none
           group_type: group
-          admin_label: 'field_tec_customer: CRM'
+          admin_label: Brand
           plugin_id: standard
+          required: false
+        reverse__tec_crm__field_tec_brands:
+          id: reverse__tec_crm__field_tec_brands
+          table: taxonomy_term_field_data
+          field: reverse__tec_crm__field_tec_brands
+          relationship: field_tec_brand
+          group_type: group
+          admin_label: 'Customers that buy the brand'
+          entity_type: taxonomy_term
+          plugin_id: entity_reverse
           required: false
       use_ajax: true
       display_description: ''
@@ -5073,7 +4773,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: true
-          content: "<div class=\"text-align-right\">\r\n<span class=\"btn-default\">\r\n<strong><a href=\"/tec_crm/{{ raw_arguments.id }}/reorder?destination=/tec_crm/{{ raw_arguments.id }}\"></>Organize products\r\n</a></strong>\r\n</span>\r\n<span class=\"btn-default\">\r\n<strong><a href=\"/admin/content/tec_product/add/tec_product?target_id={{ raw_arguments.id }}&destination=/tec_crm/{{ raw_arguments.id }}\">+ Product\r\n</a></strong>\r\n</span>\r\n</div>"
+          content: "<div class=\"text-align-right\">\r\n<span class=\"btn-default\">\r\n<strong><a href=\"/tec_crm/{{ raw_arguments.id }}/reorder?destination=/tec_crm/{{ raw_arguments.id }}\">Organize products</a></strong>\r\n</span>\r\n</div>"
           tokenize: true
       display_extenders: {  }
       block_description: 'TEC Products: CRM Customer products II'
@@ -5089,7 +4789,6 @@ display:
         - 'config:field.storage.tec_product.field_product_name'
         - 'config:field.storage.tec_product.field_tec_brand'
         - 'config:field.storage.tec_product.field_tec_color_embed_vm'
-        - 'config:field.storage.tec_product.field_tec_customer'
         - 'config:field.storage.tec_product.field_tec_pattern'
         - 'config:field.storage.tec_product.field_tec_product_type'
   block_5:
@@ -5772,69 +5471,6 @@ display:
           type: entity_reference_label
           settings:
             link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Customer
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
           group_column: target_id
           group_columns: {  }
           group_rows: true
@@ -6744,7 +6380,6 @@ display:
         - 'config:field.storage.tec_product.field_product_name'
         - 'config:field.storage.tec_product.field_tec_brand'
         - 'config:field.storage.tec_product.field_tec_colors'
-        - 'config:field.storage.tec_product.field_tec_customer'
         - 'config:field.storage.tec_product.field_tec_images'
         - 'config:field.storage.tec_product.field_tec_pattern'
         - 'config:field.storage.tec_product.field_tec_price'
@@ -7381,69 +7016,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: reverse__tec_product__field_tec_color_variations
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Customer
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_logo:
           id: field_tec_logo
           table: taxonomy_term__field_tec_logo
@@ -7887,7 +7459,6 @@ display:
         - 'config:field.storage.tec_product.field_product_name'
         - 'config:field.storage.tec_product.field_tec_brand'
         - 'config:field.storage.tec_product.field_tec_colors'
-        - 'config:field.storage.tec_product.field_tec_customer'
         - 'config:field.storage.tec_product.field_tec_images'
         - 'config:field.storage.tec_product.field_tec_pattern'
         - 'config:field.storage.tec_product.field_tec_product_type'
@@ -8336,69 +7907,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Customer
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
       pager:
         type: none
         options:
@@ -8553,7 +8061,6 @@ display:
             field_tec_colors: field_tec_colors
             field_tec_size: field_tec_size
             field_tec_brand: field_tec_brand
-            field_tec_customer: field_tec_customer
             field_tec_sales_price: field_tec_sales_price
             delete_tec_product: delete_tec_product
             field_tec_logo: field_tec_logo
@@ -8634,13 +8141,6 @@ display:
               sortable: true
               default_sort_order: asc
               align: views-align-center
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_customer:
-              sortable: true
-              default_sort_order: asc
-              align: views-align-left
               separator: ''
               empty_column: false
               responsive: ''
@@ -8726,15 +8226,6 @@ display:
         filter_groups: false
         header: false
       relationships:
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: none
-          group_type: group
-          admin_label: 'field_tec_customer: CRM'
-          plugin_id: standard
-          required: false
         field_tec_brand:
           id: field_tec_brand
           table: tec_product__field_tec_brand
@@ -8771,7 +8262,6 @@ display:
         - 'config:field.storage.tec_product.field_product_name'
         - 'config:field.storage.tec_product.field_tec_brand'
         - 'config:field.storage.tec_product.field_tec_color_embed_vm'
-        - 'config:field.storage.tec_product.field_tec_customer'
         - 'config:field.storage.tec_product.field_tec_pattern'
         - 'config:field.storage.tec_product.field_tec_product_type'
   entity_browser_1:
@@ -9337,69 +8827,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: reverse__tec_product__field_tec_color_variations
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Customer
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_price:
           id: field_tec_price
           table: tec_product__field_tec_price
@@ -9881,7 +9308,6 @@ display:
         - 'config:field.storage.tec_product.field_product_name'
         - 'config:field.storage.tec_product.field_tec_brand'
         - 'config:field.storage.tec_product.field_tec_colors'
-        - 'config:field.storage.tec_product.field_tec_customer'
         - 'config:field.storage.tec_product.field_tec_images'
         - 'config:field.storage.tec_product.field_tec_pattern'
         - 'config:field.storage.tec_product.field_tec_price'
@@ -10390,69 +9816,6 @@ display:
           type: entity_reference_label
           settings:
             link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: reverse__tec_product__field_tec_color_variations
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Customer
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
           group_column: target_id
           group_columns: {  }
           group_rows: true
@@ -11135,7 +10498,6 @@ display:
         - 'config:field.storage.tec_product.field_product_name'
         - 'config:field.storage.tec_product.field_tec_brand'
         - 'config:field.storage.tec_product.field_tec_colors'
-        - 'config:field.storage.tec_product.field_tec_customer'
         - 'config:field.storage.tec_product.field_tec_images'
         - 'config:field.storage.tec_product.field_tec_pattern'
         - 'config:field.storage.tec_product.field_tec_product'
@@ -11467,69 +10829,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: Customer
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         field_tec_color_embed_vm:
           id: field_tec_color_embed_vm
           table: tec_product__field_tec_color_embed_vm
@@ -11685,7 +10984,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: true
-          content: "<div class=\"text-align-center\"><h3 class=\"subtle\">No products yet.</h3></div>\r\n<br><br>\r\n<div class=\"text-align-center\"><div>\r\n<strong><a href=\"/admin/content/tec_product/add/tec_product?edit[field_tec_customer][widget][0][target_id]={{ raw_arguments.id }}?destination=/tec_crm/{{ raw_arguments.id }}\">+ Product\r\n</a></strong>\r\n</div>\r\n</div>"
+          content: "<div class=\"text-align-center\"><h4>No products yet</h4></div>\r\n<div class=\"text-align-center\">A product belongs to a brand. Add it from the brand page.<br>\r\n<strong><a href=\"/b\">Brands</a></strong></div>"
           tokenize: true
       sorts:
         weight:
@@ -11724,7 +11023,7 @@ display:
           id: id
           table: tec_crm_field_data
           field: id
-          relationship: field_tec_customer
+          relationship: reverse__tec_crm__field_tec_brands
           group_type: group
           admin_label: ''
           entity_type: tec_crm
@@ -11822,7 +11121,6 @@ display:
             field_tec_colors: field_tec_colors
             field_tec_size: field_tec_size
             field_tec_brand: field_tec_brand
-            field_tec_customer: field_tec_customer
             field_tec_sales_price: field_tec_sales_price
             delete_tec_product: delete_tec_product
             field_tec_logo: field_tec_logo
@@ -11903,13 +11201,6 @@ display:
               sortable: true
               default_sort_order: asc
               align: views-align-center
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_customer:
-              sortable: true
-              default_sort_order: asc
-              align: views-align-left
               separator: ''
               empty_column: false
               responsive: ''
@@ -11995,14 +11286,24 @@ display:
         filter_groups: false
         header: false
       relationships:
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
+        field_tec_brand:
+          id: field_tec_brand
+          table: tec_product__field_tec_brand
+          field: field_tec_brand
           relationship: none
           group_type: group
-          admin_label: 'field_tec_customer: CRM'
+          admin_label: Brand
           plugin_id: standard
+          required: false
+        reverse__tec_crm__field_tec_brands:
+          id: reverse__tec_crm__field_tec_brands
+          table: taxonomy_term_field_data
+          field: reverse__tec_crm__field_tec_brands
+          relationship: field_tec_brand
+          group_type: group
+          admin_label: 'Customers that buy the brand'
+          entity_type: taxonomy_term
+          plugin_id: entity_reverse
           required: false
       use_ajax: false
       display_description: ''
@@ -12046,6 +11347,5 @@ display:
         - 'config:field.storage.tec_product.field_product_name'
         - 'config:field.storage.tec_product.field_tec_brand'
         - 'config:field.storage.tec_product.field_tec_color_embed_vm'
-        - 'config:field.storage.tec_product.field_tec_customer'
         - 'config:field.storage.tec_product.field_tec_pattern'
         - 'config:field.storage.tec_product.field_tec_product_type'
