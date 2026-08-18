@@ -2077,6 +2077,83 @@ comprobar($resultados, 'y con una clave distinta de la del cliente',
   $claveMarca !== '' && $claveMarca !== $claveCliente,
   $claveCliente !== '' ? 'el cliente usa ' . $claveCliente : 'el cliente ya no se rellena');
 
+titulo('17. Quien compra cada marca se dice en un solo sitio');
+
+// Hasta el 19 de agosto de 2026 se decia en dos, y los dos lo decian mal: la
+// marca tenia UNA casilla de cliente y el producto tenia UNA casilla de cliente,
+// asi que dos empresas comprando la misma marca no se podia escribir. Ahora lo
+// dice el cliente, en una lista suya y ordenada a mano.
+$campoMarcas = 'field_tec_brands';
+$definicionesMarcas = [];
+foreach (['tec_contact_organization', 'tec_contact_person'] as $claseContacto) {
+  $definicionesMarcas[$claseContacto] = \Drupal::service('entity_field.manager')
+    ->getFieldDefinitions('tec_crm', $claseContacto)[$campoMarcas] ?? NULL;
+}
+comprobar($resultados, 'las dos clases de contacto dicen que marcas les hacemos',
+  !in_array(NULL, $definicionesMarcas, TRUE),
+  implode(', ', array_keys(array_filter($definicionesMarcas))));
+
+$definicionMarcas = $definicionesMarcas['tec_contact_organization'] ?? NULL;
+// Si alguien lo dejara en una sola, volveriamos al problema que se vino a
+// resolver, y sin que nada mas cambiara de aspecto.
+comprobar($resultados, 'y les caben todas las que compren, no una sola',
+  $definicionMarcas && $definicionMarcas->getFieldStorageDefinition()->getCardinality() === -1,
+  $definicionMarcas ? 'caben ' . $definicionMarcas->getFieldStorageDefinition()->getCardinality() : 'no hay campo');
+comprobar($resultados, 'y solo aceptan marcas, no cualquier termino',
+  array_keys($definicionMarcas?->getSetting('handler_settings')['target_bundles'] ?? []) === ['tec_brands'],
+  implode(', ', array_keys($definicionMarcas?->getSetting('handler_settings')['target_bundles'] ?? [])));
+
+// El orden de esta lista es de la casa, no alfabetico, y de el van a colgar las
+// lineas de las proformas. Solo el widget de varios valores de siempre trae la
+// tabla de arrastrar: cambiarlo por un desplegable bonito se lleva el orden por
+// delante sin dar ninguna senal.
+$widgetsMarcas = [];
+foreach (['tec_contact_organization', 'tec_contact_person'] as $claseContacto) {
+  $widgetsMarcas[$claseContacto] = \Drupal::config('core.entity_form_display.tec_crm.' . $claseContacto . '.default')
+    ->get('content.' . $campoMarcas . '.type');
+}
+comprobar($resultados, 'y su orden se puede arrastrar en las dos',
+  array_values($widgetsMarcas) === ['entity_reference_autocomplete', 'entity_reference_autocomplete'],
+  implode(', ', array_map(fn($c, $t) => $c . ': ' . ($t ?? 'no esta'), array_keys($widgetsMarcas), $widgetsMarcas)));
+
+comprobar($resultados, 'y la marca ya no lleva un cliente propio que contradiga',
+  \Drupal::config('field.field.taxonomy_term.tec_brands.field_tec_customer')->isNew(),
+  'field.field.taxonomy_term.tec_brands.field_tec_customer');
+
+// La comprobacion de fondo, la que mira los datos: mientras el producto siga
+// teniendo su propio cliente, los dos tienen que estar de acuerdo. Un producto
+// que apunta a un cliente que no compra su marca cambiara de dueno el dia del
+// corte, y sin esto se descubriria despues.
+$desacuerdos = [];
+foreach ($almacenVariacion->loadMultiple($almacenVariacion->getQuery()
+  ->accessCheck(FALSE)
+  ->condition('type', 'tec_product')
+  ->exists('field_tec_brand')
+  ->exists('field_tec_customer')
+  ->execute()) as $productoMarca) {
+  $marcaDelProducto = (string) $productoMarca->get('field_tec_brand')->target_id;
+  $clienteDelProducto = $productoMarca->get('field_tec_customer')->entity;
+  if (!$clienteDelProducto || !$clienteDelProducto->hasField($campoMarcas)) {
+    continue;
+  }
+  $lasSuyas = array_map(
+    fn(array $v): string => (string) $v['target_id'],
+    $clienteDelProducto->get($campoMarcas)->getValue()
+  );
+  if (!in_array($marcaDelProducto, $lasSuyas, TRUE)) {
+    $desacuerdos[] = $productoMarca->label() . ' (' . $productoMarca->id() . ')';
+  }
+}
+comprobar($resultados, 'ningun producto apunta a un cliente que no compra su marca',
+  $desacuerdos === [], $desacuerdos ? implode(', ', array_slice($desacuerdos, 0, 8)) : 'todos de acuerdo');
+
+$conMarcas = \Drupal::entityTypeManager()->getStorage('tec_crm')->getQuery()
+  ->accessCheck(FALSE)
+  ->exists($campoMarcas)
+  ->count()
+  ->execute();
+informar('contactos que ya dicen que marcas compran', (int) $conMarcas);
+
 // -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------
