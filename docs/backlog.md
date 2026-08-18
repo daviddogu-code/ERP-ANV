@@ -1968,6 +1968,65 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-19 — El pedido de un clic sale ya de la marca, y de paso lo recibe quien no lo recibía
+
+Empieza el corte del campo Customer del producto, y empieza por la pieza que más miedo daba: el botón
+**«+ Order»** de la ficha del cliente, el que hace de un clic un pedido con una línea por cada talla de
+cada producto suyo. Si eso se rompe, el ERP se queda sin poder hacer pedidos de venta, y se rompe
+callado.
+
+Por dentro son dos piezas que se llaman por su nombre y no se enteran si la otra cambia: una ECA que la
+bandera dispara, y una vista que la ECA consulta pasándole el número del cliente. La vista contestaba
+*«las tallas de los productos cuyo cliente es este»*, saltando por el campo que se va. Ahora contesta
+*«las tallas de los productos de las marcas que compra este cliente»*. El eslabón nuevo lo ofrece Views
+solo, en cuanto existe la lista de marcas del cliente del bloque anterior; comprobar que existía fue lo
+primero que se hizo, antes de prometer nada. **La ECA no se ha tocado**: sigue preguntando a la misma
+vista con el mismo número. Cambia por dónde busca la vista, no quién pregunta.
+
+**La prueba se escribió antes del cambio y se pasó antes del cambio**, para tener la línea base. Salió
+lo que tenía que salir: el cliente de siempre recibía sus dos tallas y el segundo cliente que compra la
+misma marca **no recibía nada**. Eso no era un defecto del corte, era el defecto de antes — el producto
+solo podía apuntar a un cliente, así que el compañero de marca se quedaba sin su pedido de un clic y
+nadie se enteraba. Después del cambio las dos mitades salen en verde. O sea que esto no es solo quitar
+un campo: **hay una función que antes no funcionaba y ahora sí**.
+
+Y la prueba no se queda en la consulta, que sería quedarse a medias: **levanta la bandera de verdad**,
+la misma que se pulsa en la ficha, con los dos clientes, y mira que el pedido sale con una línea por
+talla, con las tallas que son, y que la bandera se baja sola para poder pedir otro.
+
+**El camino nuevo trajo un peligro que el viejo no tenía, y se midió en vez de suponerlo.** La vista
+llega ahora al cliente por su lista de marcas, así que una marca apuntada **dos veces** en la lista se
+une dos veces y el pedido sale con **cada línea duplicada**: cuatro filas donde había dos. Se arregla
+donde nace —la lista es un conjunto, y al guardar se queda una fila por marca— y no con un `DISTINCT` en
+la consulta, porque la consulta no es la que está mal. El guardián cuenta duplicados de todas formas,
+por el día que algo escriba en el campo sin pasar por ahí.
+
+**Una cosa que no se ha tocado a propósito**, anotada para que no parezca un descuido: la ECA pide el
+pedido *sin publicar* y el pedido sale *publicado*. Pasa igual por el camino viejo y por el nuevo, así
+que no lo trae este cambio; y además «borrador» no es un estado guardado en el pedido — `/o/draft/N` es
+solo una pantalla que lista sus líneas. Queda para cuando se mire el ciclo del pedido de venta entero.
+
+**Y un aviso de nombres**, que aquí se tropieza fácil: `field_tec_customer` existe en dos sitios
+distintos. El del **pedido** se queda, es quien dice de quién es el pedido. El que se retira es el del
+**producto**.
+
+Guardián en **166 comprobaciones**, y las nuevas vigilan el cable entre las dos piezas, que es donde
+esto se rompería en silencio: que la vista busque al cliente por su marca, que el eslabón del que cuelga
+siga existiendo, que no haya vuelto a aparecer el salto al cliente del producto, y que siga habiendo una
+ECA preguntándole **por la pantalla que es**. Si alguien renombra esa pantalla, la bandera no da error:
+hace un pedido vacío, o no hace ninguno. Prueba de humo en 57 pantallas, 0 con problemas —y ahí se ve
+que dos pantallas de pedidos de venta no se pueden probar porque el ERP no tiene ni un pedido de venta;
+la prueba de hoy es lo único que ha pasado por ese camino.
+
+La receta está en `scripts/el-pedido-de-un-clic-sale-de-la-marca.php` y la prueba en
+`scripts/el-excel-lover-mira-las-marcas.php`, que monta su propio juego —una marca, dos clientes, un
+producto, un color y dos tallas—, lo llama todo «PRUEBA algo» y lo primero que hace es barrer lo que
+lleve ese nombre, para que una prueba que murió a medias no deje clientes de mentira por ahí.
+
+Quedan del corte las otras dos pantallas que leen el cliente del producto —la pestaña Products de la
+ficha del cliente y la de ordenar productos— y luego lo mecánico: quitar columnas, filtros, el campo del
+formulario y un paso de la ECA que duplica productos.
+
 ### 2026-08-19 (madrugada) — Quién compra cada marca se dice ya en un solo sitio, y es una lista
 
 Segundo bloque del modelo de marcas y clientes. Hasta hoy la misma pregunta estaba contestada en **dos**
