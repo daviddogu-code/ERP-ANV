@@ -125,7 +125,18 @@ try {
   }
 
   echo "\n=== Sin codigo corto no queda un espacio suelto delante ===\n";
-  $comprobar('venta sin cliente', "{$year}-001", (string) $pedido('tec_sales_order')->label());
+  // Esto pedia "26-001" a pelo, y volvia a ser un dato sobre el mundo y no sobre el
+  // codigo: hay un pedido de venta de verdad, el 1003, que ya se llama asi, asi que
+  // el siguiente sin cliente sale 26-002 y hacia bien. Lo que importa es que sin
+  // codigo corto el nombre EMPIEZA por el ano, sin espacio ni guion suelto delante,
+  // y que sigue la serie. Eso es lo que se pregunta.
+  $sinCliente = (string) $pedido('tec_sales_order')->label();
+  $comprobar('venta sin cliente, sin nada delante del ano', TRUE,
+    (bool) preg_match("/^{$year}-\d{3}$/", $sinCliente));
+  $siguienteSinCliente = (string) $pedido('tec_sales_order')->label();
+  $comprobar('y la siguiente sin cliente va justo detras',
+    "{$year}-" . str_pad((string) ((int) substr($sinCliente, -3) + 1), 3, '0', STR_PAD_LEFT),
+    $siguienteSinCliente);
 
   echo "\n=== Un numero ya usado no se reparte dos veces ===\n";
   // Borrowing A 26-001 away and creating another order for A: counting alone

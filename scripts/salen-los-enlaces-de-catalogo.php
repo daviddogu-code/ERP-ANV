@@ -67,27 +67,56 @@ $unMaterial = static function () {
   return $ids ? reset($ids) : NULL;
 };
 
+/**
+ * Una ficha de verdad de cada clase, buscada al vuelo.
+ *
+ * Antes iban tres numeros escritos a mano -887, 888, 889- y el dia que el juego de
+ * pruebas se rehizo esas fichas dejaron de existir: la prueba se paso a quejarse de
+ * que no habia pantalla, cuando lo que no habia era ficha. Y en la parte de los
+ * formularios embebidos era peor, porque cargar una ficha que no existe no revienta:
+ * pasaba por buena una pantalla de anadir haciendose pasar por una de editar.
+ */
+$unaDeLaClase = static function (string $grupo) {
+  $ids = \Drupal::entityTypeManager()->getStorage('tec_product')->getQuery()
+    ->accessCheck(FALSE)->condition('type', $grupo)->range(0, 1)->execute();
+  return $ids ? reset($ids) : NULL;
+};
+
+$unProducto = $unaDeLaClase('tec_product');
+$unColor = $unaDeLaClase('tec_color_variation');
+$unaTalla = $unaDeLaClase('tec_size_variation');
+
+foreach (['producto' => $unProducto, 'color' => $unColor, 'talla' => $unaTalla] as $que => $cual) {
+  if ($cual === NULL) {
+    printf("  OJO: no hay ninguna ficha de %s con la que probar. Monta el juego de pruebas:\n", $que);
+    print "       php vendor\\bin\\drush.php scr scripts/fabricar-el-juego-de-pruebas.php\n";
+    $fallos++;
+  }
+}
+
 $pantallas = [
   [
     '/admin/content/tec_product/add/tec_product',
     'anadir un producto',
-    ['Manage product types'],
+    // La marca tambien es catalogo desde el 16 de agosto: no se puede crear al
+    // vuelo desde el desplegable, asi que lleva su enlace como los tipos.
+    ['Manage product types', 'Manage brands'],
   ],
   [
-    '/tec_product/887/edit',
+    '/tec_product/' . $unProducto . '/edit',
     'editar un producto (aqui no salia ninguno)',
-    // Solo el de tipos: al cargar la pagina la tabla de variaciones se dibuja
-    // sola, sin ningun formulario de color abierto, asi que el campo de color no
-    // existe todavia. Sus enlaces se comprueban mas abajo, por su camino.
-    ['Manage product types'],
+    // Los del producto y nada mas: al cargar la pagina la tabla de variaciones se
+    // dibuja sola, sin ningun formulario de color abierto, asi que el campo de
+    // color no existe todavia. Sus enlaces se comprueban mas abajo, por su camino.
+    ['Manage product types', 'Manage brands'],
   ],
   [
-    '/tec_product/888/edit',
+    '/tec_product/' . $unColor . '/edit',
     'editar un color suelto',
     ['Manage colors'],
   ],
   [
-    '/tec_product/889/edit',
+    '/tec_product/' . $unaTalla . '/edit',
     'editar una talla suelta',
     ['Manage sizes'],
   ],
@@ -154,9 +183,9 @@ echo str_repeat('=', 82) . "\n\n";
 // que sigue al pulsar el boton, y es ahi dentro donde tiene que haber saltado el
 // gancho de los formularios embebidos.
 $embebidos = [
-  ['tec_size_variation', 889, 'field_tec_size', 'editar una talla desde el producto'],
+  ['tec_size_variation', $unaTalla, 'field_tec_size', 'editar una talla desde el producto'],
   ['tec_size_variation', NULL, 'field_tec_size', 'anadir una talla nueva, que es cuando se echa en falta una'],
-  ['tec_color_variation', 888, 'field_tec_colors', 'editar un color desde el producto'],
+  ['tec_color_variation', $unColor, 'field_tec_colors', 'editar un color desde el producto'],
 ];
 
 foreach ($embebidos as [$grupo, $id, $campo, $comentario]) {
@@ -175,7 +204,13 @@ foreach ($embebidos as [$grupo, $id, $campo, $comentario]) {
     // Sin ficha de partida, IEF crea una del grupo pedido y la operacion pasa a
     // ser de anadir, que es el caso de "Add new size".
     if ($id !== NULL) {
-      $entityForm['#default_value'] = $gestor->getStorage('tec_product')->load($id);
+      $ficha = $gestor->getStorage('tec_product')->load($id);
+      if (!$ficha) {
+        printf("      la ficha %s ya no existe, esto no prueba nada\n\n", $id);
+        $fallos++;
+        continue;
+      }
+      $entityForm['#default_value'] = $ficha;
       $entityForm['#op'] = 'edit';
     }
 

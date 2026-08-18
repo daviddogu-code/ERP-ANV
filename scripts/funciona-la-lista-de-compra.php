@@ -199,9 +199,12 @@ echo "El pedido que ha salido\n";
 echo str_repeat('-', 78) . "\n";
 printf("         %s (ficha %s)\n", $pedido->label(), $pedido->id());
 
+// El mismo formato que vigila el guardian: el codigo corto del contacto delante,
+// cuando lo tiene, y detras el ano y el numero. Esta prueba pedia solo «AA-NNN» y
+// se quedo vieja el dia que el codigo del proveedor entro en el nombre.
 $mirar(
   'lleva numero con el formato del ERP',
-  (bool) preg_match('/^\d{2}-\d+$/', (string) $pedido->label()),
+  (bool) preg_match('/^(?:.{1,6} )?\d{2}-\d{3}$/', (string) $pedido->label()),
   (string) $pedido->label()
 );
 // El flujo viejo de ECA saca el numero de un conteo por proveedor y solo de

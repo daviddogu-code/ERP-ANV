@@ -97,28 +97,44 @@ echo str_repeat('=', 82) . "\n\n";
 
 $terminos = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
 $marcas = $terminos->loadByProperties(['vid' => 'tec_brands']);
-$marca = reset($marcas) ?: NULL;
 
-if (!$marca) {
-  echo "  No hay ninguna marca, asi que la lista ya esta vacia de por si.\n\n";
+// Se despublican todas las publicadas, no solo la primera: en cuanto la casa tuvo
+// una segunda marca, despublicar una sola dejaba la lista con contenido y la prueba
+// se quejaba de una pantalla que estaba bien.
+$publicadas = array_filter($marcas, fn ($m) => $m->isPublished());
+
+if (!$publicadas) {
+  echo "  No hay ninguna marca publicada, asi que la lista ya esta vacia de por si.\n\n";
   [$codigo, $html] = $pedir('/b');
   $comprobar('sale el boton de crear con la lista vacia', str_contains($html, '+ Brand'));
+  $comprobar('sale el aviso de que no hay nada', str_contains($html, 'Nothing here yet'));
 }
 else {
-  printf("  Se despublica un momento \"%s\" para dejar la lista vacia.\n\n", $marca->label());
-  $marca->setUnpublished()->save();
+  printf("  Se despublican un momento %d marcas para dejar la lista vacia: %s\n\n",
+    count($publicadas),
+    implode(', ', array_map(fn ($m) => $m->label(), $publicadas))
+  );
+  foreach ($publicadas as $m) {
+    $m->setUnpublished()->save();
+  }
   try {
     \Drupal::service('cache_tags.invalidator')->invalidateTags(['taxonomy_term_list']);
     [$codigo, $html] = $pedir('/b');
     $comprobar('/b responde con la lista vacia', $codigo === 200, 'ha devuelto ' . $codigo);
     $comprobar('sale el boton de crear con la lista vacia', str_contains($html, '+ Brand'));
     $comprobar('sale el aviso de que no hay nada', str_contains($html, 'Nothing here yet'));
-    $comprobar('ya no sale la marca despublicada', !str_contains($html, 'PRUEBA marca'));
+    $comprobar('ya no sale ninguna marca despublicada', !str_contains($html, 'PRUEBA marca'));
   }
   finally {
-    $marca->setPublished()->save();
+    $malas = [];
+    foreach ($publicadas as $m) {
+      $m->setPublished()->save();
+      if (!$m->isPublished()) {
+        $malas[] = $m->label();
+      }
+    }
     \Drupal::service('cache_tags.invalidator')->invalidateTags(['taxonomy_term_list']);
-    printf("  Vuelta a publicar: %s\n", $marca->isPublished() ? 'si' : 'NO, MIRALO A MANO');
+    printf("  Vuelta a publicar: %s\n", $malas ? 'NO, MIRA A MANO ' . implode(', ', $malas) : 'si, todas');
   }
 }
 
