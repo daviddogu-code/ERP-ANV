@@ -4,7 +4,7 @@
 > Escrito en español porque el lector principal es el dueño del proyecto.
 > Las otras notas de `docs/` están en inglés y son documentación técnica; esta no.
 >
-> Última actualización: 2026-08-18.
+> Última actualización: 2026-08-19.
 
 ## Cómo usar este archivo
 
@@ -206,6 +206,38 @@ preparado para cuando se retome:
   índice y basta con confirmarlo; si aparece contenido de verdad, entonces hay algo que revisar antes
   de guardar nada. Media hora contando la lectura, y mejor hacerlo cuando no haya trabajo a medias
   encima, porque toca setenta ficheros de golpe y se come cualquier diff que haya pendiente.
+
+- **Terminar el modelo de marcas y clientes. Está empezado: el primer paso se hizo el 19 de agosto**
+  y está contado abajo, en Hecho. Lo que queda es el cambio de fondo, decidido ese mismo día a raíz de
+  una observación del dueño: *una empresa puede comprar varias marcas, y la misma marca la pueden
+  comprar dos clientes distintos.* Hoy el ERP dice lo contrario en dos sitios a la vez, y ninguno de
+  los dos aguanta ese caso.
+
+  **El producto apunta a un cliente** (`field_tec_customer` en `tec_product`, obligatorio) y **la marca
+  también** (`field_tec_customer` en el vocabulario, de un solo valor). Dos caminos para la misma
+  pregunta, que pueden contradecirse sin que nadie avise, y el de la marca además no se usa para nada:
+  es decorativo y engaña.
+
+  El modelo acordado es: **los productos van dentro de la marca, y el cliente elige qué marcas le
+  hacemos**, en su ficha y en el orden que decida el dueño. Los pasos:
+
+  1. Un campo nuevo en las fichas de contacto —`tec_contact_organization` y `tec_contact_person`—, de
+     varios valores y arrastrable, apuntando a marcas.
+  2. Pasar a ese campo lo que hoy diga el `field_tec_customer` de cada marca, y **retirar ese campo**.
+  3. Retirar el `field_tec_customer` del producto y **recablear los cuatro sitios que lo leen**: la
+     vista que crea las proformas del *Excel lover*, la pestaña Products de la ficha del cliente, la
+     pantalla de *Organize products* —que pasa a ser por marca— y la columna con su filtro en las
+     listas de productos.
+  4. Ordenar las líneas de la proforma en dos niveles: primero por el orden de marcas del cliente,
+     después por el orden de productos dentro de la marca. **Hoy las proformas no tienen ningún
+     orden**, y esto es lo que se gana de verdad con el cambio.
+  5. Borrar las filas de `draggableviews_structure` que están guardadas por cliente, que dejan de
+     significar nada, y añadir al guardián que la marca de un producto esté en la lista de su cliente.
+
+  **Lo de la mayúscula no es un detalle suelto:** mientras el producto siga con su cliente obligatorio,
+  el botón *+ Product* de la pantalla del catálogo no puede rellenar la marca, porque el parámetro
+  `?target_id=` que sabe leer el formulario está atado al campo de cliente. Eso se resuelve solo al
+  hacer el paso 3.
 
 ## 3. Antes de que entren los empleados
 
@@ -1872,6 +1904,62 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-19 (madrugada) — Cada marca ya tiene su catálogo, y editarla ya es un botón y no la única puerta
+
+Lo pidió el dueño mirando `/b`: *cuando hago clic en las marcas, llego al edit de cada marca. Tendría
+que haber un botón para ir al edit, y cuando haces clic en la casilla de la marca que te mandase a una
+pantalla en la que se ven todos los productos de esa marca.* Y añadió una duda: *¿es posible que antes
+de que elimináramos marcas y lo volviéramos a poner existiese una pantalla similar o me lo estoy
+inventando?*
+
+**No se lo inventaba.** Existió una vista llamada `tec_brands_gui_products_by_brand`, y su nombre sigue
+fosilizado en la lista de vistas permitidas de siete campos de tipo *viewfield*, al lado de su gemela
+`tec_crm_contact_customer_products`. Las dos se perdieron antes de agosto; el diario del día 14 anotó
+que de marcas y patrones sobrevivían tres vistas, y son exactamente las tres que hay hoy. O sea que
+esto no se ha inventado, se ha repuesto.
+
+**La pantalla no se ha escrito de cero.** Se ha clonado `block_4` de la vista de productos, que es la
+pestaña *Products* de la ficha del contacto, y solo se le ha cambiado por dónde entra: donde antes
+entraba un cliente ahora entra una marca. Así el catálogo sale con las columnas que ya se conocen
+—nombre, la tira de colores con sus fotos, tipo, patrón y cliente— y el día que se toque una se tocan
+las dos. Se pega en la ficha del término con el mismo mecanismo que usa la ficha del producto para
+enseñar sus colores, un campo *viewfield* con el valor puesto de fábrica y escondido del formulario,
+así que no hay una casilla nueva que nadie deba rellenar.
+
+**Tres trampas del clonado que no se ven leyendo el original.** La primera, la relación con el cliente
+se ha quedado puesta además de la nueva con la marca, porque alguna columna del molde cuelga de ella y
+quitarla habría vaciado columnas. La segunda, el molde lleva tres enlaces escritos a mano con
+`raw_arguments.id` dando por hecho que el argumento es un cliente. La tercera es la que podía hacer
+daño: el botón *+ Product* del molde pasa `?target_id=`, y eso **no es decoración**. El campo de cliente
+del producto tiene el módulo `epp` puesto con `[current-page:query:target_id]`, o sea que rellena el
+cliente con lo que venga en ese parámetro. Copiarlo tal cual habría escrito el número de una marca en
+la casilla del cliente. El botón de la pantalla nueva va sin él.
+
+**El orden del catálogo es por nombre, y es una decisión provisional.** El molde ordena por el peso que
+se arrastra en *Organize products*, y ese peso está guardado por cliente: en una pantalla nueva no hay
+ninguna fila, así que ordenar por él no ordenaría nada. Dar a la marca su propio orden —que el dueño ya
+dijo que lo decide él y no el cliente— es el paso siguiente del modelo, el que está apuntado arriba en
+*Esta semana*. También se ha quitado la columna *Brand*, que en la ficha de una marca repetiría en todas
+las filas el título de la propia página.
+
+**Y en `/b`, el botón de editar ya estaba hecho y escondido.** Alguien lo escribió con su icono y su
+clase y lo puso a no dibujarse nunca, probablemente porque la baldosa entera ya llevaba a editar y
+sobraba. Ahora la baldosa lleva a la ficha de la marca y el lápiz al formulario, que es lo que se pedía.
+Esto separa a marcas de colores, que sigue con el comportamiento viejo, y está bien: marcas es el sitio
+donde hay algo dentro que ver, colores no.
+
+Probado en `scripts/la-marca-ensena-su-catalogo.php`, que crea dos productos en dos marcas para poder
+distinguir, y comprueba las tres puertas: que la pantalla devuelve los productos de la marca que se le
+pasa y ni uno más, que la ficha del término los enseña, y que en `/b` la baldosa y el lápiz van a sitios
+distintos. Y la receta que lo montó está en `scripts/dar-catalogo-a-la-marca.php`, que se puede volver a
+lanzar.
+
+**Un detalle que conviene recordar de la prueba**, porque hará perder tiempo a quien no lo sepa: la
+primera vez falló una sola afirmación, la de que la ficha enseña su producto, y el catálogo estaba
+perfecto. Buscaba el nombre tal como lo había escrito, y el arreglo de anoche pone mayúscula en la
+inicial de cada palabra al guardar. **Una prueba no debe dar por sabido el nombre de lo que crea: tiene
+que preguntárselo a la ficha después de guardarla.**
 
 ### 2026-08-18 (madrugada) — Renombrar un producto no le cambiaba el nombre, y nadie podía verlo
 
