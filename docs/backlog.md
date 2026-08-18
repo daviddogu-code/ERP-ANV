@@ -207,11 +207,32 @@ preparado para cuando se retome:
   de guardar nada. Media hora contando la lectura, y mejor hacerlo cuando no haya trabajo a medias
   encima, porque toca setenta ficheros de golpe y se come cualquier diff que haya pendiente.
 
-- **Terminar el modelo de marcas y clientes. Está empezado: el primer paso se hizo el 19 de agosto**
-  y está contado abajo, en Hecho. Lo que queda es el cambio de fondo, decidido ese mismo día a raíz de
-  una observación del dueño: *una empresa puede comprar varias marcas, y la misma marca la pueden
-  comprar dos clientes distintos.* Hoy el ERP dice lo contrario en dos sitios a la vez, y ninguno de
-  los dos aguanta ese caso.
+- **Terminar el modelo de marcas y clientes. Empezado: el catálogo de la marca y las cuatro asperezas
+  del formulario están hechos el 19 de agosto** y contados abajo, en Hecho. Lo que queda es el cambio de
+  fondo, decidido ese mismo día a raíz de una observación del dueño: *una empresa puede comprar varias
+  marcas, y la misma marca la pueden comprar dos clientes distintos.* Hoy el ERP dice lo contrario en dos
+  sitios a la vez, y ninguno de los dos aguanta ese caso.
+
+  **El orden de los bloques, y la regla que lo decide:** la relación cliente–marca tiene que existir en
+  su sitio nuevo **antes** de desaparecer de los dos viejos. De ahí sale el orden: primero la lista de
+  marcas en la ficha del cliente con sus datos migrados (no se quita nada, riesgo cero), después el corte
+  del cliente del producto con sus recableados de una sentada, luego el orden en dos niveles de las
+  proformas, y al final el catálogo en formato de líneas de pedido con el precio editable, que es la
+  pantalla más grande y la única que no bloquea a ninguna otra.
+
+  **Dos cosas medidas el 19 de agosto que conviene no volver a averiguar.** El campo de cliente del
+  producto alimenta **ocho** sitios, y los dos que duelen son la pestaña Products de la ficha del cliente
+  y la vista del *Excel lover*, la que usa ECA para crear el borrador de pedido: si esa se rompe no se
+  pueden crear pedidos de venta. Pero **varias de las otras seis parecen configuración muerta** —`block_2`
+  no está colocado en ningún sitio, y el quicktabs que usa `block_1`, `block_5` y `block_8` no está puesto
+  en ningún bloque—, así que el primer paso del corte es contar cuáles están vivas de verdad. Puede que
+  el recableado sea la mitad de lo que parece.
+
+  **Y el precio de venta no está donde se supondría:** vive en la talla
+  (`tec_product.tec_size_variation.field_tec_price`, etiquetado «Sales price»), no en el producto ni en el
+  color. O sea que la pantalla para editar precios desde el catálogo de una marca es una lista de tallas
+  agrupadas por color, no una lista de productos. Editarlas dentro de una vista no necesita nada nuevo:
+  es lo que ya hace `views_entity_form_field` con las cantidades de `/o/draft/%`.
 
   **El producto apunta a un cliente** (`field_tec_customer` en `tec_product`, obligatorio) y **la marca
   también** (`field_tec_customer` en el vocabulario, de un solo valor). Dos caminos para la misma
@@ -234,10 +255,22 @@ preparado para cuando se retome:
   5. Borrar las filas de `draggableviews_structure` que están guardadas por cliente, que dejan de
      significar nada, y añadir al guardián que la marca de un producto esté en la lista de su cliente.
 
-  **Lo de la mayúscula no es un detalle suelto:** mientras el producto siga con su cliente obligatorio,
-  el botón *+ Product* de la pantalla del catálogo no puede rellenar la marca, porque el parámetro
-  `?target_id=` que sabe leer el formulario está atado al campo de cliente. Eso se resuelve solo al
-  hacer el paso 3.
+  **Y dos decisiones que hay que tomar antes de tocar, no durante.** La primera: el orden de las líneas
+  de los pedidos de venta sale hoy de los pesos que se arrastran en `/tec_crm/%/reorder`, guardados con el
+  número del cliente pegado. Al pasar esa pantalla a ser por marca, **los pedidos ya emitidos pueden
+  cambiar el orden de sus líneas en pantalla**. No cambia ningún dato, pero va contra el principio que ya
+  se adoptó con los precios: un documento emitido no se mueve. Hay que decidir si se acepta o si el orden
+  se congela en la línea el día que nace. La segunda es de significado: a partir del cambio, «los
+  productos del cliente» pasan a ser «los productos de sus marcas», y dos clientes que compartan marca
+  verán exactamente la misma lista. Es lo que se quiere, pero es un cambio de concepto, no de pantalla.
+
+  **Lo que no se toca, y conviene recordarlo cada vez que dé miedo:** el cliente del *pedido*
+  (`tec_order.field_tec_customer`) es un campo distinto que solo comparte nombre. La numeración, el IVA,
+  los precios congelados, la cadena de compras y la de producción se quedan enteras.
+
+  **Un detalle que se resuelve solo al hacer el paso 3:** el botón *+ Product* de la pantalla del catálogo
+  ya rellena la marca desde el 19 de agosto, pero mientras el producto siga con su cliente obligatorio
+  seguirá pidiendo el cliente a mano.
 
 ## 3. Antes de que entren los empleados
 
@@ -1904,6 +1937,60 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-19 (madrugada) — Cuatro asperezas alrededor de la marca, y una marca vacía que no tenía puerta
+
+Primer bloque del plan de marcas y clientes: lo barato, lo suelto y lo reversible, hecho antes de tocar
+nada que pueda romperse. Cuatro cosas que el dueño anotó mirando el formulario de crear una marca y la
+ficha de un término.
+
+**El formulario preguntaba tres cosas que nadie contesta.** Relations con su Parent terms, Weight, y
+Revision information con su Revision log message vienen gratis con cualquier formulario de taxonomía, y
+en este ERP ninguna de las tres hace nada: no hay un solo vocabulario con jerarquía, `new_revision` está
+apagado en todos —así que el mensaje de revisión se escribe sobre una revisión que no ocurre— y la
+pantalla de marcas **no ordena por nada**, `sorts: {}`, así que el peso no coloca a nadie. El sitio donde
+sí se ordenan términos es la pantalla de overview del vocabulario, que escribe ese mismo peso
+arrastrando y no necesita la casilla.
+
+**Y ahí estaba la trampa, que es lo único de este bloque que merecía una prueba de verdad:** Weight es
+una casilla **obligatoria**. Una casilla obligatoria que nadie puede ver debería bloquear el formulario
+para siempre. No lo hace, porque Drupal toma el valor de un elemento inalcanzable de su valor por
+omisión, y ese valor es el peso que el término ya tiene. Pero eso no se puede afirmar leyendo el código:
+la prueba **envía el formulario de verdad**, con sus fichas de seguridad copiadas del HTML, y comprueba
+que la marca se guarda y que sale con peso 0. Se esconden solo en marcas, a propósito: las tres son
+igual de inútiles en colores, tallas y materiales, pero esconder algo en todas partes es una decisión
+distinta de esconderlo donde se pidió.
+
+**El icono naranja llevaba a un canal vacío.** Lo pone la vista `taxonomy_term` de Drupal, que tiene una
+pantalla de tipo canal enganchada a la página, y ese canal lista los **nodos** etiquetados con el
+término. Aquí el contenido son entidades propias, así que estaba vacío en marcas, en colores, en tallas
+y en materiales. Se apaga la pantalla en vez de borrarla: apagada, Drupal ni la engancha —se va el
+icono— ni le da ruta, así que la dirección contesta 404, y si algún día hiciera falta se vuelve con una
+casilla.
+
+**La marca ya viene puesta al crear un producto desde su catálogo,** que es lo que pedía el dueño. Lo
+hace el módulo `epp`, el mismo que ya rellenaba el cliente. Y aquí hay un detalle que no es cosmético:
+**la clave de la dirección tiene que ser distinta.** El cliente se rellena con lo que venga en
+`target_id`, así que si la marca usara esa misma clave, crear un producto desde el catálogo de una marca
+intentaría escribir una marca en la casilla del cliente. El módulo lo rechazaría al validar, pero
+dejaría un aviso en el registro por cada producto. La marca usa `brand_id`, y el guardián vigila que las
+dos sigan siendo distintas.
+
+**El enlace «Manage Product Material» que se pidió no se puede hacer, y conviene saber por qué.**
+`field_tec_product_material` **no es una taxonomía**: es una lista de valores fijos escrita en la
+configuración —semi, leather...—, así que no hay ninguna pantalla que administrar. O se convierte en
+vocabulario de verdad, como los tipos de producto, o ese enlace no existe. Lo que sí se ha puesto con el
+patrón que ya había es un **«Manage brands»** debajo del campo de marca, porque la marca sí es taxonomía.
+
+**Y por el camino apareció un hueco que nadie había pedido arreglar.** Una marca recién creada no tenía
+**nada** en su ficha: ni el aviso de que no tiene productos ni el botón de crear el primero. El módulo
+que embebe la vista se calla cuando la vista sale vacía, y eso deja a una marca nueva sin puerta de
+entrada, que es justo el caso del prospecto de ventas que el dueño había mencionado —una marca puede
+existir antes que sus productos—. Se le ha dicho que la dibuje de todos modos. El guardián lo vigila,
+porque es una casilla que alguien puede desmarcar sin entender qué se lleva por delante.
+
+El guardián sube a **155 comprobaciones** con una sección nueva, y la prueba entera está en
+`scripts/el-formulario-de-la-marca-va-al-grano.php`.
 
 ### 2026-08-19 (madrugada) — Cada marca ya tiene su catálogo, y editarla ya es un botón y no la única puerta
 
