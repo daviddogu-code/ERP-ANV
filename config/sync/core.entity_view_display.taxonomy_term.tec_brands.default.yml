@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.tec_brands.field_tec_brand_catalogue
     - field.field.taxonomy_term.tec_brands.field_tec_customer
     - field.field.taxonomy_term.tec_brands.field_tec_logo
     - taxonomy.vocabulary.tec_brands
@@ -11,6 +12,7 @@ dependencies:
     - image
     - manage_display
     - text
+    - viewfield
 id: taxonomy_term.tec_brands.default
 targetEntityType: taxonomy_term
 bundle: tec_brands
@@ -22,6 +24,16 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 0
+    region: content
+  field_tec_brand_catalogue:
+    type: viewfield_default
+    label: hidden
+    settings:
+      view_title: hidden
+      always_build_output: false
+      empty_view_title: hidden
+    third_party_settings: {  }
+    weight: 10
     region: content
   field_tec_customer:
     type: entity_reference_label

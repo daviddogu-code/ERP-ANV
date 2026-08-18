@@ -1,0 +1,34 @@
+uuid: cbae67d7-90f8-492b-817f-bd8a4aa25adf
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tec_brand_catalogue
+    - taxonomy.vocabulary.tec_brands
+    - views.view.tec_products
+  module:
+    - viewfield
+id: taxonomy_term.tec_brands.field_tec_brand_catalogue
+field_name: field_tec_brand_catalogue
+entity_type: taxonomy_term
+bundle: tec_brands
+label: Catalogue
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    target_uuid: bb307e0c-c4b2-44c9-a029-6c91eff3872f
+    display_id: brand_catalogue
+    arguments: '[term:tid]'
+    items_to_display: ''
+default_value_callback: ''
+settings:
+  force_default: true
+  allowed_views:
+    tec_products: tec_products
+  allowed_display_types:
+    embed: embed
+  handler: 'default:view'
+  handler_settings: {  }
+field_type: viewfield

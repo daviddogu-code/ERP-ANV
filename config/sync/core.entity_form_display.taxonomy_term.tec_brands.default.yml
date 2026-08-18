@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.tec_brands.field_tec_brand_catalogue
     - field.field.taxonomy_term.tec_brands.field_tec_customer
     - field.field.taxonomy_term.tec_brands.field_tec_logo
     - taxonomy.vocabulary.tec_brands
@@ -115,6 +116,7 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
+  field_tec_brand_catalogue: true
   langcode: true
   path: true
   status: true

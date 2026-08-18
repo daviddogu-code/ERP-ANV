@@ -96,59 +96,6 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        edit_taxonomy_term:
-          id: edit_taxonomy_term
-          table: taxonomy_term_data
-          field: edit_taxonomy_term
-          relationship: none
-          group_type: group
-          admin_label: ''
-          entity_type: taxonomy_term
-          plugin_id: entity_link_edit
-          label: ''
-          exclude: true
-          alter:
-            alter_text: true
-            text: " <a class=\"tec-control\" href=\"{{ edit_taxonomy_term }}?destination=/node/4\" title=\"Edit brand\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>"
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          text: edit
-          output_url_as_text: true
-          absolute: false
         field_tec_logo:
           id: field_tec_logo
           table: taxonomy_term__field_tec_logo
@@ -163,7 +110,7 @@ display:
             alter_text: false
             text: ''
             make_link: true
-            path: '/taxonomy/term/{{ tid }}/edit?destination=/node/4'
+            path: '/taxonomy/term/{{ tid }}'
             absolute: false
             external: false
             replace_spaces: false
@@ -231,7 +178,7 @@ display:
             alter_text: false
             text: '<div class="text-align-center"><h5>{{ name }} </h5>'
             make_link: true
-            path: '/taxonomy/term/{{ tid }}/edit?destination=/node/4'
+            path: '/taxonomy/term/{{ tid }}'
             absolute: false
             external: false
             replace_spaces: false
@@ -281,6 +228,59 @@ display:
           separator: ', '
           field_api_classes: false
           convert_spaces: false
+        edit_taxonomy_term:
+          id: edit_taxonomy_term
+          table: taxonomy_term_data
+          field: edit_taxonomy_term
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: taxonomy_term
+          plugin_id: entity_link_edit
+          label: ''
+          exclude: false
+          alter:
+            alter_text: true
+            text: " <a class=\"tec-control\" href=\"{{ edit_taxonomy_term }}?destination=/node/4\" title=\"Edit brand\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>"
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          text: edit
+          output_url_as_text: true
+          absolute: false
       pager:
         type: full
         options:

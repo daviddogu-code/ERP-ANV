@@ -1,0 +1,21 @@
+uuid: d41adfb3-b9b6-42a6-a1f5-3efb264805f8
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+    - viewfield
+    - views
+id: taxonomy_term.field_tec_brand_catalogue
+field_name: field_tec_brand_catalogue
+entity_type: taxonomy_term
+type: viewfield
+settings:
+  target_type: view
+module: viewfield
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
