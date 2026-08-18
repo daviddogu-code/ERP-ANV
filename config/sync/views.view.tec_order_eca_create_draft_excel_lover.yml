@@ -109,48 +109,48 @@ display:
           bef:
             general:
               autosubmit: false
+              auto_submit_sort_only: false
+              autosubmit_breakpoint: ''
               autosubmit_exclude_textfield: false
               autosubmit_textfield_delay: 500
+              autosubmit_textfield_minimum_length: 3
               autosubmit_hide: false
               input_required: false
               allow_secondary: false
               secondary_label: 'Advanced options'
               secondary_open: false
               reset_button_always_show: false
-              autosubmit_textfield_minimum_length: 3
-              autosubmit_breakpoint: ''
-              auto_submit_sort_only: false
             sort:
               plugin_id: default
             filter:
               field_tec_product_type_target_id:
                 plugin_id: default
                 advanced:
-                  field_classes: ''
-                  open_by_default: false
                   sort_options_method: alphabetical_asc
                   sort_options_natural: true
+                  open_by_default: false
+                  field_classes: ''
               field_tec_brand_target_id:
                 plugin_id: default
                 advanced:
-                  field_classes: ''
-                  open_by_default: false
                   sort_options_method: alphabetical_asc
                   sort_options_natural: true
+                  open_by_default: false
+                  field_classes: ''
               field_tec_pattern_target_id:
                 plugin_id: default
                 advanced:
-                  field_classes: ''
-                  open_by_default: false
                   sort_options_method: alphabetical_asc
                   sort_options_natural: true
+                  open_by_default: false
+                  field_classes: ''
               field_tec_colors_target_id:
                 plugin_id: default
                 advanced:
-                  field_classes: ''
-                  open_by_default: false
                   sort_options_method: alphabetical_asc
                   sort_options_natural: true
+                  open_by_default: false
+                  field_classes: ''
       access:
         type: none
         options: {  }
@@ -164,7 +164,7 @@ display:
           id: id
           table: tec_crm_field_data
           field: id
-          relationship: field_tec_customer
+          relationship: reverse__tec_crm__field_tec_brands
           group_type: group
           admin_label: ''
           entity_type: tec_crm
@@ -289,14 +289,15 @@ display:
           admin_label: 'field_tec_brand: Taxonomy term'
           plugin_id: standard
           required: false
-        field_tec_customer:
-          id: field_tec_customer
-          table: tec_product__field_tec_customer
-          field: field_tec_customer
-          relationship: reverse__tec_product__field_tec_color_variations
+        reverse__tec_crm__field_tec_brands:
+          id: reverse__tec_crm__field_tec_brands
+          table: taxonomy_term_field_data
+          field: reverse__tec_crm__field_tec_brands
+          relationship: field_tec_brand
           group_type: group
-          admin_label: 'field_tec_customer: CRM'
-          plugin_id: standard
+          admin_label: 'Customers that buy the brand'
+          entity_type: taxonomy_term
+          plugin_id: entity_reverse
           required: false
       use_ajax: false
       header: {  }

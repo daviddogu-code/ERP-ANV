@@ -122,15 +122,54 @@ function tec_crm_ux_person_title_from_name(FieldableEntityInterface $entity): st
  * blank row. Keep title in sync with Given + Family from field_tec_name.
  */
 function tec_crm_ux_entity_presave(EntityInterface $entity): void {
-  if ($entity->getEntityTypeId() !== 'tec_crm'
-    || $entity->bundle() !== 'tec_contact_person'
-    || !$entity instanceof FieldableEntityInterface
-    || !$entity->hasField('title')) {
+  if ($entity->getEntityTypeId() !== 'tec_crm' || !$entity instanceof FieldableEntityInterface) {
+    return;
+  }
+
+  tec_crm_ux_drop_repeated_brands($entity);
+
+  if ($entity->bundle() !== 'tec_contact_person' || !$entity->hasField('title')) {
     return;
   }
   $title = tec_crm_ux_person_title_from_name($entity);
   if ($title !== '') {
     $entity->set('title', $title);
+  }
+}
+
+/**
+ * Leave one row per brand in the customer's brand list.
+ *
+ * The list answers "which brands do we make for this customer", so it is a set:
+ * saying Rise Fight Gear twice adds nothing, and there is no widget button for
+ * "remove the duplicate I just created" that is any easier than this.
+ *
+ * It is not cosmetic. The one-click draft order -the Excel lover flag- asks a
+ * view for every size of every product of the customer's brands, and that view
+ * reaches the customer through this list. A brand listed twice joins twice, so
+ * the order comes out with every line duplicated. That was measured, not
+ * guessed: with the brand repeated the view returned four rows instead of two.
+ *
+ * Fixed here rather than with DISTINCT in the view because the query is not the
+ * one that is wrong. The guardian still counts duplicates, for the day something
+ * writes to the field without coming through here.
+ */
+function tec_crm_ux_drop_repeated_brands(FieldableEntityInterface $entity): void {
+  if (!$entity->hasField('field_tec_brands') || $entity->get('field_tec_brands')->isEmpty()) {
+    return;
+  }
+
+  $seen = [];
+  foreach ($entity->get('field_tec_brands')->getValue() as $item) {
+    $tid = (string) ($item['target_id'] ?? '');
+    // The order is the house's, so the first mention is the one that stays.
+    if ($tid !== '' && !isset($seen[$tid])) {
+      $seen[$tid] = ['target_id' => $tid];
+    }
+  }
+
+  if (count($seen) !== $entity->get('field_tec_brands')->count()) {
+    $entity->set('field_tec_brands', array_values($seen));
   }
 }
 
