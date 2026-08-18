@@ -516,21 +516,6 @@ actions:
       object: productCreated
     successors:
       -
-        id: Activity_171sw4c
-        condition: ''
-  Activity_171sw4c:
-    plugin: eca_set_field_value
-    label: 'Set the Customer'
-    configuration:
-      field_name: field_tec_customer
-      field_value: '[entity:field_tec_customer]'
-      method: 'set:clear'
-      strip_tags: false
-      trim: false
-      save_entity: true
-      object: productCreated
-    successors:
-      -
         id: Activity_0b1w62d
         condition: Flow_1xu98in
   Activity_1bvex2d:

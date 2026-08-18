@@ -9,7 +9,6 @@ dependencies:
     - field.field.tec_product.tec_product.field_tec_color_embed_vm
     - field.field.tec_product.tec_product.field_tec_color_variations
     - field.field.tec_product.tec_product.field_tec_create_color
-    - field.field.tec_product.tec_product.field_tec_customer
     - field.field.tec_product.tec_product.field_tec_pattern
     - field.field.tec_product.tec_product.field_tec_product_material
     - field.field.tec_product.tec_product.field_tec_product_type
@@ -607,128 +606,6 @@ third_party_settings:
                   field_formatter_class:
                     class: inline-block
             weight: 3
-            additional:
-              bootstrap_styles:
-                block_style:
-                  background:
-                    background_type: null
-                  background_color:
-                    class: null
-                  background_media:
-                    image:
-                      media_id: null
-                    video:
-                      media_id: null
-                    background_options:
-                      background_position: center
-                      background_repeat: no-repeat
-                      background_attachment: not_fixed
-                      background_size: cover
-                  text_color:
-                    class: null
-                  text_alignment:
-                    class: null
-                  padding:
-                    class: _none
-                  padding_left:
-                    class: _none
-                  padding_top:
-                    class: _none
-                  padding_right:
-                    class: _none
-                  padding_bottom:
-                    class: _none
-                  margin:
-                    class: _none
-                  margin_left:
-                    class: _none
-                  margin_top:
-                    class: _none
-                  margin_right:
-                    class: _none
-                  margin_bottom:
-                    class: _none
-                  border:
-                    border_style:
-                      class: null
-                    border_width:
-                      class: _none
-                    border_color:
-                      class: null
-                    rounded_corners:
-                      class: _none
-                    border_left_style:
-                      class: null
-                    border_left_width:
-                      class: _none
-                    border_left_color:
-                      class: null
-                    border_top_style:
-                      class: null
-                    border_top_width:
-                      class: _none
-                    border_top_color:
-                      class: null
-                    border_right_style:
-                      class: null
-                    border_right_width:
-                      class: _none
-                    border_right_color:
-                      class: null
-                    border_bottom_style:
-                      class: null
-                    border_bottom_width:
-                      class: _none
-                    border_bottom_color:
-                      class: null
-                    rounded_corner_top_left:
-                      class: _none
-                    rounded_corner_top_right:
-                      class: _none
-                    rounded_corner_bottom_left:
-                      class: _none
-                    rounded_corner_bottom_right:
-                      class: _none
-                  box_shadow:
-                    class: null
-                  scroll_effects:
-                    class: null
-              component_attributes:
-                block_attributes:
-                  id: ''
-                  class: inline-block
-                  style: ''
-                  data: ''
-                block_title_attributes:
-                  id: ''
-                  class: ''
-                  style: ''
-                  data: ''
-                block_content_attributes:
-                  id: ''
-                  class: ''
-                  style: ''
-                  data: ''
-          f2fd6422-e9ba-4877-9eb6-afc83454a319:
-            uuid: f2fd6422-e9ba-4877-9eb6-afc83454a319
-            region: blb_region_col_1
-            configuration:
-              id: 'field_block:tec_product:tec_product:field_tec_customer'
-              label: Customer
-              label_display: '0'
-              provider: layout_builder
-              context_mapping:
-                entity: layout_builder.entity
-                view_mode: view_mode
-              formatter:
-                type: entity_reference_label
-                label: above
-                settings:
-                  link: true
-                third_party_settings:
-                  field_formatter_class:
-                    class: inline-block
-            weight: 4
             additional:
               bootstrap_styles:
                 block_style:
@@ -1506,7 +1383,6 @@ hidden:
   changed: true
   field_product_name: true
   field_tec_color_embed_vm: true
-  field_tec_customer: true
   field_tec_product_material: true
   field_tec_product_type: true
   langcode: true

@@ -9,7 +9,6 @@ dependencies:
     - field.field.tec_product.tec_product.field_tec_color_embed_vm
     - field.field.tec_product.tec_product.field_tec_color_variations
     - field.field.tec_product.tec_product.field_tec_create_color
-    - field.field.tec_product.tec_product.field_tec_customer
     - field.field.tec_product.tec_product.field_tec_pattern
     - field.field.tec_product.tec_product.field_tec_product_material
     - field.field.tec_product.tec_product.field_tec_product_type
@@ -46,7 +45,6 @@ third_party_settings:
     group_right:
       children:
         - field_tec_brand
-        - field_tec_customer
         - field_tec_product_material
       label: Right
       region: content
@@ -119,16 +117,6 @@ content:
     weight: 7
     region: content
     settings: {  }
-    third_party_settings: {  }
-  field_tec_customer:
-    type: select2_entity_reference
-    weight: 5
-    region: content
-    settings:
-      width: 100%
-      autocomplete: false
-      match_operator: CONTAINS
-      match_limit: 10
     third_party_settings: {  }
   field_tec_pattern:
     type: select2_entity_reference

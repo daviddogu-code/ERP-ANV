@@ -15,7 +15,6 @@ third_party_settings:
     group_left:
       children:
         - name
-        - field_tec_customer
         - description
       label: Left
       region: content
