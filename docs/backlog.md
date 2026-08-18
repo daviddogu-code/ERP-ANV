@@ -223,13 +223,40 @@ preparado para cuando se retome:
   `#states` y su javascript— y que las marcas se vean en la **ficha** del cliente y no solo en su
   formulario.
 
-  **Dos cosas medidas el 19 de agosto que conviene no volver a averiguar.** El campo de cliente del
-  producto alimenta **ocho** sitios, y los dos que duelen son la pestaña Products de la ficha del cliente
-  y la vista del *Excel lover*, la que usa ECA para crear el borrador de pedido: si esa se rompe no se
-  pueden crear pedidos de venta. Pero **varias de las otras seis parecen configuración muerta** —`block_2`
-  no está colocado en ningún sitio, y el quicktabs que usa `block_1`, `block_5` y `block_8` no está puesto
-  en ningún bloque—, así que el primer paso del corte es contar cuáles están vivas de verdad. Puede que
-  el recableado sea la mitad de lo que parece.
+  **El corte está medido, no estimado.** `scripts/quien-lee-el-cliente-del-producto.php` recorre quién lee
+  el campo y, para cada lector, sube la cadena hasta encontrar una puerta de verdad. Resultado: **once
+  lectores vivos y siete muertos**. Los muertos no son trabajo: `block_5` y `page_1` están apagadas,
+  `block_8` solo lo abría un quicktabs que nadie ha colocado, `block_2` no lo nombra nadie, y dos
+  pantallas de la vista del *Excel lover* tampoco.
+
+  De los vivos, **solo tres son recableado de verdad**, porque el campo no les da una columna sino el
+  argumento por el que filtran:
+
+  1. **La consulta del *Excel lover*** (`tec_order_eca_create_draft_excel_lover:default`, que la ECA llama
+     por su nombre). Hoy recibe el número del cliente y devuelve las tallas de *sus* productos, saltando por
+     `field_tec_customer`. Tiene que pasar a saltar por `field_tec_brand` y de la marca a los clientes que
+     la compran, con una relación inversa a `tec_crm.field_tec_brands`. **Si esta se rompe no se pueden
+     crear pedidos de venta**, así que es la primera y con prueba antes y después.
+  2. **La pestaña Products de la ficha del cliente** (`tec_products:block_4`, viva por el quicktabs
+     `tec_crm_contact_tabs`, que sí está colocado). Mismo cambio de argumento.
+  3. **La pantalla *Organize products*** (`/tec_crm/%/reorder`, `tec_products:page_2`), que pasa a ser por
+     marca.
+
+  Los otros ocho vivos son mecánicos: quitar una columna en `block_1` —el bloque de `/p`—, en
+  `brand_catalogue` y en el navegador de productos del borrador; quitar el filtro «por cliente» de
+  `block_1` o cambiarlo por «por marca»; quitar el widget del formulario del producto; sacar el campo de la
+  maqueta de la ficha del producto; y quitar el paso que lo copia en la ECA de duplicar producto.
+
+  **Y una lección del método, que costó dos vueltas:** mirar solo la configuración da un mapa equivocado.
+  Las maquetas de las páginas del ERP viven **en la ficha de cada página, no en la configuración**, y ahí
+  hay bloques de vista metidos a mano. `block_1` salía muerto y está vivo: lo embebe la maqueta de la
+  página «Products». El guion mira ahora las dos fuentes.
+
+  **Un enlace que ya está roto hoy,** y que conviene arreglar al pasar: el botón «+ Product» de `block_2`
+  y de `page_2` construye
+  `...?edit[field_tec_customer][widget][0][target_id]={{ id }}?destination=/tec_crm/{{ id }}` — con dos
+  interrogaciones. La segunda no separa nada, así que el valor del cliente acaba siendo
+  `53?destination=/tec_crm/53`, que no es ningún cliente. Ni rellena ni vuelve.
 
   **Y el precio de venta no está donde se supondría:** vive en la talla
   (`tec_product.tec_size_variation.field_tec_price`, etiquetado «Sales price»), no en el producto ni en el
