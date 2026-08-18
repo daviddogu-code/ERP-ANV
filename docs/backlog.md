@@ -207,56 +207,22 @@ preparado para cuando se retome:
   de guardar nada. Media hora contando la lectura, y mejor hacerlo cuando no haya trabajo a medias
   encima, porque toca setenta ficheros de golpe y se come cualquier diff que haya pendiente.
 
-- **Terminar el modelo de marcas y clientes. Van tres cosas hechas el 19 de agosto** —el catálogo de la
-  marca, las cuatro asperezas de su formulario y **la lista de marcas en la ficha del cliente, con su
-  dato mudado**— y están contadas abajo, en Hecho. La observación del dueño que lo puso todo en marcha:
-  *una empresa puede comprar varias marcas, y la misma marca la pueden comprar dos clientes distintos.*
+- **Terminar el modelo de marcas y clientes. El corte está hecho: el 19 de agosto el producto soltó al
+  cliente y el campo se borró.** Están contadas abajo, en Hecho, las cinco cosas de ese día: el catálogo de
+  la marca, las cuatro asperezas de su formulario, la lista de marcas en la ficha del cliente con su dato
+  mudado, el pedido de un clic saliendo ya de la marca, y el corte entero con sus recableados. La
+  observación del dueño que lo puso todo en marcha: *una empresa puede comprar varias marcas, y la misma
+  marca la pueden comprar dos clientes distintos.*
 
-  **Lo que queda, y la regla que ordena lo que falta:** la relación cliente–marca ya existe en su sitio
-  nuevo, así que **el camino para cortar está abierto**. Queda el corte del cliente del producto con sus
-  recableados de una sentada, después el orden en dos niveles de las proformas, y al final el catálogo en
-  formato de líneas de pedido con el precio editable, que es la pantalla más grande y la única que no
-  bloquea a ninguna otra.
+  **Lo que queda son dos cosas, y ninguna bloquea a la otra:** el **orden en dos niveles de las proformas**
+  —primero por el orden de marcas del cliente, después por el de productos dentro de la marca—, que es lo
+  que se gana de verdad con todo el cambio; y el **catálogo en formato de líneas de pedido con el precio
+  editable**, que es la pantalla más grande.
 
-  **Dos cosas menores que se dejaron fuera del bloque 2 a propósito:** que la lista de marcas se esconda
-  cuando el contacto no es cliente —la maquinaria existe, es la misma del bloque de proveedor con su
-  `#states` y su javascript— y que las marcas se vean en la **ficha** del cliente y no solo en su
-  formulario.
-
-  **El corte está medido, no estimado.** `scripts/quien-lee-el-cliente-del-producto.php` recorre quién lee
-  el campo y, para cada lector, sube la cadena hasta encontrar una puerta de verdad. Resultado: **once
-  lectores vivos y siete muertos**. Los muertos no son trabajo: `block_5` y `page_1` están apagadas,
-  `block_8` solo lo abría un quicktabs que nadie ha colocado, `block_2` no lo nombra nadie, y dos
-  pantallas de la vista del *Excel lover* tampoco.
-
-  De los vivos, **solo tres son recableado de verdad**, porque el campo no les da una columna sino el
-  argumento por el que filtran:
-
-  1. **La consulta del *Excel lover*** (`tec_order_eca_create_draft_excel_lover:default`, que la ECA llama
-     por su nombre). Hoy recibe el número del cliente y devuelve las tallas de *sus* productos, saltando por
-     `field_tec_customer`. Tiene que pasar a saltar por `field_tec_brand` y de la marca a los clientes que
-     la compran, con una relación inversa a `tec_crm.field_tec_brands`. **Si esta se rompe no se pueden
-     crear pedidos de venta**, así que es la primera y con prueba antes y después.
-  2. **La pestaña Products de la ficha del cliente** (`tec_products:block_4`, viva por el quicktabs
-     `tec_crm_contact_tabs`, que sí está colocado). Mismo cambio de argumento.
-  3. **La pantalla *Organize products*** (`/tec_crm/%/reorder`, `tec_products:page_2`), que pasa a ser por
-     marca.
-
-  Los otros ocho vivos son mecánicos: quitar una columna en `block_1` —el bloque de `/p`—, en
-  `brand_catalogue` y en el navegador de productos del borrador; quitar el filtro «por cliente» de
-  `block_1` o cambiarlo por «por marca»; quitar el widget del formulario del producto; sacar el campo de la
-  maqueta de la ficha del producto; y quitar el paso que lo copia en la ECA de duplicar producto.
-
-  **Y una lección del método, que costó dos vueltas:** mirar solo la configuración da un mapa equivocado.
-  Las maquetas de las páginas del ERP viven **en la ficha de cada página, no en la configuración**, y ahí
-  hay bloques de vista metidos a mano. `block_1` salía muerto y está vivo: lo embebe la maqueta de la
-  página «Products». El guion mira ahora las dos fuentes.
-
-  **Un enlace que ya está roto hoy,** y que conviene arreglar al pasar: el botón «+ Product» de `block_2`
-  y de `page_2` construye
-  `...?edit[field_tec_customer][widget][0][target_id]={{ id }}?destination=/tec_crm/{{ id }}` — con dos
-  interrogaciones. La segunda no separa nada, así que el valor del cliente acaba siendo
-  `53?destination=/tec_crm/53`, que no es ningún cliente. Ni rellena ni vuelve.
+  **El orden de las proformas tiene la mitad del camino hecho.** La pestaña Products de la ficha ya sale
+  agrupada por marca y en el orden que el dueño arrastra, y ese orden lo pone el módulo al pintar la vista
+  (`tec_crm_ux_views_pre_render`) porque **en la consulta no se puede**: unir otra vez la lista de marcas
+  para ordenar por su posición duplica las filas. La proforma tendrá el mismo problema y la misma salida.
 
   **Y el precio de venta no está donde se supondría:** vive en la talla
   (`tec_product.tec_size_variation.field_tec_price`, etiquetado «Sales price»), no en el producto ni en el
@@ -264,43 +230,42 @@ preparado para cuando se retome:
   agrupadas por color, no una lista de productos. Editarlas dentro de una vista no necesita nada nuevo:
   es lo que ya hace `views_entity_form_field` con las cantidades de `/o/draft/%`.
 
-  **El producto sigue apuntando a un cliente** (`field_tec_customer` en `tec_product`, obligatorio), y ese
-  es el único de los dos caminos viejos que queda: el de la marca se retiró el 19 de agosto, después de
-  mudar su dato.
-
   El modelo acordado es: **los productos van dentro de la marca, y el cliente elige qué marcas le
-  hacemos**, en su ficha y en el orden que decida el dueño. Los pasos, con los dos primeros ya hechos:
+  hacemos**, en su ficha y en el orden que decida el dueño. Los pasos, con los tres primeros hechos:
 
   1. ~~Un campo nuevo en las fichas de contacto —`tec_contact_organization` y `tec_contact_person`—, de
      varios valores y arrastrable, apuntando a marcas.~~ Hecho el 19 de agosto.
   2. ~~Pasar a ese campo lo que hoy diga el `field_tec_customer` de cada marca, y **retirar ese
      campo**.~~ Hecho el 19 de agosto, con la comprobación previa de que no se perdía ningún par.
-  3. Retirar el `field_tec_customer` del producto y **recablear los cuatro sitios que lo leen**: la
-     vista que crea las proformas del *Excel lover*, la pestaña Products de la ficha del cliente, la
-     pantalla de *Organize products* —que pasa a ser por marca— y la columna con su filtro en las
-     listas de productos.
+  3. ~~Retirar el `field_tec_customer` del producto y **recablear los sitios que lo leen**.~~ Hecho el 19 de
+     agosto: la vista que crea las proformas del *Excel lover*, la pestaña Products de la ficha del cliente
+     —que además salió agrupada por marca—, la pantalla de *Organize products*, las columnas y filtros de
+     las listas, el widget del formulario, el campo de la ficha del producto y el paso de la ECA que lo
+     copiaba al duplicar.
   4. Ordenar las líneas de la proforma en dos niveles: primero por el orden de marcas del cliente,
      después por el orden de productos dentro de la marca. **Hoy las proformas no tienen ningún
      orden**, y esto es lo que se gana de verdad con el cambio.
-  5. Borrar las filas de `draggableviews_structure` que están guardadas por cliente, que dejan de
-     significar nada, y añadir al guardián que la marca de un producto esté en la lista de su cliente.
+  5. ~~Borrar las filas de `draggableviews_structure` guardadas por cliente y añadir al guardián que la
+     marca de un producto esté en la lista de su cliente.~~ Se cae por sí solo: la pantalla de ordenar
+     **sigue recibiendo al cliente** a propósito, así que esas filas siguen valiendo y el arrastre de ocho
+     clientes no se ha perdido; y la regla del guardián no tiene a quién contradecir, porque el producto ya
+     no lleva cliente. El guardián vigila ahora lo que sí puede fallar: que **ningún producto se quede sin
+     marca**.
 
-  **Y dos decisiones que hay que tomar antes de tocar, no durante.** La primera: el orden de las líneas
-  de los pedidos de venta sale hoy de los pesos que se arrastran en `/tec_crm/%/reorder`, guardados con el
-  número del cliente pegado. Al pasar esa pantalla a ser por marca, **los pedidos ya emitidos pueden
-  cambiar el orden de sus líneas en pantalla**. No cambia ningún dato, pero va contra el principio que ya
-  se adoptó con los precios: un documento emitido no se mueve. Hay que decidir si se acepta o si el orden
-  se congela en la línea el día que nace. La segunda es de significado: a partir del cambio, «los
-  productos del cliente» pasan a ser «los productos de sus marcas», y dos clientes que compartan marca
-  verán exactamente la misma lista. Es lo que se quiere, pero es un cambio de concepto, no de pantalla.
+  **La decisión que sigue pendiente, y hay que tomarla antes de tocar la proforma:** el orden de las líneas
+  de los pedidos de venta sale de los pesos que se arrastran en `/tec_crm/%/reorder`. Si algún día ese orden
+  cambia, **los pedidos ya emitidos cambian el orden de sus líneas en pantalla**. No cambia ningún dato,
+  pero va contra el principio que ya se adoptó con los precios: un documento emitido no se mueve. Hay que
+  decidir si se acepta o si el orden se congela en la línea el día que nace.
+
+  **Y un cambio de significado que ya está en marcha**, no de pantalla: «los productos del cliente» son
+  ahora «los productos de sus marcas», así que dos clientes que compartan marca ven exactamente la misma
+  lista. Es lo que se quiere, y de paso arregló algo que estaba roto sin que nadie lo supiera: el segundo
+  cliente de una marca no recibía nada en su pedido de un clic.
 
   **Lo que no se toca, y conviene recordarlo cada vez que dé miedo:** el cliente del *pedido*
   (`tec_order.field_tec_customer`) es un campo distinto que solo comparte nombre. La numeración, el IVA,
   los precios congelados, la cadena de compras y la de producción se quedan enteras.
-
-  **Un detalle que se resuelve solo al hacer el paso 3:** el botón *+ Product* de la pantalla del catálogo
-  ya rellena la marca desde el 19 de agosto, pero mientras el producto siga con su cliente obligatorio
-  seguirá pidiendo el cliente a mano.
 
 ## 3. Antes de que entren los empleados
 
@@ -1967,6 +1932,104 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-19 (tarde) — El producto suelta al cliente: el campo se ha ido, y la ficha del cliente enseña marcas
+
+Se cerró el corte entero de una sentada. El producto ya no apunta a ningún cliente: **el campo
+`field_tec_customer` de `tec_product` está borrado**, y las cinco pantallas que lo leían suben ahora por la
+marca. Con el respaldo delante —`antes-de-quitar-el-cliente-del-producto`, las cinco piezas— porque esto
+borra un campo con datos dentro y no hay vuelta atrás con `drush`.
+
+**La pestaña Products de la ficha del cliente cambió más de lo que decía el plan, y para bien.** El plan
+era cambiarle el argumento; el dueño pidió además verla **agrupada por marca**, y eso se hizo: cada marca
+es un bloque con su nombre enlazado a su ficha y **su propio botón «+ Product»** que ya llega con la marca
+rellenada y con el camino de vuelta a la ficha del cliente. El botón viejo, el que salía cuando la lista
+estaba vacía, llevaba **dos interrogaciones en la misma dirección** y el valor del cliente acababa siendo
+`53?destination=/tec_crm/53`: ni rellenaba ni volvía. Ya no existe.
+
+**Y ahí apareció el único sitio donde Views no llegaba.** Los bloques tenían que salir en el orden de
+marcas que el dueño arrastra en la ficha del cliente, o sea por la *posición* de cada marca en esa lista.
+Ordenar por eso en la consulta significa unir otra vez la tabla de la lista, y esa unión **duplica las
+filas**: cada producto salía tantas veces como marcas tuviera el cliente. Así que el orden no lo pone la
+consulta: lo pone el módulo **al terminar, cuando la vista se pinta** (`tec_crm_ux_views_pre_render`), que
+es reordenar una lista corta que ya está en memoria. Ordenación estable, de modo que **dentro de cada marca
+sigue mandando el arrastre** de la pantalla de ordenar. La prueba lo mira por los dos lados y a propósito
+con el arrastre al revés del orden de marcas, para que las dos cosas no puedan salir bien por casualidad.
+
+**La pantalla de ordenar productos sigue recibiendo al cliente, y eso era la decisión delicada.** El
+módulo `draggableviews` guarda los pesos con los argumentos de la vista pegados a la clave, así que si esa
+pantalla pasara a recibir la marca, **el orden arrastrado de ocho clientes se quedaría huérfano sin que
+nada avisara**. Sigue recibiendo al cliente: cambia de dónde salen las filas y nada más. La prueba escribe
+pesos a mano, comprueba que salen tal cual, y al recoger comprueba que **no se ha llevado las filas de los
+demás clientes**.
+
+**Lo mecánico, que era quitar sin pensar mucho, tuvo dos sitios con cuidado.** El paso de la ECA que
+copiaba el cliente al duplicar un producto no se podía borrar a secas: los pasos van encadenados y quitar
+el del medio corta lo que venía detrás, así que se cosió —quien apuntaba al paso pasa a apuntar a donde
+apuntaba el paso— conservando la condición «solo si el producto tiene colores» que colgaba de ese enlace.
+Y se editó también el **dibujo** del proceso, no solo el ejecutable, que el guardián compara los dos y
+canta si se separan. Lo demás fue el widget del formulario, **el campo dejó de ser obligatorio** —así se
+podía crear un producto sin cliente antes de borrar nada, y si el borrado se hubiera torcido no se habría
+roto el ERP—, el campo fuera de la maqueta de la ficha, y las columnas y filtros de las listas.
+
+**El corte se midió antes de darlo, y de medirlo salió una lección del método que conviene no olvidar.**
+`scripts/quien-lee-el-cliente-del-producto.php` recorrió quién leía el campo y, por cada lector, subió la
+cadena hasta encontrar una puerta de verdad: **once lectores vivos y siete muertos**, y de los vivos solo
+tres eran recableado —los otros ocho eran quitar columnas y filtros—. La lección costó dos vueltas: **mirar
+solo la configuración da un mapa equivocado**, porque las maquetas de las páginas del ERP viven en la ficha
+de cada página y ahí hay bloques de vista metidos a mano. `block_1` salía muerto y está vivo: lo embebe la
+maqueta de la página «Products». El guion mira ya las dos fuentes.
+
+Al pasar el peine quedaban tres nombres muertos en la configuración, que no rompían nada hoy pero son una
+trampa para el siguiente que abra esa pantalla: el **buscador de una sola caja** del bloque de `/p` seguía
+teniendo el cliente en su lista de campos por los que buscar, los **ajustes del filtro** que ya no existe
+se habían quedado huérfanos, y los grupos de los formularios del producto y de la marca lo seguían
+listando como hijo. Barridos en `scripts/barrer-los-restos-del-cliente.php`, que además dice en voz alta
+lo que no sabe arreglar.
+
+**Las dos cosas menores que estaban aparcadas se hicieron, y la segunda tapa un agujero que no se había
+visto.** La lista de marcas **solo sale si el contacto es cliente**, con el mismo truco que esconde los
+campos de compra cuando no es proveedor; esconder es solo para los ojos, así que destildar «Customer» no
+borra lo que hubiera guardado. Y las marcas **se ven ya en la ficha**, al lado del tipo de contacto y cada
+una enlazada. Esto parecía duplicar la pestaña agrupada y no lo hace: **una marca recién asignada y
+todavía sin productos no aparecía en ningún sitio**, porque la pestaña agrupa por marca y una marca sin
+filas no pinta bloque. El cliente parecía no comprar esa marca, y no había manera de crearle el primer
+producto desde su ficha. Ahora se ve, y desde ahí se llega a la marca, que sí tiene su botón.
+
+**Guardián en 167 comprobaciones, todas en verde, y prueba de humo en 61 pantallas.** La comprobación 17
+cambió de pregunta: ya no compara dos sitios —solo queda uno— sino que **exige que ningún producto se
+quede sin marca**, que ahora es quedarse sin cliente. Se comprobó antes de borrar que no había ninguno
+suelto.
+
+**Tres pruebas de la casa estaban fallando por hechos del mundo y no por el código**, y esto ya había
+pasado antes con la misma forma, así que se arreglaron igual: preguntando por la regla y no por el dato
+del día. Los enlaces a los catálogos iban a buscar los productos **887, 888 y 889**, que dejaron de existir
+el día que se rehizo el juego de pruebas; ahora busca una ficha de cada clase al vuelo, y de paso resultó
+que en la parte de los formularios embebidos **una ficha inexistente no reventaba**: pasaba por buena una
+pantalla de añadir haciéndose pasar por una de editar. La lista de la compra exigía un número con el
+formato `AA-NNN`, de antes de que el código del proveedor entrara en el nombre. Y la prueba de numeración
+esperaba `26-001` para una venta sin cliente cuando **existe un pedido de verdad, el 1003, que ya se llama
+así**. La cuarta era la pantalla de marcas: para probar la lista vacía despublicaba *la única marca que
+había*, y desde que hay dos, la lista nunca quedaba vacía y la prueba se quejaba de una pantalla que estaba
+bien.
+
+El aviso que sale al final del guardián, `The reference view /tec_crm_references/ cannot be found`, se
+volvió a mirar y **no es de este trabajo**: la vista existe, está encendida y sus cuatro pantallas están;
+lo que falla es la comprobación de permisos cuando el formulario se monta desde la consola. En el
+navegador no sale.
+
+Las recetas: `scripts/las-pantallas-del-cliente-suben-por-la-marca.php`,
+`scripts/la-pestana-agrupa-por-marca.php`, `scripts/el-producto-suelta-al-cliente.php`,
+`scripts/adios-al-cliente-del-producto.php`, `scripts/barrer-los-restos-del-cliente.php` y
+`scripts/la-ficha-del-cliente-ensena-sus-marcas.php`. Las pruebas nuevas:
+`scripts/la-pestana-del-cliente-sale-de-la-marca.php` y
+`scripts/las-marcas-solo-salen-si-es-cliente.php`.
+
+Queda del modelo el **orden en dos niveles de las proformas**, que es lo que se gana de verdad, y el
+catálogo con precios editables. Y **dos cosas del plan se caen por sí solas**: no hay que borrar las filas
+de `draggableviews_structure` guardadas por cliente, porque la pantalla sigue recibiendo al cliente y
+siguen valiendo; y la regla del guardián «que la marca de un producto esté en la lista de su cliente» ya no
+tiene sentido, porque el producto no tiene cliente al que contradecir.
 
 ### 2026-08-19 — Una prueba se comió el juego de pruebas de la casa, y el aviso llegó por la prueba de humo
 
