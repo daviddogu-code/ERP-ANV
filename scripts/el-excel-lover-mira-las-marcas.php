@@ -199,13 +199,12 @@ $elOtro = $contactos->create([
 $elOtro->save();
 $creadas[] = $elOtro;
 
-// El producto todavia lleva su cliente, que es lo que se va a retirar. Se le pone
-// el de siempre, para que la primera mitad tenga sentido antes del cambio.
+// El producto solo lleva su marca. Llevaba tambien un cliente propio, que es por
+// donde iba esta consulta antes del cambio; se retiro el 19 de agosto de 2026.
 $producto = $productos->create([
   'type' => 'tec_product',
   'field_product_name' => RASTRO . ' producto',
   'field_tec_brand' => [['target_id' => $marca->id()]],
-  'field_tec_customer' => [['target_id' => $deSiempre->id()]],
 ]);
 $producto->save();
 $creadas[] = $producto;

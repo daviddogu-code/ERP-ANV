@@ -2,23 +2,29 @@
 
 /**
  * @file
- * Quien compra cada marca, segun los tres sitios que lo dicen.
+ * Quien compra cada marca, y cuantos productos tiene.
  *
  *   php vendor\bin\drush.php scr scripts/quien-compra-cada-marca.php
  *
- * La misma pregunta ha estado contestada en tres lugares distintos:
+ * Esta pregunta estuvo contestada en tres sitios a la vez, y los tres se
+ * contradecian sin que nada avisara:
  *
- *   1. La marca lo decia de si misma, en su campo Customer. Una sola casilla, o
- *      sea que una marca solo podia tener un cliente. Retirado el 19 de agosto
- *      de 2026, cuando sus datos se mudaron al tercero.
- *   2. Cada producto lo dice por su cuenta, con su propio campo Customer, que
- *      hoy sigue siendo obligatorio. Nada obliga a que coincida con su marca.
- *   3. Y el cliente lo dice de sus marcas, que es el sitio donde se queda.
+ *   1. La marca lo decia de si misma, en su campo Customer. Una sola casilla, o sea
+ *      que una marca solo podia tener un cliente. Retirado el 19 de agosto de 2026.
+ *   2. Cada producto lo decia por su cuenta, con su propio campo Customer, que
+ *      ademas era obligatorio. Retirado el 19 de agosto de 2026.
+ *   3. Y el cliente lo dice de sus marcas, en una lista suya y ordenada a mano. Este
+ *      es el que se quedo, y hoy es el unico.
+ *
+ * Asi que ahora solo hay una respuesta y este guion la ensena, con las dos cosas que
+ * pueden estar sueltas: una marca que nadie compra, que no es un error pero conviene
+ * saberlo, y un producto sin marca, que si lo es. Desde el corte, un producto sin
+ * marca no aparece en la ficha de ningun cliente y no da ningun aviso.
  *
  * Solo mira. No arregla nada, no escribe nada.
  */
 
-const CAMPO_NUEVO = 'field_tec_brands';
+const CAMPO = 'field_tec_brands';
 
 $gestor = \Drupal::entityTypeManager();
 \Drupal::currentUser()->setAccount($gestor->getStorage('user')->load(1));
@@ -29,76 +35,59 @@ $contactos = $gestor->getStorage('tec_crm');
 
 $marcas = $terminos->loadByProperties(['vid' => 'tec_brands']);
 
-/**
- * El nombre de un contacto, con su numero detras para poder buscarlo.
- */
-$quien = function ($ficha): string {
-  return $ficha ? $ficha->label() . ' (' . $ficha->id() . ')' : '(ninguno)';
-};
-
 print "\n";
 print "=====================================================================\n";
 print "  Quien compra cada marca\n";
 print "=====================================================================\n";
 
-$hayCampoNuevo = isset(\Drupal::service('entity_field.manager')
-  ->getFieldDefinitions('tec_crm', 'tec_contact_organization')[CAMPO_NUEVO]);
-
 printf("\n  marcas: %d, productos: %d, contactos: %d\n", count($marcas),
   $productos->getQuery()->accessCheck(FALSE)->condition('type', 'tec_product')->count()->execute(),
   $contactos->getQuery()->accessCheck(FALSE)->count()->execute());
-printf("  el sitio nuevo (%s en el contacto): %s\n", CAMPO_NUEVO,
-  $hayCampoNuevo ? 'existe' : 'todavia no existe');
+
+$nadieLaCompra = 0;
 
 foreach ($marcas as $marca) {
-  printf("\n  %s (%s)\n", $marca->label(), $marca->id());
-  print '  ' . str_repeat('-', 66) . "\n";
-
-  // 1. Lo que decia la marca de si misma.
-  if (!$marca->hasField('field_tec_customer')) {
-    print "    dice la marca            (ya no tiene ese campo)\n";
-  }
-  else {
-    printf("    dice la marca            %s\n", $quien($marca->get('field_tec_customer')->entity));
-  }
-
-  // 2. Lo que dicen sus productos.
-  $ids = $productos->getQuery()
+  $cuantos = (int) $productos->getQuery()
     ->accessCheck(FALSE)
     ->condition('type', 'tec_product')
     ->condition('field_tec_brand', $marca->id())
+    ->count()
     ->execute();
-  $porProducto = [];
-  foreach ($productos->loadMultiple($ids) as $producto) {
-    $cliente = $producto->get('field_tec_customer')->entity;
-    $clave = $cliente ? $cliente->id() : '0';
-    $porProducto[$clave] = ($porProducto[$clave] ?? 0) + 1;
-  }
-  if ($porProducto === []) {
-    print "    dicen sus productos      (no tiene productos)\n";
-  }
-  foreach ($porProducto as $cid => $cuantos) {
-    printf("    dicen sus productos      %-40s en %d producto%s\n",
-      $quien($cid === '0' ? NULL : $contactos->load($cid)), $cuantos, $cuantos === 1 ? '' : 's');
+
+  $suyos = $contactos->loadMultiple($contactos->getQuery()
+    ->accessCheck(FALSE)
+    ->condition(CAMPO, $marca->id())
+    ->execute());
+
+  $quienes = [];
+  foreach ($suyos as $cliente) {
+    // La posicion en la lista del cliente es lo que ordena los bloques de su pestana
+    // de productos, asi que se ensena: es un dato que se arrastra y no se ve.
+    $posicion = NULL;
+    foreach ($cliente->get(CAMPO)->getValue() as $delta => $item) {
+      if ((string) ($item['target_id'] ?? '') === (string) $marca->id()) {
+        $posicion = $delta;
+        break;
+      }
+    }
+    $quienes[] = sprintf('%s (%s)%s', $cliente->label(), $cliente->id(),
+      $posicion === NULL ? '' : ', la ' . ($posicion + 1) . '.ª de su lista');
   }
 
-  // 3. Lo que dicen los clientes de sus marcas.
-  if ($hayCampoNuevo) {
-    $desdeCliente = $contactos->loadMultiple($contactos->getQuery()
-      ->accessCheck(FALSE)
-      ->condition(CAMPO_NUEVO, $marca->id())
-      ->execute());
-    if ($desdeCliente === []) {
-      print "    dicen los clientes       (ninguno la tiene puesta)\n";
-    }
-    foreach ($desdeCliente as $cliente) {
-      printf("    dicen los clientes       %s\n", $quien($cliente));
-    }
+  if ($quienes === []) {
+    $nadieLaCompra++;
   }
+
+  printf("\n  %s (%s), %d producto%s\n", $marca->label(), $marca->id(),
+    $cuantos, $cuantos === 1 ? '' : 's');
+  print '  ' . str_repeat('-', 66) . "\n";
+  print $quienes === []
+    ? "    no la compra nadie\n"
+    : '    ' . implode("\n    ", $quienes) . "\n";
 }
 
 print "\n";
-print "  Productos sin marca\n";
+print "  Productos sin marca, que no salen en la ficha de ningun cliente\n";
 print '  ' . str_repeat('-', 66) . "\n";
 $sinMarca = $productos->loadMultiple($productos->getQuery()
   ->accessCheck(FALSE)
@@ -109,39 +98,9 @@ if ($sinMarca === []) {
   print "    ninguno\n";
 }
 foreach ($sinMarca as $producto) {
-  printf("    %s (%s), cliente %s\n", $producto->label(), $producto->id(),
-    $quien($producto->get('field_tec_customer')->entity));
+  printf("    %s (%s)\n", $producto->label(), $producto->id());
 }
 
 print "\n";
-print "  Productos cuyo cliente no es el de su marca\n";
-print '  ' . str_repeat('-', 66) . "\n";
-$discrepan = 0;
-$puedenDiscrepar = $marcas !== [] && reset($marcas)->hasField('field_tec_customer');
-if (!$puedenDiscrepar) {
-  print "    ya no pueden: la marca no tiene cliente propio con el que discrepar\n";
-}
-$conMarca = $puedenDiscrepar
-  ? $productos->loadMultiple($productos->getQuery()
-    ->accessCheck(FALSE)
-    ->condition('type', 'tec_product')
-    ->exists('field_tec_brand')
-    ->execute())
-  : [];
-foreach ($conMarca as $producto) {
-  $marca = $producto->get('field_tec_brand')->entity;
-  $suyo = $marca && $marca->hasField('field_tec_customer')
-    ? $marca->get('field_tec_customer')->entity
-    : NULL;
-  $mio = $producto->get('field_tec_customer')->entity;
-  if ($suyo && $mio && $suyo->id() !== $mio->id()) {
-    $discrepan++;
-    printf("    %s (%s): el producto dice %s, la marca %s dice %s\n",
-      $producto->label(), $producto->id(), $quien($mio), $marca->label(), $quien($suyo));
-  }
-}
-if ($puedenDiscrepar && $discrepan === 0) {
-  print "    ninguno\n";
-}
-
-print "\n=====================================================================\n\n";
+printf("  %d marcas que no compra nadie.\n", $nadieLaCompra);
+print "=====================================================================\n\n";

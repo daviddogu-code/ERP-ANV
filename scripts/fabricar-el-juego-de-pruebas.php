@@ -89,9 +89,11 @@ $cliente = $anotar('cliente', $gestor->getStorage('tec_crm')->create([
   'type' => 'tec_contact_organization',
   'title' => 'PRUEBA cliente',
   'field_tec_contact_type' => $tipoCliente->id(),
-  // Quien compra cada marca lo dice el cliente desde el 19 de agosto de 2026, y
-  // el producto de aqui abajo lleva esta marca. Sin esta linea el juego de
-  // pruebas nace contradiciendose y el guardian lo canta.
+  // Esta linea es la que ata el cliente al producto de aqui abajo, y sin ella el
+  // juego de pruebas no sirve: media docena de pantallas del cliente -su pestana de
+  // productos, la de ordenarlos, el pedido de un clic- salen de la marca que compra,
+  // no del producto. Antes esa union se escribia al reves, en el producto; el
+  // producto solto al cliente el 19 de agosto de 2026.
   'field_tec_brands' => $marca->id(),
 ]));
 
@@ -107,7 +109,6 @@ $producto = $anotar('producto', $gestor->getStorage('tec_product')->create([
   'title' => 'PRUEBA producto',
   'field_product_name' => 'PRUEBA producto',
   'field_tec_brand' => $marca->id(),
-  'field_tec_customer' => $cliente->id(),
   'field_tec_product_type' => $tipoProducto->id(),
   'field_tec_product_material' => 'leather',
 ]));

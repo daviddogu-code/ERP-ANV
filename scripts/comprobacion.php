@@ -2063,19 +2063,23 @@ comprobar($resultados, 'el canal rss de las fichas de termino sigue apagado',
 comprobar($resultados, 'el formulario de la marca no pregunta lo que nadie contesta',
   function_exists('_admin_form_styles_hide_unused_brand_form_parts'));
 
-// Las dos claves tienen que ser distintas. El campo de cliente del producto se
-// rellena con lo que venga en `target_id`, asi que si la marca usara esa misma
-// clave, crear un producto desde el catalogo de una marca intentaria escribir
-// una marca en la casilla del cliente.
+// El «+ Product» del catalogo de una marca y el de cada bloque de la pestana del
+// cliente llevan la marca en la direccion, y quien la recoge al abrir el formulario
+// es el modulo epp con esta clave. Si se le cambiara, los botones seguirian
+// funcionando pero abririan el formulario en blanco, que es de lo que nadie se queja
+// hasta que ya ha creado el producto en la marca equivocada.
 $claveMarca = (string) (\Drupal::config('field.field.tec_product.tec_product.field_tec_brand')
   ->get('third_party_settings.epp.value') ?? '');
-$claveCliente = (string) (\Drupal::config('field.field.tec_product.tec_product.field_tec_customer')
-  ->get('third_party_settings.epp.value') ?? '');
 comprobar($resultados, 'la marca se rellena desde la direccion',
-  $claveMarca !== '', $claveMarca !== '' ? $claveMarca : 'no se rellena');
-comprobar($resultados, 'y con una clave distinta de la del cliente',
-  $claveMarca !== '' && $claveMarca !== $claveCliente,
-  $claveCliente !== '' ? 'el cliente usa ' . $claveCliente : 'el cliente ya no se rellena');
+  $claveMarca === '[current-page:query:brand_id]', $claveMarca !== '' ? $claveMarca : 'no se rellena');
+
+$botonesMarca = 0;
+foreach (\Drupal::config('views.view.tec_products')->get('display') ?? [] as $pantalla) {
+  $escrito = json_encode($pantalla['display_options'] ?? []);
+  $botonesMarca += substr_count((string) $escrito, 'brand_id=');
+}
+comprobar($resultados, 'y los botones de crear producto la llevan escrita',
+  $botonesMarca >= 3, $botonesMarca . ' botones la llevan');
 
 titulo('17. Quien compra cada marca se dice en un solo sitio');
 
@@ -2120,32 +2124,27 @@ comprobar($resultados, 'y la marca ya no lleva un cliente propio que contradiga'
   \Drupal::config('field.field.taxonomy_term.tec_brands.field_tec_customer')->isNew(),
   'field.field.taxonomy_term.tec_brands.field_tec_customer');
 
-// La comprobacion de fondo, la que mira los datos: mientras el producto siga
-// teniendo su propio cliente, los dos tienen que estar de acuerdo. Un producto
-// que apunta a un cliente que no compra su marca cambiara de dueno el dia del
-// corte, y sin esto se descubriria despues.
-$desacuerdos = [];
+// Y el producto ya no lleva el suyo. Lo llevaba, y era el tercer sitio donde se
+// decia lo mismo de tres maneras distintas.
+comprobar($resultados, 'y el producto tampoco',
+  !isset(\Drupal::service('entity_field.manager')->getFieldDefinitions('tec_product', 'tec_product')['field_tec_customer']),
+  'field_tec_customer en tec_product');
+
+// La comprobacion de fondo, la que mira los datos. Desde que el cliente se alcanza
+// subiendo por la marca, un producto SIN marca no aparece en la ficha de ningun
+// cliente: ni en su pestana de productos, ni en la de ordenarlos, ni en el pedido de
+// un clic. No da ningun error, simplemente no esta en ningun sitio. Antes la marca
+// era una etiqueta y esto no importaba.
+$sinMarca = [];
 foreach ($almacenVariacion->loadMultiple($almacenVariacion->getQuery()
   ->accessCheck(FALSE)
   ->condition('type', 'tec_product')
-  ->exists('field_tec_brand')
-  ->exists('field_tec_customer')
-  ->execute()) as $productoMarca) {
-  $marcaDelProducto = (string) $productoMarca->get('field_tec_brand')->target_id;
-  $clienteDelProducto = $productoMarca->get('field_tec_customer')->entity;
-  if (!$clienteDelProducto || !$clienteDelProducto->hasField($campoMarcas)) {
-    continue;
-  }
-  $lasSuyas = array_map(
-    fn(array $v): string => (string) $v['target_id'],
-    $clienteDelProducto->get($campoMarcas)->getValue()
-  );
-  if (!in_array($marcaDelProducto, $lasSuyas, TRUE)) {
-    $desacuerdos[] = $productoMarca->label() . ' (' . $productoMarca->id() . ')';
-  }
+  ->notExists('field_tec_brand')
+  ->execute()) as $productoSuelto) {
+  $sinMarca[] = $productoSuelto->label() . ' (' . $productoSuelto->id() . ')';
 }
-comprobar($resultados, 'ningun producto apunta a un cliente que no compra su marca',
-  $desacuerdos === [], $desacuerdos ? implode(', ', array_slice($desacuerdos, 0, 8)) : 'todos de acuerdo');
+comprobar($resultados, 'ningun producto se queda sin marca, que es quedarse sin cliente',
+  $sinMarca === [], $sinMarca ? implode(', ', array_slice($sinMarca, 0, 8)) : 'todos tienen marca');
 
 $conMarcas = \Drupal::entityTypeManager()->getStorage('tec_crm')->getQuery()
   ->accessCheck(FALSE)
