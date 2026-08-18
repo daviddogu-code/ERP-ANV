@@ -1,0 +1,29 @@
+uuid: 1c9e1f8e-8177-4582-8a31-e2e4855cb4c2
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - field.storage.tec_crm.field_tec_brands
+    - taxonomy.vocabulary.tec_brands
+id: tec_crm.tec_contact_organization.field_tec_brands
+field_name: field_tec_brands
+entity_type: tec_crm
+bundle: tec_contact_organization
+label: Brands
+description: 'Brands we make for this customer, in the order they should be listed. The same brand can be bought by more than one customer. Add them here even before the first product exists.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tec_brands: tec_brands
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -1,0 +1,20 @@
+uuid: 641c843b-743e-4dc1-8864-2fa25fb78f57
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - taxonomy
+id: tec_crm.field_tec_brands
+field_name: field_tec_brands
+entity_type: tec_crm
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

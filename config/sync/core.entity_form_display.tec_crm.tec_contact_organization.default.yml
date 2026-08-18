@@ -5,6 +5,7 @@ dependencies:
   config:
     - eck.eck_type.tec_crm.tec_contact_organization
     - field.field.tec_crm.tec_contact_organization.field_tec_address
+    - field.field.tec_crm.tec_contact_organization.field_tec_brands
     - field.field.tec_crm.tec_contact_organization.field_tec_contact_type
     - field.field.tec_crm.tec_contact_organization.field_tec_customer_code
     - field.field.tec_crm.tec_contact_organization.field_tec_email
@@ -98,6 +99,16 @@ content:
     region: content
     settings:
       wrapper_type: fieldset
+    third_party_settings: {  }
+  field_tec_brands:
+    type: entity_reference_autocomplete
+    weight: 4
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
   field_tec_contact_type:
     type: options_buttons

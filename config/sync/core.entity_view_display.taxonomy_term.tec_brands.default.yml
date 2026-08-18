@@ -4,11 +4,9 @@ status: true
 dependencies:
   config:
     - field.field.taxonomy_term.tec_brands.field_tec_brand_catalogue
-    - field.field.taxonomy_term.tec_brands.field_tec_customer
     - field.field.taxonomy_term.tec_brands.field_tec_logo
     - taxonomy.vocabulary.tec_brands
   module:
-    - field_formatter_class
     - image
     - manage_display
     - text
@@ -34,16 +32,6 @@ content:
       empty_view_title: hidden
     third_party_settings: {  }
     weight: 10
-    region: content
-  field_tec_customer:
-    type: entity_reference_label
-    label: above
-    settings:
-      link: true
-    third_party_settings:
-      field_formatter_class:
-        class: inline-block
-    weight: 2
     region: content
   field_tec_logo:
     type: image
