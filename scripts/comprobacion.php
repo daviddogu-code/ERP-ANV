@@ -2026,6 +2026,57 @@ comprobar($resultados, 'todas se llaman como dice el dato del que sale su nombre
 comprobar($resultados, 'y el presave que los mantiene al dia sigue puesto',
   function_exists('_tec_inventory_name_from_source'));
 
+titulo('16. La marca es una puerta a sus productos, no solo una etiqueta');
+
+// Hasta el 19 de agosto de 2026 la baldosa de /b entera era un enlace al
+// formulario de edicion y no habia ninguna manera de ver lo que hay dentro de
+// una marca. Ahora la baldosa abre la ficha y editar es el boton que llevaba
+// hecho y escondido desde el principio.
+$camposMarcas = \Drupal::config('views.view.tec_brands')
+  ->get('display.default.display_options.fields') ?? [];
+$caminosBaldosa = array_map(
+  fn(string $cual): string => (string) ($camposMarcas[$cual]['alter']['path'] ?? ''),
+  ['field_tec_logo', 'name']
+);
+comprobar($resultados, 'la baldosa de la pantalla de marcas abre su ficha',
+  $caminosBaldosa === ['/taxonomy/term/{{ tid }}', '/taxonomy/term/{{ tid }}'],
+  implode(' y ', array_unique($caminosBaldosa)));
+comprobar($resultados, 'y el lapiz de editar se dibuja',
+  ($camposMarcas['edit_taxonomy_term']['exclude'] ?? TRUE) === FALSE);
+
+$catalogoEnFicha = \Drupal::config('core.entity_view_display.taxonomy_term.tec_brands.default')
+  ->get('content.field_tec_brand_catalogue') ?? [];
+comprobar($resultados, 'la ficha de la marca lleva su catalogo puesto',
+  ($catalogoEnFicha['type'] ?? '') === 'viewfield_default',
+  $catalogoEnFicha['type'] ?? 'no esta');
+// El modulo se calla cuando la vista sale vacia, y asi una marca recien abierta
+// se quedaba sin el aviso y sin el boton de crear su primer producto.
+comprobar($resultados, 'y lo dibuja aunque la marca no tenga ni un producto',
+  ($catalogoEnFicha['settings']['always_build_output'] ?? FALSE) === TRUE);
+
+// El icono naranja de las fichas de termino llevaba a un canal que lista NODOS
+// etiquetados, y aqui el contenido son entidades propias: estaba vacio en todos
+// los vocabularios. Apagada la pantalla, ni se engancha ni tiene ruta.
+comprobar($resultados, 'el canal rss de las fichas de termino sigue apagado',
+  (\Drupal::config('views.view.taxonomy_term')->get('display.feed_1.display_options.enabled') ?? TRUE) === FALSE);
+
+comprobar($resultados, 'el formulario de la marca no pregunta lo que nadie contesta',
+  function_exists('_admin_form_styles_hide_unused_brand_form_parts'));
+
+// Las dos claves tienen que ser distintas. El campo de cliente del producto se
+// rellena con lo que venga en `target_id`, asi que si la marca usara esa misma
+// clave, crear un producto desde el catalogo de una marca intentaria escribir
+// una marca en la casilla del cliente.
+$claveMarca = (string) (\Drupal::config('field.field.tec_product.tec_product.field_tec_brand')
+  ->get('third_party_settings.epp.value') ?? '');
+$claveCliente = (string) (\Drupal::config('field.field.tec_product.tec_product.field_tec_customer')
+  ->get('third_party_settings.epp.value') ?? '');
+comprobar($resultados, 'la marca se rellena desde la direccion',
+  $claveMarca !== '', $claveMarca !== '' ? $claveMarca : 'no se rellena');
+comprobar($resultados, 'y con una clave distinta de la del cliente',
+  $claveMarca !== '' && $claveMarca !== $claveCliente,
+  $claveCliente !== '' ? 'el cliente usa ' . $claveCliente : 'el cliente ya no se rellena');
+
 // -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------
