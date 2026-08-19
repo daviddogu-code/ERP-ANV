@@ -4,6 +4,12 @@ product-view:
     theme:
       css/product-view.css: {}
 
+# The brand's catalogue: one row per size, with an editable price.
+brand-catalogue:
+  css:
+    theme:
+      css/brand-catalogue.css: {}
+
 # This is your existing library for the stock mutation pop-up
 form-styles:
   css:

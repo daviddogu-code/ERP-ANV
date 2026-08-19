@@ -148,8 +148,10 @@ const REFERENCIA_VARIOS = [
   // iconos de la portada y los de la aplicacion movil- y 2 hojas de estilo. El 70
   // es el icono de marcas, refichado el 15 de agosto: la imagen nunca se fue del
   // disco, pero su ficha murio con la portada. El 71 es el icono de la lista de
-  // compra, del mismo dia.
-  'ficheros' => 71,
+  // compra, del mismo dia. El 72 y el 73 son las dos primeras fotos de producto
+  // del ERP, subidas el 19 de agosto a los colores Black y White del guante RISE
+  // en cuanto el catalogo de la marca tuvo una columna donde ensenarlas.
+  'ficheros' => 73,
   // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
   // Super BOM, porque su funcion la hace ya el tablero de stock. Y volvieron a ser
   // doce el 15, al rehacer la portada de marcas, que llevaba borrada desde antes de
@@ -2383,6 +2385,29 @@ comprobar($resultados, 'las tallas salen en el orden del vocabulario',
 comprobar($resultados, 'la etiqueta del widget no repite la cabecera en cada fila',
   function_exists('_admin_form_styles_hide_views_widget_titles'),
   '_admin_form_styles_hide_views_widget_titles()');
+
+// El aspecto: la casilla estrecha, el dinero alineado y el boton con su icono son
+// una hoja de estilo enganchada a la pantalla. Sin ella la tabla vuelve a salir en
+// crudo, con una casilla de precio del ancho de su columna.
+$hojaCatalogo = DRUPAL_ROOT . '/modules/custom/admin_form_styles/css/brand-catalogue.css';
+$bibliotecas = \Drupal::service('library.discovery')->getLibraryByName('admin_form_styles', 'brand-catalogue');
+comprobar($resultados, 'la tabla lleva su hoja de estilo, y esta enganchada a la pantalla',
+  is_file($hojaCatalogo) && $bibliotecas !== FALSE && function_exists('admin_form_styles_views_pre_render'),
+  is_file($hojaCatalogo) ? 'admin_form_styles/brand-catalogue' : 'falta css/brand-catalogue.css');
+
+// La casilla de precio, estrecha como la de cantidad de los borradores. Se lee del
+// fichero porque es el ancho lo que se pidio, no que exista una regla.
+$estilo = is_file($hojaCatalogo) ? (string) file_get_contents($hojaCatalogo) : '';
+comprobar($resultados, 'y la casilla del precio va corta, no del ancho de la columna',
+  (bool) preg_match('/views-field-form-field-field-tec-price input\s*\{[^}]*width:\s*5rem/s', $estilo),
+  'sin el ancho de 5rem');
+
+// Y lo que no cambia de fila a fila se dice una vez. Va con el orden de la
+// pantalla: si alguien lo cambia, esto taparia valores que no son repeticiones.
+comprobar($resultados, 'lo repetido en cada fila se dice una vez',
+  function_exists('admin_form_styles_preprocess_views_view_table')
+  && ($catalogo['sorts']['field_product_name_value']['id'] ?? '') === 'field_product_name_value',
+  'admin_form_styles_preprocess_views_view_table()');
 
 // -----------------------------------------------------------------------------
 // Resumen.

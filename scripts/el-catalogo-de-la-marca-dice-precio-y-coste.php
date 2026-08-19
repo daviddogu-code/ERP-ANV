@@ -22,6 +22,9 @@
  *   5. Que las tallas salen en el **orden del vocabulario** y no por su nombre. Se
  *      prueba a proposito con una talla que se llama AAA y pesa mas que una que se
  *      llama ZZZ: si el orden fuera alfabetico, saldrian al reves.
+ *   6. Que lo que no cambia de una fila a la siguiente **se dice una vez**: el
+ *      nombre del producto, su material, la foto y el color. Y que aun asi cada
+ *      fila conserva lo suyo, que es talla, precio y coste.
  *
  * Deshace todo lo que crea. Se puede lanzar dos veces.
  */
@@ -287,6 +290,35 @@ try {
     'los dos costes coinciden, la prueba no valdria');
 
   // -------------------------------------------------------------------------
+  // Lo que no cambia se dice una vez.
+  // -------------------------------------------------------------------------
+  print "\n";
+  print "Y no se repite en cada fila\n";
+  print str_repeat('-', 70) . "\n";
+
+  $columnaMaterial = array_search('Material', $cabeceras, TRUE);
+  $columnaColor = array_search('Variation', $cabeceras, TRUE);
+
+  $nombrePrimera = $limpio($filas[0][$columnaNombre] ?? '');
+  $nombreSegunda = $limpio($filas[1][$columnaNombre] ?? '');
+  printf("  nombre: fila 1 \"%s\", fila 2 \"%s\"\n", $nombrePrimera, $nombreSegunda);
+
+  $mirar('la primera fila del bloque dice de que producto es', $nombrePrimera !== '', 'sale vacia');
+  $mirar('y la siguiente ya no lo repite', $nombreSegunda === '', 'dice ' . $nombreSegunda);
+  $mirar('ni repite el material', $limpio($filas[1][$columnaMaterial] ?? '') === '',
+    $limpio($filas[1][$columnaMaterial] ?? ''));
+  $mirar('ni el color', $limpio($filas[1][$columnaColor] ?? '') === '',
+    $limpio($filas[1][$columnaColor] ?? ''));
+  // Lo que cambia en cada fila sigue estando: si esto se cayera, la tabla se
+  // habria quedado en blanco de cintura para abajo.
+  $mirar('pero la segunda fila conserva su talla, su precio y su coste',
+    $limpio($filas[1][$columnaTalla] ?? '') !== ''
+    && str_contains($filas[1][$columnaPrecio] ?? '', 'form_field_field_tec_price')
+    && $limpio($filas[1][$columnaCoste] ?? '') !== '',
+    'talla "' . $limpio($filas[1][$columnaTalla] ?? '') . '", coste "'
+    . $limpio($filas[1][$columnaCoste] ?? '') . '"');
+
+  // -------------------------------------------------------------------------
   // Enviar el formulario de verdad, desde la pagina de la marca.
   // -------------------------------------------------------------------------
   print "\n";
@@ -307,6 +339,14 @@ try {
     $saleElProducto,
     'no sale el producto; PRUEBA aparece ' . substr_count($pagina, 'PRUEBA') . ' veces, la tabla '
     . (str_contains($pagina, 'form_field_field_tec_price') ? 'si' : 'no') . ' esta');
+
+  // El aspecto de la tabla lo pone una hoja de estilo que se engancha a la
+  // pantalla, no a la direccion. Con la agregacion encendida el nombre del
+  // fichero no se puede ver, y entonces esto no se puede comprobar asi.
+  $agregado = (bool) \Drupal::config('system.performance')->get('css.preprocess');
+  $mirar('y trae la hoja de estilo que la viste',
+    $agregado || str_contains($pagina, 'brand-catalogue.css'),
+    'no la carga');
 
   if (!$saleElProducto
     && preg_match('/<tbody(.*?)<\/tbody>/s', $pagina, $cuerpoPagina)
