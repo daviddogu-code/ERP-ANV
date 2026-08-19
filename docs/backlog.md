@@ -1933,6 +1933,111 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-19 (cierre) — Tres cosas que no daban error: una cantidad en negativo, un papel que no se parecía a su pantalla y una foto que ya no crecía
+
+El dueño trajo seis asuntos y pidió tres: **el 5, el 6 y el 2**. Los tres tenían en común lo que los hacía
+molestos: ninguno daba error. Un pedido con menos diez pares se guardaba, un documento de producción se
+imprimía con los productos en otro orden, y una foto se quedaba quieta. Nada en los registros, nada en rojo.
+
+**El 5: una cantidad no es negativa.** Los tres campos de cantidad de una línea —la de venta, la de compra y
+lo recibido— nacieron con `min: null`, o sea sin suelo, y un campo entero sin suelo acepta el signo menos
+igual que acepta el diez. Ahora los tres dicen **mínimo cero**, y eso lo hace cumplir el navegador (el widget
+saca su `min` de la definición del campo) y el servidor (Drupal le cuelga al campo una restricción de rango
+que se mira en cada guardado, venga de un formulario o de código). Se probaron las dos puertas por separado,
+porque cerrar solo la del navegador es dejarla cerrada con pestillo por fuera.
+
+**El suelo es cero y no uno, a propósito.** En `/o/draft` y `/po/draft` el cero es *cómo se quita un renglón*:
+se escribe 0 y la vista deja de mostrar la línea, porque filtra por cantidad distinta de cero. Con `min: 1` se
+arreglaba el signo y se rompía la única manera de deshacer.
+
+Lo que hacía un negativo aguas abajo era peor que aceptarlo. **El total de la línea se quedaba vacío**, porque
+la ECA que multiplica cantidad por precio tiene una rama que borra el total cuando la cantidad es menor que
+1 —pensada para el cero, que ahí significa «esta línea no va»— y el menos diez caía en esa rama. Pero **el
+documento de producción sí lo sumaba**: mandaba al taller cortar diez pares menos de una talla. Un dato
+imposible se paraba en la pantalla del dinero y seguía hasta el papel del taller.
+
+Lo ya escrito no lo repasa nadie: cambiar el mínimo no toca lo guardado. Queda **una línea con −10** en
+`PRUEBA 26-006`, y la próxima vez que alguien la guarde el ERP se la parará, que es exactamente lo que se
+quería. El guardián la enseña como cifra y no como alarma: son datos del dueño, no código roto.
+
+**El 6: el papel dice lo mismo que la pantalla, y son dos mitades.** La de arriba, en el bloque: ordenaba los
+productos con un `uasort` **por su nombre**. Buen orden para un catálogo y el equivocado para un papel que se
+lee al lado del pedido del que salió; PRUEBA Producto, añadido al final, salía primero. Ahora cada producto se
+coloca **por la primera línea que lo menciona**, y cada color igual, así que un producto pedido otra vez más
+abajo se queda donde apareció en vez de bajarse al final. Las tallas siguen yendo por el peso de su
+vocabulario y eso es correcto: el documento lista todas las del catálogo, incluidas las que van a cero, y esas
+nunca estuvieron en una línea para tener posición.
+
+La mitad de abajo era la interesante. Cuatro pantallas de la vista de líneas —la pestaña *Line items*, el
+bloque editable y las dos de `/o/draft`— ordenaban por la tabla de pesos de `draggableviews`, apuntando a
+`tec_products:page_2`, que es el orden que el dueño arrastra en la pantalla de productos de un cliente. La
+consulta que salía de ahí enganchaba **el número de una línea contra el número de un producto**:
+
+```sql
+LEFT JOIN draggableviews_structure ON tec_line_item_field_data.id = draggableviews_structure.entity_id
+ORDER BY COALESCE(weight, -9223372036854775808)
+```
+
+El módulo de arrastrar no sabe ordenar por una entidad que no sea la de la fila: engancha siempre por la clave
+de la tabla base. La relación `field_tec_product` que la ordenación tenía puesta no la miraba nadie.
+
+**Y lo peor de un error así es que casi siempre acierta.** Las líneas nuevas van por el 4600, en la tabla de
+pesos no hay ningún producto con ese número, ninguna fila encuentra peso, todas empatan a menos infinito y
+MySQL las devuelve como las lee, que es por su número: el orden bueno, por casualidad. Donde muerde es en los
+pedidos viejos, y se puede señalar con el dedo: la línea **195** de un pedido de hace meses sí encuentra un
+producto 195 en la tabla, se le pega su peso y esa línea salta al final de su propio pedido. Un orden que solo
+falla con los datos antiguos es un orden que nadie mira hasta que ya no se acuerda de por qué. Ahora las
+cuatro ordenan **por el número de la línea**, y al guardar la vista se cayó sola la dependencia del módulo de
+arrastrar: no la usaba para nada.
+
+Las dos mitades usan **la misma clave** —el número de la línea— y tienen que seguir usándola o volverán a
+discrepar en silencio. La prueba las mira juntas: monta un pedido con ZORRO, MEDIO y ABETO en ese orden, que
+es el contrario del alfabeto, y comprueba que el documento y la pantalla dicen lo mismo. Con tres nombres al
+revés no puede acertar por casualidad, que es lo único que hace que una prueba de orden sirva de algo.
+
+**El 2: la foto crece otra vez, y la culpa estaba escrita en el módulo.** El javascript de Simple Popup Views
+es esto:
+
+```js
+$(".spv_on_hover").hover(...)
+```
+
+Se ejecuta una vez, en el instante en que se lee el fichero, **sin `document.ready` y sin `Drupal.behaviors`**,
+y se engancha a las filas que existan justo entonces. Todas las pantallas de este ERP que llevan la foto
+llegan después de ese instante: las pestañas del pedido son quicktabs, la parrilla del log viene por ajax y
+BigPipe manda el contenido principal después de los scripts. El enganche no encontraba ninguna fila, no daba
+ningún error, y la foto se quedaba quieta.
+
+Un hover que abre algo que ya está en la página es un hover que el CSS hace desde 1998, así que el arreglo es
+**una regla**: `.spv-popup-wrapper:hover .spv-popup-content { display: block }`. Sin binding, sin timing, y
+funciona para marcado que llegue dentro de una hora. Gana por especificidad al `display: none` del propio
+módulo, así que no depende de qué hoja se agregue antes.
+
+**Dónde se engancha es la mitad de la decisión.** No en una hoja nuestra atada a una dirección o a una
+pantalla, sino **dentro de la biblioteca del propio módulo**, con `hook_library_info_alter()`. El módulo cuelga
+esa biblioteca de todas las páginas y el campo está en **diecisiete pantallas de ocho vistas**: donde puede
+dibujarse la foto, su hoja ya está. Así la regla no puede acabar donde no hay marcado ni faltar donde sí lo
+hay. Y se ha quitado la copia que vivía desde junio encerrada en `.tec-log__table`, donde arreglaba una
+pantalla de las diecisiete: dos sitios reclamando el mismo comportamiento es lo que hace que el siguiente que
+lo lea no sepa cuál manda. El javascript del módulo se deja en paz —su disparo por clic tiene el mismo fallo,
+pero ninguna pantalla usa clic, y un parche a un contrib hay que mantenerlo al día para siempre.
+
+La prueba de esto le pregunta al marcado **lo mismo que le pregunta la regla**, con XPath: ¿hay una foto
+grande colgando del mismo cajón al que se le pasa el ratón? Buscar dos trozos de texto y suponer que uno está
+dentro del otro es el error que ya se cometió una vez esta semana, comparando html dibujado en vez de datos.
+
+**Y una cosa que se vio de paso, sobre el 4 que el dueño está pensando.** Se dijo aquí que el número de un
+pedido era su id y que por eso un borrado «quema» el número. **No es su id**: es `OrderNumber`, con un
+contador guardado por contacto y año. Y que un número borrado no vuelva **no es un fallo, es una decisión del
+17 de agosto** con su entrada en este diario: antes se deducía contando pedidos, se borraba el último, la
+cuenta bajaba y el siguiente nacía con un número que el proveedor ya tenía impreso. Si lo que molesta son los
+huecos, el arreglo no es devolver números, es **no gastarlos hasta que el pedido se confirma** —y el propio
+`OrderNumber` ya lo tiene previsto, porque el bundle de borrador está fuera de su lista a propósito.
+
+Guardián **192 de 192** (seis centinelas nuevos: los tres suelos, el orden en el bloque, el orden en las
+cuatro pantallas y la regla del ratón). Prueba de humo, 61 páginas. Tres pruebas nuevas, cada una con su
+pedido de mentira que se recoge al acabar, contadores devueltos incluidos.
+
 ### 2026-08-19 (cierre) — Un rediseño pedido y desdicho en veinte minutos: del catálogo solo queda la casilla del precio, un 60% más corta
 
 El dueño miró el catálogo de la marca y dijo *«la lógica está bien, pero el diseño en pantalla es horrible;

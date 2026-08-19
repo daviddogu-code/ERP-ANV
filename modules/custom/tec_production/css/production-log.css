@@ -73,8 +73,11 @@
 }
 
 /* Thumbnail column: 40x40 image, large popup on hover (line items format).
-   Hover is done in CSS because the Simple Popup Views JS binds on page load
-   and would not see this AJAX-loaded grid. */
+   The hover itself is not here any more. It was, scoped to this table, because
+   the Simple Popup Views script binds on page load and never saw this ajax grid.
+   Since 19 August 2026 that rule lives unscoped in
+   admin_form_styles/css/popup-on-hover.css, where it fixes the other sixteen
+   displays with the same problem. Only the sizes are ours. */
 .tec-log__table th.tec-log__img-col {
   width: 56px;
 }
@@ -85,10 +88,6 @@
   height: 40px;
   border-radius: 4px;
   object-fit: cover;
-}
-
-.tec-log__table .spv-popup-wrapper:hover .spv-popup-content {
-  display: block;
 }
 
 .tec-log__table .spv-popup-content img {

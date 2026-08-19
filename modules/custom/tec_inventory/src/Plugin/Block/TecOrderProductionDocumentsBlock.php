@@ -171,7 +171,11 @@ class TecOrderProductionDocumentsBlock extends BlockBase implements ContainerFac
           'color_label' => $this->colorVariationLabel($color),
           'color_entity' => $color,
           'product_entity' => $product,
+          'first_line' => (int) $line->id(),
         ];
+      }
+      else {
+        $color_meta[$cid]['first_line'] = min($color_meta[$cid]['first_line'], (int) $line->id());
       }
 
       $size_label = '';
@@ -300,7 +304,11 @@ class TecOrderProductionDocumentsBlock extends BlockBase implements ContainerFac
           'variations' => [],
           'product_total' => 0.0,
           'cutting_tables' => [],
+          'first_line' => $meta['first_line'],
         ];
+      }
+      else {
+        $products[$pid]['first_line'] = min($products[$pid]['first_line'], $meta['first_line']);
       }
 
       $products[$pid]['variations'][] = [
@@ -310,14 +318,33 @@ class TecOrderProductionDocumentsBlock extends BlockBase implements ContainerFac
         'sizes' => $sizes,
         'subtotal' => $subtotal,
         'materials' => array_values($materials_by_color[$cid] ?? []),
+        'first_line' => $meta['first_line'],
       ];
       $products[$pid]['product_total'] += $subtotal;
     }
 
-    // Stable product order by label.
-    uasort($products, static function ($a, $b) {
-      return strnatcasecmp($a['label'], $b['label']);
-    });
+    // The order of the line items, which is the order every screen of the order
+    // shows them in, and the order the owner typed them. It used to be
+    // alphabetical by product name, which is a fine order for a catalogue and
+    // the wrong one for a document read next to the order it came from: a
+    // product added last showed up first, and the sheet stopped matching the
+    // screen it was printed from.
+    //
+    // A product is placed by the earliest line that mentions it, and a colour by
+    // the earliest line of that colour, so a product ordered again further down
+    // the order stays where it first appeared instead of moving to the bottom.
+    // The key is the line item id -- the same key the line item views sort by
+    // since 19 August 2026, when a leftover draggableviews sort was taken out of
+    // them. If one side ever changes key, the two orders drift apart again.
+    //
+    // Sizes are not sorted here: they follow the size vocabulary, because the
+    // document lists every size in the catalogue, including the ones with no
+    // quantity, and those were never in a line item to have a position.
+    uasort($products, static fn(array $a, array $b): int => $a['first_line'] <=> $b['first_line']);
+    foreach ($products as &$by_first_line) {
+      usort($by_first_line['variations'], static fn(array $a, array $b): int => $a['first_line'] <=> $b['first_line']);
+    }
+    unset($by_first_line);
 
     // Per-product sheet cutting tables (not shown on All Products).
     if (self::ENABLE_CUTTING_TABLES) {

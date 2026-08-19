@@ -2398,6 +2398,99 @@ comprobar($resultados, 'la casilla del precio va corta, no del ancho de su colum
   is_file($hojaCatalogo) ? 'sin el ancho de 5.25rem' : 'falta css/brand-catalogue.css');
 
 // -----------------------------------------------------------------------------
+titulo('21. Una cantidad no es negativa');
+
+// Los tres campos de cantidad de una linea nacieron sin suelo, y un campo entero
+// sin suelo admite el signo menos. Lo que pasa despues no da error en ningun
+// sitio: el total de la linea se queda vacio y el documento de produccion manda
+// cortar en negativo. El suelo es cero y no uno a proposito: en los borradores el
+// cero es como se quita un renglon.
+foreach ([
+  'tec_line_item.tec_sales_order_line_item.field_tec_quantity' => 'la cantidad de una linea de venta',
+  'tec_line_item.tec_po_line_item.field_tec_quantity' => 'la cantidad de una linea de compra',
+  'tec_line_item.tec_po_line_item.field_tec_quantity_received' => 'lo recibido de una linea de compra',
+] as $cual => $comoSeLlama) {
+  $minimo = \Drupal::config('field.field.' . $cual)->get('settings.min');
+  comprobar($resultados, $comoSeLlama . ' no baja de cero',
+    (string) $minimo === '0',
+    'min = ' . var_export($minimo, TRUE));
+}
+
+// Lo que ya estaba escrito no lo repasa nadie: cambiar el minimo no toca lo
+// guardado. Se ensena y no se juzga, porque son datos del dueno y el aviso vale
+// mas que la alarma: la proxima vez que guarde esa linea, el ERP se la parara.
+$negativas = 0;
+foreach (['field_tec_quantity', 'field_tec_quantity_received'] as $campoCantidad) {
+  $tablaCantidad = 'tec_line_item__' . $campoCantidad;
+  if (!$db->schema()->tableExists($tablaCantidad)) {
+    continue;
+  }
+  $negativas += (int) $db->select($tablaCantidad, 't')
+    ->condition($campoCantidad . '_value', 0, '<')
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+}
+informar('lineas con una cantidad negativa de antes', $negativas,
+  $negativas ? 'hay que arreglarlas a mano' : 'ninguna');
+
+// -----------------------------------------------------------------------------
+titulo('22. El papel de produccion dice lo mismo que la pantalla');
+
+// El documento ordenaba los productos por su nombre y la pantalla por otra cosa,
+// asi que un producto anadido al final salia arriba en el papel. Las dos mitades
+// tienen que usar la misma clave -- el numero de la linea -- o volveran a
+// discrepar sin que nadie lo note hasta que un pedido salga mal cortado.
+$bloqueDocumentos = DRUPAL_ROOT . '/modules/custom/tec_inventory/src/Plugin/Block/TecOrderProductionDocumentsBlock.php';
+$fuenteBloque = is_file($bloqueDocumentos) ? (string) file_get_contents($bloqueDocumentos) : '';
+comprobar($resultados, 'el documento ordena los productos por su primera linea',
+  str_contains($fuenteBloque, "\$a['first_line'] <=> \$b['first_line']")
+  && !str_contains($fuenteBloque, "strnatcasecmp(\$a['label']"),
+  $fuenteBloque === '' ? 'no esta el bloque' : 'sigue ordenando por el nombre del producto');
+
+// Y la vista, por el mismo numero. La ordenacion que habia enganchaba el numero
+// de una linea contra el de un producto arrastrado en la pantalla de un cliente,
+// y acertaba solo porque las lineas nuevas van por numeros que en esa tabla no
+// existen: en los pedidos viejos si coinciden, y ahi se desordenaba.
+$pantallasLineas = \Drupal::config('views.view.tec_order_sales_order_line_items')->get('display') ?? [];
+$porNumeroDeLinea = 0;
+$conPesoFantasma = [];
+foreach ($pantallasLineas as $nombrePantalla => $pantallaLineas) {
+  foreach (($pantallaLineas['display_options']['sorts'] ?? []) as $orden) {
+    if (($orden['table'] ?? '') === 'draggableviews_structure') {
+      $conPesoFantasma[] = $nombrePantalla;
+    }
+    elseif (($orden['table'] ?? '') === 'tec_line_item_field_data' && ($orden['field'] ?? '') === 'id') {
+      $porNumeroDeLinea++;
+    }
+  }
+}
+comprobar($resultados, 'las lineas de un pedido se ordenan por su numero',
+  $porNumeroDeLinea === 4 && !$conPesoFantasma,
+  $conPesoFantasma
+    ? 'peso de arrastrar en ' . implode(', ', $conPesoFantasma)
+    : $porNumeroDeLinea . ' pantallas ordenan por el numero de la linea, se esperaban 4');
+
+// -----------------------------------------------------------------------------
+titulo('23. La foto crece al pasar el raton');
+
+// El javascript del modulo engancha el raton una sola vez, al leerse el fichero,
+// sin Drupal.behaviors: no encuentra las filas de una pestana, de un ajax ni de
+// BigPipe, y no da ningun error. Lo hace una regla de CSS, suelta -- vivio
+// encerrada en la tabla del log de produccion, donde arreglaba una pantalla de
+// las diecisiete que llevan la foto -- y colgada de la biblioteca del propio
+// modulo, que es la que va en todas las paginas.
+$hojaRaton = DRUPAL_ROOT . '/modules/custom/admin_form_styles/css/popup-on-hover.css';
+$cssRaton = is_file($hojaRaton) ? (string) file_get_contents($hojaRaton) : '';
+$bibliotecaPopup = \Drupal::service('library.discovery')->getLibraryByName('simple_popup_views', 'simple_popup_views');
+$hojasPopup = array_map(fn(array $f) => ltrim((string) $f['data'], '/'), $bibliotecaPopup['css'] ?? []);
+comprobar($resultados, 'la regla del raton existe, suelta y en la biblioteca del popup',
+  (bool) preg_match('/^\.spv-popup-wrapper:hover\s+\.spv-popup-content\s*\{[^}]*display:\s*block/m', $cssRaton)
+  && in_array('modules/custom/admin_form_styles/css/popup-on-hover.css', $hojasPopup, TRUE)
+  && function_exists('admin_form_styles_library_info_alter'),
+  $cssRaton === '' ? 'falta css/popup-on-hover.css' : 'hojas del popup: ' . implode(', ', $hojasPopup));
+
+// -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------
 $mal = array_filter($resultados, fn($r) => !$r['bien']);

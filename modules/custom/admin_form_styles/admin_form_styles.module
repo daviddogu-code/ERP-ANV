@@ -43,6 +43,24 @@ function admin_form_styles_views_pre_render(ViewExecutable $view): void {
 }
 
 /**
+ * Implements hook_library_info_alter().
+ *
+ * Completes the popup module's own stylesheet with the hover rule its javascript
+ * fails to deliver. See css/popup-on-hover.css for why the script fails.
+ *
+ * It goes in that library rather than in one of ours, attached from somewhere,
+ * because the module hangs its library on every page and the field appears in
+ * seventeen displays across eight views. Anywhere the popup can be drawn, its
+ * stylesheet is already there; this way the rule cannot end up somewhere the
+ * markup is not, or missing from somewhere it is.
+ */
+function admin_form_styles_library_info_alter(array &$libraries, string $extension): void {
+  if ($extension === 'simple_popup_views' && isset($libraries['simple_popup_views'])) {
+    $libraries['simple_popup_views']['css']['theme']['/modules/custom/admin_form_styles/css/popup-on-hover.css'] = [];
+  }
+}
+
+/**
  * Implements hook_page_attachments().
  */
 function admin_form_styles_page_attachments(array &$attachments) {

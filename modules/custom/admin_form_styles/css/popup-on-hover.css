@@ -1,0 +1,35 @@
+/**
+ * @file
+ * The photo grows again when the pointer is on it, with no javascript involved.
+ *
+ * Simple Popup Views draws a 40x40 thumbnail with the large image next to it,
+ * hidden, and shows the large one on hover. It stopped showing anything, and the
+ * reason is in its own script:
+ *
+ *   $(".spv_on_hover").hover(...)
+ *
+ * That runs once, the moment the file is read, outside any document-ready and
+ * without Drupal.behaviors. It binds to the rows that happen to exist at that
+ * instant. Every screen in this ERP that carries the thumbnail arrives later than
+ * that instant -- the order's tabs are quicktabs, the log grid comes by ajax, and
+ * BigPipe sends the main content of a page after the scripts -- so the handler
+ * gets attached to nothing at all. Nothing errors. The image simply sits there.
+ *
+ * A hover that opens something already in the page is a hover CSS has done since
+ * 1998, so this is the whole fix: one rule, no binding, no timing, and it works
+ * for markup that arrives in an hour. It is the same rule the production log has
+ * carried scoped to its own table since June; this takes the scope off, because
+ * seventeen displays across eight views use the field and every one of them was
+ * asking for it.
+ *
+ * The rule wins over the module's own `display: none` on specificity, so it does
+ * not depend on which stylesheet is aggregated first.
+ *
+ * The module's script is left alone: its click trigger has the same fault, but no
+ * display here uses click, and a patch on a contrib module is a thing to keep in
+ * step forever. If a click popup is ever configured, this is where to look.
+ */
+
+.spv-popup-wrapper:hover .spv-popup-content {
+  display: block;
+}
