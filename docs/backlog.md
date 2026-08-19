@@ -1933,39 +1933,39 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
-### 2026-08-19 (cierre) — El catálogo de la marca deja de parecer un volcado: la casilla del precio pasa de 210 a 80 píxeles
+### 2026-08-19 (cierre) — Un rediseño pedido y desdicho en veinte minutos: del catálogo solo queda la casilla del precio, un 60% más corta
 
-El dueño lo miró y el veredicto fue *«la lógica está bien, pero el diseño en pantalla es horrible»*. Tenía
-razón y el motivo se puede señalar con el dedo: **a esta pantalla le faltaba una capa que los borradores de
-pedido sí tienen**. La casilla de escribir el precio llegaba con el ancho de su columna —unos 210 píxeles para
-seis dígitos—, y era lo más gordo de cada fila. Ahora mide **5rem, 80 píxeles**, que es exactamente lo que
-mide la casilla de cantidad en `/o/draft` y `/po/draft` desde siempre.
+El dueño miró el catálogo de la marca y dijo *«la lógica está bien, pero el diseño en pantalla es horrible;
+ponlo bonito»*. Se puso bonito: cabecera en versalitas, filas sin rayas, foto enmarcada, el dinero con cifras
+de ancho fijo, y sobre todo **cada cosa dicha una vez** —el nombre del producto al empezar el producto, la foto
+y el color al empezar cada color, los bloques separados con una raya— para que seis filas que se leían iguales
+dejaran de esconder lo único que cambiaba, que es talla, precio y coste.
 
-**La capa que faltaba estaba escrita, pero atada a una dirección.** El ancho corto, el rótulo callado y el
-botón de guardar con su icono viven en `asset_injector.css.tec_excel_lover_orders`, que se carga en
-`/o/draft/*` y `/po/draft/*` y en ningún otro sitio. Todo lo demás de la casa —los botones, la tipografía— sí
-llegaba a la ficha de la marca. Lo nuevo no se ha añadido a ese inyector: **se ha escrito como hoja de estilo
-del módulo y se engancha a la pantalla**, no a la ruta, porque el catálogo va embebido en la ficha del término
-y mañana puede ir en otro sitio. Si se muda, el estilo se muda con él.
+**Y al verlo, la respuesta fue *«no no, déjalo como estaba antes; simplemente reduce la caja de precio un
+60%»*.** Así que se ha ido todo menos eso. Queda una hoja de estilo de nueve líneas con una sola idea: la
+casilla del precio mide **5.25rem, 84 píxeles**, el 40% de los 210 que ocupaba —el ancho entero de su
+columna— cuando lo único que se teclea ahí son cuatro dígitos y dos decimales. El resto de la tabla lo dibuja
+el tema como dibuja las demás tablas del ERP, con sus rayas y sus repeticiones.
 
-**El cambio que más se nota no es el ancho, es que cada cosa se dice una vez.** Seis filas de un producto en
-dos colores repetían el nombre, el material, el color y la foto en las seis: las seis líneas se leían iguales
-y lo único que cambiaba de verdad —talla, precio y coste— era lo que se perdía. Ahora el nombre se dice al
-empezar el producto, la foto y el color al empezar cada color, y los bloques se separan con una raya. Un
-catálogo, no un volcado.
+**Lo que sí se ha mantenido de la manera de engancharla.** El ancho corto no se ha añadido a
+`asset_injector.css.tec_excel_lover_orders` —donde vive el mismo apaño para la casilla de cantidad de
+`/o/draft` y `/po/draft`— porque ese inyector se ata a direcciones, y el catálogo va embebido en la ficha del
+término y mañana puede ir en otro sitio. Se engancha **a la pantalla**: `hook_views_pre_render()` mira si la
+vista es `tec_products:brand_catalogue` y le cuelga la biblioteca. Si el catálogo se muda, el estilo se muda
+con él.
 
-**Y ahí hubo un fallo que se delató solo.** La primera versión decidía si algo era una repetición comparando
-el html dibujado de la celda, y el color nunca cambiaba: la columna de la foto no es texto sino un árbol de
-render, así que todas las filas comparaban iguales como la palabra «Array» —con su aviso en el registro— y el
-bloque de White desaparecía entero. Se compara ahora **la ficha de la que cuelga la fila**, subiendo por las
-relaciones de la vista, que es un dato y no un dibujo.
+**La lección del rato perdido no es sobre CSS.** «Ponlo bonito» se leyó como permiso para rediseñar, y lo que
+había detrás era una queja concreta sobre un elemento concreto —la casilla— dicha con el número al lado: un
+65% primero, un 60% después. Cuando el encargo trae una cifra, la cifra *es* el encargo; lo demás son ideas
+propias colándose de gratis, y aquí costaron un borrado. La próxima vez, la cifra primero y lo bonito
+preguntando.
 
-Lo demás es aritmética de la vista: el dinero con cifras de ancho fijo, para que los decimales caigan en
-columna y dos precios se puedan comparar de un vistazo; las dos columnas de dinero pegadas al borde derecho en
-vez de separándose a medida que la tabla crece; el coste en gris y el precio en negro, que uno se lee y el
-otro se escribe; las flechitas del campo numérico fuera, que en una columna de seis son seis pares de flechas
-que nadie usa y una manera de cambiar un precio de baht en baht sin querer; y el lápiz de editar, que era tan
-llamativo como el nombre que edita, esperando a que el ratón entre en su fila.
+También se va con el rediseño el fallo más interesante del día, que ya no tiene código donde vivir: la
+primera versión del «cada cosa una vez» decidía si algo era repetición comparando el html dibujado de la
+celda, y la columna de la foto no es texto sino un árbol de render, así que todas las filas comparaban iguales
+como la palabra «Array» y el bloque de White desaparecía entero. Se arregló comparando la ficha de la que
+cuelga la fila, subiendo por las relaciones de la vista. Queda apuntado por si el agrupado vuelve a pedirse:
+**en Views se compara el dato, no el dibujo.**
 
 **Y una cosa que parecía un fallo y era el dueño trabajando.** Se dijo aquí que la columna de la foto saldría
 vacía porque ningún color tenía imagen. A las 13:24, mientras esto se escribía, **aparecieron dos ficheros
@@ -1973,12 +1973,11 @@ nuevos**: el dueño subió las fotos de Black y de White en cuanto tuvo una colu
 guardián, que contaba 71 ficheros y encontró 73, o sea que hizo exactamente su trabajo. El recuento sube a 73
 con la explicación puesta.
 
-Tres comprobaciones nuevas en el guardián: que la hoja existe y está enganchada, que **la casilla mide 5rem**
-—se lee del fichero, porque lo que se pidió era el ancho y no que hubiera una regla— y que lo repetido se dice
-una vez, atado al orden de la pantalla, porque con otro orden esto taparía valores que no son repeticiones.
-**188 de 188.** Prueba de humo, 61 páginas. Y cinco comprobaciones más en la prueba del catálogo, incluida la
-que vigila que la segunda fila de un bloque conserve su talla, su precio y su coste: si el borrado de
-repeticiones se fuera de la mano, la tabla se quedaría en blanco de cintura para abajo.
+Del guardián queda **un solo centinela** en vez de los tres del rediseño: que la casilla mide 5.25rem —leído
+del fichero, porque lo que se pidió era el ancho y no que hubiera una regla— y que la hoja está enganchada a
+la pantalla, que es lo que la carga. **186 de 186.** Prueba de humo, 61 páginas. La prueba del catálogo vuelve
+a comprobar lo contrario de lo que comprobaba hace una hora: que **cada fila dice de qué producto y de qué
+talla es**, entera, sin agrupar.
 
 ### 2026-08-19 (cierre) — La ficha de la marca deja de ser un cartel: es la lista de sus tallas, con el precio editable
 

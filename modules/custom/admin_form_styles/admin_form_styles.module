@@ -28,114 +28,17 @@ function admin_form_styles_entity_view(array &$build, $entity, $display, $view_m
 /**
  * Implements hook_views_pre_render().
  *
- * Dresses the brand's catalogue, which is a pricing sheet and was arriving in
- * the theme's raw table: a price box as wide as its column, the header repeated
- * as a label inside every cell and no telling where one colour ended.
+ * Narrows the price box of the brand's catalogue, which arrives as wide as the
+ * column it sits in. Nothing else about that table is styled: the rest of it is
+ * drawn the way the theme draws every other table here.
  *
  * Attached from here rather than from a stylesheet injected by path, because the
  * display is embedded in the brand's term page and could be embedded elsewhere
  * tomorrow. It travels with the display, not with the address.
  */
 function admin_form_styles_views_pre_render(ViewExecutable $view): void {
-  if (_admin_form_styles_is_brand_catalogue($view)) {
+  if ($view->id() === 'tec_products' && $view->current_display === 'brand_catalogue') {
     $view->element['#attached']['library'][] = 'admin_form_styles/brand-catalogue';
-  }
-}
-
-/**
- * Implements hook_preprocess_HOOK() for views-view-table.html.twig.
- *
- * Says each thing once. A brand with one product in two colours and three sizes
- * is six rows, and the product's name, its material, the colour and the picture
- * were printed in all six: the six lines read as identical, and the three things
- * that actually differ -- size, price and cost -- were the ones getting lost.
- *
- * So a repeat is left blank and the block is separated with a rule instead. The
- * grouping is a property of the rows being sorted by product, then colour, then
- * size, which is how the display sorts them; on any other order this would blank
- * cells that are not repeats, which is why it is tied to this one display.
- *
- * The two levels are told apart on purpose: a product's name and material stop
- * being repeated for as long as the product lasts, while the picture and the
- * colour come back every time the colour changes, because that is the block
- * somebody reads down when pricing a size.
- */
-function admin_form_styles_preprocess_views_view_table(array &$variables): void {
-  $view = $variables['view'] ?? NULL;
-  if (!$view instanceof ViewExecutable || !_admin_form_styles_is_brand_catalogue($view)) {
-    return;
-  }
-
-  // The relationships the display climbs: from the size up to the colour that
-  // lists it, and from the colour up to the product. Views names a reverse
-  // relationship after the field it walks backwards, which is why these read
-  // the wrong way round.
-  $rel_color = 'reverse__tec_product__field_tec_size_variations';
-  $rel_producto = 'reverse__tec_product__field_tec_color_variations';
-
-  $del_producto = ['field_product_name_1', 'field_tec_product_material'];
-  $del_color = ['field_tec_images', 'field_tec_colors'];
-
-  $producto_anterior = NULL;
-  $color_anterior = NULL;
-
-  foreach ($variables['rows'] as $indice => &$fila) {
-    $producto = _admin_form_styles_row_entity_id($view, $indice, $rel_producto);
-    $color = _admin_form_styles_row_entity_id($view, $indice, $rel_color);
-
-    // A row whose product or colour cannot be named keeps everything it has:
-    // blanking on a comparison of two unknowns would hide a real value.
-    $mismo_producto = $indice > 0 && $producto !== NULL && $producto === $producto_anterior;
-    $mismo_color = $mismo_producto && $color !== NULL && $color === $color_anterior;
-
-    foreach ($mismo_producto ? $del_producto : [] as $columna) {
-      _admin_form_styles_blank_cell($fila, $columna);
-    }
-    foreach ($mismo_color ? $del_color : [] as $columna) {
-      _admin_form_styles_blank_cell($fila, $columna);
-    }
-
-    // The first row needs no rule above it: the header is the rule.
-    if ($indice > 0 && isset($fila['attributes'])) {
-      if (!$mismo_producto) {
-        $fila['attributes']->addClass('tec-catalogue-product');
-      }
-      elseif (!$mismo_color) {
-        $fila['attributes']->addClass('tec-catalogue-colour');
-      }
-    }
-
-    $producto_anterior = $producto;
-    $color_anterior = $color;
-  }
-}
-
-/**
- * Whether a view is the listing of a brand's sizes.
- */
-function _admin_form_styles_is_brand_catalogue(ViewExecutable $view): bool {
-  return $view->id() === 'tec_products' && $view->current_display === 'brand_catalogue';
-}
-
-/**
- * Which entity a row hangs from, up one of the view's relationships.
- *
- * Asked of the result row rather than read off the drawn cell. The first attempt
- * compared the markup of the cells, and the colour never changed: the picture
- * column is a render array at that point, not a string, so every row compared
- * equal as the word "Array" and the White block was blanked away.
- */
-function _admin_form_styles_row_entity_id(ViewExecutable $view, int|string $indice, string $relacion): ?string {
-  $entidad = $view->result[$indice]->_relationship_entities[$relacion] ?? NULL;
-  return $entidad instanceof EntityInterface ? (string) $entidad->id() : NULL;
-}
-
-/**
- * Empties a column of a table row, leaving the cell itself in place.
- */
-function _admin_form_styles_blank_cell(array &$fila, string $columna): void {
-  foreach (array_keys($fila['columns'][$columna]['content'] ?? []) as $cual) {
-    $fila['columns'][$columna]['content'][$cual]['field_output'] = '';
   }
 }
 

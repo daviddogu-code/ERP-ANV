@@ -1,216 +1,29 @@
 /**
  * @file
- * The brand's catalogue: one row per size, with its price and its cost.
+ * The one thing the brand's catalogue needed: a box the size of a price.
  *
- * The screen is a pricing sheet. Somebody comes here to read what a size costs
- * to make and to type what it sells for, so everything below serves those two
- * figures: they line up in columns that can be read down, they sit next to each
- * other on the right, and the descriptive columns get out of the way once they
- * have been said.
+ * The widget arrives as wide as the column it sits in -- around 210 pixels for
+ * six digits -- and in a table of six rows it was the loudest thing on screen.
+ * Nothing else about the table is touched from here on purpose: it was asked for
+ * and then unasked for, and the table reads as the theme draws every other table
+ * in the ERP.
  *
- * The narrow box and the save button with its icon are the ones the order drafts
- * already have (asset_injector.css.tec_excel_lover_orders). That layer was the
- * whole difference between this screen and the drafts: same widget in a table,
- * but here it arrived at the width of the column. This one is a stylesheet in
- * the module rather than an injected one because it belongs to a display, and
- * displays live in code in this ERP.
+ * The order drafts have the same box narrowed the same way, in
+ * asset_injector.css.tec_excel_lover_orders, tied to /o/draft and /po/draft. This
+ * one is a stylesheet in the module and is attached to the display rather than to
+ * an address, because the catalogue is embedded in the brand's term page and
+ * could be embedded somewhere else tomorrow.
  */
 
-.view-id-tec_products.view-display-id-brand_catalogue .view-header {
-  margin-bottom: 0.5rem;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue table {
-  margin-bottom: 0.5rem;
-}
-
-/* The header names each column once, quietly: what the eye is hunting for on
-   this screen is the figures, not the words above them. */
-.view-id-tec_products.view-display-id-brand_catalogue thead th {
-  padding: 0.35rem 0.6rem;
-  border-bottom: 2px solid var(--bs-border-color, #dee2e6);
-  color: var(--bs-secondary-color, #6c757d);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-/* No line under every row: the lines that mean something are the ones that
-   separate one product, or one colour, from the next. */
-.view-id-tec_products.view-display-id-brand_catalogue tbody td {
-  padding: 0.3rem 0.6rem;
-  border: 0;
+/* Sixty per cent narrower than the cell it used to fill: 5.25rem is 84 pixels of
+   the roughly 210 it had. Inline so that the column's own right alignment puts it
+   where the header and the figures below it already are. */
+.view-id-tec_products.view-display-id-brand_catalogue td.views-field-form-field-field-tec-price .input-group {
+  display: inline-flex;
+  width: auto;
   vertical-align: middle;
 }
 
-/* Stripes fight the grouping: one every other row cuts a colour's sizes in half
-   and the eye ends up reading the stripes instead of the blocks. */
-.view-id-tec_products.view-display-id-brand_catalogue .table-striped > tbody > tr:nth-of-type(odd) > * {
-  --bs-table-accent-bg: transparent;
-  --bs-table-bg-type: transparent;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue tbody tr:hover > td {
-  background-color: rgba(0, 0, 0, 0.03);
-}
-
-/* Where a new product starts, and where the same product changes colour. Both
-   classes are put on by admin_form_styles_preprocess_views_view_table(), which
-   is also what blanks the cells that would otherwise repeat. */
-.view-id-tec_products.view-display-id-brand_catalogue tbody tr.tec-catalogue-product > td {
-  border-top: 1px solid var(--bs-border-color, #ced4da);
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue tbody tr.tec-catalogue-colour > td {
-  border-top: 1px dotted var(--bs-border-color, #dee2e6);
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-tec-images {
-  width: 3.25rem;
-}
-
-/* A frame around the picture: the photographs are pale things shot on white and
-   at forty pixels they dissolve into the row without one. */
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-tec-images img {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--bs-border-color, #dee2e6);
-  border-radius: 3px;
-  background-color: #fff;
-  object-fit: cover;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-product-name-1 {
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-product-name-1 a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-product-name-1 a:hover,
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-product-name-1 a:focus {
-  text-decoration: underline;
-}
-
-/* The pencil was as loud as the name it edits. It comes back when the pointer
-   is on its row, and it stays faintly there so nobody has to discover it. */
-.view-id-tec_products.view-display-id-brand_catalogue .tec-op-icon {
-  opacity: 0.3;
-  transition: opacity 0.12s ease-in-out;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue tbody tr:hover .tec-op-icon,
-.view-id-tec_products.view-display-id-brand_catalogue .tec-op-icon:focus {
-  opacity: 1;
-}
-
-/* What the product is and what colour it comes in are the setting, not the
-   subject. */
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-tec-product-material,
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-tec-colors {
-  color: var(--bs-secondary-color, #6c757d);
-  white-space: nowrap;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-tec-size {
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-tec-size a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-tec-size a:hover,
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-field-tec-size a:focus {
-  text-decoration: underline;
-}
-
-/* The two money columns take only what a figure needs, so they end up side by
-   side against the right edge instead of drifting apart as the table widens. */
-.view-id-tec_products.view-display-id-brand_catalogue th.views-field-form-field-field-tec-price,
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-form-field-field-tec-price,
-.view-id-tec_products.view-display-id-brand_catalogue th.views-field-tec-size-material-cost,
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-tec-size-material-cost {
-  width: 1%;
-  white-space: nowrap;
-}
-
-/* The cost is read, the price is written: telling them apart by weight saves
-   looking for the box. */
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-tec-size-material-cost {
-  color: var(--bs-secondary-color, #6c757d);
-  font-variant-numeric: tabular-nums;
-}
-
-/* The widget arrives wrapped in two divs, each with a margin of its own, and the
-   input group stretches to whatever width it is handed. */
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-form-field-field-tec-price .js-form-wrapper,
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-form-field-field-tec-price .form-item {
-  margin: 0;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-form-field-field-tec-price .input-group {
-  width: auto;
-  flex-wrap: nowrap;
-  justify-content: flex-end;
-}
-
-/* The box used to be as wide as the column, around thirteen rem, and it was the
-   loudest thing on a screen made of figures. Five is what a price needs, and it
-   is the width the quantity box has on the order drafts. */
 .view-id-tec_products.view-display-id-brand_catalogue td.views-field-form-field-field-tec-price input {
-  width: 5rem;
-  padding: 0.15rem 0.4rem;
-  border-left: 0;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-/* The baht sign belongs to the figure, so it shares its box instead of sitting
-   in the cell like a column of its own. */
-.view-id-tec_products.view-display-id-brand_catalogue td.views-field-form-field-field-tec-price .input-group-text {
-  padding: 0.15rem 0.1rem 0.15rem 0.4rem;
-  border-right: 0;
-  background-color: transparent;
-  color: var(--bs-secondary-color, #6c757d);
-}
-
-/* Spinners on a price are a way of changing it by one baht without meaning to,
-   and six of them in a column is six pairs of arrows nobody uses. */
-.view-id-tec_products.view-display-id-brand_catalogue input[type="number"] {
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue input[type="number"]::-webkit-outer-spin-button,
-.view-id-tec_products.view-display-id-brand_catalogue input[type="number"]::-webkit-inner-spin-button {
-  margin: 0;
-  -webkit-appearance: none;
-}
-
-/* Saving is the only thing on this page that writes a price, and the word alone
-   in a box read as one more link. Same button as the drafts. */
-.view-id-tec_products.view-display-id-brand_catalogue .form-actions {
-  margin-top: 0.25rem;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue #edit-actions-submit {
-  position: relative;
-  padding: 0.2rem 0.75rem 0.2rem 1.65rem;
-  font-weight: 700;
-}
-
-.view-id-tec_products.view-display-id-brand_catalogue #edit-actions-submit::before {
-  content: url("/sites/default/files/000-save-16.png");
-  position: absolute;
-  top: 50%;
-  left: 6px;
-  transform: translateY(-50%);
+  width: 5.25rem;
 }

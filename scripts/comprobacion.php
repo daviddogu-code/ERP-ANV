@@ -2386,28 +2386,16 @@ comprobar($resultados, 'la etiqueta del widget no repite la cabecera en cada fil
   function_exists('_admin_form_styles_hide_views_widget_titles'),
   '_admin_form_styles_hide_views_widget_titles()');
 
-// El aspecto: la casilla estrecha, el dinero alineado y el boton con su icono son
-// una hoja de estilo enganchada a la pantalla. Sin ella la tabla vuelve a salir en
-// crudo, con una casilla de precio del ancho de su columna.
+// La casilla del precio va corta, que es lo unico que se le viste a esta tabla. Se
+// lee el ancho del fichero, porque lo que se pidio fue el ancho y no que hubiera
+// una regla; y que la hoja este enganchada a la pantalla, que es lo que la carga.
 $hojaCatalogo = DRUPAL_ROOT . '/modules/custom/admin_form_styles/css/brand-catalogue.css';
-$bibliotecas = \Drupal::service('library.discovery')->getLibraryByName('admin_form_styles', 'brand-catalogue');
-comprobar($resultados, 'la tabla lleva su hoja de estilo, y esta enganchada a la pantalla',
-  is_file($hojaCatalogo) && $bibliotecas !== FALSE && function_exists('admin_form_styles_views_pre_render'),
-  is_file($hojaCatalogo) ? 'admin_form_styles/brand-catalogue' : 'falta css/brand-catalogue.css');
-
-// La casilla de precio, estrecha como la de cantidad de los borradores. Se lee del
-// fichero porque es el ancho lo que se pidio, no que exista una regla.
 $estilo = is_file($hojaCatalogo) ? (string) file_get_contents($hojaCatalogo) : '';
-comprobar($resultados, 'y la casilla del precio va corta, no del ancho de la columna',
-  (bool) preg_match('/views-field-form-field-field-tec-price input\s*\{[^}]*width:\s*5rem/s', $estilo),
-  'sin el ancho de 5rem');
-
-// Y lo que no cambia de fila a fila se dice una vez. Va con el orden de la
-// pantalla: si alguien lo cambia, esto taparia valores que no son repeticiones.
-comprobar($resultados, 'lo repetido en cada fila se dice una vez',
-  function_exists('admin_form_styles_preprocess_views_view_table')
-  && ($catalogo['sorts']['field_product_name_value']['id'] ?? '') === 'field_product_name_value',
-  'admin_form_styles_preprocess_views_view_table()');
+comprobar($resultados, 'la casilla del precio va corta, no del ancho de su columna',
+  (bool) preg_match('/views-field-form-field-field-tec-price input\s*\{[^}]*width:\s*5\.25rem/s', $estilo)
+  && \Drupal::service('library.discovery')->getLibraryByName('admin_form_styles', 'brand-catalogue') !== FALSE
+  && function_exists('admin_form_styles_views_pre_render'),
+  is_file($hojaCatalogo) ? 'sin el ancho de 5.25rem' : 'falta css/brand-catalogue.css');
 
 // -----------------------------------------------------------------------------
 // Resumen.
