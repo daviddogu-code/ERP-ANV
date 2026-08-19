@@ -49,6 +49,14 @@
   color: var(--bs-danger, #b32d2e);
 }
 
+/* A cost with a material missing, in a list where each row is one size. The
+   asterisk carries the explanation in its title; the colour is so that a page
+   full of figures shows at a glance which ones are not the whole story. */
+.tec-material-cost__incomplete {
+  color: var(--bs-danger, #b32d2e);
+  cursor: help;
+}
+
 /* On paper the rule above the total is the only thing separating it from the
    rows, so it has to survive the browser dropping backgrounds and colours. */
 @media print {

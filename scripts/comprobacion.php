@@ -2316,6 +2316,75 @@ informar('materiales en algun BoM sin coste de consumo', $materialesSinCoste,
   $materialesSinCoste ? 'sus tallas cuestan mas de lo que dicen' : 'todos con precio');
 
 // -----------------------------------------------------------------------------
+titulo('20. La ficha de una marca lista sus tallas, con precio y coste');
+
+// Esta pantalla es una fila por talla, y eso es lo que la hace util: el precio de
+// venta y el coste viven en la talla, no en el producto. Si alguien la devuelve a
+// una fila por producto, las dos columnas que importan se quedan vacias y la
+// pagina sigue cargando.
+$catalogo = \Drupal::config('views.view.tec_products')->get('display.brand_catalogue.display_options') ?? [];
+$filasDe = $catalogo['filters']['type']['value'] ?? [];
+
+comprobar($resultados, 'el catalogo de la marca lista tallas, no productos',
+  array_keys(array_filter($filasDe)) === ['tec_size_variation'],
+  implode(', ', array_keys(array_filter($filasDe))) ?: 'sin filtro de tipo');
+
+$columnasCatalogo = [];
+foreach (($catalogo['fields'] ?? []) as $id => $campo) {
+  if (empty($campo['exclude'])) {
+    $columnasCatalogo[$id] = $campo['label'] ?? '';
+  }
+}
+comprobar($resultados, 'y ensena las siete columnas que se pidieron',
+  array_values($columnasCatalogo) === ['', 'Product name', 'Material', 'Variation', 'Size', 'Sales price', 'Material cost'],
+  implode(' | ', array_values($columnasCatalogo)));
+
+// El precio editable. Son tres cosas y las tres tienen que estar: el campo, el
+// que sea el precio de venta y no otro, y que la etiqueta del widget no repita
+// la cabecera en cada fila.
+$precio = $catalogo['fields']['form_field_field_tec_price'] ?? [];
+comprobar($resultados, 'el precio de venta se escribe en la propia tabla',
+  ($precio['plugin_id'] ?? '') === 'entity_form_field'
+  && ($precio['field'] ?? '') === 'form_field_field_tec_price'
+  && !empty($precio['plugin']['hide_title']),
+  $precio ? 'plugin ' . ($precio['plugin_id'] ?? '?') : 'no esta');
+
+// Sin ajax a proposito: con ajax, el modulo guarda al salir de la casilla y quita
+// el boton, y para saber que fila guardar mezcla el numero de la talla con la
+// posicion de la fila.
+comprobar($resultados, 'y se guarda con el boton, no al salir de la casilla',
+  ($catalogo['use_ajax'] ?? TRUE) === FALSE,
+  'use_ajax = ' . var_export($catalogo['use_ajax'] ?? NULL, TRUE));
+
+comprobar($resultados, 'y el coste lo pone la columna que suma el BoM',
+  ($catalogo['fields']['tec_size_material_cost']['plugin_id'] ?? '') === 'tec_size_material_cost'
+  && isset(\Drupal::service('views.views_data')->get('tec_product_field_data')['tec_size_material_cost']),
+  'tec_size_material_cost');
+
+// El argumento tiene que seguir colgando de la marca: la ficha del termino dibuja
+// esta pantalla y le pasa su propio numero.
+comprobar($resultados, 'la pantalla sigue recibiendo la marca por su relacion',
+  ($catalogo['arguments']['tid']['relationship'] ?? '') === 'field_tec_brand',
+  $catalogo['arguments']['tid']['relationship'] ?? 'sin argumento');
+
+$campoFicha = \Drupal::config('field.field.taxonomy_term.tec_brands.field_tec_brand_catalogue')->get('default_value')[0] ?? [];
+comprobar($resultados, 'y la ficha de la marca sigue dibujando esa y no otra',
+  ($campoFicha['display_id'] ?? '') === 'brand_catalogue',
+  $campoFicha['display_id'] ?? 'sin pantalla');
+
+// El orden de las tallas es el del vocabulario. Por nombre saldria L, M, S, XL.
+comprobar($resultados, 'las tallas salen en el orden del vocabulario',
+  ($catalogo['sorts']['weight']['relationship'] ?? '') === 'field_tec_size'
+  && ($catalogo['sorts']['weight']['table'] ?? '') === 'taxonomy_term_field_data',
+  implode(', ', array_keys($catalogo['sorts'] ?? [])) ?: 'sin orden');
+
+// Y la etiqueta repetida, que es lo que arregla admin_form_styles en las tres
+// tablas que se editan por dentro.
+comprobar($resultados, 'la etiqueta del widget no repite la cabecera en cada fila',
+  function_exists('_admin_form_styles_hide_views_widget_titles'),
+  '_admin_form_styles_hide_views_widget_titles()');
+
+// -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------
 $mal = array_filter($resultados, fn($r) => !$r['bien']);

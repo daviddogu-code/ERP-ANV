@@ -5,6 +5,7 @@ dependencies:
   config:
     - eck.eck_type.tec_product.tec_product
     - eck.eck_type.tec_product.tec_size_variation
+    - field.field.tec_product.tec_size_variation.field_tec_price
     - field.storage.taxonomy_term.field_tec_logo
     - field.storage.tec_product.field_product_name
     - field.storage.tec_product.field_tec_brand
@@ -14,6 +15,7 @@ dependencies:
     - field.storage.tec_product.field_tec_pattern
     - field.storage.tec_product.field_tec_price
     - field.storage.tec_product.field_tec_product
+    - field.storage.tec_product.field_tec_product_material
     - field.storage.tec_product.field_tec_product_type
     - field.storage.tec_product.field_tec_size
     - image.style.large
@@ -33,13 +35,16 @@ dependencies:
     - eck
     - entity_browser
     - image
+    - options
     - simple_popup_views
     - taxonomy
+    - tec_inventory
     - user
     - verf
     - viewfield
     - views_bootstrap
     - views_bulk_operations
+    - views_entity_form_field
     - views_infinite_scroll
 id: tec_products
 label: 'TEC Products'
@@ -7471,18 +7476,16 @@ display:
     display_options:
       title: Products
       fields:
-        id:
-          id: id
-          table: tec_product_field_data
-          field: id
-          relationship: none
+        field_tec_images:
+          id: field_tec_images
+          table: tec_product__field_tec_images
+          field: field_tec_images
+          relationship: reverse__tec_product__field_tec_size_variations
           group_type: group
           admin_label: ''
-          entity_type: tec_product
-          entity_field: id
           plugin_id: field
           label: ''
-          exclude: true
+          exclude: false
           alter:
             alter_text: false
             text: ''
@@ -7511,7 +7514,7 @@ display:
             preserve_tags: ''
             html: false
           element_type: ''
-          element_class: ''
+          element_class: rounded
           element_label_type: ''
           element_label_class: ''
           element_label_colon: false
@@ -7522,15 +7525,17 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          click_sort_column: value
-          type: number_integer
+          click_sort_column: target_id
+          type: image
           settings:
-            thousand_separator: ''
-            prefix_suffix: false
-          group_column: value
+            image_link: ''
+            image_style: small_40x40
+            image_loading:
+              attribute: lazy
+          group_column: ''
           group_columns: {  }
           group_rows: true
-          delta_limit: 0
+          delta_limit: 1
           delta_offset: 0
           delta_reversed: false
           delta_first_last: false
@@ -7541,7 +7546,7 @@ display:
           id: edit_tec_product
           table: tec_product
           field: edit_tec_product
-          relationship: none
+          relationship: reverse__tec_product__field_tec_color_variations
           group_type: group
           admin_label: ''
           entity_type: tec_product
@@ -7550,7 +7555,7 @@ display:
           exclude: true
           alter:
             alter_text: true
-            text: " <a class=\"tec-op-icon\" href=\"{{ edit_tec_product }}?destination=/taxonomy/term/{{ raw_arguments.tid }}\" title=\"Edit product\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>"
+            text: " <a class=\"tec-op-icon\" href=\"{{ edit_tec_product }}?destination=/node/1\" title=\"Edit product\">\r\n    <img src=\"/sites/default/files/999-edit-16.png\">\r\n  </a>"
             make_link: false
             path: ''
             absolute: false
@@ -7594,7 +7599,7 @@ display:
           id: field_product_name_1
           table: tec_product__field_product_name
           field: field_product_name
-          relationship: none
+          relationship: reverse__tec_product__field_tec_color_variations
           group_type: group
           admin_label: ''
           plugin_id: field
@@ -7602,7 +7607,7 @@ display:
           exclude: false
           alter:
             alter_text: true
-            text: '<div><strong>{{ field_product_name_1 }}</strong>  {{ edit_tec_product }}</div>'
+            text: '{{ field_product_name_1 }}  {{ edit_tec_product }}'
             make_link: false
             path: ''
             absolute: false
@@ -7653,80 +7658,28 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_color_embed_vm:
-          id: field_tec_color_embed_vm
-          table: tec_product__field_tec_color_embed_vm
-          field: field_tec_color_embed_vm
-          relationship: none
+        field_tec_product_material:
+          id: field_tec_product_material
+          table: tec_product__field_tec_product_material
+          field: field_tec_product_material
+          relationship: reverse__tec_product__field_tec_color_variations
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: Variations
+          label: Material
           exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: viewfield_default
-          settings:
-            view_title: hidden
-            always_build_output: false
-            empty_view_title: hidden
-          group_column: ''
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_product_type:
-          id: field_tec_product_type
-          table: tec_product__field_tec_product_type
-          field: field_tec_product_type
-          relationship: none
+          element_label_colon: true
+          type: list_default
+          settings: {  }
+        field_tec_colors:
+          id: field_tec_colors
+          table: tec_product__field_tec_colors
+          field: field_tec_colors
+          relationship: reverse__tec_product__field_tec_size_variations
           group_type: group
           admin_label: ''
           plugin_id: field
-          label: 'Product type'
+          label: Variation
           exclude: false
           alter:
             alter_text: false
@@ -7781,132 +7734,43 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        field_tec_pattern:
-          id: field_tec_pattern
-          table: tec_product__field_tec_pattern
-          field: field_tec_pattern
+        field_tec_size:
+          id: field_tec_size
+          table: tec_product__field_tec_size
+          field: field_tec_size
+          plugin_id: field
+          label: Size
+          exclude: false
+        form_field_field_tec_price:
+          id: form_field_field_tec_price
+          table: tec_product_field_data
+          field: form_field_field_tec_price
           relationship: none
           group_type: group
           admin_label: ''
-          plugin_id: field
-          label: Pattern
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
+          entity_type: tec_product
+          plugin_id: entity_form_field
+          label: 'Sales price'
+          exclude: false
           element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_tec_brand:
-          id: field_tec_brand
-          table: tec_product__field_tec_brand
-          field: field_tec_brand
+          plugin:
+            hide_title: 1
+            hide_description: 1
+            type: number
+            settings:
+              placeholder: ''
+            third_party_settings: {  }
+        tec_size_material_cost:
+          id: tec_size_material_cost
+          table: tec_product_field_data
+          field: tec_size_material_cost
           relationship: none
           group_type: group
           admin_label: ''
-          plugin_id: field
-          label: Brand
-          exclude: true
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
+          plugin_id: tec_size_material_cost
+          label: 'Material cost'
+          exclude: false
           element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: false
-          group_column: target_id
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
       pager:
         type: none
         options:
@@ -7945,11 +7809,23 @@ display:
           content: '<div class="text-align-center"><h4>No products in this brand yet</h4></div><div class="text-align-center"><div><strong><a href="/admin/content/tec_product/add/tec_product?brand_id={{ raw_arguments.tid }}&destination=/taxonomy/term/{{ raw_arguments.tid }}">+ Product</a></strong></div></div>'
           tokenize: true
       sorts:
+        field_product_name_value:
+          id: field_product_name_value
+          table: tec_product__field_product_name
+          field: field_product_name_value
+          relationship: reverse__tec_product__field_tec_color_variations
+          group_type: group
+          admin_label: ''
+          plugin_id: standard
+          order: ASC
+          expose:
+            label: ''
+          exposed: false
         title:
           id: title
           table: tec_product_field_data
           field: title
-          relationship: none
+          relationship: reverse__tec_product__field_tec_size_variations
           group_type: group
           admin_label: ''
           entity_type: tec_product
@@ -7958,7 +7834,20 @@ display:
           order: ASC
           expose:
             label: ''
-            field_identifier: ''
+          exposed: false
+        weight:
+          id: weight
+          table: taxonomy_term_field_data
+          field: weight
+          relationship: field_tec_size
+          group_type: group
+          admin_label: ''
+          entity_type: taxonomy_term
+          entity_field: weight
+          plugin_id: standard
+          order: ASC
+          expose:
+            label: ''
           exposed: false
       arguments:
         tid:
@@ -8009,36 +7898,9 @@ display:
           plugin_id: bundle
           operator: in
           value:
-            tec_product: tec_product
+            tec_size_variation: tec_size_variation
           group: 1
           exposed: false
-          expose:
-            operator_id: ''
-            label: ''
-            description: ''
-            use_operator: false
-            operator: ''
-            operator_limit_selection: false
-            operator_list: {  }
-            identifier: ''
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
       filter_groups:
         operator: AND
         groups:
@@ -8048,54 +7910,18 @@ display:
         options:
           grouping: {  }
           row_class: ''
-          default_row_class: false
+          default_row_class: true
           columns:
-            id: id
-            field_tec_images_1: field_tec_images_1
             field_tec_images: field_tec_images
-            simple_popup_views_field: simple_popup_views_field
-            edit_tec_product: edit_tec_product
             field_product_name_1: field_product_name_1
-            field_tec_product_type: field_tec_product_type
-            field_tec_pattern: field_tec_pattern
+            field_tec_product_material: field_tec_product_material
             field_tec_colors: field_tec_colors
             field_tec_size: field_tec_size
-            field_tec_brand: field_tec_brand
-            field_tec_sales_price: field_tec_sales_price
-            delete_tec_product: delete_tec_product
-            field_tec_logo: field_tec_logo
-            field_tec_product_type_1: field_tec_product_type_1
-            field_tec_brand_1: field_tec_brand_1
-            field_tec_pattern_1: field_tec_pattern_1
-            changed: changed
-            draggableviews: draggableviews
+            form_field_field_tec_price: form_field_field_tec_price
+            tec_size_material_cost: tec_size_material_cost
           default: '-1'
           info:
-            id:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_images_1:
-              align: views-align-center
-              separator: ''
-              empty_column: false
-              responsive: ''
             field_tec_images:
-              align: views-align-center
-              separator: ''
-              empty_column: false
-              responsive: ''
-            simple_popup_views_field:
-              sortable: false
-              default_sort_order: asc
-              align: views-align-center
-              separator: ''
-              empty_column: false
-              responsive: ''
-            edit_tec_product:
               sortable: false
               default_sort_order: asc
               align: views-align-center
@@ -8103,98 +7929,44 @@ display:
               empty_column: false
               responsive: ''
             field_product_name_1:
-              sortable: true
+              sortable: false
               default_sort_order: asc
               align: views-align-left
               separator: ''
               empty_column: false
               responsive: ''
-            field_tec_product_type:
-              sortable: true
+            field_tec_product_material:
+              sortable: false
               default_sort_order: asc
               align: ''
               separator: ''
               empty_column: false
               responsive: ''
-            field_tec_pattern:
-              sortable: true
-              default_sort_order: asc
-              align: views-align-right
-              separator: ''
-              empty_column: false
-              responsive: ''
             field_tec_colors:
-              sortable: true
+              sortable: false
               default_sort_order: asc
               align: views-align-center
               separator: ''
               empty_column: false
               responsive: ''
             field_tec_size:
-              sortable: true
+              sortable: false
               default_sort_order: asc
               align: views-align-center
               separator: ''
               empty_column: false
               responsive: ''
-            field_tec_brand:
-              sortable: true
-              default_sort_order: asc
-              align: views-align-center
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_sales_price:
-              sortable: true
+            form_field_field_tec_price:
+              sortable: false
               default_sort_order: asc
               align: views-align-right
               separator: ''
               empty_column: false
               responsive: ''
-            delete_tec_product:
+            tec_size_material_cost:
               sortable: false
               default_sort_order: asc
-              align: views-align-center
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_logo:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_product_type_1:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_brand_1:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            field_tec_pattern_1:
-              sortable: false
-              default_sort_order: asc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            changed:
-              sortable: true
-              default_sort_order: desc
-              align: ''
-              separator: ''
-              empty_column: false
-              responsive: ''
-            draggableviews:
-              align: ''
+              align: views-align-right
               separator: ''
               empty_column: false
               responsive: ''
@@ -8207,7 +7979,11 @@ display:
           class: ''
       row:
         type: fields
-        options: {  }
+        options:
+          default_field_elements: true
+          inline: {  }
+          separator: ''
+          hide_empty: false
       defaults:
         empty: false
         access: false
@@ -8226,16 +8002,45 @@ display:
         filter_groups: false
         header: false
       relationships:
+        reverse__tec_product__field_tec_size_variations:
+          id: reverse__tec_product__field_tec_size_variations
+          table: tec_product_field_data
+          field: reverse__tec_product__field_tec_size_variations
+          relationship: none
+          group_type: group
+          admin_label: 'Color variation'
+          entity_type: tec_product
+          plugin_id: entity_reverse
+          required: false
+        reverse__tec_product__field_tec_color_variations:
+          id: reverse__tec_product__field_tec_color_variations
+          table: tec_product_field_data
+          field: reverse__tec_product__field_tec_color_variations
+          relationship: reverse__tec_product__field_tec_size_variations
+          group_type: group
+          admin_label: Product
+          entity_type: tec_product
+          plugin_id: entity_reverse
+          required: false
         field_tec_brand:
           id: field_tec_brand
           table: tec_product__field_tec_brand
           field: field_tec_brand
-          relationship: none
+          relationship: reverse__tec_product__field_tec_color_variations
           group_type: group
           admin_label: 'field_tec_brand: Taxonomy term'
           plugin_id: standard
-          required: true
-      use_ajax: true
+          required: false
+        field_tec_size:
+          id: field_tec_size
+          table: tec_product__field_tec_size
+          field: field_tec_size
+          relationship: none
+          group_type: group
+          admin_label: 'Size term'
+          plugin_id: standard
+          required: false
+      use_ajax: false
       display_description: ''
       header:
         area_text_custom:
@@ -8256,14 +8061,16 @@ display:
         - 'languages:language_content'
         - 'languages:language_interface'
         - url
-        - url.query_args
+        - user
         - user.roles
       tags:
+        - 'config:field.field.tec_product.tec_size_variation.field_tec_price'
         - 'config:field.storage.tec_product.field_product_name'
-        - 'config:field.storage.tec_product.field_tec_brand'
-        - 'config:field.storage.tec_product.field_tec_color_embed_vm'
-        - 'config:field.storage.tec_product.field_tec_pattern'
-        - 'config:field.storage.tec_product.field_tec_product_type'
+        - 'config:field.storage.tec_product.field_tec_colors'
+        - 'config:field.storage.tec_product.field_tec_images'
+        - 'config:field.storage.tec_product.field_tec_price'
+        - 'config:field.storage.tec_product.field_tec_product_material'
+        - 'config:field.storage.tec_product.field_tec_size'
   entity_browser_1:
     id: entity_browser_1
     display_title: 'Entity browser'

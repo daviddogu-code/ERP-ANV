@@ -8,15 +8,22 @@
  *
  * Comprueba las tres puertas del catalogo:
  *
- * - La pantalla `brand_catalogue` de la vista de productos devuelve los
- *   productos de la marca que se le pasa, ni uno mas ni uno menos.
- * - La ficha del termino de la marca los ensena, o sea que el campo que la
+ * - La pantalla `brand_catalogue` de la vista de productos devuelve las tallas de
+ *   la marca que se le pasa, ni una mas ni una menos.
+ * - La ficha del termino de la marca las ensena, o sea que el campo que la
  *   embebe esta puesto y el argumento le llega.
  * - En /b la baldosa lleva a la ficha y el lapiz al formulario de edicion, que
  *   antes eran la misma cosa.
  *
- * Crea dos productos en dos marcas para poder distinguir, y los borra al final.
- * Si no hay dos marcas, lo dice y no prueba nada.
+ * El catalogo era una fila por producto y desde el 19 de agosto de 2026 es una
+ * fila por talla, porque el precio de venta y el coste viven en la talla. Por eso
+ * el juego de prueba de aqui no es un producto suelto: un producto sin colores ni
+ * tallas no tiene ninguna fila que ensenar. Lo que cada fila dice -precio
+ * editable y coste de materiales- se prueba aparte, en
+ * `el-catalogo-de-la-marca-dice-precio-y-coste.php`.
+ *
+ * Crea el arbol entero -producto, color y talla- en dos marcas para poder
+ * distinguir, y lo borra al final. Si no hay dos marcas, lo dice y no prueba nada.
  */
 
 use Drupal\views\Views;
@@ -53,19 +60,43 @@ if (count($marcas) < 2) {
 [$laNuestra, $laOtra] = $marcas;
 $almacen = $gestor->getStorage('tec_product');
 
-$mio = $almacen->create([
-  'type' => 'tec_product',
-  'field_product_name' => 'PRUEBA catalogo de la marca',
-  'field_tec_brand' => [['target_id' => $laNuestra]],
-]);
-$mio->save();
+/**
+ * Un producto de una marca, con su color y su talla, que es lo que hace fila.
+ *
+ * Devuelve el producto y la talla. El color queda enganchado por los dos lados
+ * porque el catalogo sube de la talla al color y del color al producto por la
+ * lista del padre, igual que la ficha del producto.
+ *
+ * La talla se deja a proposito sin termino de talla: asi esta prueba tambien
+ * vigila que una talla a medio crear siga saliendo en el catalogo, con la casilla
+ * de talla vacia, en vez de desaparecer sin decir nada.
+ */
+$arbol = static function (string $nombre, $marca) use ($almacen): array {
+  $producto = $almacen->create([
+    'type' => 'tec_product',
+    'field_product_name' => $nombre,
+    'field_tec_brand' => [['target_id' => $marca]],
+  ]);
+  $producto->save();
 
-$ajeno = $almacen->create([
-  'type' => 'tec_product',
-  'field_product_name' => 'PRUEBA catalogo de la otra',
-  'field_tec_brand' => [['target_id' => $laOtra]],
-]);
-$ajeno->save();
+  $color = $almacen->create(['type' => 'tec_color_variation', 'title' => $nombre . ' color']);
+  $color->save();
+
+  $talla = $almacen->create(['type' => 'tec_size_variation', 'title' => $nombre . ' talla']);
+  $talla->save();
+
+  $color = $almacen->loadUnchanged($color->id());
+  $color->set('field_tec_size_variations', [$talla->id()]);
+  $color->save();
+
+  $producto->set('field_tec_color_variations', [$color->id()]);
+  $producto->save();
+
+  return [$almacen->loadUnchanged($producto->id()), $talla, $color];
+};
+
+[$mio, $miTalla, $miColor] = $arbol('PRUEBA catalogo de la marca', $laNuestra);
+[$ajeno, $tallaAjena, $colorAjeno] = $arbol('PRUEBA catalogo de la otra', $laOtra);
 
 // Se preguntan los nombres en vez de darlos por sabidos: al guardar, el ERP
 // pone en mayuscula la inicial de cada palabra, asi que el nombre que sale en
@@ -89,16 +120,25 @@ foreach ($vista->result as $fila) {
   $salen[] = (int) $fila->_entity->id();
 }
 
-$mirar('sale el producto de esta marca', in_array((int) $mio->id(), $salen, TRUE));
-$mirar('y no sale el de la otra', !in_array((int) $ajeno->id(), $salen, TRUE));
+$mirar('sale la talla de esta marca', in_array((int) $miTalla->id(), $salen, TRUE));
+$mirar('y no sale la de la otra', !in_array((int) $tallaAjena->id(), $salen, TRUE));
 
-$conMarca = array_values($almacen->getQuery()
+// Todas las tallas de la marca: por cada producto suyo, por cada color, sus
+// tallas. Se cuentan bajando el arbol, que es el mismo camino que sube la vista.
+$suyas = [];
+foreach ($almacen->loadMultiple($almacen->getQuery()
   ->accessCheck(FALSE)
   ->condition('type', 'tec_product')
   ->condition('field_tec_brand', $laNuestra)
-  ->execute());
-$mirar('salen todos los que tiene la marca', count($salen) === count($conMarca),
-  count($salen) . ' en pantalla, ' . count($conMarca) . ' en la base');
+  ->execute()) as $producto) {
+  foreach ($producto->get('field_tec_color_variations')->referencedEntities() as $color) {
+    foreach ($color->get('field_tec_size_variations')->referencedEntities() as $talla) {
+      $suyas[(int) $talla->id()] = TRUE;
+    }
+  }
+}
+$mirar('salen todas las tallas que tiene la marca', count($salen) === count($suyas),
+  count($salen) . ' en pantalla, ' . count($suyas) . ' en la base');
 
 $vista->destroy();
 
@@ -136,13 +176,15 @@ $mirar('la baldosa lleva a la ficha',
 $mirar('y el lapiz al formulario de edicion',
   str_contains($html, '/taxonomy/term/' . $laNuestra . '/edit'));
 
-$almacen->loadUnchanged($mio->id())?->delete();
-$almacen->loadUnchanged($ajeno->id())?->delete();
+// De abajo arriba: borrar un producto no se lleva a sus colores ni a sus tallas.
+foreach ([$miTalla, $tallaAjena, $miColor, $colorAjeno, $mio, $ajeno] as $pieza) {
+  $almacen->loadUnchanged($pieza->id())?->delete();
+}
 
 print "\n" . str_repeat('=', 70) . "\n";
 if ($problemas === 0) {
-  print "  Todo bien. Los dos productos de prueba se han borrado.\n\n";
+  print "  Todo bien. Los dos arboles de prueba se han borrado.\n\n";
 }
 else {
-  printf("  %d cosas mal. Los dos productos de prueba se han borrado.\n\n", $problemas);
+  printf("  %d cosas mal. Los dos arboles de prueba se han borrado.\n\n", $problemas);
 }

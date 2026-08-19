@@ -23,4 +23,16 @@ function tec_inventory_views_data_alter(array &$data): void {
       'id' => 'tec_size_material_cost_total',
     ],
   ];
+
+  // The same figure as a column, for lists whose rows are sizes. Hung off the
+  // product table and not off a field because there is no field: it is the BoM
+  // added up, and the BoM is somewhere else.
+  $data['tec_product_field_data']['tec_size_material_cost'] = [
+    'title' => t('Material cost'),
+    'help' => t('What the materials of a size cost at today\'s consumption costs. Empty for products and colours, which have no BoM of their own.'),
+    'field' => [
+      'id' => 'tec_size_material_cost',
+      'click sortable' => FALSE,
+    ],
+  ];
 }

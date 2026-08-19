@@ -1933,6 +1933,57 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-19 (cierre) — La ficha de la marca deja de ser un cartel: es la lista de sus tallas, con el precio editable
+
+La página de una marca enseñaba **una fila por producto**, con su foto y su nombre, y para poner un precio
+había que entrar en el producto, bajar al color y abrir la talla. Ahora enseña **una fila por talla** —el
+listado entero, al estilo de las líneas de un pedido— con **Foto, Product name, Material, Variation, Size,
+Sales price y Material cost**. El precio de venta se escribe en la propia tabla y se guarda con un botón.
+
+**Es una fila por talla porque el precio y el coste viven en la talla, no en el producto.** Un producto no
+tiene un precio: tiene tantos como tallas, y un coste distinto por cada una, porque cada talla lleva su
+propio BoM. Agrupar por producto obligaba a elegir cuál de los seis números enseñar, y la respuesta correcta
+era enseñarlos todos.
+
+**La columna del coste no repite la cuenta: llama a la misma clase que el pie del BoM.** Es la razón de haber
+sacado `MaterialCost` a una clase hace un rato. Lo que sí es nuevo es el cuidado con las consultas: una
+columna que cargue el BoM fila por fila son seis consultas en una marca pequeña y unos cuantos cientos en la
+grande, así que el campo carga **todos los BoM y todos los materiales de la página de golpe** antes de
+dibujar nada.
+
+**El precio se guarda con un botón, y no al salir de la casilla.** El módulo que mete formularios dentro de
+una vista sabe hacer las dos cosas; guardando al salir de la casilla no había manera fiable de saber **a qué
+talla pertenece la fila** que se acaba de tocar, y equivocarse ahí es escribir un precio en la talla de al
+lado. Con el botón es un formulario normal, y es además lo que ya hacen los borradores de pedido de esta
+casa: la pantalla se comporta igual que las que el dueño ya usa.
+
+**Y de paso se ha arreglado algo que llevaba meses en los borradores de pedido: el rótulo repetido en cada
+fila.** Cada casilla editable dibujaba «Sales price» a su izquierda, en las 6 filas, al lado de una columna
+que ya se llama así. El módulo tiene una opción para callarlo, pero **solo la aplica a algunos tipos de
+casilla** y no a las de número. Se resuelve por el camino de Drupal —el rótulo sigue en el html, escondido,
+que es lo que necesita quien navega con lector de pantalla— y como el arreglo mira la configuración de la
+vista, **las dos pantallas de borrador de pedido se han quedado limpias sin tocarlas**.
+
+**Una talla a medio crear ya no desaparece.** La primera versión exigía que la talla tuviera su término de
+talla, y eso hacía que una talla sin terminar **se cayera del listado sin decir nada**: justo la fila que hay
+que arreglar era la única que no se veía. Ahora sale, con la casilla de talla vacía. Hoy no hay ninguna así
+—se comprobó, 7 de 7 con término— pero la prueba crea una a propósito para que siga siendo verdad. Es el
+mismo criterio que el pie del BoM con los materiales sin precio: **lo que falta se enseña, no se esconde**.
+
+La columna de la foto sale vacía en todas las marcas y **no es un fallo de la pantalla: no hay ni una foto**.
+Las imágenes viven en el color, y los tres colores del ERP están sin imagen. La columna se llenará sola en
+cuanto se suban.
+
+Comprobado sobre las fichas de marca de verdad, no solo pidiendo la vista: las seis tallas de Rise Fight Gear
+con su coste (`฿ 94,05`, `฿ 74,62`, `฿ 74,39`…) y un precio escrito en la tabla que aparece guardado en la
+talla. La prueba nueva mira las siete columnas, el orden de las tallas por el peso de su término, que cada
+fila traiga su precio, que el coste de dos tallas distintas no sea el mismo y que un `POST` a la página de la
+marca guarde. Nueve comprobaciones nuevas en el guardián (la 20): **185 de 185**. Y la prueba de humo, 61
+páginas, ninguna rota.
+
+**Con esto se cierra lo que quedaba de la conversación del coste**: el BoM dice lo que cuesta cada talla, y la
+marca enseña todas las suyas con lo que cuestan y lo que se cobran, en la misma línea.
+
 ### 2026-08-19 (noche) — El BoM de una talla dice por fin lo que cuesta, línea por línea y en total
 
 La tabla de materiales de cada talla —la que sale en la ficha del producto, una por talla— tiene ahora una
@@ -1982,10 +2033,10 @@ cuatro columnas y seis pies —`฿ 94,05`, `฿ 74,62`, `฿ 74,39`—. Nueve c
 pantalla haya dejado de heredar el pie de la maestra y que el área siga ofreciéndose. **176 de 176.** Y la
 prueba de humo, 61 páginas, ninguna rota.
 
-**Queda la otra mitad de lo que se pidió**: la página de la marca tiene que dejar de ser un catálogo por
+~~**Queda la otra mitad de lo que se pidió**: la página de la marca tiene que dejar de ser un catálogo por
 producto y pasar a ser un listado por talla, al estilo de las líneas de un pedido, con el **precio de venta
 editable ahí mismo** y esta misma columna de coste al lado. La cuenta ya está hecha y compartida; falta la
-pantalla.
+pantalla.~~ **Hecha el mismo día**, arriba.
 
 ### 2026-08-19 (tarde) — El producto suelta al cliente: el campo se ha ido, y la ficha del cliente enseña marcas
 

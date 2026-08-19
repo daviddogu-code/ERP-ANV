@@ -5,6 +5,7 @@
  * Admin form styling helpers (inventory stock modal, etc.).
  */
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -13,6 +14,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\taxonomy\TermInterface;
+use Drupal\views\ViewExecutable;
 
 /**
  * Implements hook_entity_view().
@@ -130,6 +132,11 @@ function admin_form_styles_form_alter(&$form, $form_state, $form_id) {
   // Material Types overview: editable "Show on production document" checkboxes.
   if ($form_id === 'taxonomy_overview_terms') {
     _admin_form_styles_tec_materials_overview_checkboxes($form, $form_state);
+  }
+
+  // Tables you can type into: the widget in each cell repeats the column header.
+  if (str_starts_with($form_id, 'views_form_')) {
+    _admin_form_styles_hide_views_widget_titles($form, $form_state);
   }
 
   // After deleting a size/color, return to the parent product (not /p or ECK list).
@@ -420,6 +427,82 @@ function _admin_form_styles_hide_unused_brand_form_parts(array &$form, $entity):
     if (isset($form[$key])) {
       $form[$key]['#access'] = FALSE;
     }
+  }
+}
+
+/**
+ * Do what "hide the widget title" already promised in a views table.
+ *
+ * When a column of a view is an editable field, the widget brings its own label
+ * along, so every row of the table repeats the header: a column called Quantity
+ * with the word Quantity printed in each cell, and the same with Sales price.
+ *
+ * views_entity_form_field has a "Hide field title" box for exactly this and it
+ * is ticked on all three of the tables this ERP lets people type into. It works
+ * by adding a class the module's own stylesheet hides -- but only on the branch
+ * where the widget is not wrapped in a container. A plain number widget is
+ * wrapped in one, and on that branch the module only knows how to unpick a date
+ * field, so the number fields keep their label and the box does nothing. It has
+ * been like that on /o/draft and /po/draft since they were built.
+ *
+ * So the box is honoured here, and only where it is actually ticked: the handler
+ * is asked, rather than assumed. Made invisible rather than removed, because a
+ * screen reader still needs to say which figure the cursor is in when the header
+ * is three rows up.
+ */
+function _admin_form_styles_hide_views_widget_titles(array &$form, FormStateInterface $form_state): void {
+  // La vista no esta en el estado del formulario, aunque uno lo daria por hecho:
+  // Views la pasa como argumento de construccion, asi que se busca entre ellos.
+  $view = NULL;
+  foreach ($form_state->getBuildInfo()['args'] ?? [] as $argumento) {
+    if ($argumento instanceof ViewExecutable) {
+      $view = $argumento;
+      break;
+    }
+  }
+  if (!$view || !isset($view->field) || !is_array($view->field)) {
+    return;
+  }
+
+  foreach ($view->field as $id => $handler) {
+    if (!isset($form[$id]) || !is_array($form[$id])) {
+      continue;
+    }
+    if (empty($handler->options['plugin']['hide_title'])) {
+      continue;
+    }
+    foreach (Element::children($form[$id]) as $row) {
+      foreach (Element::children($form[$id][$row]) as $field_name) {
+        if (!isset($form[$id][$row][$field_name]['widget'])) {
+          continue;
+        }
+        _admin_form_styles_blank_widget_title($form[$id][$row][$field_name]['widget']);
+      }
+    }
+  }
+}
+
+/**
+ * Make a widget's own label invisible, wherever that widget keeps it.
+ *
+ * The label sits in a different place depending on the kind of field -- a
+ * number keeps it in [0]['value'], a checkbox in ['value'], a reference in
+ * ['target_id'] -- so all of them are checked rather than guessing at one.
+ */
+function _admin_form_styles_blank_widget_title(array &$widget): void {
+  if (isset($widget['#title'])) {
+    $widget['#title_display'] = 'invisible';
+  }
+
+  // Read with NestedArray and not with a reference of our own: referencing a key
+  // that is not there would create it, and every widget coming out of here would
+  // have grown an empty child.
+  foreach ([['value'], ['target_id'], [0, 'value'], [0, 'target_id']] as $donde) {
+    $elemento = &NestedArray::getValue($widget, $donde, $existe);
+    if ($existe && is_array($elemento) && isset($elemento['#title'])) {
+      $elemento['#title_display'] = 'invisible';
+    }
+    unset($elemento);
   }
 }
 
