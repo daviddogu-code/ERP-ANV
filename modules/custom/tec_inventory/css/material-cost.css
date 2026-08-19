@@ -1,0 +1,58 @@
+/**
+ * @file
+ * The foot of a size's BoM: what its materials add up to.
+ *
+ * Laid out like the foot of a purchase order, which is the other place in the
+ * ERP where a table is closed with a figure: the wording right-aligned against
+ * the amount, the amount hard against the right edge, and a rule above it so it
+ * reads as a total and not as one more row of the table.
+ */
+
+.tec-material-cost {
+  width: 100%;
+  margin: 0 0 1rem;
+  border: 0;
+}
+
+.tec-material-cost td {
+  border: 0;
+  /* The theme's own table padding when there is one, so the figure ends where
+     the column above it ends. */
+  padding: 0.2rem var(--bs-table-cell-padding-x, 0.5rem);
+}
+
+.tec-material-cost__label {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Only as wide as the figure needs, which pushes the wording up against it and
+   leaves the rest of the width to the empty space on the left. */
+.tec-material-cost__amount {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.tec-material-cost__row--total td {
+  font-weight: 700;
+  border-top: 1px solid currentColor;
+  padding-top: 0.35rem;
+}
+
+/* A material with no cost is missing from the total, which matters more than it
+   looks: it makes the product read cheaper than it is. */
+.tec-material-cost__note {
+  text-align: right;
+  font-size: 0.85em;
+  color: var(--bs-danger, #b32d2e);
+}
+
+/* On paper the rule above the total is the only thing separating it from the
+   rows, so it has to survive the browser dropping backgrounds and colours. */
+@media print {
+  .tec-material-cost__row--total td {
+    border-top: 1px solid #000;
+  }
+}

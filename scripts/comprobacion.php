@@ -2215,6 +2215,107 @@ comprobar($resultados, 'ningun cliente tiene la misma marca dos veces',
   $conRepetidas ? implode(', ', array_slice($conRepetidas, 0, 8)) : 'ninguna repetida');
 
 // -----------------------------------------------------------------------------
+titulo('19. El BoM de una talla dice lo que cuesta');
+
+// La columna de coste no es un campo guardado: es una multiplicacion que un
+// modulo hace leyendo dos campos escondidos de la propia vista. Por eso se
+// vigila entera. Si alguien quita el campo de la cantidad, o le cambia el nombre
+// a la formula, la columna no desaparece: se queda y dice cero, y un cero en una
+// hoja de costes es peor que un hueco, porque parece un dato.
+$pantallaBom = \Drupal::config('views.view.tec_product_elements')->get('display.embed_7.display_options') ?? [];
+$camposBom = $pantallaBom['fields'] ?? [];
+$cuentaBom = $camposBom['field_views_simple_math_field'] ?? [];
+
+comprobar($resultados, 'la tabla del BoM lleva su columna de coste',
+  ($cuentaBom['plugin_id'] ?? '') === 'field_views_simple_math_field'
+  && ($cuentaBom['label'] ?? '') === 'Cost',
+  $cuentaBom ? 'label ' . ($cuentaBom['label'] ?? '') : 'no esta');
+
+comprobar($resultados, 'y multiplica la cantidad calculada por el coste de consumo',
+  ($cuentaBom['fieldset_one']['formula'] ?? '') === '@field_tec_quantity * @field_tec_price',
+  $cuentaBom['fieldset_one']['formula'] ?? 'sin formula');
+
+// La cantidad que entra en la cuenta tiene que ser la calculada. En un BoM se
+// escribe «1/12» de plancha: cobrar lo escrito multiplicaria por doce.
+$alimentan = $cuentaBom['fieldset_one']['data_field'] ?? [];
+comprobar($resultados, 'y la cantidad que usa es la calculada, no lo que se teclea',
+  !empty($alimentan['field_tec_quantity']) && !empty($alimentan['field_tec_price'])
+  && empty($alimentan['field_tec_quantity_input']),
+  implode(', ', array_keys(array_filter($alimentan))) ?: 'ninguno');
+
+$ordenBom = array_keys($camposBom);
+$dondeBom = static fn(string $campo): int => (int) array_search($campo, $ordenBom, TRUE);
+
+comprobar($resultados, 'sus dos campos siguen puestos, escondidos y delante de ella',
+  !empty($camposBom['field_tec_quantity']['exclude'])
+  && !empty($camposBom['field_tec_price']['exclude'])
+  && $dondeBom('field_tec_quantity') < $dondeBom('field_views_simple_math_field')
+  && $dondeBom('field_tec_price') < $dondeBom('field_views_simple_math_field'),
+  implode(', ', $ordenBom));
+
+// Las cuatro columnas que se ven, en su orden: Material, Requires, UoU y Cost.
+$visiblesBom = [];
+foreach ($camposBom as $id => $campo) {
+  if (empty($campo['exclude'])) {
+    $visiblesBom[] = $campo['label'] ?? $id;
+  }
+}
+comprobar($resultados, 'y se ven cuatro columnas, con el coste al final',
+  $visiblesBom === ['Material', 'Requires', 'UoU', 'Cost'],
+  implode(' | ', $visiblesBom));
+
+// El pie. La pantalla tiene que dejar de heredar el pie de la maestra, o lo que
+// se escriba aqui no se dibuja nunca y nadie se entera.
+comprobar($resultados, 'la tabla se cierra con el total de sus materiales',
+  isset($pantallaBom['footer']['tec_size_material_cost_total'])
+  && ($pantallaBom['defaults']['footer'] ?? TRUE) === FALSE,
+  isset($pantallaBom['footer']['tec_size_material_cost_total'])
+    ? 'puesto, heredando=' . var_export($pantallaBom['defaults']['footer'] ?? TRUE, TRUE)
+    : 'no hay pie');
+
+// Un area que nadie cuelga de una tabla de Views es un area que la pantalla
+// nombra y no dibuja, otra vez sin queja ninguna.
+comprobar($resultados, 'y el area que lo dibuja sigue ofreciendose',
+  isset(\Drupal::service('views.views_data')->get('views')['tec_size_material_cost_total']),
+  'tec_size_material_cost_total');
+
+// El pie y el catalogo preguntan lo mismo, asi que lo preguntan al mismo sitio.
+comprobar($resultados, 'el total lo suma un solo sitio',
+  method_exists('Drupal\tec_inventory\MaterialCost', 'ofSize'),
+  'MaterialCost::ofSize()');
+
+// Los datos. Una linea con la cantidad escrita pero sin calcular sale a cero, y
+// se arregla volviendo a guardarla: el enganche que la parsea existe desde
+// agosto de 2026, asi que solo pueden ser lineas anteriores o importadas.
+$bomSinCantidad = (int) $db->query("
+  SELECT COUNT(*)
+  FROM {tec_inventory__field_tec_quantity_input} i
+  LEFT JOIN {tec_inventory__field_tec_quantity} q
+    ON q.entity_id = i.entity_id AND q.deleted = 0
+  WHERE i.bundle = 'tec_bom_item'
+    AND i.deleted = 0
+    AND q.field_tec_quantity_value IS NULL
+")->fetchField();
+comprobar($resultados, 'ninguna linea de BoM se ha quedado sin su cantidad calculada',
+  $bomSinCantidad === 0,
+  $bomSinCantidad === 0 ? 'todas parseadas' : $bomSinCantidad . ' lineas');
+
+// Un material sin coste de consumo no es un fallo: puede que todavia no se sepa
+// lo que cuesta. Pero deja al total de cada talla que lo usa por debajo de la
+// verdad, y el pie lo dice, asi que la cifra merece una mirada.
+$materialesSinCoste = (int) $db->query("
+  SELECT COUNT(DISTINCT b.field_tec_inventory_target_id)
+  FROM {tec_inventory__field_tec_inventory} b
+  LEFT JOIN {taxonomy_term__field_tec_price} p
+    ON p.entity_id = b.field_tec_inventory_target_id AND p.deleted = 0
+  WHERE b.bundle = 'tec_bom_item'
+    AND b.deleted = 0
+    AND p.field_tec_price_value IS NULL
+")->fetchField();
+informar('materiales en algun BoM sin coste de consumo', $materialesSinCoste,
+  $materialesSinCoste ? 'sus tallas cuestan mas de lo que dicen' : 'todos con precio');
+
+// -----------------------------------------------------------------------------
 // Resumen.
 // -----------------------------------------------------------------------------
 $mal = array_filter($resultados, fn($r) => !$r['bien']);

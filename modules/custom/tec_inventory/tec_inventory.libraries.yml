@@ -7,3 +7,8 @@ production_documents:
   dependencies:
     - core/drupal
     - core/once
+
+material_cost:
+  css:
+    theme:
+      css/material-cost.css: {}

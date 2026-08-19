@@ -1933,6 +1933,60 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-19 (noche) — El BoM de una talla dice por fin lo que cuesta, línea por línea y en total
+
+La tabla de materiales de cada talla —la que sale en la ficha del producto, una por talla— tiene ahora una
+columna **Cost** y se cierra por abajo con **Material cost**, el total. Antes enseñaba lo que una talla
+consume y no lo que eso vale, así que **el número por el que se pone precio a un producto no estaba en
+ninguna pantalla**: había que sacarlo a mano, material por material, de la ficha de cada uno.
+
+Las columnas quedan en cuatro: **Material, Requires, UoU y Cost**. La unidad de compra se ha ido de ahí, y
+no por sitio: un BoM dice lo que una talla *consume*, y eso está escrito en unidades de consumo. La unidad
+de compra es cosa de la ficha del material y aquí solo separaba la cantidad de su unidad.
+
+**Estaba medio hecho y no se veía, que es la razón de que nadie lo echara en falta.** El módulo que
+multiplica dos columnas ya estaba instalado y ya se usaba en las dos vistas de cálculo de material de los
+pedidos; lo que no había era una columna así en el BoM. Y al ponerla apareció el porqué de una rareza vieja:
+la columna **UoU estaba escondida en la configuración viva y no en la exportada**. O sea que alguien la
+ocultó desde la pantalla de Views y no exportó nunca, y la diferencia llevaba ahí lo bastante para que
+`drush config:status` la diera por normal. Ahora la receta escribe **quién se ve y quién no**, entero, así
+que no depende de lo que alguien dejara a medias.
+
+**El total del pie no es la suma de la columna, y esa es la decisión que importa.** La columna redondea cada
+línea al céntimo para poder dibujarla, y hay materiales que valen **seis diezmilésimas de baht** por
+centímetro: cada línea de hilo redondea a `฿ 0,00`, y diez líneas de cero siguen siendo cero. Un total
+construido sumando lo que se ve diría que un guante se cose gratis. Así que el pie lo suma aparte, en crudo,
+y **redondea una sola vez al final** — el mismo error que se cazó el 17 de agosto en las fórmulas de los
+pedidos, donde una tela a 0,001 entraba en la cuenta como 0,00 y el ERP decía que era gratis. La prueba lo
+comprueba a propósito con diez líneas que a la vista valen cero y un pie que dice `฿ 0,04`.
+
+**Y un material sin coste de consumo no se cuenta como cero callando: el pie lo dice y dice cuál.** Es la
+otra cara de lo mismo. Un total al que le falta un material lee como un producto más barato de lo que es, y
+nadie va a buscar un número que parece bien. Hoy no hay ninguno —el guardián lo cuenta como dato, no como
+fallo, porque no saber todavía lo que cuesta algo es legítimo— pero el importador va a meter 857 materiales
+y algunos entrarán sin precio.
+
+La cuenta vive en **una clase, `MaterialCost`**, y no en la pantalla, porque el catálogo de la marca va a
+preguntar exactamente lo mismo y dos sitios que multiplican por su cuenta acaban diciendo números
+distintos. El pie es un área de Views que la llama.
+
+**Dos tropiezos que costaron media hora cada uno, los dos por callarse.** Un área de Views se declara en la
+configuración con la clave `field` puesta al nombre del plugin, no a la palabra `area`: con `area` la
+pantalla nombra el pie, Views no encuentra el manejador, **no dibuja nada y no se queja**. Y aunque el
+plugin exista, hace falta colgarlo de la tabla global en un `hook_views_data_alter()`, que es un fichero
+`tec_inventory.views.inc` que este módulo no tenía: sin él, otra vez, nada dibujado y ni un aviso.
+
+Comprobado sobre la ficha de un producto de verdad, no solo pidiendo la vista: seis tallas, seis tablas de
+cuatro columnas y seis pies —`฿ 94,05`, `฿ 74,62`, `฿ 74,39`—. Nueve comprobaciones nuevas en el guardián
+(la 19), que mira la fórmula, los dos campos escondidos que la alimentan, el orden de las columnas, que la
+pantalla haya dejado de heredar el pie de la maestra y que el área siga ofreciéndose. **176 de 176.** Y la
+prueba de humo, 61 páginas, ninguna rota.
+
+**Queda la otra mitad de lo que se pidió**: la página de la marca tiene que dejar de ser un catálogo por
+producto y pasar a ser un listado por talla, al estilo de las líneas de un pedido, con el **precio de venta
+editable ahí mismo** y esta misma columna de coste al lado. La cuenta ya está hecha y compartida; falta la
+pantalla.
+
 ### 2026-08-19 (tarde) — El producto suelta al cliente: el campo se ha ido, y la ficha del cliente enseña marcas
 
 Se cerró el corte entero de una sentada. El producto ya no apunta a ningún cliente: **el campo
