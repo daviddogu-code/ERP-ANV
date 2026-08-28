@@ -4,7 +4,7 @@
 > Escrito en español porque el lector principal es el dueño del proyecto.
 > Las otras notas de `docs/` están en inglés y son documentación técnica; esta no.
 >
-> Última actualización: 2026-08-28 (noche).
+> Última actualización: 2026-08-29.
 
 ## Cómo usar este archivo
 
@@ -99,10 +99,13 @@ cerrados por David.
 
 - **Captación:** web OEM con **SEO potente** (encargo en
   [`docs/web-anvfightgear.md`](web-anvfightgear.md)), para que el cliente llegue solo.
-- **Sistematización:** **SOP de cliente nuevo** (aún por decidir y redactar; es complejo). La
-  máxima información posible para **cerrar la venta** y **sistematizar el negocio**: límites
-  claros de lo que se hace y de lo que no, **MOQs**, **materias primas** que se usan,
-  **colores**, etc.
+- **Sistematización:** **SOP de cierre de venta** (aún por decidir y redactar; es complejo).
+  La máxima información posible para **cerrar la venta** y **sistematizar el negocio**:
+  límites claros de lo que se hace y de lo que no, **MOQs**, **materias primas** que se
+  usan, **colores**, etc. **No confundir** con el SOP ya escrito
+  [`docs/sop-give-a-customer-a-portal-login.md`](sop-give-a-customer-a-portal-login.md)
+  (*Give a customer a portal login*): ese es solo **abrir `/my`** cuando la empresa ya
+  está en el CRM.
 
 **Re-orders** (el cliente ya cerrado vuelve a pedir): recoger cantidades y el resto de
 procesos → hoy Lukpla (+ Noi); destino **portal + ERP + agente**. Mientras los clientes no
@@ -427,18 +430,23 @@ correo.
   `make_unused_managed_files_temporary` en `false` `file_cron` no los tocaba; se han borrado
   igualmente ese mismo día, por limpieza y no por el cron.
 - **Crear el buzón `erp@anvfightgear.com`** en Google Workspace, como alias que reenvía al
-  dueño y no como cuenta de pago nueva. Es la dirección desde la que el ERP manda los
-  correos desde el 2026-08-12.
+  dueño y no como cuenta de pago nueva. Es la dirección de **sistema** desde la que el ERP
+  autentica el SMTP (acordado el 2026-08-12). La cara que ve el cliente en un pedido es
+  `orders@`, no esta.
+- **Crear los grupos `info@anvfightgear.com` y `orders@anvfightgear.com`.** Decisión del
+  28 de agosto (noche), en Hecho. No son usuarios nuevos ni alias de `admin@`. Miembros:
+  `admin@` (David) y `artitaya@` (Lukpla). Gente de fuera puede publicar. Cada uno envía
+  *como* el grupo. `info@` es la web / SEO; `orders@` es pedidos, proformas y el portal.
 - **Configurar el envío de correo a través del servidor de Google.** No es opcional:
   DigitalOcean bloquea el envío directo en las cuentas nuevas. El módulo `smtp` ya está
-  instalado, solo hay que rellenar servidor, usuario y contraseña.
+  instalado, solo hay que rellenar servidor, usuario y contraseña. El From de las
+  proformas será `orders@` cuando el portal las mande.
 - **Activar DKIM y DMARC en `anvfightgear.com`.** Hoy solo existe SPF. DKIM se genera en el
   panel de Google Workspace y se pega en Namecheap → Advanced DNS; DMARC es un registro TXT
   escrito a mano.
 
-  Estos tres puntos de correo van juntos: con uno o dos hechos, las recuperaciones de
-  contraseña siguen sin llegar. Y mientras no funcionen, un empleado que olvide su clave
-  depende de que alguien se la restablezca desde la línea de comandos.
+  SMTP, DKIM y `erp@` van juntos: con uno o dos hechos, las recuperaciones de contraseña
+  siguen sin llegar. Los grupos `info@` y `orders@` se pueden crear ya, sin esperar al SMTP.
 
 - ~~**Repasar las cuentas de usuario.**~~ **Hecho por el dueño el 15 de agosto de 2026**, a mano y
   desde el navegador. Quedan cinco cuentas contando el anónimo: `david`, que es la del dueño con rol
@@ -1370,15 +1378,10 @@ Sin prisa y sin orden fijo entre ellas.
   hacer el dueño. Corrección del 12 de agosto: el dominio no muestra una página de
   aparcamiento, simplemente **no tiene ningún registro A**, ni él ni `www`. No hay nada roto
   que arreglar.
-- **Portal de clientes**: que entren con su cuenta, vean sus productos y hagan sus propios
-  pedidos. Los requisitos completos están escritos en **`docs/customer-portal.md`**: el
-  recorrido del cliente, lo que no puede ver, los estados que se le enseñan y las decisiones
-  que faltan por cerrar. **Este sí depende del ERP** y no debe empezarse hasta que
-  el modelo de datos esté asentado, después de la limpieza y de los cambios que proponga
-  Lukpla. Dos avisos de ese documento que conviene no perder de vista: falta el enlace entre
-  la cuenta de usuario y la empresa del cliente, sin el cual no hay portal posible, y el rol
-  Customer **hay que vaciarlo y rehacerlo** antes de crear la primera cuenta, porque hoy
-  permite crear productos y meter movimientos de inventario.
+- ~~**Portal de clientes**~~ **Hecho el 29 de agosto de 2026** (código en producción,
+  **cero cuentas Customer**). Alta: [`docs/sop-give-a-customer-a-portal-login.md`](sop-give-a-customer-a-portal-login.md).
+  Falta la **proforma automática por correo** y el **SOP de cierre de venta**. Requisitos
+  originales en [`docs/customer-portal.md`](customer-portal.md).
 - **Agentes.** Atención al cliente en los grupos de WhatsApp y en el correo. Pedidos
   automáticos a proveedores locales por los grupos de LINE.
 
@@ -2065,6 +2068,58 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-29 — Portal de clientes en producción; aún no hay cliente real
+
+Módulo `tec_portal` en `https://erp.anvfightgear.com`. `/my` pide login. El rol
+**Customer** quedó en **7 permisos de ver** (antes 19, incluidos crear producto e
+inventario). **Ningún usuario** tiene ese rol. No se copió la base local (Prueba LTD /
+ChrisPruebaLTD / PRUEBA 26-013 se quedan en `tec.test`).
+
+Recorrido: login → `/my` → Place an order → cantidades → Confirm → estado interno
+`pending_deposit` (el cliente ve **Pending payment**). Misma entidad `tec_order` que
+fábrica. Fila gris en la cola hasta **Accounting Verified**. Date en `/my` es ese
+clic, no la fecha de creación.
+
+Identidad: usuario → **Contact person** → **Works at** → organización → marcas.
+Nunca mezclar Customer con roles de fábrica. Las URLs `/tec_order/…` y `/customer/…`
+rebotan a `/my`.
+
+SOP de alta (nombre mejor que “Add new customer to the portal”, porque el cliente
+ya está en el CRM):
+[`docs/sop-give-a-customer-a-portal-login.md`](sop-give-a-customer-a-portal-login.md)
+—*Give a customer a portal login*. El SOP de **cerrar la venta** (MOQs, materiales,
+colores) sigue pendiente.
+
+Pendiente de portal: correo de proforma al confirmar.
+
+### 2026-08-28 (noche) — Correo de función: grupos, no alias ni asientos nuevos
+
+El cliente no debe escribir a un Gmail personal. Las direcciones de trabajo son de **función**
+y se montan como **grupo de Google Workspace**, no como usuario de pago ni como alias de una
+sola persona. Un alias de `admin@` solo vería David. Un usuario nuevo para `info@` u `orders@`
+cobraría otra licencia y no hace falta: el grupo es una dirección extra del dominio y entrega
+a los miembros.
+
+| Dirección | Qué es | Para qué |
+|---|---|---|
+| `admin@anvfightgear.com` | Usuario (David) | Oficina general |
+| `artitaya@anvfightgear.com` | Usuario (Lukpla) | Día a día |
+| `info@anvfightgear.com` | Grupo (aún no existe) | Quien llega por la web / SEO |
+| `orders@anvfightgear.com` | Grupo (aún no existe) | Pedidos, proformas, portal |
+
+Miembros de **los dos grupos**: `admin@` y `artitaya@`. Quien escribe a `info@` u `orders@` les
+llega a los dos. Responden **como** esa dirección (Gmail → Enviar correo como), no como ellos.
+Gente de fuera tiene que poder publicar: si no, la respuesta del cliente rebota.
+
+No se puede forzar «Responder a todos» en el Gmail del cliente. El grupo evita ese problema: el
+cliente solo ve `orders@`. Si Artitaya no está, David sigue el mismo hilo.
+
+El ERP, cuando mande la proforma (paso 7 del portal), usará **From / Reply-To `orders@`**. SMTP
+autentica con un usuario que ya exista (`admin@` o `erp@`); el grupo no tiene contraseña. `erp@`
+sigue siendo el buzón de sistema acordado el 12 de agosto; no es la cara que ve el cliente en un
+pedido. Crear los dos grupos y el «enviar como» es trabajo en Workspace, no en Drupal. SMTP,
+DKIM y DMARC siguen pendientes más arriba.
 
 ### 2026-08-28 — Quién opera: Lukpla testa, no hay supervisor a lo antiguo
 

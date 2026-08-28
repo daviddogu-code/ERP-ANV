@@ -1,0 +1,18 @@
+uuid: 9b7e4c21-8f3a-4d6e-b2c1-0a1f3e5d7c89
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_order.field_tec_accounting_verified_on
+field_name: field_tec_accounting_verified_on
+entity_type: tec_order
+type: timestamp
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

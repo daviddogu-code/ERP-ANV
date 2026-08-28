@@ -1,0 +1,538 @@
+<?php
+
+/**
+ * @file
+ * Portal lock: a customer sees only their company's sales data.
+ *
+ * The Customer role grants "view any" on the sales bundles (ECK has no
+ * "view by company" permission). This file is what turns that into "view
+ * mine". Factory roles never enter these hooks.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\tec_portal\CustomerCompany;
+use Drupal\tec_portal\PortalOrder;
+use Drupal\user\UserInterface;
+
+/**
+ * The company helper.
+ */
+function _tec_portal_company(): CustomerCompany {
+  return \Drupal::service('tec_portal.company');
+}
+
+/**
+ * Implements hook_entity_access().
+ *
+ * Neutral for factory users. For a portal customer, forbidden unless the
+ * entity belongs to their company (or, for products, to a brand they buy).
+ * Neutral on their own sales data so ECK's bundle view permission can allow.
+ */
+function tec_portal_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  $companies = _tec_portal_company();
+  if (!$companies->isPortalCustomer($account)) {
+    return AccessResult::neutral();
+  }
+
+  $cache = $companies->cache($account);
+
+  // File download is its own operation. hook_file_access decides which
+  // private photos a portal customer may fetch. Forbidding "download" here
+  // made every product thumbnail 403.
+  if ($entity->getEntityTypeId() === 'file') {
+    return AccessResult::neutral()->addCacheContexts(['user.roles']);
+  }
+
+  if (!in_array($operation, ['view', 'view label', 'update', 'delete'], TRUE)) {
+    return $cache->andIf(AccessResult::forbidden('Portal customers cannot run this operation.'));
+  }
+
+  if ($operation !== 'view' && $operation !== 'view label') {
+    return $cache->andIf(AccessResult::forbidden('Portal customers cannot change factory records through the entity UI. Confirming is done from /my/order.'));
+  }
+
+  $type = $entity->getEntityTypeId();
+  $bundle = $entity->bundle();
+
+  if ($type === 'tec_order') {
+    if ($bundle !== 'tec_sales_order') {
+      return $cache->andIf(AccessResult::forbidden('Portal customers cannot see purchase or draft orders.'));
+    }
+    $ids = $companies->orderCompanyIds($entity);
+    return $companies->ownsOneOf($account, $ids)
+      ? AccessResult::neutral()->inheritCacheability($cache)
+      : $cache->andIf(AccessResult::forbidden('This order is not from your company.'));
+  }
+
+  if ($type === 'tec_line_item') {
+    if ($bundle !== 'tec_sales_order_line_item') {
+      return $cache->andIf(AccessResult::forbidden('Portal customers cannot see purchase lines.'));
+    }
+    $order = $entity->hasField('field_tec_order') && !$entity->get('field_tec_order')->isEmpty()
+      ? $entity->get('field_tec_order')->entity
+      : NULL;
+    if (!$order) {
+      return $cache->andIf(AccessResult::forbidden('This line has no order.'));
+    }
+    return tec_portal_entity_access($order, $operation, $account);
+  }
+
+  if ($type === 'tec_crm') {
+    $mine = $companies->id($account);
+    if ($mine === NULL) {
+      return $cache->andIf(AccessResult::forbidden('This login is not tied to a company.'));
+    }
+    if ($bundle === 'tec_contact_organization') {
+      return (int) $entity->id() === $mine
+        ? AccessResult::neutral()->inheritCacheability($cache)
+        : $cache->andIf(AccessResult::forbidden('This is not your company.'));
+    }
+    if ($bundle === 'tec_contact_person') {
+      $works = $entity->hasField(CustomerCompany::WORKS_AT_FIELD) && !$entity->get(CustomerCompany::WORKS_AT_FIELD)->isEmpty()
+        ? (int) $entity->get(CustomerCompany::WORKS_AT_FIELD)->target_id
+        : 0;
+      return $works === $mine
+        ? AccessResult::neutral()->inheritCacheability($cache)
+        : $cache->andIf(AccessResult::forbidden('This person does not work at your company.'));
+    }
+    return $cache->andIf(AccessResult::forbidden());
+  }
+
+  if ($type === 'tec_product') {
+    $brand = $companies->productBrandId($entity);
+    $brands = $companies->brandIds($account);
+    return ($brand && in_array($brand, $brands, TRUE))
+      ? AccessResult::allowed()->inheritCacheability($cache)
+      : $cache->andIf(AccessResult::forbidden('This product is not in your catalogue.'));
+  }
+
+  if ($type === 'taxonomy_term' && $bundle === 'tec_brands') {
+    $brands = $companies->brandIds($account);
+    return in_array((int) $entity->id(), $brands, TRUE)
+      ? AccessResult::neutral()->inheritCacheability($cache)
+      : $cache->andIf(AccessResult::forbidden('Your company does not buy this brand.'));
+  }
+
+  if (in_array($type, ['tec_inventory', 'media', 'node'], TRUE)) {
+    return $cache->andIf(AccessResult::forbidden('Portal customers cannot see factory records.'));
+  }
+
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_entity_create_access().
+ */
+function tec_portal_entity_create_access(AccountInterface $account, array $context, $entity_bundle) {
+  $companies = _tec_portal_company();
+  if (!$companies->isPortalCustomer($account)) {
+    return AccessResult::neutral();
+  }
+  $type = $context['entity_type_id'] ?? '';
+  if (in_array($type, ['tec_order', 'tec_line_item', 'tec_product', 'tec_crm', 'tec_inventory', 'taxonomy_term', 'node', 'media'], TRUE)) {
+    return $companies->cache($account)
+      ->andIf(AccessResult::forbidden('Portal customers cannot create factory records. New orders go through /my/order/new.'));
+  }
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_entity_field_access().
+ *
+ * The join from user to person is set by the factory. A customer must not
+ * retarget their login to another company.
+ */
+function tec_portal_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
+  if ($field_definition->getName() !== CustomerCompany::PERSON_FIELD
+    || $field_definition->getTargetEntityTypeId() !== 'user') {
+    return AccessResult::neutral();
+  }
+  $companies = _tec_portal_company();
+  if (!$companies->isPortalCustomer($account)) {
+    return AccessResult::neutral()->addCacheContexts(['user.roles']);
+  }
+  return $companies->cache($account)
+    ->andIf(AccessResult::forbidden('Only factory staff can tie a login to a contact person.'));
+}
+
+/**
+ * Implements hook_entity_presave().
+ *
+ * A portal order is this company's, always. While it is Open the customer
+ * may change quantities and Confirm (Pending deposit). After that the pen
+ * comes away. Product, colour, size and price never move.
+ */
+function tec_portal_entity_presave(EntityInterface $entity): void {
+  if ($entity->getEntityTypeId() === 'tec_order') {
+    PortalOrder::stampPaidOn($entity);
+  }
+
+  $account = \Drupal::currentUser();
+  $companies = _tec_portal_company();
+  if (!$companies->isPortalCustomer($account)) {
+    return;
+  }
+  $mine = $companies->id($account);
+
+  if ($entity->getEntityTypeId() === 'tec_order') {
+    if ($entity->bundle() !== 'tec_sales_order' || $mine === NULL) {
+      throw new \RuntimeException('Portal customers cannot save this order.');
+    }
+    $entity->set(CustomerCompany::ORDER_CUSTOMER_FIELD, $mine);
+    if ($entity->isNew()) {
+      if ($entity->hasField('field_tec_order_status')) {
+        $entity->set('field_tec_order_status', PortalOrder::OPEN);
+      }
+      return;
+    }
+    $was = $entity->getOriginal();
+    if ($was && !PortalOrder::isOpen($was)) {
+      throw new \RuntimeException('Portal customers cannot change a confirmed order.');
+    }
+    $status = PortalOrder::statusOf($entity);
+    if (!in_array($status, [PortalOrder::OPEN, PortalOrder::PENDING_DEPOSIT], TRUE)) {
+      throw new \RuntimeException('Portal customers cannot set this order status.');
+    }
+    if ($was && $was->hasField('field_tec_line_items') && $entity->hasField('field_tec_line_items')) {
+      if (!PortalOrder::isOpen($was)) {
+        $entity->set('field_tec_line_items', $was->get('field_tec_line_items')->getValue());
+      }
+      else {
+        $storage = \Drupal::entityTypeManager()->getStorage('tec_line_item');
+        $safe = [];
+        $oid = (int) $entity->id();
+        foreach ($entity->get('field_tec_line_items') as $item) {
+          $lid = (int) $item->target_id;
+          if ($lid < 1) {
+            continue;
+          }
+          $line = $storage->load($lid);
+          if (!$line || $line->bundle() !== 'tec_sales_order_line_item') {
+            continue;
+          }
+          $attached = 0;
+          if ($line->hasField('field_tec_order') && !$line->get('field_tec_order')->isEmpty()) {
+            $attached = (int) $line->get('field_tec_order')->target_id;
+          }
+          if ($attached && $attached !== $oid) {
+            continue;
+          }
+          $safe[] = ['target_id' => $lid];
+        }
+        $entity->set('field_tec_line_items', $safe);
+      }
+    }
+    return;
+  }
+
+  if ($entity->getEntityTypeId() === 'tec_line_item') {
+    if ($entity->bundle() !== 'tec_sales_order_line_item') {
+      throw new \RuntimeException('Portal customers cannot save this line.');
+    }
+
+    $was = $entity->isNew() ? NULL : $entity->getOriginal();
+    $order = NULL;
+    if ($was && $was->hasField('field_tec_order') && !$was->get('field_tec_order')->isEmpty()) {
+      $entity->set('field_tec_order', $was->get('field_tec_order')->getValue());
+      $order = $was->get('field_tec_order')->entity;
+    }
+    elseif ($entity->hasField('field_tec_order') && !$entity->get('field_tec_order')->isEmpty()) {
+      $order = $entity->get('field_tec_order')->entity;
+    }
+
+    if ($order) {
+      $ids = $companies->orderCompanyIds($order);
+      if (!$companies->ownsOneOf($account, $ids)) {
+        throw new \RuntimeException('Portal customers cannot attach a line to another company\'s order.');
+      }
+      if (!PortalOrder::isOpen($order)) {
+        throw new \RuntimeException('Portal customers cannot change a confirmed order.');
+      }
+    }
+
+    if ($was) {
+      foreach (['field_tec_product', 'field_tec_color_variation', 'field_tec_size_variation', 'field_tec_price'] as $field) {
+        if ($was->hasField($field) && $entity->hasField($field)) {
+          $entity->set($field, $was->get($field)->getValue());
+        }
+      }
+      $qty = 0;
+      if ($entity->hasField('field_tec_quantity') && !$entity->get('field_tec_quantity')->isEmpty()) {
+        $qty = max(0, (int) $entity->get('field_tec_quantity')->value);
+      }
+      $price = 0.0;
+      if ($was->hasField('field_tec_price') && !$was->get('field_tec_price')->isEmpty()) {
+        $price = (float) $was->get('field_tec_price')->value;
+      }
+      if ($entity->hasField('field_tec_quantity')) {
+        $entity->set('field_tec_quantity', $qty);
+      }
+      if ($entity->hasField('field_tec_line_item_total_number')) {
+        $entity->set('field_tec_line_item_total_number', number_format($qty * $price, 2, '.', ''));
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the user form.
+ */
+function tec_portal_form_user_form_alter(array &$form, FormStateInterface $form_state): void {
+  if (!isset($form[CustomerCompany::PERSON_FIELD])) {
+    return;
+  }
+  $companies = _tec_portal_company();
+  if ($companies->isPortalCustomer(\Drupal::currentUser())) {
+    $form[CustomerCompany::PERSON_FIELD]['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the login form.
+ *
+ * A destination of /start (the 403 they hit before logging in) would bounce a
+ * customer back to a page they cannot see. Send them to /my. Factory logins
+ * keep whatever destination they had.
+ */
+function tec_portal_form_user_login_form_alter(array &$form, FormStateInterface $form_state): void {
+  $form['#submit'][] = 'tec_portal_login_submit';
+}
+
+/**
+ * Sends a portal customer to /my after login.
+ */
+function tec_portal_login_submit(array &$form, FormStateInterface $form_state): void {
+  $account = \Drupal::currentUser();
+  if (!_tec_portal_company()->isPortalCustomer($account)) {
+    return;
+  }
+  $form_state->setRedirect('tec_portal.home');
+}
+
+/**
+ * Implements hook_user_login().
+ *
+ * Other login paths (password reset, a module that logs someone in) do not
+ * run the login form submit. Overwrite destination so they still land on /my.
+ */
+function tec_portal_user_login(UserInterface $account): void {
+  if (!_tec_portal_company()->isPortalCustomer($account)) {
+    return;
+  }
+  $request = \Drupal::request();
+  if ($request) {
+    $request->query->set('destination', Url::fromRoute('tec_portal.home')->toString());
+  }
+}
+
+/**
+ * Implements hook_entity_query_tec_order_alter().
+ *
+ * Listings that asked for access checking never return another company's
+ * sales orders, and never return purchase orders, to a portal customer.
+ */
+function tec_portal_entity_query_tec_order_alter(QueryInterface $query): void {
+  $companies = _tec_portal_company();
+  $account = \Drupal::currentUser();
+  if (!$companies->isPortalCustomer($account) || !CustomerCompany::queryChecksAccess($query)) {
+    return;
+  }
+  $mine = $companies->id($account);
+  $query->condition('type', 'tec_sales_order');
+  if ($mine === NULL) {
+    $query->condition('id', 0);
+    return;
+  }
+  $query->condition(CustomerCompany::ORDER_CUSTOMER_FIELD, $mine);
+}
+
+/**
+ * Implements hook_entity_query_tec_crm_alter().
+ */
+function tec_portal_entity_query_tec_crm_alter(QueryInterface $query): void {
+  $companies = _tec_portal_company();
+  $account = \Drupal::currentUser();
+  if (!$companies->isPortalCustomer($account) || !CustomerCompany::queryChecksAccess($query)) {
+    return;
+  }
+  $mine = $companies->id($account);
+  if ($mine === NULL) {
+    $query->condition('id', 0);
+    return;
+  }
+  $or = $query->orConditionGroup()
+    ->condition('id', $mine)
+    ->condition(CustomerCompany::WORKS_AT_FIELD, $mine);
+  $query->condition($or);
+}
+
+/**
+ * Implements hook_entity_query_tec_inventory_alter().
+ */
+function tec_portal_entity_query_tec_inventory_alter(QueryInterface $query): void {
+  $companies = _tec_portal_company();
+  $account = \Drupal::currentUser();
+  if (!$companies->isPortalCustomer($account) || !CustomerCompany::queryChecksAccess($query)) {
+    return;
+  }
+  $query->condition('id', 0);
+}
+
+/**
+ * Implements hook_entity_query_tec_line_item_alter().
+ */
+function tec_portal_entity_query_tec_line_item_alter(QueryInterface $query): void {
+  $companies = _tec_portal_company();
+  $account = \Drupal::currentUser();
+  if (!$companies->isPortalCustomer($account) || !CustomerCompany::queryChecksAccess($query)) {
+    return;
+  }
+  $mine = $companies->id($account);
+  $query->condition('type', 'tec_sales_order_line_item');
+  if ($mine === NULL) {
+    $query->condition('id', 0);
+    return;
+  }
+  $order_ids = \Drupal::entityTypeManager()->getStorage('tec_order')->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', 'tec_sales_order')
+    ->condition(CustomerCompany::ORDER_CUSTOMER_FIELD, $mine)
+    ->execute();
+  $query->condition('field_tec_order', $order_ids ?: [0], 'IN');
+}
+
+/**
+ * Implements hook_entity_query_tec_product_alter().
+ */
+function tec_portal_entity_query_tec_product_alter(QueryInterface $query): void {
+  $companies = _tec_portal_company();
+  $account = \Drupal::currentUser();
+  if (!$companies->isPortalCustomer($account) || !CustomerCompany::queryChecksAccess($query)) {
+    return;
+  }
+  $brands = $companies->brandIds($account);
+  if (!$brands) {
+    $query->condition('id', 0);
+    return;
+  }
+  $product_ids = \Drupal::entityTypeManager()->getStorage('tec_product')->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', 'tec_product')
+    ->condition(CustomerCompany::PRODUCT_BRAND_FIELD, $brands, 'IN')
+    ->execute();
+  if (!$product_ids) {
+    $query->condition('id', 0);
+    return;
+  }
+  $or = $query->orConditionGroup()
+    ->condition('id', $product_ids, 'IN')
+    ->condition('field_tec_product', $product_ids, 'IN');
+  $query->condition($or);
+}
+
+/**
+ * Implements hook_entity_query_media_alter().
+ */
+function tec_portal_entity_query_media_alter(QueryInterface $query): void {
+  $companies = _tec_portal_company();
+  $account = \Drupal::currentUser();
+  if (!$companies->isPortalCustomer($account) || !CustomerCompany::queryChecksAccess($query)) {
+    return;
+  }
+  $query->condition('mid', 0);
+}
+
+/**
+ * Implements hook_entity_query_node_alter().
+ */
+function tec_portal_entity_query_node_alter(QueryInterface $query): void {
+  $companies = _tec_portal_company();
+  $account = \Drupal::currentUser();
+  if (!$companies->isPortalCustomer($account) || !CustomerCompany::queryChecksAccess($query)) {
+    return;
+  }
+  $query->condition('nid', 0);
+}
+
+/**
+ * Whether this file is a catalogue photo for the portal customer.
+ */
+function tec_portal_file_is_catalogue_image($file, AccountInterface $account): bool {
+  $companies = _tec_portal_company();
+  $brands = $companies->brandIds($account);
+  if (!$brands) {
+    return FALSE;
+  }
+  $ids = \Drupal::database()->select('tec_product__field_tec_images', 'f')
+    ->fields('f', ['entity_id'])
+    ->condition('field_tec_images_target_id', $file->id())
+    ->execute()
+    ->fetchCol();
+  if (!$ids) {
+    return FALSE;
+  }
+  $storage = \Drupal::entityTypeManager()->getStorage('tec_product');
+  foreach ($storage->loadMultiple($ids) as $entity) {
+    if (in_array($companies->productBrandId($entity), $brands, TRUE)) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access() for file.
+ *
+ * Private product photos: Drupal's file download returns -1 unless view
+ * access is explicitly allowed. Neutral from the CRM lock is not enough.
+ */
+function tec_portal_file_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  if (!in_array($operation, ['view', 'download'], TRUE)) {
+    return AccessResult::neutral();
+  }
+  $companies = _tec_portal_company();
+  if (!$companies->isPortalCustomer($account)) {
+    return AccessResult::neutral()->addCacheContexts(['user.roles']);
+  }
+  if (tec_portal_file_is_catalogue_image($entity, $account)) {
+    return $companies->cache($account)->andIf(AccessResult::allowed());
+  }
+  return AccessResult::neutral()->addCacheContexts(['user']);
+}
+
+/**
+ * Implements hook_file_download().
+ *
+ * Product photos are private files. A portal customer may download one only
+ * when it hangs on a colour (or product) of a brand they buy.
+ */
+function tec_portal_file_download($uri) {
+  $companies = _tec_portal_company();
+  $account = \Drupal::currentUser();
+  if (!$companies->isPortalCustomer($account)) {
+    return NULL;
+  }
+
+  $uri = \Drupal::service('stream_wrapper_manager')->normalizeUri($uri);
+  $files = \Drupal::entityTypeManager()->getStorage('file')->loadByProperties(['uri' => $uri]);
+  if (!$files) {
+    return NULL;
+  }
+  /** @var \Drupal\file\FileInterface $file */
+  $file = reset($files);
+  if (!tec_portal_file_is_catalogue_image($file, $account)) {
+    return NULL;
+  }
+  return [
+    'Content-Type' => $file->getMimeType() ?: 'application/octet-stream',
+    'Content-Length' => (string) $file->getSize(),
+    'Cache-Control' => 'private',
+  ];
+}

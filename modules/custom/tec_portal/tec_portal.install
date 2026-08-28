@@ -1,0 +1,171 @@
+<?php
+
+/**
+ * @file
+ * Installs the portal join field on the user form.
+ */
+
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+
+/**
+ * Implements hook_install().
+ */
+function tec_portal_install(): void {
+  $displays = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+  $form = $displays->load('user.user.default');
+  if ($form && !$form->getComponent('field_tec_contact_person')) {
+    $form->setComponent('field_tec_contact_person', [
+      'type' => 'entity_reference_autocomplete',
+      'weight' => -8,
+      'settings' => [
+        'match_operator' => 'CONTAINS',
+        'match_limit' => 10,
+        'size' => 60,
+        'placeholder' => '',
+      ],
+    ]);
+    $form->save();
+  }
+
+  $views = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+  $view = $views->load('user.user.default');
+  if ($view && !$view->getComponent('field_tec_contact_person')) {
+    $view->setComponent('field_tec_contact_person', [
+      'type' => 'entity_reference_label',
+      'label' => 'above',
+      'weight' => -8,
+      'settings' => [
+        'link' => TRUE,
+      ],
+    ]);
+    $view->save();
+  }
+
+  tec_portal_update_8002();
+  tec_portal_update_8003();
+}
+
+/**
+ * Show Contact person on the user account view for factory staff.
+ */
+function tec_portal_update_8001(): void {
+  $view = \Drupal::entityTypeManager()
+    ->getStorage('entity_view_display')
+    ->load('user.user.default');
+  if (!$view || $view->getComponent('field_tec_contact_person')) {
+    return;
+  }
+  $view->setComponent('field_tec_contact_person', [
+    'type' => 'entity_reference_label',
+    'label' => 'above',
+    'weight' => -8,
+    'settings' => [
+      'link' => TRUE,
+    ],
+  ]);
+  $view->save();
+}
+
+/**
+ * Add Pending deposit between Open and Accounting Verified.
+ *
+ * Confirming a portal order is not the same as the deposit arriving. The
+ * factory still clicks Accounting Verified. Phone orders stay Open and
+ * still jump to Accounting Verified in one click on the queue.
+ */
+function tec_portal_update_8002(): void {
+  $config = \Drupal::entityTypeManager()
+    ->getStorage('field_storage_config')
+    ->load('tec_order.field_tec_order_status');
+  if (!$config) {
+    return;
+  }
+  $values = $config->getSetting('allowed_values') ?: [];
+  foreach ($values as $key => $item) {
+    if ($key === 'pending_deposit' || (is_array($item) && ($item['value'] ?? '') === 'pending_deposit')) {
+      \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+      return;
+    }
+  }
+
+  if ($values && !array_is_list($values)) {
+    $new = [];
+    foreach ($values as $value => $label) {
+      $new[$value] = $label;
+      if ((string) $value === 'draft') {
+        $new['pending_deposit'] = 'Pending deposit';
+      }
+    }
+    if (!isset($new['pending_deposit'])) {
+      $new = ['pending_deposit' => 'Pending deposit'] + $new;
+    }
+    $config->setSetting('allowed_values', $new);
+  }
+  else {
+    $new = [];
+    $inserted = FALSE;
+    foreach ($values as $item) {
+      $new[] = $item;
+      if (is_array($item) && ($item['value'] ?? '') === 'draft') {
+        $new[] = [
+          'value' => 'pending_deposit',
+          'label' => 'Pending deposit',
+        ];
+        $inserted = TRUE;
+      }
+    }
+    if (!$inserted) {
+      array_unshift($new, [
+        'value' => 'pending_deposit',
+        'label' => 'Pending deposit',
+      ]);
+    }
+    $config->setSetting('allowed_values', $new);
+  }
+  $config->save();
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+}
+
+/**
+ * Date on /my is when factory records the payment, not when the order was placed.
+ */
+function tec_portal_update_8003(): void {
+  if (!FieldStorageConfig::loadByName('tec_order', 'field_tec_accounting_verified_on')) {
+    FieldStorageConfig::create([
+      'uuid' => '9b7e4c21-8f3a-4d6e-b2c1-0a1f3e5d7c89',
+      'field_name' => 'field_tec_accounting_verified_on',
+      'entity_type' => 'tec_order',
+      'type' => 'timestamp',
+      'cardinality' => 1,
+      'translatable' => TRUE,
+    ])->save();
+  }
+  if (!FieldConfig::loadByName('tec_order', 'tec_sales_order', 'field_tec_accounting_verified_on')) {
+    FieldConfig::create([
+      'uuid' => 'a1c8d4f2-5e6b-4a90-9c3d-7f8e1b2a4c5d',
+      'field_name' => 'field_tec_accounting_verified_on',
+      'entity_type' => 'tec_order',
+      'bundle' => 'tec_sales_order',
+      'label' => 'Accounting verified on',
+      'description' => 'When the factory recorded that payment had arrived. The customer portal Date column uses this.',
+      'required' => FALSE,
+      'translatable' => FALSE,
+    ])->save();
+  }
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+
+  $forms = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+  $form = $forms->load('tec_order.tec_sales_order.default');
+  if ($form && $form->getComponent('field_tec_accounting_verified_on')) {
+    $form->removeComponent('field_tec_accounting_verified_on');
+    $form->save();
+  }
+
+  $views = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+  $view = $views->load('tec_order.tec_sales_order.default');
+  if ($view && $view->getComponent('field_tec_accounting_verified_on')) {
+    $view->removeComponent('field_tec_accounting_verified_on');
+    $view->save();
+  }
+}

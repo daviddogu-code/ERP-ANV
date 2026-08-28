@@ -4,8 +4,13 @@
 > propios pedidos.
 > Escrito en español porque el lector principal es el dueño. **Los textos del portal van en inglés.**
 >
-> Preparado el 2026-08-13, juntando lo que pidió el dueño con lo que se encontró auditando
-> el código que dejó el desarrollador anterior.
+> Preparado el 2026-08-13. **Construido y publicado el 29 de agosto de 2026** en
+> `https://erp.anvfightgear.com` (`/my`). Aún no hay cuentas Customer. Alta:
+> [`sop-give-a-customer-a-portal-login.md`](sop-give-a-customer-a-portal-login.md).
+> Lo que sigue abajo es el encargo original; varias “decisiones pendientes” de la
+> sección 11 ya están cerradas en el código (enlace usuario→persona→empresa,
+> estado `pending_deposit`, rol Customer vaciado, rutas `/my`). Falta la proforma
+> por correo.
 
 ---
 
@@ -16,8 +21,9 @@ frágil. Este documento los fija. Quien lo lea después —otro agente, un desar
 propio dueño dentro de seis meses— tiene que poder construir el portal sin volver a preguntar
 nada, salvo las decisiones que en la sección 11 están marcadas como pendientes.
 
-**Estado a día de hoy: no hay nada construido.** Lo que existe en el ERP y se parece a esto es
-otra cosa distinta. La sección 3 explica cuál y por qué no sirve tal cual.
+**Estado a 29 de agosto de 2026: el portal está construido y en producción** (`/my`),
+sin cuentas Customer todavía. La sección 3 describe el flujo de fábrica (*pedido de un
+clic*) que **no** es el portal; no se reutilizó esa piel.
 
 ---
 

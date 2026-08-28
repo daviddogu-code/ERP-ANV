@@ -11,6 +11,7 @@ dependencies:
     - image
     - link
     - node
+    - tec_production
     - user
 id: tec_icons_launchpad
 label: 'TEC: Icons launchpad'
@@ -244,7 +245,7 @@ display:
       access:
         type: perm
         options:
-          perm: 'access content'
+          perm: 'access tec start page'
       cache:
         type: tag
         options: {  }

@@ -1,0 +1,329 @@
+.tec-portal {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+  max-width: 72rem;
+}
+
+.tec-portal__head {
+  margin: 0;
+}
+
+.tec-portal__company {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.tec-portal__help {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3f6fb;
+  border: 1px solid #dbe4f0;
+  border-radius: 6px;
+  color: #444;
+  font-size: 0.82rem;
+  max-width: 72rem;
+}
+
+.tec-portal__nothing {
+  padding: 1.25rem;
+  background: #f4f9f4;
+  border: 1px solid #cfe3cf;
+  border-radius: 6px;
+  color: #2f5d2f;
+  max-width: 72rem;
+}
+
+.tec-portal__warning {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  background: #fdf6e7;
+  border: 1px solid #ecd9a6;
+  border-radius: 6px;
+  color: #6b4e00;
+}
+
+.tec-portal__table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  max-width: 72rem;
+  margin: 0;
+  background: #fff;
+  border: 1px solid #c8c8c8;
+  border-radius: 6px;
+}
+
+.tec-portal__table th,
+.tec-portal__table td {
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid #ececec;
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* Headers bigger than the rows. DXPR/Gin shrink thead; beat that. */
+.tec-portal__table thead th,
+.tec-portal__table > thead > tr > th {
+  background: #f3f6fb;
+  font-size: 1.15rem !important;
+  font-weight: 700;
+  color: #222;
+  line-height: 1.3;
+}
+
+.tec-portal__table .tec-portal__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tec-portal__back {
+  display: inline-block;
+  margin: 0 0 0.75rem;
+}
+
+.tec-portal__meta {
+  margin: 0 0 0.75rem;
+}
+
+.tec-portal .tec-portal__status,
+.tec-portal__table .tec-portal__status {
+  display: inline-block;
+  padding: 0.28rem 0.7rem;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  font-size: 0.95rem !important;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.tec-portal__status--open {
+  background: #fff;
+  color: #555;
+  border-color: #c9c9c9;
+  border-style: dashed;
+}
+
+.tec-portal__status--pending-payment {
+  background: #f4cccc;
+  color: #990000;
+  border-color: #ea9999;
+}
+
+.tec-portal__status--confirmed {
+  background: #cfe2f3;
+  color: #0b5394;
+  border-color: #9fc5e8;
+}
+
+.tec-portal__status--ready-to-ship {
+  background: #d9ead3;
+  color: #38761d;
+  border-color: #b6d7a8;
+}
+
+.tec-portal__status--shipped {
+  background: #38761d;
+  color: #fff;
+  border-color: #38761d;
+}
+
+.tec-portal__status--cancelled {
+  background: #e8e8e8;
+  color: #8a8a8a;
+  border-color: #dcdcdc;
+  text-decoration: line-through;
+}
+
+.tec-portal__foot {
+  margin: 0.75rem 0 0;
+  max-width: 72rem;
+}
+
+.tec-portal__group {
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid #c8c8c8;
+  border-radius: 6px;
+  background: #fff;
+  max-width: 72rem;
+}
+
+.tec-portal__group > legend {
+  padding: 0 0.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+a.button.tec-portal__place {
+  display: block;
+  float: none;
+  width: max-content;
+  margin: 0;
+  align-self: flex-start;
+}
+
+.tec-portal__qty input,
+.tec-portal__qty-box {
+  width: 5rem;
+  text-align: right;
+  box-sizing: border-box;
+}
+
+.tec-portal--place .tec-portal__group {
+  width: 100%;
+  max-width: 72rem;
+  box-sizing: border-box;
+}
+
+.tec-portal--place .tec-portal__group > .fieldset-wrapper,
+.tec-portal--place .tec-portal__group > .fieldset__wrapper {
+  padding-left: 0;
+  padding-right: 0;
+  margin: 0;
+}
+
+.tec-portal--place .tec-portal__table {
+  table-layout: fixed;
+  width: 100%;
+  max-width: none;
+}
+
+.tec-portal--place .tec-portal__col-image {
+  width: 4.25rem;
+}
+
+.tec-portal--place .tec-portal__col-name {
+  width: 26%;
+}
+
+.tec-portal--place .tec-portal__col-material {
+  width: 12%;
+}
+
+.tec-portal--place .tec-portal__col-colour {
+  width: 11%;
+}
+
+.tec-portal--place .tec-portal__col-size {
+  width: 7%;
+}
+
+.tec-portal--place .tec-portal__table tbody td,
+.tec-portal--place .tec-portal__table thead th,
+.tec-portal--place .tec-portal__table tfoot td {
+  vertical-align: middle;
+}
+
+.tec-portal--place .tec-portal__col-qty {
+  width: 5.75rem;
+  text-align: right;
+}
+
+.tec-portal--place .tec-portal__col-price {
+  width: 7.5rem;
+}
+
+.tec-portal--place .tec-portal__col-total {
+  width: 8.5rem;
+}
+
+.tec-portal--place td.tec-portal__qty .form-item,
+.tec-portal--place td.tec-portal__qty .js-form-item,
+.tec-portal--place td.tec-portal__qty .form-group {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.tec-portal--place td.tec-portal__qty input {
+  margin: 0;
+}
+
+.tec-portal--place,
+.tec-portal--place .tec-portal__group,
+.tec-portal--place .tec-portal__group .fieldset-wrapper,
+.tec-portal--place .tec-portal__table,
+.tec-portal--place .tec-portal__table td {
+  overflow: visible;
+}
+
+.tec-portal--place .tec-portal__table tbody tr:hover {
+  position: relative;
+  z-index: 8;
+}
+
+.tec-portal__img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.tec-portal__thumb {
+  position: relative;
+  display: block;
+  width: 40px;
+  line-height: 0;
+}
+
+.tec-portal__thumb-pop {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 8px;
+  z-index: 9999;
+  width: 300px;
+  padding: 5px;
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 10px;
+  box-shadow: 0 0 17px 2px rgba(0, 0, 0, 0.35);
+}
+
+.tec-portal__thumb:hover .tec-portal__thumb-pop,
+.tec-portal__thumb:focus-within .tec-portal__thumb-pop {
+  display: block;
+}
+
+.tec-portal__thumb-pop img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.tec-portal--place .tec-portal__group--grand {
+  border-color: transparent;
+  background: transparent;
+  margin-bottom: 0;
+}
+
+.tec-portal__foot-label {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.tec-portal--place tfoot td,
+.tec-portal__grand td {
+  font-weight: 600;
+  border-top: 1px solid #c8c8c8;
+  background: #f3f6fb;
+}
+
+.tec-portal__grand thead th {
+  height: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  line-height: 0;
+  font-size: 0 !important;
+}
+
+.tec-portal__confirm {
+  margin-left: 0.5rem;
+}

@@ -1,0 +1,11 @@
+name: 'TEC Portal'
+type: module
+description: 'Customer login: which company a user belongs to, and the lock that keeps them inside it.'
+package: TEC
+core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:user
+  - drupal:views
+  - eck:eck
+  - eck_bundle_permissions:eck_bundle_permissions
+  - tec_production:tec_production

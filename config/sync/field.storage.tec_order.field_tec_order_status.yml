@@ -15,6 +15,9 @@ settings:
       value: draft
       label: Open
     -
+      value: pending_deposit
+      label: 'Pending deposit'
+    -
       value: accounting_verified
       label: 'Accounting Verified'
     -

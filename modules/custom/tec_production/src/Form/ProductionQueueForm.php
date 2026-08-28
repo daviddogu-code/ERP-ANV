@@ -25,6 +25,7 @@ class ProductionQueueForm extends FormBase {
    */
   const ACTIVE_STATUSES = [
     'draft',
+    'pending_deposit',
     'accounting_verified',
     'in_progress_processing',
     'ready_for_production',
@@ -54,7 +55,10 @@ class ProductionQueueForm extends FormBase {
    * the queue. Corrections that go backwards stay on the order edit form.
    */
   const STATUS_NEXT = [
+    // Phone orders skip the portal: Open → Accounting Verified.
     'draft' => 'accounting_verified',
+    // Portal Confirm: still unpaid, grey row, one click when the deposit is in.
+    'pending_deposit' => 'accounting_verified',
     'accounting_verified' => 'in_progress_processing',
     'in_progress_processing' => 'ready_for_production',
     'ready_for_production' => 'production_started',
@@ -611,7 +615,7 @@ class ProductionQueueForm extends FormBase {
         'label' => $order->label() ?: ('#' . $oid),
         'status' => $status,
         'status_label' => (string) ($status_options[$status] ?? $status),
-        'is_open' => $status === 'draft',
+        'is_open' => in_array($status, ['draft', 'pending_deposit'], TRUE),
         'is_post_mfg' => in_array($status, self::POST_MFG_STATUSES, TRUE),
         'categories' => $cats,
         'total' => $total,

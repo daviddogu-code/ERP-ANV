@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.user.user.field_tec_contact_person
     - field.field.user.user.user_picture
     - image.style.thumbnail
   module:
@@ -15,6 +16,14 @@ targetEntityType: user
 bundle: user
 mode: default
 content:
+  field_tec_contact_person:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: -8
+    region: content
   masquerade:
     settings: {  }
     third_party_settings: {  }

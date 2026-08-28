@@ -1,0 +1,9 @@
+portal:
+  css:
+    theme:
+      css/portal.css: { weight: 200 }
+  js:
+    js/place.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

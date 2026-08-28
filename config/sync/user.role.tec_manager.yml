@@ -63,6 +63,7 @@ is_admin: null
 permissions:
   - 'access coffee'
   - 'access content'
+  - 'access tec start page'
   - 'access draggableviews'
   - 'access feed overview'
   - 'access files overview'

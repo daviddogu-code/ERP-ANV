@@ -1,0 +1,19 @@
+uuid: a1c8d4f2-5e6b-4a90-9c3d-7f8e1b2a4c5d
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_sales_order
+    - field.storage.tec_order.field_tec_accounting_verified_on
+id: tec_order.tec_sales_order.field_tec_accounting_verified_on
+field_name: field_tec_accounting_verified_on
+entity_type: tec_order
+bundle: tec_sales_order
+label: 'Accounting verified on'
+description: 'When the factory recorded that payment had arrived. The customer portal Date column uses this.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: timestamp

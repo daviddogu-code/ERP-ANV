@@ -1,0 +1,14 @@
+services:
+  tec_portal.company:
+    class: Drupal\tec_portal\CustomerCompany
+    arguments: ['@entity_type.manager']
+
+  tec_portal.catalogue:
+    class: Drupal\tec_portal\Catalogue
+    arguments: ['@entity_type.manager', '@tec_portal.company']
+
+  tec_portal.redirect:
+    class: Drupal\tec_portal\EventSubscriber\PortalRedirectSubscriber
+    arguments: ['@tec_portal.company', '@current_user']
+    tags:
+      - { name: event_subscriber }

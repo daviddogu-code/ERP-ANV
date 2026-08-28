@@ -1,0 +1,29 @@
+uuid: b9e4d2f1-8c3e-4f02-ad5b-2e7c9e3f4b21
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_person
+    - field.storage.user.field_tec_contact_person
+  module:
+    - user
+id: user.user.field_tec_contact_person
+field_name: field_tec_contact_person
+entity_type: user
+bundle: user
+label: 'Contact person'
+description: 'The CRM person this login belongs to. Their company (Works at) is the only company this user may see. Set by factory staff; the customer cannot change it.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_crm'
+  handler_settings:
+    target_bundles:
+      tec_contact_person: tec_contact_person
+    sort:
+      field: title
+      direction: ASC
+    auto_create: false
+field_type: entity_reference

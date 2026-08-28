@@ -7,6 +7,7 @@ dependencies:
     - core.base_field_override.tec_order.tec_sales_order.title
     - core.base_field_override.tec_order.tec_sales_order.uid
     - eck.eck_type.tec_order.tec_sales_order
+    - field.field.tec_order.tec_sales_order.field_tec_accounting_verified_on
     - field.field.tec_order.tec_sales_order.field_tec_customer
     - field.field.tec_order.tec_sales_order.field_tec_line_items
     - field.field.tec_order.tec_sales_order.field_tec_order_status
@@ -1155,6 +1156,7 @@ content:
     region: content
 hidden:
   changed: true
+  field_tec_accounting_verified_on: true
   field_tec_customer: true
   field_tec_produced: true
   field_tec_queue_position: true
