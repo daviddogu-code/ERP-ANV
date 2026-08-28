@@ -1,0 +1,25 @@
+uuid: d4376498-b886-48ac-a2a1-fda83d635a6c
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_product.tec_product
+    - field.storage.tec_product.field_tec_catalogue_position
+id: tec_product.tec_product.field_tec_catalogue_position
+field_name: field_tec_catalogue_position
+entity_type: tec_product
+bundle: tec_product
+label: 'Position in the brand'
+description: "Where this product sits in its brand's list. Set by dragging on the brand's Organize products screen, and read by every screen that lists products, the brand catalogue and the pro forma included. Not typed by hand, and not the same for two brands: the number starts again at 1 inside each one."
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

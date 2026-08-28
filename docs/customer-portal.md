@@ -51,12 +51,13 @@ mismo en dos minutos.
 
 ## 3. Qué existe hoy en el ERP, y por qué no es esto
 
-El desarrollador anterior construyó lo que internamente se llama **el flujo "Excel lover"**. Se
-parece por fuera, pero es otra cosa: es una **pantalla para que la use el personal de fábrica**,
-no el cliente.
+El desarrollador anterior construyó lo que él llamó **el flujo "Excel lover"**, hoy **el pedido de
+un clic** —el nombre se cambió el 19 de agosto de 2026, en configuración y en la dirección del
+botón—. Se parece por fuera a un portal, pero es otra cosa: es una **pantalla para que la use el
+personal de fábrica**, no el cliente.
 
 Funciona así. En la ficha de una empresa del CRM hay una marca, el *flag*
-`tec_draft_order_excel_lover`. Al pulsarla, una automatización de ECA (`process_sclj26d`) crea
+`tec_order_draft_sales`. Al pulsarla, una automatización de ECA (`process_sclj26d`) crea
 un pedido con una línea por cada talla de cada producto de ese cliente y redirige a
 `/o/draft/{id}`. Ahí la vista `tec_order_sales_order_line_items` pinta la rejilla editable de
 cantidades. Se puede ver funcionando en una instalación con datos, por ejemplo en
@@ -76,16 +77,17 @@ cantidades. Se puede ver funcionando en una instalación con datos, por ejemplo 
 **Lo que no sirve:**
 
 - Está pensado para que lo ejecute un empleado desde el CRM, no para que un cliente entre solo.
-- **El botón de checkout no hace nada.** El flag `tec_order_checkout_excel` está desactivado
+- **El botón de checkout no hace nada.** El flag `tec_order_checkout` está desactivado
   (`status: false`) y la automatización asociada (`process_v0gguvo`) es literalmente un mensaje
   que dice que la magia llegará en la próxima versión. La proforma automática **hay que
   construirla entera**.
 - No hay ninguna pantalla de "mis pedidos".
 - El rol Customer está inservible y además es peligroso. Ver sección 9.
-- **Hay dos pantallas distintas colgando de la misma dirección `o/draft/%`**, los displays
-  `page_2` y `tec_excel_lover_form`, y no enseñan las mismas columnas: una lleva la de
-  "Sales price" y la otra no. Solo una gana, así que lo que ve el usuario depende de cuál elija
-  Drupal. Hay que quedarse con una y borrar la otra antes de construir el portal encima.
+- **Hay dos pantallas escritas para la misma dirección `o/draft/%`**, los displays `page_2` y
+  `sales_order_draft_form_unused`, y no enseñan las mismas columnas: una lleva la de "Sales price"
+  y la otra no. La segunda está **apagada** (`enabled: false`), así que hoy no compite con nadie y
+  la que sirve es `page_2` —cuando esto se escribió parecía un empate y no lo era—. Sigue siendo
+  peso muerto: hay que borrarla antes de construir el portal encima.
 
 ---
 
@@ -164,15 +166,24 @@ palabra que no cambia**. Nada de seguir el pulso de la fábrica.
 ## 7. El orden de los productos
 
 Hay clientes con **más de cien líneas** en un pedido. Esto no es un problema abierto: la
-fábrica ya ordena los productos de cada cliente a mano, con el mismo criterio que usa en las
-proformas manuales, y ese orden ya está guardado en el sistema.
+fábrica ya ordena los productos a mano, con el mismo criterio que usa en las proformas
+manuales, y ese orden ya está guardado en el sistema.
 
-El botón que lo gestiona es **"Organize products"**, en la ficha del cliente, y lleva a
-`/tec_crm/{id}/reorder`. El orden se guarda con *draggableviews* y la rejilla de líneas de
-pedido ya lo respeta.
+El orden tiene cuatro niveles y cada uno lo decide otra cosa: las **marcas**, por la lista de
+la ficha del cliente; los **productos**, por el sitio que se les arrastra en la pestaña
+*Organize products* de la ficha de la marca; los **colores**, por la lista de la ficha del
+producto; y las **tallas**, por el peso del vocabulario. Una proforma nace ya en ese orden y
+desde ese momento se congela: cada pantalla la lista por el número de la línea, así que volver
+a arrastrar una marca cambia la proforma siguiente y no las ya emitidas.
+
+Hasta el 19 de agosto de 2026 el orden de los productos era **del cliente** —se arrastraba en
+`/tec_crm/{id}/reorder` y se guardaba con *draggableviews*—, y esa pantalla ya no existe: eran
+ocho ordenes del mismo catálogo y ninguno le servía a la proforma. Está contado en el README
+del módulo `tec_production`, sección *The brand decides the order of its products*.
 
 **Requisito para el portal: respetar ese mismo orden interno.** No hay que inventar ninguna
-ordenación nueva, ni alfabética, ni por categorías.
+ordenación nueva, ni alfabética, ni por categorías. Y para leerlo no hace falta calcularlo: es
+el orden en que ya vienen las líneas del pedido.
 
 ---
 

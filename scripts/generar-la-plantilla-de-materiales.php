@@ -8,9 +8,8 @@
  *
  * Las columnas NO se escriben aqui a mano: se leen del importador tal y como
  * esta guardado en la base. Asi la plantilla no se puede desincronizar del
- * importador, que es el fallo que tenia la anterior -declaraba una columna
- * "Traceable" cuando el fichero traia "Traceability", y entraba vacia en
- * silencio-.
+ * importador. Las cabeceras son las etiquetas del formulario de anadir material
+ * (Material name, Traceable, Active, Purchase Cost (No VAT), etc.).
  *
  * Se generan dos ficheros, y no por gusto:
  *
@@ -66,6 +65,16 @@ const AYUDA = [
   'field_tec_safety_stock' => 'Stock de seguridad, en unidades de inventario.',
   'field_tec_scrap_margin' => 'Merma en tanto por ciento. 8.5 son ocho y medio por ciento.',
   'field_tec_volume_cbm' => 'Metros cubicos que ocupa una unidad de compra. Para calcular el flete.',
+  'status' => '1 deja el material activo, 0 lo oculta de listados (Inactive). Vacio = activo. OJO: escribir "Inactive" cuenta como 1.',
+  'field_tec_colors' => 'Color del material. Texto EXACTO de la hoja "Colores". Un color por material.',
+  'field_tec_internal_sku' => 'Referencia interna del material. Texto libre.',
+  'field_tec_importer_item_id' => 'Identificador de la fila en el fichero de origen, para poder rastrear de donde salio cada material.',
+  'field_tec_lead_time_days' => 'Dias que tarda el proveedor en servir. Numero entero.',
+  'field_tec_moq_quantity' => 'Pedido minimo, en unidades de compra. Numero entero.',
+  'field_tec_reorder_point' => 'Nivel de stock al que hay que volver a pedir, en unidades de inventario.',
+  'field_tec_safety_stock' => 'Stock de seguridad, en unidades de inventario.',
+  'field_tec_scrap_margin' => 'Merma en tanto por ciento. 8.5 son ocho y medio por ciento.',
+  'field_tec_volume_cbm' => 'Metros cubicos que ocupa una unidad de compra. Para calcular el flete.',
 ];
 
 /**
@@ -101,6 +110,7 @@ const EJEMPLOS = [
     'field_tec_safety_stock' => '60',
     'field_tec_scrap_margin' => '8.5',
     'field_tec_volume_cbm' => '0.004',
+    'status' => '1',
   ],
   [
     'name' => 'Nylon Lining Fabric Black 150cm',
@@ -123,6 +133,7 @@ const EJEMPLOS = [
     'field_tec_safety_stock' => '200',
     'field_tec_scrap_margin' => '5',
     'field_tec_volume_cbm' => '0.06',
+    'status' => '1',
   ],
   [
     'name' => 'Velcro Hook 50mm Black',
@@ -145,6 +156,7 @@ const EJEMPLOS = [
     'field_tec_safety_stock' => '100',
     'field_tec_scrap_margin' => '3',
     'field_tec_volume_cbm' => '0.02',
+    'status' => '1',
   ],
 ];
 
@@ -430,10 +442,11 @@ $texto = [
   ['3. Guardar como CSV UTF-8, separado por comas.'],
   ['4. Subir en /feed/4/import, la ficha "Inventory Excel-CSV file".'],
   [''],
-  ['Tres cosas que hacen fallar la importacion en silencio'],
+  ['Cosas que hacen fallar la importacion en silencio'],
   ['- Coma decimal. El importador quiere punto: 1850.50, no 1850,50. Con coma el numero entra vacio.'],
   ['- Espacios sobrantes en las columnas de lista. "Blue " con un espacio detras no encuentra "Blue".'],
-  ['- La columna Traceability: solo 1, 0 o vacio. Escribir "No" cuenta como 1.'],
+  ['- La columna Traceable: solo 1, 0 o vacio. Escribir "No" cuenta como 1.'],
+  ['- La columna Active: solo 1, 0 o vacio. Vacio deja el material activo. Escribir "Inactive" cuenta como 1.'],
   [''],
   ['Que pasa si un valor de lista no existe'],
   ['La creacion automatica de terminos esta APAGADA a proposito. Antes estaba encendida y una errata'],
@@ -457,7 +470,7 @@ foreach ($texto as $numero => $linea) {
   $instrucciones->setCellValue('A' . ($numero + 1), $linea[0]);
 }
 $instrucciones->getStyle('A1')->applyFromArray(['font' => ['bold' => TRUE, 'size' => 14]]);
-foreach ([6, 12, 17, 22, 25, count($texto)] as $fila) {
+foreach ([6, 12, 18, 23, 26, count($texto)] as $fila) {
   $instrucciones->getStyle('A' . $fila)->applyFromArray(['font' => ['bold' => TRUE]]);
 }
 

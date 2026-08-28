@@ -37,10 +37,21 @@
  *   venga en ese parametro. Pasarle el numero de una marca escribiria una marca
  *   en la casilla del cliente. Por eso el boton de aqui va sin el.
  *
- * El orden del catalogo queda por nombre. El molde ordena por el peso que se
- * arrastra en «Organize products», y ese peso esta guardado por cliente: en una
- * pantalla nueva no hay ninguna fila, asi que ordenar por el no ordenaria nada.
- * Dar a la marca su propio orden es el paso siguiente del modelo, no este.
+ * El orden del catalogo queda por nombre, y **eso ya no es lo que hay**: era el
+ * paso siguiente del modelo y se dio el 19 de agosto de 2026. El molde ordenaba
+ * por el peso de «Organize products», que estaba guardado por cliente y en una
+ * pantalla nueva no ordenaba nada; hoy el orden es de la marca, un campo del
+ * producto, y lo escribe la receta que convierte esta pantalla en una lista de
+ * tallas -- `el-catalogo-de-la-marca-es-una-lista-de-tallas.php`, que se lanza
+ * despues de esta y rehace sus ordenaciones enteras. Si se lanza esta sola, el
+ * catalogo sale por nombre hasta que se lance la otra.
+ *
+ * El destination del + Product a la ficha de la marca **tampoco es lo que hay**.
+ * El 19 de agosto de 2026 se quito: el catalogo es una lista de tallas, y un
+ * producto recien creado no tiene ninguna, asi que Save te dejaba en una lista
+ * donde no estabas. Esta receta ya escribe el boton sin destination y con
+ * Organize al lado; `el-producto-nuevo-no-se-pierde-en-la-marca.php` es la que
+ * parchea una pantalla que ya existia.
  *
  * Se puede lanzar dos veces: comprueba antes de crear y vuelve a escribir lo
  * mismo si ya estaba.
@@ -173,8 +184,14 @@ $volver = '/taxonomy/term/{{ raw_arguments.tid }}';
 // numero de una marca intentaria escribir una marca en la casilla del cliente,
 // y aunque el modulo lo rechaza al validar, dejaria un aviso en el registro por
 // cada producto que se cree desde aqui.
+//
+// Sin destination a la marca: Save tiene que dejar en la ficha del producto,
+// que es donde estan + Variation y + Size. Con destination, un producto nuevo
+// desaparecia de la lista a la que te mandaban. Organize si lleva destination,
+// porque desde Organize no hay nada que completar.
 $crear = '/admin/content/tec_product/add/tec_product'
-  . '?brand_id={{ raw_arguments.tid }}&destination=' . $volver;
+  . '?brand_id={{ raw_arguments.tid }}';
+$organizar = $volver . '/organize?destination=' . $volver;
 
 $opciones['header'] = [
   'area_text_custom' => [
@@ -188,14 +205,16 @@ $opciones['header'] = [
     'empty' => TRUE,
     'content' => '<div class="text-align-right"><span class="btn-default">'
       . '<strong><a href="' . $crear . '">+ Product</a></strong>'
-      . '</span></div>',
+      . '</span> <span class="btn-default"><strong>'
+      . '<a href="' . $organizar . '">Organize</a></strong></span></div>',
     'tokenize' => TRUE,
   ],
 ];
 
 if (isset($opciones['empty']['area_text_custom'])) {
   $opciones['empty']['area_text_custom']['content'] =
-    '<div class="text-align-center"><h4>No products in this brand yet</h4></div>'
+    '<div class="text-align-center"><h4>Nothing to show here yet</h4>'
+    . '<div>A product joins this list once it has a colour and that colour has a size.</div></div>'
     . '<div class="text-align-center"><div><strong><a href="' . $crear . '">'
     . '+ Product</a></strong></div></div>';
 }

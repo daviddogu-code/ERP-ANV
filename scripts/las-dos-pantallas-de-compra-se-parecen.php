@@ -204,13 +204,13 @@ $vista->save();
 // 5. La casilla de cantidad del borrador.
 // -----------------------------------------------------------------------------
 print "\nLa casilla de cantidad\n" . str_repeat('-', 78) . "\n";
-$inyector = \Drupal::configFactory()->getEditable('asset_injector.css.tec_excel_lover_orders');
+$inyector = \Drupal::configFactory()->getEditable('asset_injector.css.tec_order_draft_screens');
 if ($inyector->isNew()) {
-  print "  [MAL] no existe el inyector tec_excel_lover_orders.\n";
+  print "  [MAL] no existe el inyector tec_order_draft_screens.\n";
 }
 else {
   $css = <<<'CSS'
-/* Excel lover orders */
+/* Order draft screens */
 
 /*.ajax-progress {
   display: none;

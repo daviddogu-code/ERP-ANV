@@ -2,23 +2,24 @@
 
 /**
  * @file
- * La pestana Products del cliente y la de ordenar salen de las marcas.
+ * La pestana Products del cliente sale de las marcas, y en dos ordenes.
  *
  *   php vendor\bin\drush.php scr scripts/la-pestana-del-cliente-sale-de-la-marca.php
  *
  * QUE ES ESTO.
  *
  * En la ficha de un cliente hay tres pestanas -Orders, Products, Details- y la de
- * Products es un bloque de la vista `tec_products` que recibe el numero del
- * cliente. Al lado vive la pantalla de ordenar productos, `/tec_crm/N/reorder`, que
- * es la que guarda a mano en que orden salen, y ese orden es el que sale impreso en
- * la proforma.
+ * Products es un bloque de la vista `tec_products` que recibe el numero del cliente.
+ * Contestaba «los productos cuyo cliente es este», saltando por el campo de cliente
+ * del producto, que se retiro. Ahora contesta «los productos de las marcas que
+ * compra este cliente».
  *
- * Las dos contestaban «los productos cuyo cliente es este», saltando por el campo
- * de cliente del producto, que se retira. Pasan a contestar «los productos de las
- * marcas que compra este cliente».
+ * Al lado vivia la pantalla de ordenar productos, `/tec_crm/N/reorder`, y **ya no
+ * existe**: se retiro la noche del 19 de agosto de 2026, cuando el orden de los
+ * productos dejo de ser del cliente y paso a ser de la marca. Lo que aquella
+ * pantalla hacia se prueba ahora en `scripts/la-marca-manda-en-el-orden.php`.
  *
- * LAS TRES COSAS QUE ESTA PRUEBA VIGILA.
+ * LAS CUATRO COSAS QUE ESTA PRUEBA VIGILA.
  *
  * Una, que cada cliente vea los productos de TODAS sus marcas. Un producto de una
  * marca que compran dos clientes sale en las dos fichas, que antes no podia pasar:
@@ -26,18 +27,22 @@
  *
  * Dos, que no vea los de las marcas que no compra.
  *
- * Tres, y es la delicada: que el ORDEN ARRASTRADO no se pierda. El modulo
- * draggableviews guarda el orden en su propia tabla con una clave que incluye los
- * argumentos de la vista, o sea el numero del cliente. Mientras la pantalla siga
- * recibiendo al cliente, esas filas siguen valiendo; si se le cambiara el argumento
- * por la marca, el orden hecho a mano se quedaria huerfano sin que nada avisara. Hay
- * orden guardado de ocho clientes, asi que no es un peligro teorico.
+ * Tres, que los bloques salgan en el orden de marcas de SU ficha, que lo pone el
+ * modulo al pintar la vista porque en la consulta no se puede.
+ *
+ * Y cuatro, que dentro de cada bloque manden el orden de la marca. Son dos ordenes
+ * de dos duenos distintos actuando a la vez sobre la misma lista, y esta prueba los
+ * pone a contradecirse a proposito: la marca que el cliente puso primera es la
+ * segunda del alfabeto, y el producto que la marca puso primero es el ultimo por
+ * numero de ficha. Si los dos ordenes salen bien con el juego montado asi, no puede
+ * ser casualidad.
  *
  * Se monta su propio juego y lo barre al empezar y al acabar. Todo lo suyo se llama
  * «PRUEBA pestana algo», con nombre largo y propio: un rastro corto como «PRUEBA» se
  * lleva por delante el juego de pruebas permanente de la casa.
  */
 
+use Drupal\tec_production\CataloguePosition;
 use Drupal\views\Views;
 
 const RASTRO = 'PRUEBA pestana';
@@ -49,7 +54,6 @@ $gestor = \Drupal::entityTypeManager();
 $terminos = $gestor->getStorage('taxonomy_term');
 $productos = $gestor->getStorage('tec_product');
 $contactos = $gestor->getStorage('tec_crm');
-$bd = \Drupal::database();
 
 $problemas = 0;
 
@@ -111,12 +115,11 @@ $loQueVeAlPintar = function (string $pantalla, string $cid): array {
 /**
  * Barre lo de esta prueba y nada mas.
  */
-$barrer = function () use ($terminos, $productos, $contactos, $bd): int {
+$barrer = function () use ($terminos, $productos, $contactos): int {
   $barridas = 0;
   foreach ([[$productos, 'title'], [$contactos, 'title'], [$terminos, 'name']] as [$almacen, $campo]) {
     $suyas = $almacen->getQuery()->accessCheck(FALSE)->condition($campo, RASTRO, 'STARTS_WITH')->execute();
     foreach ($almacen->loadMultiple($suyas) as $ficha) {
-      $bd->delete('draggableviews_structure')->condition('entity_id', $ficha->id())->execute();
       $ficha->delete();
       $barridas++;
     }
@@ -185,7 +188,7 @@ printf("  productos: de alfa %s, de beta %s, otro de alfa %s\n",
 printf("  clientes: el de siempre %s (compra beta y alfa), el otro %s (solo alfa)\n",
   $deSiempre->id(), $elOtro->id());
 
-foreach (['block_4' => 'la pestana Products de la ficha', 'page_2' => 'la pantalla de ordenar'] as $pantalla => $comoSeLlama) {
+foreach (['block_4' => 'la pestana Products de la ficha'] as $pantalla => $comoSeLlama) {
   printf("\n%s (%s)\n", $comoSeLlama, $pantalla);
   print str_repeat('-', 70) . "\n";
 
@@ -206,56 +209,23 @@ foreach (['block_4' => 'la pestana Products de la ficha', 'page_2' => 'la pantal
     'ensena ' . (count($ve) ? implode(', ', $ve) : 'nada') . ' y se esperaban ' . implode(', ', $deLaMarcaAlfa));
 }
 
-print "\nEl orden arrastrado sigue valiendo\n";
+print "\nDentro de cada marca manda el orden de la marca\n";
 print str_repeat('-', 70) . "\n";
 
-// Se escriben a mano las filas del orden, las mismas que escribiria un arrastre en
-// la pantalla de ordenar. La clave lleva el numero del cliente, y de eso va la
-// comprobacion: mientras la pantalla siga recibiendo al cliente, lo arrastrado vale.
-//
-// Se le da peso a los TRES y en un orden que no es ni el del alfabeto ni el de los
-// numeros. Hay que darselo a todos: los que no tienen peso guardado salen ANTES que
-// los que lo tienen, porque la pantalla esta puesta en «los nuevos arriba», asi que
-// con uno solo arrastrado no se ve nada.
-// Se arrastra a proposito al REVES de lo que tiene que salir en la pestana: primero
-// el de alfa. Asi las dos cosas que se comprueban no pueden coincidir por casualidad.
-// Si al final la pestana saca el de beta delante, es porque manda el orden de marcas
-// del cliente; y si dentro de alfa sigue saliendo antes el que se arrastro antes, es
-// porque el arrastre no se ha perdido. La pantalla de ordenar, que no agrupa, tiene
-// que seguir sacandolos tal cual se arrastraron.
-$aMano = [
-  (string) $deAlfa->id() => -50,
-  (string) $deBeta->id() => 0,
-  (string) $delOtro->id() => 50,
-];
-foreach ($aMano as $pid => $peso) {
-  $bd->insert('draggableviews_structure')
-    ->fields([
-      'view_name' => VISTA,
-      'view_display' => 'page_2',
-      'args' => json_encode([(string) $deSiempre->id()]),
-      'entity_id' => $pid,
-      'weight' => $peso,
-      'parent' => 0,
-    ])
-    ->execute();
-}
-
-// Con cuidado al comparar: los numeros de ficha salen de la vista como texto y las
-// claves de un array de PHP se vuelven enteras solas, asi que sin igualar el tipo
-// esto falla ensenando dos listas identicas.
-$arrastrados = array_map('strval', array_keys($aMano));
-
-$ve = $loQueVe('page_2', (string) $deSiempre->id());
-$mirar('la pantalla de ordenar los saca tal cual se arrastraron',
-  $ve === $arrastrados,
-  'salen ' . implode(', ', $ve) . ' y se arrastraron ' . implode(', ', $arrastrados));
+// Se arrastra la marca alfa, que es la que tiene dos productos, dejando delante el
+// que se creo el ultimo. Asi el orden que tiene que salir no es el de los numeros de
+// ficha ni el del alfabeto, que son los dos que saldrian solos.
+CataloguePosition::write([
+  (int) $delOtro->id() => 1,
+  (int) $deAlfa->id() => 2,
+]);
+$productos->resetCache();
 
 $ve = $loQueVeAlPintar('block_4', (string) $deSiempre->id());
 $dondeSale = array_flip($ve);
-$mirar('y en la pestana el arrastre manda dentro de cada marca',
-  ($dondeSale[(string) $deAlfa->id()] ?? -1) < ($dondeSale[(string) $delOtro->id()] ?? -1),
-  'salen ' . implode(', ', $ve) . ' y de alfa se arrastro antes el ' . $deAlfa->id());
+$mirar('el producto que la marca puso primero sale primero',
+  ($dondeSale[(string) $delOtro->id()] ?? -1) < ($dondeSale[(string) $deAlfa->id()] ?? -1),
+  'salen ' . implode(', ', $ve) . ' y la marca puso delante el ' . $delOtro->id());
 
 print "\nLos bloques salen en el orden de marcas del cliente\n";
 print str_repeat('-', 70) . "\n";
@@ -263,13 +233,12 @@ print str_repeat('-', 70) . "\n";
 // El cliente tiene apuntadas beta y luego alfa, al reves del alfabeto. Si los bloques
 // salen en su orden, primero viene el producto de beta y despues los dos de alfa; si
 // saliera el alfabeto o el numero de ficha, saldria alfa primero.
-$ve = $loQueVeAlPintar('block_4', (string) $deSiempre->id());
 $mirar('primero el bloque de beta, que es la que puso primera',
   ($ve[0] ?? '') === (string) $deBeta->id(),
   'salen ' . implode(', ', $ve) . ' y el de beta es el ' . $deBeta->id());
 
-$mirar('y las dos de alfa detras, aunque una se arrastro a la primera posicion',
-  array_slice($ve, 1) === array_map('strval', [$deAlfa->id(), $delOtro->id()]),
+$mirar('y las dos de alfa detras, en el orden que arrastro la marca',
+  array_slice($ve, 1) === array_map('strval', [$delOtro->id(), $deAlfa->id()]),
   'detras salen ' . implode(', ', array_slice($ve, 1)));
 
 // Subir del producto a la marca y de la marca a sus clientes es un camino con dos
@@ -278,25 +247,7 @@ $mirar('y sigue sin repetirse ninguno al ordenar por la posicion',
   count($ve) === count(array_unique($ve)),
   count($ve) . ' filas para ' . count(array_unique($ve)) . ' productos');
 
-/**
- * Cuantas filas de orden hay guardadas para la pantalla de ordenar.
- */
-$filasDeOrden = fn(): int => (int) $bd->select('draggableviews_structure', 'd')
-  ->condition('view_name', VISTA)
-  ->condition('view_display', 'page_2')
-  ->countQuery()
-  ->execute()
-  ->fetchField();
-
-$conLasMias = $filasDeOrden();
-$mirar('y las filas de orden de los demas clientes siguen ahi', $conLasMias > count($aMano),
-  $conLasMias . ' filas guardadas para esa pantalla');
-
 $barrer();
-
-$mirar('y al recoger no se lleva las de los demas',
-  $filasDeOrden() === $conLasMias - count($aMano),
-  'quedan ' . $filasDeOrden() . ' de las ' . ($conLasMias - count($aMano)) . ' que habia antes');
 
 print "\n" . str_repeat('=', 70) . "\n";
 printf("  %s El juego de prueba se ha borrado.\n",

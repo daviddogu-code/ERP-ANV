@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\tec_production\OrderNumber;
 use Drupal\tec_production\Purchasing;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -33,7 +34,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * added to dollars.
  *
  * The button writes the same shape of purchase order as the older flag-driven
- * flow "TEC Order: Create Purchase order - Excel lover" (process_kryibry): same
+ * flow "TEC Order: Create Purchase order" (process_kryibry): same
  * owner, same link between order and lines, and literally the same number, since
  * both get their name from OrderNumber on save. That flow lists every material
  * of the supplier with no quantities for someone to type; this one lists only
@@ -419,10 +420,10 @@ class PurchaseListForm extends FormBase {
       $lines[] = $line;
     }
 
-    // No title here on purpose. The number comes from OrderNumber, through the
-    // presave hook, so that this screen and the flag-driven flow cannot hand out
-    // the same one. The supplier has to be in this array rather than set
-    // afterwards, because that is where the short code in the name comes from.
+    // No title here on purpose. The name is OrderNumber's to give, so that this
+    // screen and the flag-driven flow cannot hand out the same one. The supplier
+    // has to be in this array rather than set afterwards, because that is where
+    // the short code in the name comes from.
     $order_storage = $this->entityTypeManager->getStorage('tec_order');
     $order = $order_storage->create([
       'type' => 'tec_purchase_order',
@@ -430,6 +431,13 @@ class PurchaseListForm extends FormBase {
       'field_tec_line_items' => array_map(static fn($line) => $line->id(), $lines),
       'uid' => $this->currentUser()->id(),
     ]);
+
+    // Numbered here and now, unlike an order somebody starts by hand, which
+    // waits for its first Save. The button that lands here says "order these
+    // materials from these suppliers" over a list the owner has just ticked --
+    // the deciding and the keeping happen in the same click, so there is no
+    // later moment to wait for.
+    OrderNumber::earn($order);
     $order->save();
 
     foreach ($lines as $line) {

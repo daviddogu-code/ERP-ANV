@@ -188,7 +188,7 @@ function tec_crm_ux_entity_presave(EntityInterface $entity): void {
  * saying Rise Fight Gear twice adds nothing, and there is no widget button for
  * "remove the duplicate I just created" that is any easier than this.
  *
- * It is not cosmetic. The one-click draft order -the Excel lover flag- asks a
+ * It is not cosmetic. The one-click draft order -the + Order flag- asks a
  * view for every size of every product of the customer's brands, and that view
  * reaches the customer through this list. A brand listed twice joins twice, so
  * the order comes out with every line duplicated. That was measured, not
@@ -702,7 +702,7 @@ function tec_crm_ux_tec_crm_view(array &$build, EntityInterface $entity, EntityV
   if ($entity->bundle() !== 'tec_contact_organization') {
     return;
   }
-  if (in_array($view_mode, ['compact', 'excel_lover_button', 'p_o_button', 'print'], TRUE)) {
+  if (in_array($view_mode, ['compact', 'sales_order_button', 'p_o_button', 'print'], TRUE)) {
     return;
   }
 

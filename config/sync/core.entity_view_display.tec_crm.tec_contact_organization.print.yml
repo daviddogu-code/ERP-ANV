@@ -73,7 +73,7 @@ hidden:
   field_tec_tax_nr: true
   field_tec_vat_treatment: true
   field_tec_website: true
-  flag_tec_draft_order_excel_lover: true
+  flag_tec_order_draft_sales: true
   flag_tec_order_draft_po: true
   langcode: true
   uid: true

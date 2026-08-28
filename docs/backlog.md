@@ -4,7 +4,7 @@
 > Escrito en español porque el lector principal es el dueño del proyecto.
 > Las otras notas de `docs/` están en inglés y son documentación técnica; esta no.
 >
-> Última actualización: 2026-08-19.
+> Última actualización: 2026-08-28 (tarde).
 
 ## Cómo usar este archivo
 
@@ -24,8 +24,20 @@ por error algo que estaba puesto a propósito.
 
 ## 1. Ahora mismo
 
+- ~~**Llevar al servidor el salto a Drupal 11.4.5.**~~ **Hecho el 20 de agosto de 2026.** Producción
+  en Singapur (`erp-anv-sgp1`, `https://erp.anvfightgear.com`), Drupal **11.4.5**, comprobación
+  **220/223**. El relato del despliegue y del cierre de Nueva York están en Hecho.
+
+- ~~**Dar de baja el servidor de Nueva York.**~~ **Hecho el 28 de agosto de 2026.** Destruido el
+  droplet `actafight.com` (NYC3, `174.138.49.12`). Sin IP reservada. El snapshot
+  `actafight.com-1755603370919` también se borró ese día; no queda copia del disco viejo en
+  DigitalOcean, solo las copias diarias de `erp-anv-sgp1` y las de Drive/Git.
+
+<details>
+<summary>Notas del despliegue a Singapur (agosto 2026, ya ejecutado)</summary>
+
 - **Llevar al servidor el salto a Drupal 11.4.5.** Hecho en local el 13 de agosto; el servidor
-  sigue en **10.2.4 con los 82 avisos de seguridad**. Es lo más urgente de la lista.
+  siguió en **10.2.4 con los 82 avisos de seguridad** hasta el despliegue del 20 de agosto.
 
   **La máquina ya sirve, no hay que tocarla.** Se montó a propósito con PHP 8.3 y MySQL 8.4 sobre
   Ubuntu 24.04 para que coincidiera con Laragon, y resulta que eso es exactamente lo que pide
@@ -43,8 +55,8 @@ por error algo que estaba puesto a propósito.
   queda idéntico a lo que se probó. **Y desde el 15 de agosto ya no se pierde nada al hacerlo**:
   aquí se decía que el precio era la cuenta de Lukpla, que existía en el servidor y no en local, y
   ese precio ha desaparecido porque ese día se crearon aquí las tres cuentas de los empleados
-  —`lukpla`, `coo` y `manager`—, así que viajan con la base. Lo único que hay que hacer al llegar es
-  ponerles la contraseña. Aun así, antes hay que pasar `drush config:status` **en el servidor** y
+  —`lukpla`, `coo` y `manager`—, así que viajan con la base. ~~Lo único que hay que hacer al llegar es
+  ponerles la contraseña.~~ **Hecho el 28 de agosto de 2026** en producción. Aun así, antes hay que pasar `drush config:status` **en el servidor** y
   contar los procesos de ECA, que allí deben ser **36** antes de desplegar y **30** después. La
   explicación de por qué bajan cuatro está unas líneas más abajo, en la comprobación de los
   procesos.
@@ -88,6 +100,9 @@ por error algo que estaba puesto a propósito.
   que hacer nada, se resuelve sola en el despliegue, cuando la base de datos de local llegue con
   `eca_ui` ya sobre ECA 2.1.22, que es la versión parcheada. Está escrito para que dentro de tres
   semanas no parezca un descuadre.
+
+</details>
+
 - ~~**Un cabo suelto de dos minutos, mejor antes de desplegar: desinstalar `upgrade_status`.**~~
   Hecho el 14 de agosto de 2026. De paso hubo que decidir qué pasaba con `update`, que estaba
   encendido solo porque `upgrade_status` lo arrastra: **se queda, y ahora a propósito**. Es el
@@ -111,28 +126,9 @@ preparado para cuando se retome:
 - ~~**Crear la cuenta de Lukpla.**~~ Hecha, con rol *supervisor*, directamente en el servidor. Y
   **desde el 15 de agosto existe también en local**, con las de `coo` y `manager`, así que deja de
   ser una cuenta que solo vive en un lado.
-- **Llevar al servidor la limpieza de módulos del 13 de agosto**, con un cuidado que antes no
-  hacía falta. **Local y servidor ya no son la misma cosa**, y lo que importa de esa diferencia no
-  son los usuarios sino lo que ella haya podido tocar: si ha empezado a revisar puede haber cambiado
-  vistas o pantallas. Los usuarios son contenido y no corren peligro, pero **la configuración sí**:
-  un `drush cim` desde local machacaría cualquier cambio que ella haya hecho. Antes de desplegar hay
-  que ejecutar `drush config:status` **en el servidor** y mirar si ha divergido. Si ha divergido,
-  primero se traen sus cambios, y luego se sube la limpieza.
-
-  Y una comprobación más, por lo que pasó al quitar los módulos de IA: **contar los procesos de
-  ECA en el servidor antes y después** de desplegar. Al desinstalar en local, Drupal borró nueve
-  procesos en cascada sin avisar, y la cuenta de módulos salía bien igual.
-  `drush sql:query "SELECT COUNT(*) FROM config WHERE name LIKE 'eca.eca.%'"`.
-
-  **La cifra que hay que esperar cambió, y conviene tenerlo claro antes de contar, porque si no
-  este control se lee al revés.** El servidor sigue en **36**, porque allí no se ha desplegado nada.
-  Local está en **30**. El 14 de agosto se borraron cuatro procesos que hacían el trabajo del
-  sistema de unidades opcionales de Óscar y que sobraban al erradicarlo —`rxuimsq`, `uix9n5i`,
-  `pehrnr8` e `idtd6ah`—, y el 18 de agosto los dos últimos clones apagados, `darq39m` e `icpsbgv`.
-  O sea que al desplegar la cuenta **baja a propósito de 36 a 30**, y eso es la señal de que ha ido
-  bien, no de que se haya perdido nada. Lo que este control busca es lo otro: una bajada que nadie ha
-  pedido. La comprobación del ERP ya exige 30, así que si algún día se pierde un proceso por el
-  camino, salta ahí.
+- ~~**Llevar al servidor la limpieza de módulos del 13 de agosto**~~ Cubierto por el despliegue del
+  20 de agosto. Si Lukpla retoma la revisión, volver a pasar `drush config:status` en el servidor
+  antes de cualquier `cim` desde local.
 - **Preparar dónde apunta lo que vea**, aunque sea una hoja de cálculo compartida. Por chat
   se evapora en tres días.
 - **Darle un encargo concreto**, empezando por compras, en vez de un "míralo a ver qué te
@@ -178,6 +174,12 @@ preparado para cuando se retome:
   pasa el `> 0`. Si el formulario añade una tercera en PHP van tres. Lo ordenado es que la pregunta
   «¿esta línea cuenta?» viva junto a `Purchasing::outstanding()` y que las tres pantallas la
   consulten.
+- **Desinstalar `draggableviews`, que desde el 19 de agosto no lo usa nadie.** Era el módulo que
+  guardaba el orden de productos por cliente; esa noche se retiró su pantalla, se borraron todas las
+  filas de pesos y ninguna vista lo menciona ya —lo comprueba el guardián, sección 25—. Sigue
+  instalado y sin hacer nada. Son dos minutos: `drush pm:uninstall draggableviews` y bajar la cifra de
+  módulos de la comprobación de 146 a 145. Se deja para después de desplegar, por no meter un cambio
+  de lista de módulos en medio del salto pendiente del servidor.
 - **Limpiar los mensajes de registro de los procesos de duplicar.** Un solo clic de duplicar un color
   escribe veintiséis líneas en el registro, y la mitad salen con el hueco sin rellenar:
   `%token__entity`, `List: %token__bomOriginal`, `The size name is: [size:name]`. Están escritos con
@@ -214,15 +216,10 @@ preparado para cuando se retome:
   observación del dueño que lo puso todo en marcha: *una empresa puede comprar varias marcas, y la misma
   marca la pueden comprar dos clientes distintos.*
 
-  **Lo que queda son dos cosas, y ninguna bloquea a la otra:** el **orden en dos niveles de las proformas**
-  —primero por el orden de marcas del cliente, después por el de productos dentro de la marca—, que es lo
-  que se gana de verdad con todo el cambio; y el **catálogo en formato de líneas de pedido con el precio
-  editable**, que es la pantalla más grande.
-
-  **El orden de las proformas tiene la mitad del camino hecho.** La pestaña Products de la ficha ya sale
-  agrupada por marca y en el orden que el dueño arrastra, y ese orden lo pone el módulo al pintar la vista
-  (`tec_crm_ux_views_pre_render`) porque **en la consulta no se puede**: unir otra vez la lista de marcas
-  para ordenar por su posición duplica las filas. La proforma tendrá el mismo problema y la misma salida.
+  **Lo que queda es una cosa:** el **catálogo en formato de líneas de pedido con el precio editable**, que
+  es la pantalla más grande. El orden de las proformas se hizo la noche del 19 de agosto, y salió con
+  cuatro niveles en vez de dos —marca, producto, color y talla—, porque al mirarlo de cerca resultó que
+  tres de los cuatro ya existían y nadie los usaba. Está contado abajo, en Hecho.
 
   **Y el precio de venta no está donde se supondría:** vive en la talla
   (`tec_product.tec_size_variation.field_tec_price`, etiquetado «Sales price»), no en el producto ni en el
@@ -238,25 +235,27 @@ preparado para cuando se retome:
   2. ~~Pasar a ese campo lo que hoy diga el `field_tec_customer` de cada marca, y **retirar ese
      campo**.~~ Hecho el 19 de agosto, con la comprobación previa de que no se perdía ningún par.
   3. ~~Retirar el `field_tec_customer` del producto y **recablear los sitios que lo leen**.~~ Hecho el 19 de
-     agosto: la vista que crea las proformas del *Excel lover*, la pestaña Products de la ficha del cliente
+     agosto: la vista que crea las proformas del pedido de un clic, la pestaña Products de la ficha del cliente
      —que además salió agrupada por marca—, la pantalla de *Organize products*, las columnas y filtros de
      las listas, el widget del formulario, el campo de la ficha del producto y el paso de la ECA que lo
      copiaba al duplicar.
-  4. Ordenar las líneas de la proforma en dos niveles: primero por el orden de marcas del cliente,
-     después por el orden de productos dentro de la marca. **Hoy las proformas no tienen ningún
-     orden**, y esto es lo que se gana de verdad con el cambio.
+  4. ~~Ordenar las líneas de la proforma en dos niveles: primero por el orden de marcas del cliente,
+     después por el orden de productos dentro de la marca.~~ Hecho la noche del 19 de agosto, y en
+     **cuatro** niveles: marca, producto, color y talla. El orden de los productos dejó de ser del cliente
+     y pasó a ser de la marca, que es lo que hacía falta para que una proforma pudiera leerlo.
   5. ~~Borrar las filas de `draggableviews_structure` guardadas por cliente y añadir al guardián que la
-     marca de un producto esté en la lista de su cliente.~~ Se cae por sí solo: la pantalla de ordenar
-     **sigue recibiendo al cliente** a propósito, así que esas filas siguen valiendo y el arrastre de ocho
-     clientes no se ha perdido; y la regla del guardián no tiene a quién contradecir, porque el producto ya
-     no lleva cliente. El guardián vigila ahora lo que sí puede fallar: que **ningún producto se quede sin
-     marca**.
+     marca de un producto esté en la lista de su cliente.~~ Se dijo que se caía por sí solo, porque la
+     pantalla de ordenar seguía recibiendo al cliente; **se hizo esa misma noche**, cuando la pantalla se
+     retiró: las filas de pesos se borraron todas y ninguna vista menciona ya ese módulo. La regla del
+     guardián sigue sin tener a quién contradecir, porque el producto ya no lleva cliente, y en su lugar se
+     vigila que **ningún producto se quede sin marca** ni sin sitio dentro de ella.
 
-  **La decisión que sigue pendiente, y hay que tomarla antes de tocar la proforma:** el orden de las líneas
-  de los pedidos de venta sale de los pesos que se arrastran en `/tec_crm/%/reorder`. Si algún día ese orden
-  cambia, **los pedidos ya emitidos cambian el orden de sus líneas en pantalla**. No cambia ningún dato,
-  pero va contra el principio que ya se adoptó con los precios: un documento emitido no se mueve. Hay que
-  decidir si se acepta o si el orden se congela en la línea el día que nace.
+  ~~**La decisión que sigue pendiente, y hay que tomarla antes de tocar la proforma:** el orden de las
+  líneas de los pedidos de venta sale de los pesos que se arrastran en `/tec_crm/%/reorder`, así que si
+  algún día ese orden cambia, los pedidos ya emitidos cambian el orden de sus líneas en pantalla.~~
+  Decidida por el dueño el 19 de agosto: **el orden se congela al crear las líneas, como los precios.** Sale
+  gratis, porque el orden pasa a ser la sucesión de los números de las líneas y todas las pantallas ordenan
+  por ese número; volver a arrastrar una marca cambia la proforma siguiente y no las emitidas.
 
   **Y un cambio de significado que ya está en marcha**, no de pantalla: «los productos del cliente» son
   ahora «los productos de sus marcas», así que dos clientes que compartan marca ven exactamente la misma
@@ -282,11 +281,11 @@ sección 1.
 
 El resto de esta lista es el "no publicar sin esto" de la segunda fase, la de los tres
 empleados. Casi todo es trabajo técnico y no requiere decisiones del dueño, salvo los tres
-puntos de correo y el de las cuentas.
+puntos de correo.
 
-- **Programar el cron.** **Lo único que queda es pegar una línea en el servidor el día del
-  despliegue**, y está escrita y explicada en la sección 7, en "El cron del sistema". El lado de
-  Drupal ya está como tiene que estar y se volvió a comprobar el 15 de agosto: `automated_cron` no
+- **Programar el cron.** ~~**Lo único que queda es pegar una línea en el servidor el día del
+  despliegue**~~ **Hecho el 20 de agosto de 2026:** `/etc/cron.d/erp-cron` cada 15 minutos como
+  `www-data`. El lado de Drupal ya estaba como tenía que estar (comprobado el 15 de agosto): `automated_cron` no
   está instalado, así que el cron no lo dispara la primera visita de la mañana; la clave de cron
   existe y la ruta `/cron/{key}` responde, que es la vía de repuesto si algún día no se puede usar
   `drush`; y los trece trabajos siguen como se dejaron el 14, con los dos peligrosos apagados. La
@@ -318,11 +317,10 @@ puntos de correo y el de las cuentas.
   de ellas con correo en `drusphere.com` y otra en `actafight.com`—. Neto, una cuenta menos, y el
   guardián del comprobador ya espera cinco.
 
-  **Queda ponerles la contraseña a mano a las tres nuevas**, y con un detalle que hay que recordar:
-  la de `manager` se creó **sin correo**, a propósito. Sin correo no puede recibir el enlace para
-  ponerse contraseña ni ningún aviso del ERP, así que esa cuenta depende de que se la pongan por
-  consola o desde la pantalla de administración. Las de `lukpla` y `coo` sí tienen dirección, en el
-  dominio de la casa.
+  ~~**Queda ponerles la contraseña a mano a las tres nuevas.**~~ **Hecho por el dueño el 28 de
+  agosto de 2026**, desde la pantalla de administración de usuarios en producción. Incluye
+  `manager`, que sigue sin correo y por eso no puede usar el enlace de «olvidé mi contraseña»;
+  `lukpla` y `coo` sí tienen dirección en el dominio de la casa.
 
   Lo que sigue debajo es el estado en que quedó el repaso del 12 de agosto, que es de donde salió
   la lista de lo que había que limpiar:
@@ -406,12 +404,19 @@ materiales. Existe (`tec_inventory_csv_importer`) y por él entraron 470 de los 
 estaba a medio hacer.
 
 **Arreglado el 15 de agosto de 2026.** Pasa de **3 a 20 columnas con destino**, con las **nueve
-obligatorias** cubiertas y ninguna columna pidiéndose dos veces. `Traceable` pasa a `Traceability`,
-el proveedor va a `field_tec_vendor` resolviendo por título, el límite sube de 100 a **1.000 filas
-por pasada**, y la creación automática de unidades y tipos queda **apagada**. Los seis términos
-duplicados, el `Blue ` con espacio incluido, ya no están: se limpiaron en una fase anterior.
+obligatorias** cubiertas y ninguna columna pidiéndose dos veces. El proveedor va a
+`field_tec_vendor` resolviendo por título, el límite sube de 100 a **1.000 filas por pasada**, y
+la creación automática de unidades y tipos queda **apagada**. Los seis términos duplicados, el
+`Blue ` con espacio incluido, ya no están: se limpiaron en una fase anterior.
 
-Se probó importando de verdad, no solo validando: tres materiales creados con los veinte campos
+**El 20 de agosto las cabeceras pasan a ser las etiquetas del formulario de añadir material**
+(`/admin/structure/taxonomy/manage/tec_inventory/add`): `Material name`, `Traceable`,
+`Purchase Cost (No VAT)`, `MOQ (UoP)`, `Reorder Point (ROP) (UoS)`, `Safety Stock Qty (UoS)`,
+`Importer item ID`. Se añade **Active** (`status`). Quedan **21 columnas**. **Stock level (UoS)
+no se importa**: el stock inicial tiene que entrar como transacción, y de momento lo pondrán
+los empleados a mano o se hará en un segundo paso.
+
+Se probó importando de verdad, no solo validando: tres materiales creados con los veintiún campos
 rellenos y el proveedor enganchado al CRM, más una **fila trampa** con la unidad `Metro Inventado`,
 que se rechazó sin crear nada — los recuentos de unidades, tipos y colores salieron idénticos antes
 y después, o sea que la autocreación está apagada de verdad. Todo lo de la prueba quedó borrado.
@@ -1110,11 +1115,9 @@ por una celda que no existe. Un barrido del ERP entero dice que no queda ningún
 
 ## 4. Cuando el ERP nuevo ya funcione
 
-- **Dar de baja el servidor de Nueva York.** Ahí está el ahorro grande: 32 dólares al mes.
-  Durante el solape se pagan los dos, pero el cobro es por horas. Conviene tenerlo encendido
-  unos días por si acaso.
-- **Borrar el snapshot `actafight.com-1755603370919`** (38,68 GB) cuando el ERP nuevo lleve
-  un mes funcionando.
+- ~~**Dar de baja el servidor de Nueva York.**~~ Hecho el 28 de agosto de 2026 (ver sección 1).
+- ~~**Borrar el snapshot `actafight.com-1755603370919`** (38,68 GB)~~ Hecho el mismo día, junto
+  con la destrucción del droplet.
 - **Borrar de Drive la carpeta `PRE-limpieza`** cuando exista la copia nueva y el servidor
   lleve unos días funcionando. Así deja de haber dos juegos de copias y desaparece el último
   sitio donde queda la clave de OpenAI del programador anterior.
@@ -1337,7 +1340,7 @@ máquina entera. Sacar esos volcados fuera del servidor, a Drive, queda para una
 6. Añadir el registro A de `erp.anvfightgear.com` en Namecheap.
 7. Instalar el certificado con Let's Encrypt.
 8. Probarlo unos días con el de Nueva York todavía encendido.
-9. Destruir el de Nueva York.
+9. ~~Destruir el de Nueva York.~~ **Hecho el 28 de agosto de 2026.**
 
 Crear el servidor son veinte minutos. Dejarlo bien, una tarde.
 
@@ -1932,6 +1935,476 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-28 — GitHub al día; Cursor ya ve Git
+
+El aviso de Cursor («Git no está instalado») era eso: no encontraba `git.exe`. Se le apuntó a
+el de Laragon (`C:\laragon\bin\git\bin\git.exe`). La carpeta `.git` no se había perdido; el
+remoto seguía siendo `https://github.com/daviddogu-code/ERP-ANV.git`. Había **cinco commits**
+solo en este PC (coste del BoM, catálogo de marca, foto al pasar el ratón, cantidades
+negativas); se subieron. El resto del trabajo de agosto que aún no estaba confirmado —cola de
+producción, orden del catálogo, numeración de pedidos, corte del Excel Lover, guiones de
+despliegue y este backlog— va en el commit de esta tarde.
+
+**No se han metido** los ~70 ficheros que `git status` marca cambiados y `git diff` deja
+vacíos (finales de línea). Siguen en «Esta semana».
+
+### 2026-08-28 — Contraseñas de los tres empleados en producción
+
+El dueño puso contraseña a mano a `lukpla`, `coo` y `manager` en
+`https://erp.anvfightgear.com`. `manager` sigue sin correo electrónico; la recuperación por email
+no aplica a esa cuenta hasta que se configure SMTP del ERP o se le añada una dirección.
+
+### 2026-08-28 — Cierre del servidor de Nueva York
+
+Destruido en DigitalOcean el droplet **`actafight.com`** (NYC3, 4 GB / 2 vCPU / 80 GB,
+`174.138.49.12`). No tenía IP reservada. El dueño borró también el snapshot
+`actafight.com-1755603370919` (38,68 GB); no queda disco del ERP viejo en DO. Producción sigue
+solo en **`erp-anv-sgp1`** (SGP1, `188.166.255.1`, `https://erp.anvfightgear.com`). Ahorro
+aproximado: unos 45 USD/mes frente al solape de los dos servidores.
+
+### 2026-08-20 — Despliegue total a Singapur y ajustes de la cola de producción
+
+Reemplazo de código, base de datos y ficheros en `erp-anv-sgp1` (Drupal **11.4.5**). Cron del
+sistema en `/etc/cron.d/erp-cron`. Comprobación en servidor **220/223** (fallos menores:
+`tec_sizes`, ficheros, bandera de ECA). En la cola (`/o/queue`): marco blanco a ancho completo,
+cabeceras **PRODUCED** / **REMAINING**, columnas finales y **TOTAL** estrechas. Icono **PO CONTROL**
+redibujado en estilo bloque 100×100 como el resto de la portada.
+
+### 2026-08-20 (madrugada) — El importador de materiales usa las etiquetas del formulario
+
+Las 21 cabeceras del CSV coinciden con los campos de
+`/admin/structure/taxonomy/manage/tec_inventory/add`, incluida **Active**. **Stock level (UoS)
+queda fuera a propósito**: el ECA lo inicializa a 0 y lo recalcula desde mutaciones; meterlo
+en la ficha pelearía con eso. La plantilla está en `docs/plantillas/`. La prueba
+`probar-la-importacion-de-materiales.php -- --de-verdad` importó los 21 campos, rechazó la
+fila trampa y no dejó rastro.
+
+### 2026-08-20 (madrugada) — Una variación creada con + Variation sale en la ficha del producto
+
+El dueño creó *Black* para *RISE THAI KICK PAD 1 STRAP* (`/tec_product/1660`). El mensaje
+de estado lo confirmaba, pero la ficha seguía vacía: solo se veía *+ Variation*. El botón
+llevaba `edit[field_tec_product][widget][0][target_id]=1660`, un patrón que **no rellena**
+el campo al guardar. Sin `field_tec_product`, el ECA *Insert Color entity* no mete el color
+en `field_tec_color_variations` del producto, y Layout Builder no pinta nada.
+
+La cura es la misma que `brand_id` en *+ Product*: EPP lee `product_id` de la URL, y el
+enlace del botón deja de usar `edit[...]`. *+ Size* recibe el mismo tratamiento con
+`color_id`. Los dos colores huérfanos (1685 y 1686) quedaron enganchados al producto 1660.
+
+### 2026-08-19 (noche) — Un producto a medias no desaparece de la marca
+
+El dueño creó *RISE THAI KICK PAD 1 STRAP* desde la ficha de Rise Fight Gear y Save le
+devolvió a `/taxonomy/term/3410`. El producto se había guardado —el mensaje de estado lo
+decía— y no había manera de verlo. El catálogo de una marca es una **lista de tallas**:
+cada fila es una talla, y desde ella se sube al color y al producto. Un producto sin
+color no tiene ninguna fila. Un color sin talla, tampoco. Y el botón *+ Product* de esa
+pantalla llevaba pegado un `destination` a la propia marca, que pisa el redirect de ECK
+—la ficha del producto, donde están *+ Variation* y *+ Size*.
+
+Tres cosas lo tapan, y las tres hacen falta:
+
+1. **El destination se va.** Save deja en la ficha del producto. La cadena queda
+   *+ Product → Save → ficha → + Variation → + Size → la marca, con el producto ya
+   dentro*. El texto de cuando la tabla está vacía deja de decir "No products in this
+   brand yet", que era mentira en cuanto existía un producto sin talla.
+2. **Organize se pone al lado de + Product**, el mismo par que ya tenía la pestaña
+   Products del cliente. La pestaña *Organize products* sigue arriba, pero el bloque de
+   pestañas del tema de la web está limitado al rol administrator: para los demás no
+   existía.
+3. **Lo que la tabla no puede pintar se nombra debajo.** `BrandGaps` lista los
+   productos de la marca que no tienen color, o que tienen un color sin talla, el más
+   nuevo primero, con un enlace a cada uno y el motivo. Un color sin tallas es un hueco
+   aunque el producto tenga otros colores que sí las tienen: los precios de ese color
+   no se pueden escribir en ninguna parte. Organize —que sí lista el producto pelado—
+   gana una columna Sizes y marca en amarillo las mismas filas, con la misma pregunta.
+   La regla vive en `BrandGaps::of()` y en ningún otro sitio.
+
+### 2026-08-19 (noche) — Un pedido, una columna: el tablero de stock se puede leer con la cola llena
+
+El dueño abrió `/stock` con diez pedidos en la cola y dijo lo que había que decir: *«hay muchos
+elementos descuadrados en la pantalla, no entiendo nada»*. Y la tabla **no estaba partida**: 27
+celdas arriba y 27 en cada fila. Por eso no la había cazado nada. Todas las pruebas de esta
+pantalla preguntan «¿carga?», y cargaba.
+
+**Lo que estaba mal era el emparejado.** Cada pedido ocupaba **dos columnas**, la casilla en una y
+la cantidad en otra. La cantidad iba pegada al borde derecho de la suya, así que un número corto
+—un `0`, un `30`— acababa a un dedo de la casilla del pedido **siguiente** y a tres dedos de la
+suya. Se leía `30 ☐` mientras la cabecera decía `☐ 26-001`. Había una raya de 2px separando los
+grupos y no sirvió de nada: **la cercanía gana a cualquier raya**.
+
+Ahora la casilla y la cantidad van en la **misma celda y pegadas**, con el hueco a la izquierda.
+Lo que separa a un pedido del siguiente es aire, y lo que junta a una casilla con su cantidad es
+que se tocan. La cabecera de cada columna lleva el número del pedido en una línea y la casilla que
+marca la columna entera en la siguiente, justo encima de la vertical de las casillas de abajo,
+porque detrás lleva un hueco que mide lo mismo que una cantidad. Esas dos medidas se declaran
+juntas en la hoja de estilos a propósito, y la prueba comprueba que siguen juntas: si alguien
+cambia una y no la otra, la cabecera se descoloca de su columna sin que nada falle.
+
+**Diez pedidos cuestan ahora diez columnas y no veinte**, que es de lo que iba el encargo: el
+tablero tiene que aguantar que la cola crezca, y la cola es lo único de esta pantalla que no
+decide nadie.
+
+Y **cada columna tiene su raya vertical**, por lo mismo que la tiene una hoja de cálculo: con
+veinte columnas en pantalla, una columna cuyo borde no se ve es una columna que no se puede seguir
+hacia abajo.
+
+**La columna `Ordered (UoP)` era un segundo fallo en la misma pantalla**, y el dueño tuvo que
+señalarla dos veces, la segunda con un círculo naranja encima. La celda lleva la cifra y además un
+enlace por cada pedido de compra que espera, y esos enlaces iban **al lado** de la cifra. De ahí
+salían dos cosas: la celda está alineada a la derecha, así que un `45 PO PO PO` dejaba el `45` en
+el extremo izquierdo con la cabecera encima del último enlace; y un material esperando seis pedidos
+hacía que esa sola celda ocupase más que tres columnas.
+
+El primer intento fue recortar la celda con un `max-width`, y **lo empeoró**, que es lo que hay que
+apuntar: la tabla se dimensiona a `max-content`, o sea que una columna se cobra siempre el ancho que
+le pide su contenido, y un `max-width` no recorta nada más que la caja —el texto sigue saliendo por
+encima de las dos columnas de su derecha—. Estaba escribiendo `-561.99` encima de `636.99`. Ahora la
+medida vive en un bloque **dentro** de la celda, que es contra lo que la columna se mide, así que
+los enlaces bajan de línea en vez de salirse; y van **debajo** de la cifra, con lo que la cifra
+vuelve a quedar bajo su propia cabecera.
+
+Hubo que deshacer un truco de Bootstrap dentro de la celda: `.form-check` reserva 1.5em de relleno
+a la izquierda y mete el `input` ahí con un margen negativo y un `float`, que dentro de una fila
+flexible vuelve a abrir justo el hueco que este cambio cierra.
+
+**Y los pedidos de prueba se quedan.** Se propuso vaciar la cola y el dueño lo paró en seco, con
+razón: *«precisamente para esto están, para que falle aquí antes de meter el ERP en el servidor y
+que los empleados no puedan trabajar porque está todo lleno de fallos.»* Son diez columnas de
+mentira que hacen visible aquí un fallo que allí lo habría visto Lukpla.
+
+- No hay receta: el tablero es código, así que con el `git pull` va.
+- Prueba: `scripts/el-tablero-de-stock-se-lee-con-muchos-pedidos.php`, que lee el tablero **de
+  verdad**, sin montar nada, con lo que haya en la cola. No mira píxeles, que no se pueden mirar
+  desde un guion: mira la regla —una columna por pedido, una casilla y una cantidad por celda, las
+  dos del mismo pedido y la casilla delante— y se niega a aceptar las clases viejas, de modo que
+  volver a separar la pareja falla en voz alta. Y se niega también a un `max-width` en la celda de
+  `Ordered`, que es el arreglo que parecía bueno y no lo era. Dos de sus medidas las lee de la hoja
+  de estilos y no del HTML, porque son casualidades que sostienen la pantalla: el hueco de la
+  cabecera tiene que seguir midiendo lo que una cantidad, y el ancho del bloque de enlaces tiene que
+  seguir estando en el bloque.
+- **Lección para la próxima tabla ancha:** en una tabla dimensionada a `max-content`, la manera de
+  limitar una columna es poner la medida en un bloque de dentro. Un `max-width` en la celda no
+  limita, esconde.
+- Está contado en el README de `tec_production`, sección *One column per order on the stock board*.
+
+### 2026-08-19 (noche) — La marca manda en el orden de sus productos, y la proforma nace ordenada en cuatro niveles
+
+Esto es lo que se ganaba de verdad con quitarle el cliente al producto, y lo que estaba apuntado
+desde el 19 de agosto por la mañana: **hoy las proformas no tenían ningún orden**. Salían como
+las devolviera MySQL, o sea por número interno de talla, que no significa nada para nadie.
+
+El dueño eligió las cuatro decisiones, una por una: se arrastra **como en *Organize products***,
+la pantalla vieja **se retira**, se empieza **por orden alfabético** y ya arrastra él, y el orden
+**se congela** al crear las líneas, como los precios.
+
+**Lo primero que hubo que corregir era una suposición mía.** Escribí que los colores no tenían
+ningún orden, y el dueño mandó una foto de la ficha de un producto con los tiradores de arrastrar
+marcados en rojo. Tenía razón: los colores se arrastran en el formulario del producto desde que
+existe, y las tallas llevan un peso deliberado del vocabulario desde
+`scripts/poner-las-tallas-en-su-orden.php`. Así que de los cuatro niveles **tres ya existían y
+nadie los usaba**, y lo que faltaba era justo el del medio:
+
+| Nivel | De dónde sale |
+| :-- | :-- |
+| Marca | el orden de la lista de marcas de la ficha del cliente |
+| Producto | `field_tec_catalogue_position`, arrastrado en la ficha de la marca |
+| Color | el orden de la lista de colores de la ficha del producto |
+| Talla | el peso del término en el vocabulario `tec_sizes` |
+
+**Por qué el orden de los productos no podía seguir donde estaba.** Era del *cliente*: se
+arrastraba en `/tec_crm/{id}/reorder` y lo guardaba *draggableviews*, que pega a su clave la
+vista, la pantalla **y los argumentos**. Ocho clientes eran ocho ordenes del mismo catálogo, y
+ninguno le servía a la proforma: la vista que crea las líneas corre para *un* cliente y no puede
+leer el orden de otro, y el catálogo de una marca no tiene ningún cliente a quien preguntar. De
+esos mismos pesos tiraban las pantallas de líneas, enganchando el número de una *línea* contra el
+de un *producto* —el fallo que se arregló esta misma mañana—. Un orden que solo servía en la
+pantalla donde se arrastraba.
+
+Ahora el número vive en el producto: `field_tec_catalogue_position`, escondido en el formulario y
+en la ficha porque no se teclea, se arrastra. Un producto nuevo recibe **el último sitio de su
+marca**, que un producto sin sitio se colaría por delante de todo lo que alguien ordenó a
+propósito; y un duplicado recibe uno nuevo, porque llega con el de su original y dos productos no
+pueden reclamar la misma fila.
+
+**La pantalla es una pestaña de la marca**, *Organize products*, en
+`/taxonomy/term/{tid}/organize`. Arrastrar del núcleo, la foto del primer color, cuántos colores
+lleva cada producto, y los números de fila se renumeran solos mientras se arrastra. Quien puede
+entrar es quien puede **editar la marca**: cambiar lo que ven todos los clientes es el mismo
+trabajo que editar la marca, y de paso eso es lo que mantiene la pestaña fuera de los otros
+vocabularios, porque Drupal esconde una pestaña cuya ruta no te deja abrir. En la pestaña
+*Products* de la ficha de un cliente, que agrupa por marca, cada cabecera de marca lleva un botón
+**Organize** que vuelve al cliente al guardar: el orden es de la marca, pero quien quiere
+cambiarlo suele estar mirando un cliente.
+
+**El número se escribe directamente en la tabla de su campo**, y es el único sitio del módulo que
+se salta la API de entidades. Guardar un producto despierta *«TEC Product: Set references on
+sub-entities»*, que recorre y vuelve a guardar cada color y cada talla suyos: entre 0,2 y 1,1
+segundos por producto y dos líneas de registro cada vez, medido. Arrastrar una marca de veinte
+productos serían veinte segundos y cuarenta líneas de registro para un número que ningún
+automatismo lee. Escrito a pelo son 0,005 segundos, más invalidar las etiquetas de caché a mano,
+que es la parte que el guardado sí hacía. Vale aquí y en ningún otro sitio: de este número no se
+calcula nada y ninguna ECA lo escucha.
+
+**La proforma se ordena en PHP, después de la consulta**, y esto es una decisión y no un atajo.
+Dos de los cuatro niveles son *la posición de un valor dentro de una lista*, y para leerla Views
+tendría que enganchar la tabla del campo por segunda vez; ese enganche no va atado a la fila, así
+que cada fila vuelve una vez por cada valor de la lista —medido en la pestaña del cliente: tres
+productos, seis filas—. Se ordena en `hook_views_post_execute()` y no en `pre_render()` porque
+**la pantalla que más importa no se dibuja nunca**: el botón *+ Order* le da la vista a ECA, que
+la ejecuta y va creando una línea por fila. Ordenar al volver la consulta es el último punto que
+los dos caminos comparten.
+
+**Y en cuanto las líneas existen, el orden se congela.** Es lo que pidió el dueño en una frase, y
+sale gratis: el orden pasa a ser la sucesión de los números de las líneas, y las siete pantallas
+que listan líneas ordenan por ese número. Volver a arrastrar una marca el mes que viene cambia la
+proforma siguiente, no las ya emitidas. La misma regla que los precios.
+
+**La trampa que saltó por el camino, y que merece quedar escrita.** Al poner el orden por número
+de línea en la pantalla `default`, las que **agregan** lo heredaron, y Views mete en el `GROUP BY`
+todo aquello por lo que ordena: el bloque de totales pasó a devolver *una fila por línea*, cada
+una con su propio total. Se arregló poniendo el orden en cada pantalla que lista líneas y
+dejando `default` y las seis que suman **sin ninguno**, explícitamente. El guardián vigila las dos
+mitades, porque son contrarias y quien arregle una puede romper la otra sin enterarse.
+
+**Lo que se ha retirado:** la pantalla `/tec_crm/{id}/reorder` (`tec_products:page_2`), los
+botones que llevaban a ella y **todas** las filas de pesos de `draggableviews`. Ninguna vista
+menciona ya ese módulo.
+
+En local esto se nota poco, y conviene decirlo: aquí solo hay **dos productos con marca**, así que
+sembrar el orden alfabético fue un trámite. Donde se va a ver es en el servidor, con el catálogo
+de verdad, y por eso las tres recetas tienen que pasarse allí al desplegar.
+
+Recetas: `scripts/la-marca-ordena-sus-productos.php` (el campo y la siembra, con orden natural
+para que *Glove 2* vaya antes de *Glove 10*), `scripts/las-pantallas-siguen-el-orden-de-la-marca.php`
+(las vistas, los botones y la retirada de la pantalla vieja) y `scripts/la-proforma-nace-ordenada.php`
+(el orden de las líneas). Las tres se pueden pasar dos veces.
+
+Prueba `scripts/la-marca-manda-en-el-orden.php`, **30 comprobaciones**, montada con una regla:
+los nombres, los colores y las tallas están elegidos para que el orden correcto y el alfabético
+**no coincidan en ninguno de los cuatro niveles**, porque un orden que resulta ser el alfabético
+no prueba nada aquí —el alfabético es lo que hacía el ERP antes—. Arrastra por el formulario de
+verdad, pulsa la bandera de verdad, y luego vuelve a arrastrar la marca para comprobar que el
+pedido emitido no se mueve y el siguiente sí. Guardián **210 de 210**, con la sección 25 nueva.
+
+### 2026-08-19 (última hora) — El pie del pedido se mete dentro de la tabla, que es el único sitio donde una cifra cae bajo su columna
+
+El dueño miró la suma de piezas que se le había puesto esta misma mañana y dijo lo que faltaba por decir:
+**«Qty Total tiene que ir debajo de qty»**. Tenía razón y no era una manía: una cifra suelta al borde
+derecho obliga a buscar de qué columna es, y la respuesta correcta es que se vea sin buscarla.
+
+No se podía desde donde estaba. Aquel pie era `attachment_1`, otra pantalla de la misma vista enganchada
+detrás de la tabla, es decir **una segunda tabla**. Dos tablas no se ponen de acuerdo en el ancho de sus
+columnas: el navegador mide cada una por lo que lleva dentro, así que una cifra de la de abajo cae bajo
+una columna de la de arriba **por casualidad**, y deja de caer en cuanto un nombre de producto es más
+largo. Con CSS no se arregla, y la que se intente hoy se rompe el día que un cliente tenga un producto
+con el nombre largo. El único sitio donde una cifra comparte anchos con una columna es **dentro de la
+misma tabla**.
+
+Así que el pie es ahora **una fila más de la tabla**, escrita en el servidor:
+`modules/custom/tec_production/src/OrderFoot.php`, colgada de
+`hook_preprocess_views_view_table()`. Las piezas debajo de Qty, el dinero debajo de Item total, y el
+`Total` entre las dos, que es exactamente la forma que el borrador ya dibujaba en el navegador. Las dos
+pantallas del ERP que suman piezas se parecen por fin.
+
+**En el servidor y no en el navegador**, porque una de las dos pantallas es la Pro Forma que se imprime y
+se le da a un cliente, y un papel no puede depender de que un guion haya corrido. El borrador es el caso
+contrario y por eso sigue sumando en el navegador: allí las cifras se mueven a cada tecla.
+
+**La columna se busca por su nombre y jamás contando**, que es la regla que el guion del borrador ya
+seguía: Views bautiza cada celda con el nombre del campo que la llena. La cantidad es la sexta columna de
+ocho en la ficha del pedido y la tercera de ocho en la Pro Forma, y las dos se mueven el día que alguien
+añada una columna. La prueba lo comprueba como hay que comprobarlo: dibuja las dos pantallas y calcula en
+qué columna **empieza** cada celda del pie sumando los `colspan` de las anteriores. Un número una columna
+más allá no da ningún error; solo se lee mal.
+
+**Y con el `attachment_1` se fue el último campo agregado de esa vista**, y con él la trampa que traía.
+Cuando Views agrega un campo lo dibuja otro manejador que lee `separator` como separador de millares, y
+por eso el total decía `฿44, 090.00`. Esta mañana se arregló poniendo comas en los cuatro; esta tarde dos
+de ellos han dejado de existir y su cifra la escribe `number_format()`, igual que la del pie de compras y
+la del borrador. Los tres pies del ERP escriben ya un millar de la misma manera.
+
+**Lo que no se toca.** Compras conserva su pie de tres líneas —Subtotal, VAT, Total—, que también es una
+tablita por debajo: allí no hay ninguna cifra que deba caer bajo una columna, son tres importes y el
+importe va al final en las dos tablas. Queda apuntado que el truco de hoy sirve para ellos el día que
+haga falta.
+
+Un detalle que enseñó la prueba y que no es un fallo: **un pedido en el que ninguna línea lleva cantidad
+no tiene pie**, porque la pantalla filtra las líneas a cero y una tabla sin filas no tiene nada que
+sumar.
+
+Receta `scripts/el-pie-del-pedido-se-mete-en-la-tabla.php` —solo retira la pantalla que sobraba; la fila
+es código— y prueba `scripts/se-cuentan-las-piezas-del-pedido.php`, reescrita para mirar columnas en vez
+de leer texto. Guardián **201 de 201**.
+
+### 2026-08-19 (última hora) — El nombre que Óscar le puso al pedido de un clic se va del ERP, y cuatro piezas se quedan a medio camino
+
+El dueño pinchó «+ Orders» en la ficha de un cliente, miró a dónde llevaba y dijo lo que había que decir:
+
+```
+/flag/flag/tec_draft_order_excel_lover/121?destination=/customer/121
+```
+
+*«No me gusta nada ese nombre de excel lovers, lo puso Óscar sin yo saberlo y me parece que no es
+profesional.»* En pantalla no se veía —el botón dice «+ Order» y la bandera se llama «TEC Order: Draft
+Sales order»—, pero **una dirección se ve al pasar el ratón, se copia en un correo y se pega en un
+mensaje**, y ahí un nombre así deja de ser una broma interna. Preguntado hasta dónde llegar, el dueño
+eligió *todo*.
+
+El nombre nuevo ya estaba escrito en el hermano: la bandera de compras es `tec_order_draft_po`, así que
+la de ventas es **`tec_order_draft_sales`**. Lo demás sigue la misma regla, decir lo que la cosa hace.
+
+| Antes | Ahora |
+| :-- | :-- |
+| `tec_draft_order_excel_lover` | `tec_order_draft_sales` |
+| `tec_order_checkout_excel` | `tec_order_checkout` |
+| `excel_lover_button` | `sales_order_button` |
+| `tec_excel_lover_orders` | `tec_order_draft_screens` |
+| `tec_order_eca_create_draft_excel_lover` | `tec_order_eca_create_draft_sales` |
+| `tec_order_eca_create_draft_po_excel_lover` | `tec_order_eca_create_draft_purchase` |
+| `tec_excel_lover_form` | `sales_order_draft_form_unused` |
+
+Y con ellos dieciocho etiquetas de las que lee una persona, más el PHP, el README de `tec_production`,
+`docs/customer-portal.md` y una prueba que hasta hoy se llamaba `el-excel-lover-mira-las-marcas.php`.
+
+**En Drupal el nombre de una entidad de configuración no se cambia**: se crea otra igual con el nombre
+nuevo y se borra la vieja. Entre esas dos cosas hay que mover todo lo que la citaba, que aquí eran **110
+sitios**: los permisos de cuatro papeles, las acciones de las banderas, el campo de la bandera en seis
+fichas de contacto, la pieza de Layout Builder de una séptima, dos vistas de pedidos, tres procesos de
+ECA, ocho ajustes de campo y una regla de CSS. El orden es crear, mover y borrar, y es el orden y no
+otro: al revés hay un instante en que cuatro papeles tienen permiso sobre una bandera que no existe.
+
+**La mina de ECA, otra vez.** Un proceso vive en dos ficheros —`eca.eca.X` es lo que se ejecuta y
+`eca.model.X` es el dibujo que ve el editor— y **el editor regenera el primero desde el segundo cada vez
+que alguien pulsa guardar**. Cambiar solo el ejecutable habría dejado el nombre viejo escondido en el
+dibujo, esperando a que alguien abriera el editor para devolverlo. Así que el nombre entra en los dos, y
+después se hace la pregunta que importa: se le entrega el dibujo al modeller, que regenera el
+ejecutable, y se comprueba que **no cambia ni un valor**. Con red: si cambiara alguno, el guion devuelve
+el ejecutable a como estaba y lo cuenta, en vez de dejarlo regenerado a medias. Los tres pasaron.
+
+Esa comprobación va **al final y no al principio**, y eso se aprendió a la primera: el modeller valida
+cada valor contra lo que existe, y una bandera o una vista que todavía no se ha creado no es un valor
+permitido. Preguntarle antes de crear las cosas nuevas es que diga que no a todo.
+
+**Y las cuatro piezas que se quedaron a medias**, que es lo que ha enseñado algo. Las dos acciones de
+cada bandera —marcar y desmarcar— no las escribe nadie: las crea el módulo Flag cuando nace la bandera y
+las borra cuando la bandera se va, **buscándolas por su identificador**. Aquí no las encontró, porque el
+nombre nuevo ya había entrado *dentro* de ellas con todo lo demás: por dentro decían
+`flag_action.tec_order_draft_sales_flag` mientras el objeto seguía llamándose `...excel_lover_flag`.
+Cuatro objetos que Drupal busca por el nombre y en los que encuentra a un desconocido, conviviendo con
+los cuatro buenos que el módulo sí creó al nacer las banderas nuevas.
+
+Eran invisibles para todo lo que había montado. **Cargar una acción por su identificador no llega a
+ellas**: el almacén de configuración indexa lo que lee por el `id` que hay *dentro* del fichero, no por
+el nombre del fichero, así que pedir `flag_action.tec_draft_order_excel_lover_flag` devuelve nada aunque
+el fichero esté ahí. El guion preguntaba así y decía que estaban borradas. El guardián preguntaba así y
+daba 200 de 200. Aparecieron en la lista del `drush cex`: cuatro **Update** con nombre viejo, al lado de
+los cuatro **Create** con nombre nuevo.
+
+La regla que ahora las caza vale para toda esa familia: **un objeto cuyo nombre acaba en una cosa y cuyo
+`id` dice otra es un resto**, y se borra. Si por dentro dijera lo mismo que su nombre no sería un resto
+sino algo sin mover, y eso se cuenta en vez de borrarlo, que es la diferencia entre limpiar y romper. Y
+los dos barridos, el del guion y el del guardián, leen ya **el nombre de cada objeto** y no solo lo que
+lleva dentro. El barrido que solo mira dentro es exactamente el que dejó pasar esto.
+
+**Lo que no se toca, a propósito.** Este diario, que cuenta lo que pasó el día que pasó y con los
+nombres de ese día: reescribirlo sería mentir sobre el pasado. Los guiones de limpieza de una vez, que
+son la lista de la compra de una limpieza ya hecha. Y las direcciones `/o/draft/N` y `/po/draft/N`, que
+nunca llevaron el nombre y son las que la gente tiene en el historial del navegador. Sí se ha tocado una
+línea de las secciones de arriba, la del paso 3 del plan de marcas, porque esas secciones señalan cosas
+que existen hoy y ahora señala la vista por lo que hace.
+
+La receta es `scripts/se-va-el-excel-lover.php` y se puede lanzar dos veces: la segunda no encuentra
+nada que cambiar. Guardián **200 de 200**, humo de 60 páginas, y `drush cex` que ya solo tiene nombres
+que se pueden enseñar.
+
+### 2026-08-19 (última hora) — El pedido dice cuántas piezas lleva, guardado y en borrador, y la casilla del precio se pone en la línea de su fila
+
+Tres cosas pequeñas que el dueño pidió seguidas, y una de ellas destapó una cifra mal escrita que
+llevaba ahí desde siempre.
+
+**El pedido guardado suma sus cantidades**, en la misma línea que el Grand total. Es un campo agregado
+—`field_tec_quantity` con `group_type: sum`— en el `attachment_1` de la vista de líneas, que es el pie
+que ya dibujaba los importes. Y ese pie es **el mismo que alimenta la impresión de la Pro Forma**, así
+que la cifra sale también en el papel; se preguntó antes de hacerlo y el dueño dijo que sí. Va **solo en
+ventas**: el pie de compras tiene sus tres líneas —Subtotal, VAT, Total—, su bloque no agrega, y el
+dueño fue claro, *«en compras no hay suma de quantities»*.
+
+**Y de paso, los millares.** Cuando Views agrega un campo lo dibuja *otro* manejador, y ese lee
+`separator` como **separador de millares**. Estaba en coma y espacio, así que el pie de un pedido de
+cuarenta y cuatro mil bahts decía `฿44, 090.00`, con un hueco en medio del número. Los cuatro campos
+agregados de esa vista llevan ya coma y nada más. Nadie lo había mirado porque es la línea del total, la
+que se lee de reojo.
+
+**El borrador cuenta las piezas mientras se teclean.** Ese pie no lo puede dibujar el servidor, porque
+las cifras se mueven a cada tecla, así que lo monta el navegador. Ahora suma las cantidades y pone el
+número **debajo de su columna**, y para eso busca la columna **por su nombre y no por su número**: la
+fila del pie se montaba a ciegas, con una cuenta fija de celdas vacías, y añadir o mover una columna
+habría deslizado el total bajo el título de al lado. Ventas tiene nueve columnas con la cantidad en una
+de ellas; compras tiene siete y ninguna de cantidad, así que allí el pie sigue con sus tres líneas y no
+cuenta nada.
+
+**Y la casilla del precio, en la línea de su fila.** En el catálogo de una marca todas las celdas llevan
+una línea de texto menos esa, que lleva un formulario, y Drupal envuelve cada casilla en un `.form-item`
+con margen arriba y abajo —sitio para una etiqueta que aquí está escondida—. El margen de arriba era lo
+que empujaba la casilla por debajo de la línea de su fila, y el de abajo lo que hacía la fila más alta
+que nada de lo que tiene dentro. Dos reglas: los márgenes a cero y las celdas centradas. **Hacen falta
+las dos**; centrar a secas dejaría la casilla colgando medio margen por encima.
+
+### 2026-08-19 (última hora) — Un pedido se gana su número la primera vez que alguien le da a guardar
+
+Quedó escrito ayer que si lo que molestaban eran los huecos en la numeración, el arreglo no era devolver
+números sino no gastarlos hasta que el pedido fuera de verdad. El dueño puso el momento exacto, y no era
+el que se había supuesto: **«el pedido se gana el número cuando se le da por primera vez a save»**.
+
+Hasta hoy se numeraba al nacer, y nacer es un clic en «+ Order» en la ficha de un contacto, que monta
+una lista de la compra: una línea vacía por cada talla que ese cliente puede comprar. **Muchos de esos
+clics son una mirada, no un pedido**, y los que nadie rellenó se pueden contar: de los treinta y seis
+pedidos que había en el sitio el día del cambio, **dieciséis no tenían ni una cantidad escrita**, y cada
+uno se había quedado con un número de la serie de su contacto para siempre, porque un número repartido
+no vuelve. El contador de KJ iba por el 24 con diez de esos números vacíos.
+
+**Guardar, y no un botón de confirmar.** Hay un Checkout en cada pedido y un Accounting verified, y
+nadie ha pulsado nunca ninguno de los dos: los veintinueve pedidos de compra estaban sin estado y los
+siete de venta seguían en Open, así que una regla que esperase a eso no habría numerado nada. La otra
+candidata era la primera cantidad escrita, y es demasiado lista: bautiza el pedido a espaldas del dueño
+mientras teclea, y en cambio se niega a bautizar el que guarda vacío a propósito para seguir mañana.
+**Pulsar Guardar es el acto que dice «esto se queda»**, que es justo lo que significa un número.
+
+Por eso quién llama es todo el diseño, y **no es un gancho de guardado**. El código guarda pedidos todo
+el día por sus motivos —una ECA que pega el contacto, un estado que cambia, una línea que se cuenta— y
+nada de eso es una persona quedándose con un pedido. Cuelga de los botones de Guardar que sí pueden
+significarlo: las pantallas de borrador `/o/draft/N` y `/po/draft/N`, reconocidas **por su dirección**,
+porque «o/draft» dice qué pantalla es esta y «page_2» no; el formulario del propio pedido, que es la
+ruta rara al mismo acto y del que se deja fuera el de borrar, porque borrar no es quedarse; y el botón
+de la lista de la compra, que crea los pedidos y se los queda de una vez.
+
+Los dos primeros se enganchan distinto porque **Drupal saca los manejadores de dos sitios**: el
+formulario de una vista deja el botón desnudo y corre la lista del formulario, y el Guardar de un
+formulario de entidad trae la suya —`::submitForm` y `::save`—, y la del botón gana a la del formulario.
+Y hay un detalle que costó encontrar: apuntarse desde el `hook_form_alter` pone el manejador **por
+delante** del que guarda las líneas, porque `views_entity_form_field` añade el suyo desde un `#process`
+y el procesado ocurre después de que todos los módulos hayan hablado. `#after_build` es el primer sitio
+desde el que el final de la lista es de verdad el final.
+
+Que vaya el último importa por dos motivos. Un número gastado en un guardado que luego se cae sería un
+hueco en la serie de un cliente, o sea lo mismo que se está evitando. Y el orden dice qué significa
+Guardar: **primero se queda lo que el dueño escribió, y el pedido se hace real por eso**.
+
+Mientras tanto el pedido necesita llamarse de alguna manera, así que el gancho de guardado sigue ahí,
+pero dando **nombre y no número**: «Draft order for Kajenta», copiando la redacción de las dos ECA hasta
+en la mayúscula rara de «Draft Purchase order», para que la lista de pedidos no enseñe dos maneras de
+escribir lo mismo. Sin eso, un pedido creado por código con el título vacío se quedaría en la lista como
+un renglón en blanco que no se puede ni pinchar. Y la forma de un número —código, año, tres cifras— vive
+en un solo sitio, `OrderNumber::isNumber()`, para no escribirla dos veces: un título tecleado a mano que
+acabe en año y tres cifras se lee como numerado, y ese es el lado seguro del error, porque lo peor que
+hace es dejar un nombre en paz.
+
+**El guardián ha tenido que aprender la regla nueva.** Un pedido sin número ya no es un fallo: es un
+borrador que nadie ha guardado todavía, y se cuenta como cifra, no como alarma. Lo que sí es un fallo es
+un pedido **sin número y con cantidades escritas**, porque las cantidades solo llegan a la base de datos
+cuando alguien pulsa Guardar en la pantalla del borrador, que es justo el botón que tiene que numerar.
+Si hay cantidades y no hay número, el gancho no ha corrido.
 
 ### 2026-08-19 (cierre) — Tres cosas que no daban error: una cantidad en negativo, un papel que no se parecía a su pantalla y una foto que ya no crecía
 
@@ -3717,2574 +4190,3 @@ sigue siendo válido, que no hay ninguna línea ni forma suelta, y que la pantal
 - Ningún pedido sin el código de su contacto en el nombre. **Esa es la que caza el orden de los pasos**:
   un pedido cuyo contacto tiene código pero cuyo nombre no lo lleva solo puede salir de que el contacto
   se pegara después del primer guardado.
-- El código corto en las dos clases de ficha, y el de proveedor sin resucitar.
-- Ninguna de las dos ECA pone el título **del pedido** (siguen poniendo el de sus líneas, que es otra
-  cosa y tiene que quedarse; la primera versión de la comprobación no distinguía y dio un falso rojo).
-- **El dibujo dice lo mismo que el ejecutable, en los treinta y dos procesos**, comparando los pasos que
-  conoce cada fichero. Es la comprobación general de la mina, y es la que habría cazado esto sin que
-  hiciera falta ir a mirar. Los treinta y dos están de acuerdo.
-- La lista de la compra no se ha vuelto a hacer su propio contador.
-
-#### Daño colateral que apareció por el camino, y estaba de verdad roto
-
-El guardián contaba **tres redirecciones donde debía haber dos**. Tirando del hilo: la ficha 33 había
-perdido su dirección bonita y se llamaba `/33` en lugar de `/customer/33`.
-
-El patrón de direcciones era `/[tec_crm:field_tec_contact_type:0]/[tec_crm:id]`. Ese tipo de token **no
-lee el campo, lo renderiza**, usando la vista `default` de la ficha — y esa vista tiene **Layout Builder
-encendido**. Con Layout Builder puesto, los campos listados en la vista no son lo que se pinta; se pintan
-las secciones. Así que el token salía vacío y un patrón de «/tipo/id» se quedaba en «/id».
-
-Nadie se queja cuando pasa: la dirección sigue siendo única porque lleva el id, el sitio funciona, y no
-se nota hasta que se guarda una ficha y su dirección vieja se convierte en una redirección. Arreglado
-leyendo el nombre del término directamente (`:0:entity:name`), regeneradas las direcciones de las dos
-fichas y borrada la redirección que dejó la dirección rota. **El patrón de los materiales usa el mismo
-tipo de token**; hoy funciona porque los términos no usan Layout Builder, pero es la misma trampa.
-
-#### También corregido
-
-La comprobación «ningún pedido abierto sin nada pendiente» daba rojo por `KJ 26-002` y `KJ 26-003`, que
-no tienen cantidades. Y no está mal: la bandera de la ficha del proveedor crea justo eso, un pedido con
-una línea por material y las cantidades en blanco para que alguien las escriba. Meter esos en el mismo
-saco que un pedido ya servido dejaba el guardián en rojo para siempre por algo correcto. Ahora solo
-salta si el pedido **tiene cantidades** y no queda nada pendiente, y los de a medio escribir se informan
-aparte.
-
-#### Cómo quedó
-
-- Guardián: **74 de 74**.
-- `scripts/se-numeran-los-pedidos.php`: todo bien, incluido el caso A/B/A palabra por palabra y los dos
-  caminos que crean pedidos.
-- `scripts/funciona-la-recepcion.php`: todo bien. Hubo que tocarla: ya no puede elegir cómo se llama el
-  pedido que crea, así que lee el nombre que le ha tocado.
-- `scripts/cargan-las-paginas.php`: 58 páginas, ninguna con problemas.
-- Copia previa: `backups/actatec_antes_de_la_numeracion_2026-08-16.sql.gz`.
-
-#### Queda dicho
-
-`views.view.tec_order_eca_count_orders` es configuración muerta: no la usa nada. Se deja porque borrarla
-dejaría una referencia colgando en la lista de ajustes de un viewfield, pero **no debe volver a
-conectarse**: sus displays `so_count` y `po_count` llevan dentro el filtro de solo publicados que causó
-los números repetidos.
-
-### 2026-08-16 (tarde) — «¿Dónde están los estados?»: en ningún sitio, y por eso no se veían
-
-El dueño preguntó por los estados de los pedidos de compra y dijo que no era capaz de verlos. No era
-cosa de no encontrarlos: **no estaban**.
-
-`/supplier-orders` tenía una columna titulada **Order status** vacía en todas las filas, y no por
-falta de datos. Preguntaba por `field_tec_order_status`, que es el estado de los pedidos de **venta**.
-Un pedido de compra no tiene ese campo, y la pantalla está filtrada a pedidos de compra, así que la
-columna salía vacía el cien por cien de las veces desde el día que se hizo. El mismo campo inexistente
-alimentaba el condicional de los botones de la fila, así que **el lápiz de editar no aparecía nunca**,
-y el enlace que había detrás apuntaba a `/o/draft`, el borrador de un pedido de venta, que tampoco era
-el sitio. Tres síntomas y una sola causa: ese display se copió de una lista de pedidos de venta y
-nadie terminó de cambiarle las preguntas. Estaba anotado como deuda técnica la noche anterior con un
-«probablemente no sale nunca»; era un «no sale nunca», y ya está cobrado.
-
-#### Lo que se ha hecho
-
-- **La columna lee `field_tec_po_status`**, y hay una segunda copia escondida, `field_tec_po_status_1`,
-  para el condicional. Hace falta porque views_conditional compara con lo que el campo *pinta*, y el
-  visible pinta `<div class="Open">Open</div>` y no `Open`. Es el mismo truco que ya usaba el bloque
-  del CRM del proveedor, que era el único sitio donde esto funcionaba bien.
-- **Vuelve el lápiz** en los pedidos abiertos, apuntando a `/po/draft/{id}` con la propia lista como
-  destino, y de paso llega el de imprimir, que en esta pantalla no había. Cerrado conserva imprimir y
-  pierde editar, igual que en la ficha y en el bloque del proveedor.
-- **Columna nueva, `Delivery`**, en `/supplier-orders` y en la pestaña de pedidos de la ficha del
-  proveedor: *Nothing received*, *Partially received*, *Fully received*, *Cancelled*. Existe porque
-  `Open` a secas no le dice a quien persigue a los proveedores a quién perseguir: un pedido del que no
-  ha llegado nada y otro del que ya está la mitad en la estantería se leían igual.
-- **No hay campo detrás ni columna en la base.** Es un manejador de vista propio,
-  `ReceiptState.php`, que llama a `Purchasing::receiptState()` por fila: la misma función que usan el
-  tablero y el guardián, para que las pantallas no puedan contradecirse. No añade nada a la consulta y
-  no se puede ordenar por ella. Sus etiquetas de caché incluyen las **líneas** y no solo el pedido,
-  porque guardar una línea invalida la línea, y sin eso la palabra se quedaría vieja en el caché.
-- Solo se ha tocado el display por defecto; los tres bloques tienen su propia lista de campos. El
-  estilo sí es compartido, así que ahí **solo se ha añadido**: quitar la entrada del estado de ventas
-  le habría estropeado la alineación al bloque de pedidos de venta.
-
-#### Y el segundo hallazgo del día, que era más gordo
-
-Preguntó también si debajo de **Nothing more expected** tenía que haber una casilla. Sí, y estaba: en
-el HTML, con su `<input type="checkbox">` y su etiqueta. Lo que no estaba era **visible**.
-
-Bootstrap 5 no dibuja la casilla del navegador, dibuja la suya: `.form-check-input` pone
-`appearance: none` y la pinta con `--bs-border-color` sobre un relleno de `--bs-body-bg`. DXPR apunta
-`--bs-border-color` a su `--dxt-color-graylighter`, que en la paleta de este sitio anda por `#ededed`,
-y `--bs-body-bg` al fondo de la página, que es blanco. **Todas las casillas del sitio eran un cuadrado
-blanco de trece píxeles con un borde que no se ve**, incluidas las del tablero de stock con las que se
-decide qué se compra. No era un fallo del formulario de recibir; ese solo fue donde se notó, porque
-allí la columna entera parecía vacía.
-
-Arreglado en una hoja de estilo de todo el sitio, `css/dxpr-checkbox-fix.css`, colgada desde
-`tec_production_page_attachments()` al lado del arreglo de la cabecera. Solo toca la casilla **sin
-marcar**: la marcada Bootstrap la rellena con el color de acento y le dibuja un visto blanco, y eso
-siempre se leyó bien.
-
-Y es la segunda vez en dos días que muerde la misma distinción: **estar en el marcado no es estar en
-la pantalla**. La primera fue la pestaña que nadie podía leer. Así que la prueba de punta a punta
-ahora exige, además de que la casilla exista, que la hoja que la hace visible esté en la página.
-
-Comprobado: la prueba de punta a punta pasa entera con doce comprobaciones nuevas sobre la lista, el
-guardián 61 de 61 con cinco centinelas nuevos, y la prueba de humo sin páginas rotas.
-
-
-### 2026-08-16 (mañana) — «¿Dónde sale Receive?»: la función estaba, la puerta no se veía
-
-El dueño abrió el pedido `26-1` para probar la recepción recién construida y preguntó lo que no
-debería haber tenido que preguntar: **«¿dónde sale Receive?»**. Y tenía razón: en esa pantalla no
-salía.
-
-La pestaña existía y funcionaba. Estaba declarada como tarea local sobre la ficha del pedido, junto a
-las de View, Edit y Delete que trae ECK, y el bloque que las imprime estaba activo. Lo que pasa es que
-**DXPR saca la barra de pestañas del flujo de la página**: posición absoluta, centrada, y subida su
-propia altura entera con un `translate(-50%,-100%)` que está en `css/components/tabs.css`. La deja
-flotando por encima del borde superior del contenido, que en este sitio es justo donde está la
-cabecera pegajosa. En la captura del dueño se ve: ese rectángulo pálido que tapa CUSTOMERS y
-SUPPLIERS **es** la barra de pestañas, ilegible.
-
-Y encima hay un segundo motivo, peor que el primero: el bloque tiene una **condición de visibilidad
-por rol, solo `administrator`**. Lukpla, coo y manager no habrían visto esa pestaña nunca, ni la de
-recibir ni las de ECK, aunque tuviesen permiso para recibir. Es decir, la pestaña no servía de puerta
-precisamente para la gente que firma albaranes.
-
-#### El fallo de fondo era la comprobación, no el tema
-
-La prueba de punta a punta daba esto por bueno. Buscaba el texto `/tec_order/776/receive` en el HTML
-de la ficha, lo encontraba —está ahí, dentro de la pestaña invisible— y pintaba BIEN. **Presencia en
-el marcado no es lo mismo que visible para una persona**, y esa distinción es justo la que tenía que
-haber cazado. Una función a la que no hay manera de llegar pasó el examen.
-
-Ahora la prueba cuenta **botones**, no apariciones de la dirección: busca etiquetas de enlace dentro
-de `div.btn-default`, que es lo único que alguien puede pulsar.
-
-Ese cambio destapó una trampa de las pruebas que conviene tener anotada. Al exigir que el pedido
-cerrado **no** ofrezca recibir, la comprobación falló, y no por un fallo del código: en una petición
-de verdad la pestaña desaparece sola, porque el acceso a la ruta la deniega. Lo que ocurre es que
-**Drupal calcula las tareas locales de una ruta una sola vez por proceso** —`LocalTaskManager` las
-guarda en memoria con el permiso ya resuelto, en `$taskData`— y esta prueba pinta la misma ficha antes
-y después de cerrar el pedido dentro del mismo proceso. Vaciar los cachés de render no lo arregla,
-porque no es un caché de render. Se comprobó lanzando la misma página en un proceso limpio con el
-pedido ya cerrado: ni un enlace.
-
-#### Lo que se ha hecho
-
-- **El botón `Receive` vive donde la gente ya mira**: al lado de `Edit order` y `Print/PDF`, que salen
-  de `attachment_6` de la vista de líneas. No depende del CSS del tema y lo ven todos los roles. El
-  icono es el visto (`000-ok-16.png`), que de los que hay es el que mejor lee para «dar por bueno lo
-  que ha llegado».
-- **Los tres botones pasan por un condicional sobre el estado**, el mismo patrón que ya usaban
-  `attachment_5` con los pedidos de venta y la lista de proveedores con los de compra: abierto enseña
-  editar, recibir e imprimir; cerrado conserva imprimir y pierde los otros dos. Esto arregla de paso
-  una incoherencia que venía de antes: **un pedido cerrado seguía ofreciendo editar en su propia
-  ficha**, aunque la lista de proveedores ya se lo negaba desde la noche anterior.
-- **La pestaña se queda donde está.** No molesta y para un administrador con pantalla ancha sigue
-  siendo un atajo. Arreglar el CSS de un tema de contribución para que se lea es otra faena, y no la
-  de hoy.
-- **El guardián tiene dos centinelas nuevos** sobre la configuración de esa vista: que la rama de
-  abierto ofrezca la recepción y que la de cerrado solo imprima. Cualquiera que retoque la vista por
-  la pantalla de administración puede llevarse el botón por delante sin notarlo, y eso es exactamente
-  lo que acaba de pasar durante seis horas por otro camino.
-
-Comprobado: la prueba de punta a punta pasa entera, el guardián 56 de 56 y la prueba de humo 58
-páginas.
-
-### 2026-08-16 — El círculo de la compra se cierra: recibir mercancía, al modo de Odoo
-
-Faltaba la puerta de entrada. Se podía pedir —`/purchase` propone, el botón escribe el pedido, la
-cantidad aparece en `Ordered (UoP)` del tablero— y ahí se quedaba todo para siempre. **No había
-ningún sitio donde decir que el material había llegado.** El dueño lo vio con el ojo puesto en la
-pantalla: *"tiene que haber una manera, ya sea dentro de la purchase order o dentro de `/stock`, que
-nos deje indicar que el material ha llegado"*.
-
-Y el daño no era estético. Mientras un pedido contaba como en camino, `/purchase` restaba esa
-cantidad antes de sugerir nada, así que **el tablero mandaba comprar cosas que ya estaban en la
-estantería** —o peor, dejaba de mandar comprar creyendo que venían de camino unos rollos que llegaron
-hace tres semanas y que ya se han gastado.
-
-#### La pregunta que decidió el diseño
-
-El dueño planteó el caso que ningún atajo resuelve: **el proveedor manda 1.980 de los 1.990 y el
-resto no va a llegar nunca**. Y dio dos opciones: arreglarlo a fondo *"como lo hace Odoo y SAP,
-seguramente ya hayan solucionado este problema"*, o dejar la columna editable a mano *"sin conexiones
-que luego pueden desatar un montón de problemas"*. Eligió la primera, entera: *"si hacemos la A, la
-hacemos completa. modo Odoo"*.
-
-Los tres principios que comparten Odoo y SAP, y que son los que se han copiado:
-
-1. **Lo pendiente se deduce, nunca se escribe.** Es `pedido − recibido`, calculado cada vez que se
-   pregunta. No hay ningún campo con "lo que queda por llegar" ni ninguna casilla donde teclearlo,
-   porque una cifra así acaba sin poder cuadrarse contra los pedidos.
-2. **Todo movimiento de stock dice de dónde viene.** Cada entrada apunta a la línea de pedido que la
-   trajo.
-3. **El pedido corto se cierra a propósito.** Los 10 que faltan no desaparecen solos: alguien marca
-   que no vienen más, y entonces —y solo entonces— dejan de contar.
-
-#### Lo que se ha construido
-
-- **Cuatro datos nuevos**: lo recibido por línea, la marca de "no viene nada más", su motivo, y la
-  referencia del movimiento de inventario a su línea de pedido. Más un **segundo estado** de pedido,
-  `closed`, porque hasta esa noche el campo admitía un único valor y por tanto un pedido no podía
-  terminar.
-- **La pantalla de recibir**, en `/tec_order/{id}/receive`, con pestaña propia en la ficha del pedido
-  y atajo desde el número de `Ordered (UoP)` del tablero, que es donde mira quien firma el albarán.
-  (Esa pestaña resultó ser invisible; a la mañana siguiente se cambió por un botón. Está contado en la
-  ficha de arriba.)
-  Se teclea en unidad de compra y **la pantalla enseña, mientras se teclea, en qué se convierte en
-  unidad de almacén**. Esa vista previa es lo más importante del formulario: la multiplicación por el
-  factor es lo único que puede fallar sin dar la cara, porque mete en el almacén un número creíble y
-  equivocado que nadie descubre hasta que se cuentan rollos a mano semanas después.
-- El stock se mueve **por la única puerta que ya tenía**, los modelos ECA del gestor de stock, igual
-  que el `±` del tablero. No se ha inventado un segundo camino para llegar al mismo sitio.
-- **El pedido se cierra solo** cuando ninguna línea deja nada pendiente, y entonces desaparece de
-  `Ordered (UoP)` y de los cálculos de `/purchase`.
-
-#### Las tres decisiones del dueño
-
-- **La entrega corta se cierra con la casilla de su fila**, no con un diálogo al final. Odoo pregunta
-  una vez, al validar, y solo por las líneas que se quedan cortas: es más elegante y es imposible
-  olvidarlo. Se descartó por precio —cuatro horas frente a seis— y se puede añadir encima más
-  adelante **sin tocar ni un dato guardado**, porque lo que se escribe es idéntico de las dos formas.
-- **Recibir más de lo pedido se acepta, con aviso.** La mercancía está físicamente en el edificio, y
-  un stock que miente para que un documento quede cuadrado es peor que una sorpresa.
-- **El motivo del cierre es opcional.** Merece la pena escribirlo igual: las líneas de pedido no
-  guardan autor ni versiones, así que sin él esa decisión no deja más rastro que una fecha cambiada.
-
-Deshacer una recepción **no se ha construido**, a propósito. Se corrige con el `±` del tablero y
-arreglando el recibido a mano en la línea, que está en su formulario justo para eso.
-
-#### Dos cosas que se encontraron por el camino
-
-**Un pedido cerrado se habría quedado sin el botón de imprimir.** En la lista de pedidos del
-proveedor, los botones de editar e imprimir viven dentro de un campo condicional que solo se cumple
-cuando el estado es `Open`. Mientras hubo un único estado eso no se notaba, porque siempre se
-cumplía. Con el estado nuevo, un pedido terminado habría perdido los dos, y perder el de imprimir es
-perder la copia para la carpeta de contabilidad. El condicional tiene ahora su rama de "si no": los
-cerrados conservan imprimir y pierden editar, que en un pedido terminado es justo lo que no se quiere
-que se toque a la ligera.
-
-**Una trampa de Drupal que cuesta media hora.** El control de acceso de la ruta recibía el `768` de
-la dirección en crudo en vez del pedido cargado, y reventaba con *"Call to a member function bundle()
-on string"*. La causa está en `ArgumentsResolver::getArgument()`: sin declaración de tipo en el
-parámetro, Drupal entrega el valor plano; con ella, entrega la entidad. Está anotado en el código
-para el próximo que escriba un `_custom_access`.
-
-#### Comprobado
-
-- **La prueba de punta a punta**, `scripts/funciona-la-recepcion.php`, recorre una entrega de verdad
-  con sus dos sorpresas: llegan 4 de 10, luego 5 más y se cierra el que falta, y de la otra línea
-  llegan 5 de los 4 pedidos. Comprueba la conversión **calculándola aparte** a partir del factor del
-  material, que es la única forma de cazar un factor puesto al revés. Deshace todo lo que crea,
-  incluidos los niveles de stock que movió el ECA.
-- **El guardián** tiene apartado nuevo, el 5, con la comprobación que de verdad importa: **ningún
-  pedido abierto sin nada pendiente**. Uno así es exactamente el fallo que se ha arreglado, y solo
-  puede reaparecer si el cierre automático se rompe. Pasa 54 de 54.
-- **La prueba de humo** pasa 58 páginas, incluida la nueva, que se busca sola: coge el último pedido
-  de compra abierto en vez de un número a pelo, que dejaría de comprobar nada el día que ese pedido
-  se cierre.
-- La prueba de la lista de compra sigue en verde, que era el riesgo real del cambio: `onOrder()`
-  ahora devuelve lo pendiente en vez de lo pedido, y las dos pantallas beben de esa función.
-
-### 2026-08-15 (noche) — La ficha del material: tres fallos que el dueño vio en la pantalla y un cuarto que se encontró detrás
-
-El dueño repasó el alta de material con Lukpla delante y sacó cinco pegas. Las cinco eran ciertas y
-las cinco están arregladas, pero la última destapó algo bastante peor que lo que se reportaba.
-
-**Lo que se reportó.** Que el campo *Material Type* dejaba escribir libremente en vez de obligar a
-elegir; que los dos factores de conversión necesitaban cinco decimales y solo tenían dos; y que
-*Safety Stock Qty*, *Reorder Point* y *MOQ* no decían en qué unidad estaban.
-
-**Por qué lo de las etiquetas no era cosmética.** Esa misma tarde el dueño escribió el punto de
-pedido y el stock de seguridad de un material en metros, que es como lo compra, cuando esos campos
-cuentan unidades de inventario. Como ese material lleva dos metros y medio por unidad de inventario,
-la lista de compra le pidió 4.990 metros en vez de 1.990. Nada dio error y la única pista estaba en
-un factor de 0,4 escondido en otra pestaña. Ahora las etiquetas llevan `(UoS)` y `(UoP)`, y el
-comprobador nuevo encontró un cuarto campo igual de mudo, `Stock level`.
-
-**La creación al vuelo dejó su prueba del delito.** `Material Type` y `Colors` tenían `auto_create`
-puesto, y con el widget de select2 eso convierte el desplegable en una caja de texto libre. Se cerró
-a las 20:31; el guardián de recuentos, media hora después, delató un tipo de material llamado
-**`vcvcvcx`** creado a las 20:18, teclazo puro, con su término, su URL y su ficha. Se le había echado
-la culpa al importador de los seis duplicados anteriores, como el color `"Blue "` con un espacio
-detrás, y el importador también lo hacía, pero la ficha tenía el mismo agujero.
-
-**Y el cuarto fallo, el que nadie había visto.** Al subir los factores a cinco decimales había que
-comprobar que las pantallas los enseñaran, porque el módulo de cálculo de las vistas no lee la base:
-lee lo que la columna dibuja. Resultó que en **diecisiete columnas los factores se dibujaban con el
-formateador de enteros**. Cuatro pantallas de cálculo de material dividen por ellos con la fórmula
-`cantidad / split_into / units`, así que un factor menor que uno —0,4 es normal y corriente— llegaba
-a la fórmula como **cero**: una división por cero en la pantalla que dice cuánto material hace falta
-para un pedido, sin necesidad de ningún dato raro. Veinte columnas de cinco vistas quedan dibujadas
-como decimales con los mismos cinco decimales que guarda el campo.
-
-**Cambiar los decimales de un campo con datos** no se puede desde la pantalla, y la receta quedó en
-`scripts/dar-cinco-decimales-a-los-factores.php`: las columnas primero, partiendo de la
-especificación que Drupal ya tenía apuntada para no perder ninguna propiedad; luego el apunte de
-esquema, que si se queda diciendo dos, el día que alguien guarde el campo Drupal "arregla" la columna
-hacia atrás; luego la configuración, escrita en crudo porque guardarla como entidad dispara la
-comprobación que prohíbe el cambio; y la copia de la definición instalada, que al contrario de lo
-que suponía la nota del cambio anterior, para estos dos campos sí existía.
-
-**Los recuentos de contenido dejan de dar veredicto.** `comprobacion.php` medía el contenido contra
-dos caras, "con juego de pruebas" y "vacío", y ese día apareció una tercera: el dueño usando el ERP.
-Sus dos materiales y su pedido de compra pusieron cuatro guardianes en rojo sin que nada estuviera
-roto. Un guardián que da la alarma cada vez que alguien hace su trabajo se acaba mirando de reojo, y
-entonces no avisa el día que hay que avisar. Las siete cifras se siguen imprimiendo, marcadas como
-dato y al lado de lo que trae el juego de pruebas, pero el aprobado lo dan ahora las 49
-comprobaciones que no dependen de cuánto contenido haya. Los vocabularios de referencia —colores,
-tipos de material, tallas, unidades— siguen juzgando, y bien que hacen: fue uno de ellos el que cazó
-el `vcvcvcx`.
-
-### 2026-08-15 — `tec_gui`, fuera del ERP: el producto del programador anterior llevaba dos años atornillado a las líneas de pedido
-
-El dueño preguntó qué era `tec_gui`, porque el nombre no dice nada, y decidió retirarlo entero.
-
-**Qué era.** No la interfaz gráfica, como sugiere el nombre: era el **producto original**, el que
-había antes de `tec_product`. Lo delatan sus propias tablas, que se leyeron una por una antes de
-tirarlas: `field_product_name`, `field_tec_brand`, `field_tec_customer`, `field_tec_images`,
-`field_tec_pattern`, `field_tec_product_type`, `field_tec_sales_price`, `field_tec_size`,
-`field_tec_bom`, `field_tec_view_bill_of_materials`. Eso es un producto, campo por campo. Cuando
-llegó el producto de verdad, alguien añadió `field_tec_product` a las líneas de pedido y le puso al
-viejo la etiqueta **`Product - DEPRECATING`** a mano. Ahí se quedó la faena, dos años.
-
-**Por qué iba primero de la lista.** No por los dos errores en rojo del informe de estado, que eran
-el síntoma cómodo. Por esto: `field_tec_gui_product` era un campo **obligatorio** de las líneas de
-pedido de venta, la pieza más usada del ERP. Retirarlo con dos líneas en la base cuesta lo que
-cuesta un `truncate`; retirarlo con los 857 materiales importados y pedidos reales dentro es otra
-conversación. Y había un segundo abaratamiento que conviene no olvidar para el resto de tareas
-estructurales: **la base del servidor se va a reemplazar con la de local**, así que no hizo falta
-escribir ningún gancho de actualización. Se borró aquí y viaja ya limpio.
-
-**Lo que se encontró al levantar la alfombra**, y que no coincidía con lo apuntado:
-
-- El tipo de entidad **no tenía ni un subtipo**. Cero. No se podía crear una ficha GUI ni queriendo:
-  un armario sin estantes, con la puerta atornillada a la pared.
-- Las tablas eran **trece**, no doce, y las trece vacías.
-- La tabla del campo tenía **22 filas**, no 20. Y el campo, además, **no estaba instalado**: existía
-  en la configuración pero no en el registro de "qué hay en la base". Ese detalle decidió el orden de
-  la operación, ver abajo.
-- De las 22 filas, 21 eran huérfanas puras —ni línea ni ficha GUI—, y **la 22 colgaba de la línea de
-  prueba viva**. La escribió `scripts/fabricar-el-juego-de-pruebas.php`, que rellenaba
-  `field_tec_gui_product` con el id del producto para poder satisfacer un campo obligatorio muerto.
-  O sea que la mina que se describía en teoría ya había explotado una vez, en nuestro propio guion.
-  Esa línea del guion se ha quitado.
-- **Ningún proceso de ECA lo tocaba**, ni ningún módulo. Se buscó en los treinta y dos procesos y en
-  los cuatro módulos propios. Eso lo hizo mucho más barato que lo de Marcas y Patrones, donde el
-  problema eran justamente los dos procesos de duplicar producto.
-- Había **una marca huérfana** puesta con la bandera `tec_eca_gui_lock`, sobre una ficha GUI que no
-  existía. Resulta que era la excepción que la comprobación del ERP daba por buena desde el principio
-  —*"en reposo solo debe haber una bandera puesta, la del panel de ECA"*—. No era el panel de nada:
-  era basura. Ahora la comprobación exige **cero banderas puestas**, que es lo que significaba.
-
-**El orden, que no era negociable.** Las banderas y el modo de vista antes que el tipo de entidad,
-porque lo declaran como su entidad y se quedarían apuntando al vacío. La tabla del campo **vaciada
-antes** de borrar el campo, y esto es lo fino: el núcleo, cuando borras un campo con datos dentro,
-renombra su tabla y la deja en la cola de purga; vacía, la tira en el acto. Vaciarla primero cambió
-una operación con cola pendiente por una limpia. Y el tipo de entidad al final, porque **ECK, al
-borrarlo, busca él solo todos los campos de referencia que apuntan a él, los borra y desinstala el
-tipo**. Eso se leyó en `EckEntityType::preDelete()` antes de ejecutar nada, no se supuso.
-
-Lo que ECK **no** se lleva son las tablas `tec_gui__field_*`: sus definiciones de campo se habían
-borrado de la configuración hace años y las tablas sobrevivieron, así que no hay nada que las
-reclame. Esas once se tiraron a mano en el último paso, después de comprobar una por una que estaban
-vacías.
-
-**La cuenta final**: 1 tipo de entidad, 13 tablas, 2 campos con sus almacenes, 2 banderas, 4
-acciones, 1 selector etiquetado `TEMP` y sin un solo widget dentro, 1 modo de vista, 29 permisos en
-tres roles, 1 marca huérfana, 1 línea del service worker y 6 entradas del botón de cancelar. En
-configuración: 13 objetos borrados y 13 actualizados.
-
-**Cómo quedó comprobado.** El informe de estado pasa de dos errores a **uno**, y el que queda es el
-HTTPS de local, que es normal aquí. `que-esta-descuadrado.php` dice *"no hay nada descuadrado"*. La
-comprobación del ERP pasa **50 de 50** —con dos guardianes nuevos, ver abajo— y la prueba de humo
-carga **53 páginas de 53**, incluidas la línea de pedido de venta que tenía el campo, los dos pedidos
-y el borrador de compra. Y lo que de verdad importaba: la comprobación crea una línea de pedido de
-venta por código y ECA le recalcula el total, o sea que **crear líneas sin el campo obligatorio
-funciona**.
-
-**Dos guardianes nuevos**, porque volver a entrar es fácil:
-
-- *ninguna definición de entidad descuadrada*. Es el general, y es el que mantiene limpio el informe
-  de estado. Un rojo que siempre está enseña a no mirar los rojos.
-- *no queda nada de `tec_gui`*. Basta importar configuración vieja para que el tipo de entidad
-  reaparezca, y con él su campo obligatorio. Mira las cuatro cosas que importan —el tipo, las tablas,
-  los campos con ese destino y los permisos— y **no** busca el texto "tec_gui" a lo bruto, por una
-  trampa que casi se lleva algo vivo: la vista **`tec_gui_bom_item_viewfields`** lleva "gui" en el
-  nombre y no es de esto, la usan dos campos vivos de los despieces. Está escrito en el propio
-  guardián para que nadie lo repita.
-
-**Dos hallazgos de rebote**, apuntados en Deuda técnica: entre las trece tablas había una
-`tec_gui__feeds_item`, que apunta a que las dos importaciones huérfanas de Feeds importaban a `tec_gui`
-y no a `tec_product` —si se confirma, no hay nada que recuperar—; y al guardar los roles, Drupal
-retiró permisos de un **`tec_app_link`** que ya no existe, otro tipo de entidad abandonado, este ya
-sin tablas y sin dejar rojos.
-
-**Una consecuencia en Patrones**, contada entera en su ficha de decisión: Patrones tenía un campo que
-apuntaba a `tec_gui`, se fue con la retirada, y la vista `tec_pattern_elements` se quedó sin nada que
-mostrar, así que Drupal la desactivó. Su bloque sigue incrustado en la ficha de un término de patrón.
-Hoy no molesta porque hay cero términos; si Patrones vuelve, se arregla antes.
-
-Guion: `scripts/quitar-a-gui-del-erp.php`, con ensayo por defecto y cinco guardias que lo abortan si
-algo no está como se comprobó. Volcado previo en
-`backups/actatec_antes_de_quitar_gui_2026-08-15.sql.gz`.
-
-### 2026-08-15 — Los cinco enlaces a los catálogos llevaban perdidos en todas las pantallas de editar
-
-Empezó con una pregunta pequeña del dueño: *"necesito un link de acceso rápido a la URL donde se
-almacenan las sizes, igual que hicimos con los product type"*. La respuesta corta es que **ese enlace
-ya estaba escrito en el código** desde hacía meses, para producto, color y talla. No se veía.
-
-**El primer motivo, y es de los que duran años sin que nadie lo note.** Los enlaces se enganchaban
-comparando el identificador del formulario contra `tec_product_tec_product_form`. Pero la ruta de
-editar usa la operación `edit`, y Drupal le pega el nombre de la operación al identificador
-(`EntityForm::getFormId()`), así que allí el nombre real es `tec_product_tec_product_edit_form` y la
-comparación no acertaba nunca. O sea que **los enlaces solo salían al crear una ficha, jamás al
-editarla**. Medido antes de tocar: al añadir un producto salía *Manage product types*; al editar ese
-mismo producto no salía ninguno de los cinco.
-
-Y lo que hacía el fallo invisible: **el del material sí funcionaba**, que era justo el que el dueño
-tenía delante cuando dijo *"igual que hicimos con los product type"*. Funcionaba por casualidad,
-porque los términos de taxonomía usan la operación `default` para añadir y para editar, así que su
-identificador no cambia. Un fallo que deja funcionando el caso que más se usa es un fallo que no se
-denuncia solo.
-
-**El segundo motivo, más escondido, y sin él el primero no bastaba.** El color y la talla casi nunca
-se editan en su página: se trabajan **embebidos** dentro del formulario de producto con
-`inline_entity_form`, y un formulario embebido **no pasa por `hook_form_alter()` con su propio
-identificador** — solo salta el del padre. Con lo cual el enlace de tallas no podía aparecer donde de
-verdad hace falta ni arreglando los identificadores. Hacía falta
-`hook_inline_entity_form_entity_form_alter()`, que es por donde `EntityInlineForm` deja tocar el
-subformulario ya construido.
-
-**El arreglo va por la entidad, no por el nombre del formulario.** Se lee la ficha que se está
-editando y se decide por su tipo y su grupo, que es inmune a la operación y no se desfasa el día que
-alguien añada una operación nueva. La tabla de qué enlace va con qué campo queda en un solo sitio y la
-usan los dos ganchos. Como ahora dos caminos pueden llegar al mismo campo, el ayudante mira si el
-enlace ya está antes de añadirlo: sin eso saldría dos veces.
-
-**Comprobado por el camino real, que aquí es la única forma.** Los subformularios de color y talla se
-abren por AJAX al pulsar *Add new size* o *Edit*, así que pedir la página nunca los ve — de hecho la
-primera versión de la comprobación daba un falso fallo por esperar el enlace del color en una carga
-normal del formulario de producto, donde solo hay tabla y botón. Así que la comprobación monta el
-elemento de `inline_entity_form` y deja que el módulo lo construya, que es el mismo camino que sigue
-al pulsar el botón. Cubre seis pantallas y los tres casos embebidos, incluido **añadir una talla
-nueva**, que es exactamente el momento en el que alguien echa en falta una talla del catálogo. Queda
-en `scripts/salen-los-enlaces-de-catalogo.php`. Comprobación del ERP 48/48 y 53 pantallas sin
-problemas.
-
-**De camino, por qué la talla de prueba tiene ese nombre tan raro, y esto interesa para el
-importador.** El dueño vio *"PRUEBA producto - Black - XXS"* en la columna Sizes y no encontraba ese
-texto en el vocabulario de tallas. No está: el vocabulario tiene solo las tallas de verdad, y ese
-texto es el **título de una *Size variation***, que es la ficha donde vive el BoM. Lo escriben
-dos procesos de ECA —`process_qlf96jn` al insertar y `process_ocmwa9c` al actualizar— y su receta es
-solo el nombre de la talla: *"XXS"*. Pero el de insertar lleva la condición **"solo si el título llega
-vacío"**, y el de actualizar solo lo reescribe **si cambia la talla**. Al fabricar el juego de pruebas
-se le escribió un título a mano, así que ECA lo respetó y ahí se quedó; la minúscula de *"producto"*
-es la prueba de que es texto congelado y no una fórmula, porque no siguió al producto cuando se
-renombró. **La consecuencia para el importador de productos es directa**: si el importador escribe un
-título en las variaciones de talla, ECA no lo va a corregir nunca. Hay que dejar ese campo vacío y que
-lo ponga el ERP.
-
-### 2026-08-15 — Marcas vuelve al ERP: no había que retirarla, había que devolverle la puerta
-
-El dueño leyó el punto pendiente *"Retirar Marcas y Patrones"* y respondió lo que hacía falta:
-*"pensaba que lo que habías borrado era la información dentro de esos dos módulos, no los módulos en
-sí"*. **Y el punto estaba mal planteado**, esta vez del todo: la marca es obligatoria para crear un
-producto, así que retirarla habría dejado el catálogo sin poder nacer. Corregido arriba.
-
-**Nunca se perdió la función; se perdió la puerta.** El vocabulario, el campo en productos, la vista
-`tec_brands`, los formularios y los permisos en tres roles estaban intactos. Lo que faltaba era el
-**nodo 4**, la portada que embebe el bloque de la vista y que pone el icono en el inicio. Y no lo
-borró ninguna de las limpiezas de estos días: cuando la prueba de humo empezó a pedir portadas ya
-contaba **doce** —1, 2, 3, 5, 6, 7, 9, 10, 11, 12, 13, 14—, o sea que el 4 llevaba caído desde antes.
-Nadie lo notó porque hasta ahora nadie necesitó una marca.
-
-**Dos fallos que se estaban tapando el uno al otro, y esto es lo que hay que llevarse.** El botón
-`+ Brand` de la vista tenía `empty: false`, o sea puesto para **esconderse justo cuando la lista está
-vacía**: el mismo fallo que dejó al CRM sin manera de crear un cliente. La auditoría del 14 de agosto
-encontró diez botones así **recorriendo las portadas**, y este se le escapó por una razón incómoda:
-su portada no existía, así que no había por dónde llegar a la vista para verlo. Un fallo escondía al
-otro. Si solo se hubiera devuelto la portada, la pantalla habría salido en blanco y sin manera de
-crear la primera marca; si solo se hubiera arreglado el botón, nadie lo habría visto nunca.
-
-**Rehecha con el número 4 a propósito.** La vista nombra `/node/4` en cuatro enlaces —el de editar
-cada marca y el destino del botón de crear—, igual que productos nombra `/node/1` y colores
-`/node/9`. Recuperando el número, los cuatro enlaces vuelven a valer sin tocar ni una ruta. El molde
-es la portada de **colores**, que es el caso gemelo —un vocabulario con una vista en cuadrícula dentro
-de un nodo—, y se copian sus tres piezas con sus pesos, así que esta queda indistinguible de las que
-ya funcionaban.
-
-**El icono estaba en el disco.** `isometric-brand-100.png` es una de las cinco imágenes de marca que
-se salvaron del borrado de fotos del 14 de agosto. Seguía en la carpeta pública de 2024-03, pero su
-ficha había muerto con el nodo, así que se copió al sistema **privado**, que es donde guardan los
-otros diez iconos, y se fichó de nuevo. Se le da orden 8, detrás de colores, que es el otro catálogo.
-
-**Comprobado lo que fallaba, no solo el código HTTP.** Un 200 ya nos engañó una vez. Así que
-`scripts/funciona-la-pantalla-de-marcas.php` mira el contenido: que el icono salga en `/start` y
-apunte a `/b`, que la pantalla traiga el botón y la marca, y **sobre todo que el botón siga saliendo
-con la lista vacía**, que es el caso que fallaba — para probarlo despublica un momento la única marca
-y la vuelve a publicar al terminar, pase lo que pase. También se comprobó que el enlace del botón
-responde con la barra de más que lleva escrita (`/add/?destination=`) y sin ella: las dos dan 200. Y
-el final de la cadena: el desplegable de marca del formulario de producto es una **lista fija y
-obligatoria**, y ya ofrece marca, o sea que el producto se puede guardar. Con cero marcas no se podía,
-y por eso esto no era cosmético.
-
-Prueba de humo en verde, **53 pantallas** con `/b` dentro, que la recoge sola porque desde el 14 de
-agosto pide todas las portadas.
-
-**Y aprovechando el hilo, cinco botones escondidos más, que el barrido de portadas no podía ver.**
-Si el de marcas se escapó porque su pantalla no existía, había que preguntarse a qué más no llegaba
-ese método. Se buscó otra vez, pero **por configuración en lugar de por pantallas**: la configuración
-está ahí aunque no haya puerta por donde llegar. Aparecieron cinco, en displays de los que no cuelga
-ninguna portada. Cuatro arreglados:
-
-- **`tec_inventory_transactions` / `block_1`**, y este era un fallo vivo: es el historial de stock de
-  un material, y un material recién creado no tiene movimientos por definición, así que el botón
-  `+/- Stock` se escondía **siempre el primer día**. No llegó a bloquear a nadie porque el listado de
-  inventario tiene el suyo por fila, y ese sí estaba bien puesto.
-- **`tec_products` / `block_2` y `block_4`**, dos listados de productos. Con el catálogo por importar,
-  la lista vacía es el estado normal de las próximas semanas.
-- **`tec_colors` / `page_1`**. El bloque de la portada `/cl` ya estaba bien, y por eso el barrido de
-  portadas lo dio por bueno: mira displays, y el fallo estaba en el otro.
-
-El quinto, **`tec_patterns` / `block_1`, se deja a propósito** por orden del dueño: Patrones está
-pendiente de decidir si se retira, y no tiene sentido arreglarle un botón a una pantalla que puede
-desaparecer.
-
-**Guardián nuevo, el 48**: *"ningún botón de crear se esconde con la lista vacía"*. Recorre las áreas
-de cabecera y pie de todas las vistas, se queda con las que llevan un enlace de crear, y exige que
-ninguna tenga `empty: false` salvo la de patrones, que figura en una lista de excepciones con su
-motivo escrito. Mira configuración, no pantallas, que es la lección de las dos veces anteriores. El
-diagnóstico suelto queda en `scripts/queda-algun-boton-escondido.php`. Comprobación 48/48.
-
-**Corrección del mismo día: la portada volvió, pero torcida.** El dueño la abrió y avisó: *"funciona,
-pero ha perdido el formato visual"*. Tenía razón — la rejilla con la marca se pintaba **encima** del
-título, y *"Brands"* aparecía debajo de las tarjetas. La portada respondía 200, tenía todas sus piezas
-y estaba mal.
-
-**La culpa es de `appendComponent()`, y esta trampa merece quedar escrita** porque la receta de copiar
-una portada es lo único que se va a reutilizar el día que se haga la siguiente. El guion copiaba las
-tres piezas del molde de colores con sus pesos —que son los que mandan el orden en pantalla— y las
-metía en la sección con `Section::appendComponent()`. Lo que no se miró es la primera línea de ese
-método en el núcleo:
-
-```php
-public function appendComponent(SectionComponent $component) {
-  $component->setWeight($this->getNextHighestWeight($component->getRegion()));
-```
-
-**Reescribe el peso antes de guardar la pieza.** O sea que copiar los pesos del molde no sirve
-absolutamente de nada si luego se añaden con ese método: cada pieza se queda con el número que le toca
-por orden de llegada. En colores los pesos son título 2, cuerpo 3 y rejilla 4; en marcas quedaron
-cuerpo 0, rejilla 1 y título 2.
-
-**Y hay un segundo detalle que es el que convirtió un fallo invisible en un fallo visible**, al revés
-de lo que suele pasar: `getComponents()` devuelve las piezas en el orden en que están **guardadas**,
-que no es el orden en que se pintan. El bucle las recorrió cuerpo, rejilla y título, y por eso el
-título acabó último. Si el molde las hubiera tenido guardadas en el mismo orden en que se pintan, la
-copia habría salido bien **por casualidad**, el fallo se habría quedado dormido en la receta y lo
-habría pagado la próxima portada. Salió mal el primer día, que es la mejor manera de que salga mal.
-
-**Arreglado sobre el nodo que ya existía, sin recrearlo**, porque el número 4 es justo lo que había
-que conservar. Los pesos no se escriben a mano en ningún sitio: se leen del nodo 9 emparejando pieza
-con pieza, así que el día que se retoque la portada de colores el guion sigue diciendo la verdad en
-vez de repetir tres números caducados. Queda como **revisión 16**, con su motivo escrito, de modo que
-la versión torcida sigue en el historial. `scripts/poner-en-orden-la-portada-de-marcas.php`.
-
-La receta, `scripts/devolver-la-pantalla-de-marcas.php`, ya no puede repetirlo: le pasa las piezas al
-**constructor de `Section`**, que es el único camino que respeta el peso porque llama a
-`setComponent()` sin tocarlo, y de paso copia los ajustes de terceros de la sección, que antes se
-perdían —hoy da igual porque colores no tiene ninguno, pero no daría igual con otro molde—. Como ese
-guion se para en seco si el nodo 4 existe, no se puede probar sin borrar el nodo, así que la receta se
-prueba aparte: `scripts/respeta-el-peso-al-copiar-la-seccion.php` monta la misma sección por los dos
-caminos y los enseña juntos. Con `appendComponent()` salen los pesos 0, 1 y 2 — **exactamente los que
-tenía el nodo roto**, o sea que reproduce el fallo, no solo lo describe. Con el constructor salen 2, 3
-y 4, los del molde.
-
-**La zona gris y el botón no eran fallos, y esto se midió antes de tocar nada.** El dueño señaló las
-dos cosas en la captura y las dos salen igual en `/cl`:
-
-- **La zona gris de la mitad inferior es el fondo del tema.** No hay ningún bloque de más: `/b` y
-  `/cl` tienen el **mismo armazón**, 44 envoltorios cada una en los tres primeros niveles. Lo que
-  cambia es cuánto contenido hay encima — `/b` pinta **2** celdas de rejilla y `/cl` **64**. Con una
-  marca el contenido no llega a la mitad de la pantalla y el resto lo pinta el fondo; en colores no se
-  ve porque las 32 fichas la llenan. El día que haya marcas de verdad desaparece sola.
-- **El botón `+ Brand` sale con el mismo HTML y el mismo CSS que el de colores**: los dos son
-  `div.text-align-right > div.btn-default > a`, y las dos pantallas cargan las mismas hojas de estilo
-  salvo tres que solo necesita `/cl` —el filtro de búsqueda expuesto, la muestra de color y el buscador
-  del tema—, ninguna de las cuales define `btn-default`. Se miró también si el tema trata distinto al
-  primer bloque de una región, que habría explicado el botón sin tocar el botón: **no**, sus reglas de
-  `:first-child` solo mueven el `h2` de los bloques de las barras laterales. Se veía raro porque
-  estaba **en lo alto de la página, sin el `h1` encima**. Con el orden arreglado se coloca donde el de
-  colores.
-
-**El guardián que faltaba.** `scripts/funciona-la-pantalla-de-marcas.php` dio **"todo bien" con la
-pantalla visiblemente torcida**, y eso es lo más incómodo de todo esto: comprobaba que el título y el
-botón estuvieran en el HTML, no **dónde**. Es la tercera versión del mismo error —primero creímos que
-un 200 bastaba, luego que estar bastaba— y ahora exige además que el título vaya antes de la rejilla.
-Lo encontró el dueño mirando la pantalla, que es justo lo que estas pruebas tendrían que ahorrarle.
-
-La comparación completa, pieza a pieza y HTML contra HTML, queda en
-`scripts/donde-se-desordeno-la-portada-de-marcas.php`. El nodo es contenido y no configuración, así
-que no hubo nada que exportar. Comprobación **48/48**, marcas **todo bien**, **53 pantallas** y **0**
-con problemas.
-
-**De propina, una cifra que no cuadraba y no era un fallo.** La comprobación empezó a dar 47/48 por
-las tallas: 15 donde esperaba 14. No lo había roto el arreglo. La primera sospecha —que fuera basura
-que la propia comprobación se dejara detrás, porque su apartado 3 crea una variación de talla— era
-razonable y era **falsa**: la de más se llama **"20 oz"** y continúa la serie de onzas que ya estaba,
-y el registro dice *"Created new term 20 oz"* desde el formulario del vocabulario con el usuario 1. La
-metió el dueño a mano mientras se arreglaba la portada. **Borrarla para que la cuenta cuadrara habría
-sido tirar un dato de verdad**, así que se subió la referencia a 15 con el motivo escrito. Que una
-cifra de referencia falle no significa que algo esté roto: significa que hay que mirar quién la movió.
-`scripts/quien-creo-la-talla-de-mas.php`.
-
-### 2026-08-14 — Los 104 CSV y Excel de las importaciones de ensayo, fuera, y dos importadores huérfanos al descubierto
-
-Decisión del dueño: los listados de materias primas y los BoM que se subieron entre marzo de
-2024 y julio de 2025 eran todos ensayos y se borran. Fuera **104 fichas** de hoja de cálculo, 1,9 MB,
-más **10 archivos sueltos** en `private://feeds` que ya no tenían ficha en la base y que nadie se
-había llevado. Quedan **69 ficheros** en todo el ERP: 39 fuentes tipográficas, 28 imágenes y 2 hojas
-de estilo. La carpeta privada, que esta misma noche empezó en 61,6 MB, se queda en **5,1 MB**.
-
-**El script se paró solo la primera vez, y por eso mereció la pena escribirlo así.** Comprueba dos
-cosas antes de borrar y no borra si alguna no sale limpia. La primera fue una falsa alarma mía: cuatro
-ficheros tenían usos registrados a nombre de un dueño de tipo `fetcher` con un UUID, y yo esperaba
-`feeds_feed`. Es correcto y está en `UploadFetcher::deleteFile()`: Feeds no apunta el uso a nombre del
-importador, sino del tipo de complemento que lee el fichero, y el identificador es el UUID del
-importador. La segunda no era falsa alarma, era simplemente inofensiva: dos ficheros aparecían
-escritos dentro de la tabla `batch`, en **lotes de importación abandonados en abril y mayo de 2024**
-que llevan dos años ahí porque el cron nunca ha corrido. No eran enlaces de descarga, era el estado
-serializado de importaciones que nunca terminaron. `system_cron` se los llevará el día que el cron
-arranque.
-
-**El hallazgo de verdad: dos de los tres importadores están huérfanos.** Al ir a quitarles el origen
-para que no apuntaran a un fichero que ya no existe, saltó una excepción: las fichas 5 y 6, "Primo
-products" y "Trust products", son de tipo `tec_products_csv_importer`, **un importador de productos
-cuya configuración ya no existe**. Confirma lo que el dueño recordaba, que se intentó importar
-productos, y que se quedó a medias. La lista de `/admin/content/feed` carga bien, pero `/feed/5/edit`
-revienta. Está apuntado con su arreglo en la sección del importador; no se ha tocado porque borrar
-fichas que nadie pidió no es limpiar, es decidir por otro.
-
-**Y de paso quedó diagnosticado el importador**, que llevaba en el backlog como "hay que
-diagnosticarlo". Los ficheros sirvieron para eso antes de irse: se leyeron por dentro, se comparó lo
-que traen con lo que la configuración espera, y salieron cuatro cosas —tres campos conectados de
-quince, una columna que se llama distinto en el fichero y en el importador, el proveedor que viene
-vacío en el Excel y obligatorio en la especificación, y un importador de BoM que no conecta
-ni el material ni la cantidad—. Todo eso está escrito arriba, en la sección del importador.
-
-Antes de esto había una copia completa de las dos carpetas de ficheros, hecha una hora antes para el
-borrado de las fotos, así que los 104 están en
-`C:\laragon\backups\ficheros-antes-del-borrado-20260814\private\feeds`. Si algún día hace falta ver
-qué formato exacto tragaba el importador, están ahí: el listado de materias son 857 filas y dieciocho
-columnas.
-
-Después: comprobación **47/47** con el recuento de ficheros en 69, prueba de humo 30 páginas y 0
-problemas.
-
-### 2026-08-14 — Las 142 fotos sin dueño, fuera, y las cinco imágenes de marca que casi se van con ellas
-
-Al vaciar los datos de prueba se fueron los productos, las marcas, los patrones y los 869
-materiales, pero no sus fotos: Drupal solo borra un fichero cuando se lo mandas. Quedaron 315 fichas
-de fichero, casi todas huérfanas de golpe. Se han borrado **142 fotos**, y con ellas **304 versiones
-recortadas** que Drupal purga solo al borrar el original: **446 archivos y 57,2 MB** de disco. La
-carpeta privada baja de 61,6 a 7,1 MB y la pública de 25,8 a 23,1. Quedan 173 fichas.
-
-**Lo que casi sale mal, y es el motivo de que esto lleve un reconocimiento delante.** La regla obvia
-—"borra todo lo que no use nadie"— se lleva por delante el logotipo del ERP, el logotipo del panel
-de administración, los dos favicon y la imagen de fondo de la pantalla de entrar. Son cinco, no dos:
-están en `dxpr_theme.settings`, `gin.settings` y `gin_login.settings`. El contador de usos de Drupal
-solo cuenta lo que apunta desde el campo de una ficha; **lo que apunta desde la configuración no lo
-cuenta**, así que para el contador esas cinco no las usa nadie. Gin es el tema de administración, o
-sea que ahí se iba la marca de todas las pantallas internas de golpe.
-
-**Y hay un segundo hallazgo, que además desactiva un miedo que apunté ese mismo día.** Esas cinco
-imágenes **no tienen ficha en la base de datos**: el formulario de ajustes del tema las dejó en la
-raíz de la carpeta pública sin registrarlas en `file_managed`. Consecuencias buenas: ningún borrado
-de fichas puede tocarlas, y `file_cron` tampoco, porque solo borra ficheros gestionados. Yo había
-avisado de que si estuvieran marcadas como "temporales" el cron se las llevaría a las seis horas de
-encenderlo; no es el caso, y no por suerte, sino porque no son suyas. Consecuencia mala: **nadie las
-vigila**. Si alguien borra el archivo, la configuración sigue apuntando ahí y no salta ningún error;
-simplemente desaparece el logotipo. Por eso el guardián tiene ahora una comprobación nueva que las
-lee de la configuración —no de una lista escrita a mano, para que siga valiendo el día que se cambie
-el logotipo— y verifica que el archivo sigue en el disco. Comprobación **47/47**, y las cinco piden
-un 200 por HTTP con su tamaño correcto.
-
-**El reparto de los 315.** Se quedan 32 que tienen usos, entre ellos los once iconos de la portada y
-los iconos de la aplicación móvil. Se quedan **141 que no son fotos**: las fuentes del tema, dos
-hojas de estilo y un montón de CSV y Excel de las importaciones de BoM de 2024. Esos CSV se
-fueron una hora después, en la entrada de arriba. Y se fueron las 142 fotos.
-
-**Las siete fotografías que no eran basura.** Entre las candidatas había fotografía de producto de
-verdad, en alta resolución: los guantes **ACTA Thai Evolution** en azul, rojo, negro y blanco, de
-2,5 a 4,7 MB cada una, más un Trust Squire, dos Joya y el fichero de logotipos de Trust. Eso son 32
-de los 52 MB, y es trabajo que no rehace ningún importador —de hecho el importador de materiales ni
-siquiera sabe meter el campo de imagen—. Están en la copia de seguridad de la carpeta entera, pero
-enterradas entre miles de archivos y con fecha en la ruta, así que antes de borrar se copiaron
-**doce fotografías, 32,5 MB**, a `C:\laragon\backups\fotos-de-producto-anv`. El criterio: lo que
-lleva el nombre de la casa o de una marca de cliente, y toda foto de más de un mega, que a ese
-tamaño ya es una cámara y no una captura de pantalla.
-
-**La red de seguridad.** Antes de tocar nada, copia completa de las dos carpetas de ficheros a
-`C:\laragon\backups\ficheros-antes-del-borrado-20260814`: 3.523 archivos, 87 MB, ninguno fallido. El
-borrado es reversible desde ahí.
-
-**Cómo se decidió qué sobraba.** `scripts/mirar-los-ficheros.php` reparte sin tocar nada, y
-`scripts/borrar-las-fotos-huerfanas.php` vuelve a calcular el reparto en vez de traerse una lista de
-identificadores: si algo cambia entre mirar y borrar, cambia el reparto y no se borra por una lista
-vieja. La comprobación cruzada buscó el nombre de cada candidata en **392 columnas de texto de la
-base, 23,5 millones de caracteres**, por si alguna estaba puesta a mano dentro de un texto o de una
-sección de diseño, donde el contador de usos no llega. Salió una sola coincidencia, y era el propio
-nombre dentro de la tabla de configuración: el fichero 102 se llama `acta-octa-black-white.jpg`
-igual que el logotipo, pero vive en `public://2024-03/` y no en la raíz, o sea que es una copia
-suelta y no el logotipo.
-
-Después: comprobación 47/47, prueba de humo 30 páginas y 0 problemas, `config:status` sin
-diferencias, los once iconos del inicio verificados en el disco con sus recortes, y la pantalla de
-entrar cargando.
-
-### 2026-08-14 — El CSRF del servidor, cerrado desde el navegador y sin desplegar
-
-El servidor llevaba desde mayo con **ECA 1.1.7 y `eca_ui` encendida**, o sea con las rutas que
-`SA-CONTRIB-2025-031` necesita: un enlace preparado que, abierto por alguien con sesión de
-administrador, apagaba o borraba un automatismo sin más confirmación. Es el único punto de todo este
-backlog que empeoraba solo con el paso del tiempo, y esperaba al despliegue completo, que es media
-jornada. Ya no: se ha cerrado desinstalando el módulo, en tres rondas de clics, y **la versión
-vulnerable sigue instalada pero sin puerta por la que entrar**.
-
-Comprobado desde fuera, antes y después, sin necesidad de entrar: `/admin/config/workflow/eca`
-respondía **307** a la página de acceso —la ruta existía y Drupal mandaba a identificarse— y ahora
-responde **404**, igual que `/admin/config/workflow/eca/settings`. Y `/user/login` sigue dando 200,
-o sea que el sitio está entero.
-
-**Lo que costó, y que era una idea equivocada mía.** Dije que bastaba marcar ECA UI y aceptar cuando
-Drupal pidiera llevarse también el modelador. Al revés: Drupal **bloquea la casilla** mientras alguien
-dependa del módulo, y no ofrece arrastrar a nadie. La cadena era de tres, y hay que deshacerla de
-abajo arriba, una ronda por módulo: **BPMN.iO for ECA** → **ECA BPMN** (`eca_modeller_bpmn`) → **ECA
-UI**. Cada ronda libera la casilla de la siguiente. Vale la pena recordarlo porque es al contrario de
-lo que hace la lista de módulos al *activar*, donde sí arrastra las dependencias sin preguntar.
-
-**Que no se pierde nada estaba verificado antes de proponerlo**, y se cumplió: los 36 procesos
-dependen de `eca_content` y `eca_log`, y los 36 diagramas del módulo base `eca`, no del modelador,
-así que ni los automatismos dejaron de correr ni los dibujos desaparecieron. Lo único que se ha ido es
-la pantalla para editarlos, que en producción no usa nadie.
-
-**Por qué lo tuvo que hacer el dueño y no yo**, que es la parte reutilizable: por SSH se entra bien
-con la llave, pero **`drush` allí no llega a la base de datos**. `settings.php` es `root:www-data`
-con permisos `640` y el usuario `david` no está en el grupo `www-data`, así que no puede leer las
-credenciales. `drush status` sí contesta la versión, porque eso lo saca del código y engaña; cualquier
-comando que toque datos responde *"Drush was unable to query the database"*. Es la misma pared del 13
-de agosto con `rebuild_access`, y la que hace falta la contraseña de `sudo` para saltar. Mientras no
-esté, **todo lo que toque datos en el servidor se hace por el navegador**, no por SSH.
-
-### 2026-08-14 — Fuera lo que no usaba nadie: un tipo de entidad, siete vistas, siete campos, catorce tablas y una llave maestra
-
-La auditoría de la mañana señaló nueve candidatos a desaparecer. Se han ido todos, pero lo que
-merece quedar escrito no es la lista, es **cómo se pasó de "parece muerto" a "es muerto"**, porque la
-primera pasada de comprobación estuvo a punto de salvar cosas que no hacía falta salvar y de tirar
-cosas que sí.
-
-**La primera búsqueda mintió, y en las dos direcciones.** Buscaba el identificador de cada vista como
-trozo de texto dentro de la configuración. Resultado: `tec_order_material_calculation` parecía
-tener trece dependencias, y `dev` cuatro. Ninguna era real. Las de la primera eran los nombres de
-otras tres vistas que **empiezan igual** (`..._summary`, `..._terms`), y las de la segunda eran
-palabras que llevan "dev" dentro. La segunda pasada buscó distinto: Drupal guarda la configuración
-serializada, y una cadena serializada lleva su longitud delante, `s:14:"identificador"`. Buscando con
-la longitud exacta solo se encuentra el valor completo, nunca un trozo. **La diferencia entre las dos
-pasadas es la diferencia entre "aparece" y "es"**, y con la primera no se puede decidir nada.
-
-Con la búsqueda buena quedó una sola duda de verdad: siete campos `viewfield` nombraban la vista del
-*Excel Lover*. Se abrió uno y era una **lista blanca de casillas** —el editor puede elegir entre
-estas vistas— con esa casilla **en cero**. Lo que el campo pinta de verdad se guarda aparte, por UUID,
-y ninguno de los siete UUID de las vistas condenadas aparecía en ningún campo. De paso se limpiaron
-esas siete casillas fantasma: si se dejan, el próximo repaso vuelve a encontrarlas y hay que volver a
-investigar lo mismo.
-
-Lo que se ha ido:
-
-- **`tec_app_link`**, un tipo de entidad con seis subtipos para enlaces a redes sociales (Facebook,
-  Instagram, LINE, WhatsApp, X y teléfono). Cero fichas, cero campos apuntando, y ECK se llevó sus
-  dos tablas al borrarlo.
-- **Siete vistas**: `tec_order_material_calculation` y su duplicado, la del *Excel Lover*, las dos
-  del núcleo que nunca se usaron (`archive` y `glossary`), `dev` —sin página ni bloque— y
-  `material_calculation_inventory_based`, cuyo bloque no estaba colocado en ninguna parte. Se
-  llevaron además cuatro traducciones al tailandés que nadie sabía que existían.
-- **Siete almacenes de campo en nodos**: `field_image_browser`, `field_files_over_ajax` y los cinco
-  `field_dth_*` que dejó el tema DXPR. Sin instancias, cero filas y cero en revisiones.
-- **Catorce tablas**: las trece `tmp_b44c2btec_gui*` y una más que apareció por el camino.
-- **La cuenta `devT`**, con rol de administrador y correo en un dominio que parece una errata del
-  del dueño. Bloqueada desde junio de 2024 y sin nada colgado. Una llave maestra que no es de nadie
-  conocido no se deja bloqueada, se quita.
-
-**Las trece tablas temporales no eran basura anónima.** Eran las tablas de `tec_gui` con cincuenta
-fichas dentro, aparcadas por una actualización de tipo de entidad que se quedó a medias hace dos
-años. Se comprobó antes de tirarlas que **las tablas de verdad existen y están vacías**, y que Drupal
-no ve ninguna ficha: o sea que esos cincuenta registros eran invisibles para el ERP desde el día en
-que se quedaron ahí.
-
-**Y un susto que no lo era.** Al borrar los siete almacenes se purgó la cola a mano para no dejarle
-el trabajo al cron, y el contador de pendientes se quedó clavado en dos durante doce vueltas. Parecía
-un atasco. No lo era: **estaba mirando el contador equivocado.** Los pendientes son *definiciones* de
-campo, y una definición no desaparece hasta que se ha vaciado su tabla entera; mientras, las filas
-sí bajaban de doscientas en doscientas sin que se viera. Eran unas 4.650 filas de
-`ai_interpolator_status`, restos de los experimentos de IA. Contando filas en vez de definiciones, la
-cola se vació en cinco vueltas.
-
-Lo que sí quedó al descubierto al vaciarla: **una tabla de campo borrado que ya no pertenecía a
-ninguna cola**, con diez filas de `field_tec_gui_product`. Ningún cron la iba a mirar jamás, porque
-su definición ya se había purgado en su día y la tabla sobrevivió. Se comprobó que las diez fichas a
-las que apuntaba no existen y se tiró. El mismo campo sigue vivo en otro subtipo, con su tabla
-aparte, que no se ha tocado.
-
-**Un hallazgo que cambia el plan de `tec_gui`.** Está en la lista de deuda técnica como "tipo de
-entidad abandonado", y es más que eso: `field_tec_gui_product` es un campo **obligatorio** de las
-líneas de pedido de venta. No se puede retirar `tec_gui` sin tocar antes eso, así que la ficha de
-deuda técnica está mal planteada y hay que rehacerla.
-
-**Las dos carpetas de peso muerto, fuera**: `tec_crm` y `tec_brands`, 51 ficheros y 111 KB, sin una
-sola línea de PHP —solo configuración exportada al estilo *features*—. Y una corrección de lo que se
-escribió esta mañana: **no eran un riesgo**, como dije en el commit del cron. El módulo `features` no
-está instalado y las dos dependen de `ai_interpolator`, que se desinstaló el 13 de agosto, así que
-Drupal se habría negado a activarlas. Eran peso muerto, no una bomba. El guardián del cron sigue
-teniendo sentido, pero por otro motivo: un clic en la interfaz o una base de datos vieja restaurada.
-
-### 2026-08-14 — Quince avisos por carga, callados con un `?? NULL`, y por fin probado con un pedido de verdad
-
-`views_simple_math_field` leía el primer valor de un campo sin comprobar que hubiera alguno:
-`$entity->get($field)->getValue()[0]['value']`. Una línea de pedido sin cantidad devuelve un array
-vacío, así que `[0]` no existe y `['value']` se lee sobre `NULL`: dos avisos por cada campo vacío y
-por cada fila, quince en una sola carga de la tabla de líneas. Y un pedido nuevo empieza con **todas**
-las cantidades vacías. No rompía nada, la página respondía 200, pero el registro es donde se buscan
-los fallos de verdad y eso los enterraba.
-
-El arreglo es `?? NULL` al final de la línea. El valor acaba siendo nulo con parche y sin él, o sea
-que el cálculo se comporta exactamente igual; lo único que cambia es el ruido.
-
-**Lo que costó no fue el arreglo, fue conseguir aplicarlo.** El parche falló dos veces, por dos
-motivos distintos y los dos reutilizables:
-
-- **Estaba en UTF-16.** Es el fallo recurrente del editor en este proyecto, y hasta hoy solo se había
-  cazado en los `.php`. Un `.patch` en UTF-16 no lo lee ni `patch` ni `git apply`, y el mensaje de
-  Composer no dice por qué: solo *"Cannot apply patch"*. **Al escribir un parche hay que comprobar la
-  codificación igual que en los guiones.**
-- **La cabecera del hunk mentía por uno.** Declaraba once líneas nuevas donde había diez, y GNU
-  `patch` respondió *"malformed patch at line 38"*, señalando la última línea de contexto en vez del
-  número mal contado. Se diagnostica en un segundo con `patch --dry-run`, que dice bastante más que
-  Composer.
-
-**Y por fin se ha podido probar de verdad.** Comprobar que un aviso ha dejado de salir no se puede
-hacer leyendo el código: hay que pedir la pantalla. Desde la limpieza no había ningún pedido con el
-que pedirla, así que `scripts/probar-el-parche.php` **se fabrica uno**: material, talla con
-BoM, pedido de venta y dos líneas, una a propósito **sin cantidad**, que es el caso que
-disparaba los avisos. Después pide `/o/draft/<pedido>` y `/o/pf/<pedido>/print`, mira el registro y lo
-borra todo. Resultado: las dos pantallas responden 200 y el registro se queda **exactamente a cero**.
-
-Eso deja además resuelto lo más difícil del punto pendiente de devolverle a la prueba de humo las
-seis pantallas que perdió: **la receta de qué hay que fabricar ya está escrita y probada** en ese
-guion. Lo que falta es llevarla a `cargan-las-paginas.php` y añadir el pedido de compra y el cliente,
-que son las otras tres pantallas.
-
-### 2026-08-14 — El cron desarmado antes de encenderlo: dos llaves fuera y los trece trabajos revisados
-
-El cron de este sitio **no ha corrido nunca**. Encenderlo está en la lista de "antes de que entren
-los empleados", y hasta hoy eso significaba encender de golpe trece trabajos que nadie había mirado.
-Uno de ellos ya había hecho daño: **`backup_migrate` volcaba la base de datos entera a la carpeta
-privada del proyecto cada noche y guardaba treinta copias**. Es de donde salieron los 178 volcados y
-los 111 MB que hubo que sacar a mano el 12 de agosto. Seguía encendido, esperando.
-
-**Apagado, y por la bandera correcta.** Aquí había una trampa que merece la pena anotar:
-`backup_migrate_cron()` no comprueba nada, ejecuta **todos** los horarios uno detrás de otro
-(`backup_migrate.module:232`). La comprobación está dentro, en `Schedule::run()`, y lo que lee es
-`$this->get('enabled')` (`Schedule.php:93`), **no** el `status` de la ficha de configuración. Son dos
-banderas distintas en el mismo sitio, y apagar la que no es habría dado una sensación de seguridad
-falsa. Se apagó `enabled`, y de paso el trabajo `backup_migrate_cron` de Ultimate Cron, que es la
-misma llave un piso más arriba. Las copias las hace `scripts/copia-de-seguridad.ps1`, que hace más
-—código, ficheros, historial de Git y verificación— y escribe **fuera** del proyecto.
-
-Detalle tranquilizador que se comprobó de paso: ese trabajo tiene `catch_up: 0`, así que no habría
-disparado al encender el cron, sino a las 3 de la mañana siguiente. Se habría descubierto por la
-mañana, con el volcado ya dentro.
-
-**Segunda llave fuera: `eca_base_cron`.** Se despertaba cada quince minutos, 96 veces al día, y
-**ninguno de los 36 procesos de ECA escucha el evento de cron**. Trabajo cero, ruido cien. Se vuelve
-a encender el día que haga falta un automatismo periódico de verdad, por ejemplo el aviso de stock
-bajo.
-
-**Y una que no era un interruptor sino un hueco.** `dblog.settings` **no existía** en la
-configuración activa. No es que el límite estuviera bajo: no estaba. `dblog_cron()` lee ese valor y,
-si no hay nada, `if ($row_limit)` es falso y **no recorta nunca**, o sea que el registro habría
-crecido sin freno. Ahora está escrito y exportado, en **100.000 filas**. Lo de fábrica son mil, que
-en un ERP recién arrancado es media mañana, y el registro de las primeras semanas de uso real es
-justo donde se van a buscar los fallos.
-
-**Lo que dijo la consulta al purgador de campos.** `field_cron` es el único de los trece que borra
-datos, así que antes de dejarlo suelto se preguntó qué tenía en la cola: **dos almacenes y cuatro
-campos**, y todos son restos de lo mismo. `ai_interpolator_status` en `tec_units`, `tec_colors` y
-`tec_bom_item` —los experimentos de IA de Oscar, cuyo módulo se desinstaló el 13 de agosto— y
-`field_tec_edit_product`. Llevan ahí desde que se borraron, porque el cron nunca pasó a recogerlos.
-O sea que `field_cron` no es un riesgo: es el que limpia. Se queda encendido.
-
-Los trece, con la decisión de cada uno:
-
-| Trabajo | Cuándo | Decisión |
-|---|---|---|
-| `backup_migrate_cron` | 3:00 cada día | **apagado**, volcaba la base dentro del proyecto |
-| `eca_base_cron` | cada 15 min | **apagado**, ningún proceso escucha |
-| `field_cron` | cada 3 h | se queda: purga los seis restos de la IA |
-| `file_cron` | 0:00 cada día | se queda; no tocaba los 315 huérfanos, que se borraron a mano |
-| `system_cron` | cada 6 h | se queda: cachés, lotes viejos, control de inundación |
-| `update_cron` | por defecto | se queda: es el que avisa de las alertas de seguridad |
-| `dblog_cron` | por defecto | se queda, ya con límite escrito |
-| `layout_builder_cron` | 0:00 cada día | se queda: borra borradores de diseño olvidados |
-| `locale_cron` | domingos 0:00 | se queda: no hace nada, y está bien así (ver la corrección) |
-| `ultimate_cron_cron` | 0:00 cada día | se queda: limpia sus propios registros |
-| `node_cron`, `feeds_cron`, `feeds_log_cron` | — | ya estaban apagados, y bien |
-
-**No queda ninguna cosa abierta**, y las dos que se apuntaron aquí eran falsas las dos. La primera
-es una corrección de lo que se escribió esa misma tarde. Dije que `locale_cron` se despertaría los domingos a descargar traducciones de tailandés para
-los 146 módulos y a engordar `locales_source` y `locales_target`, y que antes de encender el cron
-había que decidir si el ERP iba a ser multiidioma. **No es verdad, y se comprobó en el código del
-núcleo el 14 de agosto por la noche.** El ajuste "cada cuánto comprobar si hay traducciones nuevas"
-está en **0, que significa nunca** (`locale.settings`, `translation.update_interval_days`), y
-`LocaleCronHooks::cron()` lo consulta antes de mover un dedo: si es cero, el trabajo se despierta y
-se vuelve a dormir sin tocar la red ni la base de datos. O sea que se queda encendido tal cual, sin
-que haya nada que decidir. El detalle de qué hay montado de idiomas y por qué, más abajo en esta
-misma sección.
-
-Y la segunda tampoco era una decisión que bloqueara el cron, aunque aquí quedó escrita como si lo
-fuera. `file_cron` no iba a borrar los 315 ficheros huérfanos, precisamente porque
-`make_unused_managed_files_temporary` está en `false`: el cron pasaba de largo por su lado. Se
-borraron esa misma noche, pero por limpieza y no porque el cron lo pidiera.
-
-**El guardián.** `comprobacion.php` pasa de 42 a **46 comprobaciones**: los ocho trabajos
-encendidos, que los dos desarmados sigan apagados, que ningún horario de copias esté encendido y que
-el límite del registro siga escrito. No es paranoia: `tec_crm` y `tec_brands` siguen en el disco con
-49 copias viejas de configuración dentro, y un `features:import` despistado puede resucitar
-cualquiera de estas cosas sin decir nada. Comprobación 46/46 y prueba de humo en verde después de
-todo.
-
-### 2026-08-14 — El ratón ya enseña la pantalla y no el nodo: la portada enlaza por campo, y las redirecciones fuera
-
-Media hora después de poner las cuatro redirecciones, el dueño vio el precio del apaño: **al pasar
-el ratón por los cuatro iconos nuevos salía `/node/11` en vez del destino**, mientras que en los
-antiguos salía `/p`, `/i`, `/o`. Queja legítima, y con explicación exacta.
-
-**La portada siempre había enlazado al nodo, nunca al destino.** En los siete antiguos el nodo *es*
-la pantalla y tiene alias bonito, así que el ratón enseñaba una ruta bonita por casualidad. Los
-cuatro nuevos son de otra naturaleza —la pantalla es una ruta de `tec_production`, no vive dentro
-del nodo— y esos nodos no tienen alias. Y la redirección salta **en el servidor, después de
-pinchar**: en el HTML ponía `/node/11`, así que el navegador decía la verdad.
-
-**Arreglado como estaba escrito que había que arreglarlo**, el mismo día que se escribió: un campo
-de enlace, `field_tec_target`, en el tipo de contenido *Landing page*. Obligatorio, solo rutas
-internas, sin texto de enlace. Relleno en las once portadas, y la vista de la portada pinta ahora
-el icono y el título como enlace **a ese campo** en lugar de al nodo.
-
-Tres detalles que hacen que funcione, y que la próxima vez ahorran media hora:
-
-- El campo se añade a la vista **primero y excluido**, porque una reescritura de Views solo ve los
-  campos que van **antes** que ella.
-- Su formateador es *"solo la URL, en texto plano"*. Un campo de enlace pintado normal daría un
-  `<a>` en vez de una ruta, y meterlo dentro de un `href` sería un desastre. Con esa opción da
-  `/o/queue` limpio. El núcleo contempla el caso literalmente: *"Tokens might have resolved URL's,
-  as is the case for tokens provided by Link fields"* (`FieldPluginBase::renderAsLink`, línea 1472).
-- Las siete primeras rutas **no se escriben a mano**: el guion las saca del alias real de cada
-  nodo, así que el campo dice lo que dice Drupal y no se desfasa si alguien cambia un alias. Solo
-  las cuatro de código están escritas, porque su ruta la define `tec_production.routing.yml`.
-
-**Y fuera la muleta: las cuatro redirecciones borradas**, de seis a dos. Quedarse con ellas habría
-sido peor que borrarlas: dentro de un año nadie sabría por qué `/node/14` salta a otro sitio.
-Efecto colateral asumido: si alguien entra a `/node/11`–`/node/14` a pelo vuelve a ver la página
-del icono y el número. Ya no hay ningún enlace que lleve ahí.
-
-**Comprobado lo que un humano ve.** Pedido `/start` como usuario 1 y listados los enlaces uno a
-uno: once iconos, los once apuntando a su pantalla, las once rutas existen, y cada uno con sus dos
-enlaces (imagen y título). El formulario de una portada abre con el campo relleno.
-
-**Guardián nuevo en la comprobación del ERP**, porque el fallo anterior duró meses sin que nada se
-quejara: *"las portadas dicen qué pantalla abren"* y *"y esa pantalla existe"*. 42 de 42. Y el
-campo obligatorio impide que nazca una portada sin destino, que era la otra mitad del problema.
-
-Queda en `scripts/destino-de-las-portadas.php` (crea el campo, lo rellena y quita las
-redirecciones; se puede volver a pasar sin miedo) y en `scripts/a-donde-apuntan-los-iconos.php`
-(la comprobación de lo que ve el ratón).
-
-### 2026-08-14 — Super BOM retirado, y cuatro iconos del home que no llevaban a ninguna parte
-
-Super BOM sobraba: lo que hacía lo hace ya el tablero de stock. Antes de tocarlo había que
-responder a una sola pregunta, quién lo usa, y ahí apareció lo interesante.
-
-**El barrido en busca de referencias tenía un punto ciego, y era justo donde estaba la respuesta.**
-Se buscó *superbom* en las **1.335 columnas de texto de las 447 tablas** de la base y de contenido
-salió limpio. Ese resultado no valía nada: **las portadas del ERP se montan con Layout Builder, y
-ese campo se guarda serializado en una columna binaria**, igual que `config.data`. O sea que el
-único sitio donde podía vivir el enganche era el único que un `LIKE` no mira. Hubo que abrir las
-secciones con la API de Drupal para verlo.
-
-La receta buena, para la próxima retirada —Patrones—: **el mapa de portadas más un `grep` sobre
-`config/sync`**, nunca una búsqueda de texto sobre la base. Queda en
-`scripts/que-hay-en-las-portadas.php`, que dice qué bloques lleva cada portada dentro.
-
-**Lo que había, ya con el mapa delante:**
-
-- **`tec_superbom`** no la usaba nadie. Llevaba muerta quién sabe cuánto.
-- **`tec_superbom_ii`**, bloque `block_1`, tenía una sola referencia: el diseño del **nodo 10**, que
-  es la propia página `/bom`. Nada en ECA, nada en el código propio, ninguna otra vista, ningún
-  otro nodo.
-
-Así que se borró el nodo, y con él se fue su diseño y el bloque. **La entrada de menú la borró el
-núcleo solo**, en `MenuLinkContentHooks::entityPredelete`: siete enlaces donde había ocho. Después
-las dos vistas. El icono desapareció del home igual que desapareció el de Patrones.
-
-**Dos usuarios menos para `simple_popup_views`**, que es uno de los dos módulos sin versión para
-Drupal 11 y vive de un parche nuestro. Las dos vistas de Super BOM lo usaban. Pasa de diez vistas
-a ocho; sigue siendo deuda, pero la superficie mengua. Por el camino se vio una de esas ocho que
-huele a resto: `views.view.duplicate_of_tec_order_material_calculation_terms_copy`, un duplicado
-con nombre de duplicado. Sin comprobar.
-
-**Un resto que se deja a propósito.** En
-`field.field.tec_inventory.tec_bom_item.field_tec_color_swatch_vf.yml` queda una línea
-`tec_superbom: '0'`: es la lista de casillas de "vistas permitidas" de un campo de vista, donde
-figuraba con un cero, o sea **no** permitida. No era dependencia y Drupal no la limpia al borrar la
-vista. Tocar ese campo para quitar una línea inocua es más riesgo que la línea.
-
-**El segundo hallazgo, que salió de la misma consulta: cuatro de los catorce iconos del home no
-llevaban a ninguna parte.** *Orders on Queue*, *Production Log*, *Production Report* y *Stock
-Control* apuntaban a `/node/11`–`/node/14`. Esos cuatro son los únicos nodos **sin diseño propio**,
-así que caían al diseño por defecto del tipo de contenido, que pinta el cuerpo (vacío), el icono
-otra vez y el **número de orden**. Nada más. Las pantallas de verdad no son nodos, son rutas del
-módulo `tec_production`: `/o/queue`, `/production/log`, `/production/report` y `/stock`.
-
-**Y aquí la lección, que es más valiosa que el arreglo.** La entrada de ayer celebraba que la
-prueba de humo por fin pedía las doce portadas y que *"todas responden 200"*, `/node/11` a
-`/node/14` incluidos. Respondían 200 **y eran callejones sin salida**. Un 200 dice que el servidor
-no se ha roto; no dice que la página sirva para algo. Es el mismo tipo de fallo que los botones de
-crear escondidos: parece correcto hasta que pinchas.
-
-Arreglado con **cuatro redirecciones**, que es lo que el sitio ya usa para `/customers` y
-`/products`. Dos decisiones dentro:
-
-- **Son temporales (302), no permanentes.** El arreglo bueno es un campo de enlace en el tipo de
-  contenido y reescribir la salida de la portada. Si esto fuera un 301 se quedaría pegado en el
-  navegador de todos y costaría más quitarlo que ponerlo.
-- **Son contenido, no configuración.** Viven en la base de datos y viajarán al servidor con la
-  base, no con Git. Si algún día se despliega de otra manera, hay que acordarse de ellas.
-
-Comprobado con `curl` de verdad: `/node/11` devuelve `302` con `Location: /o/queue`, `/node/14` con
-`/stock`, y `/bom` ya devuelve `404`. **Ojo con un detalle de la prueba de humo**: ahí esas cuatro
-siguen apareciendo como 200, porque las peticiones internas no pasan por el vigilante de
-redirecciones —solo actúa en la petición principal—. No es un fallo de la prueba, pero hay que
-saberlo para no volverse loco.
-
-Recuentos de la comprobación al día: nodos 12 → **11**, enlaces de menú 8 → **7**, redirecciones
-2 → **6**. Sale 40 de 40, y la prueba de humo 30 páginas sin problemas. El icono del nodo 10
-(fichero 306) se suma a los huérfanos: el total de ficheros sigue en 315 porque Drupal no los
-borra, simplemente hay uno más que no usa nadie.
-
-Copia antes de tocar en `C:\laragon\backups\antes-de-retirar-superbom\` (64 MB). Lo que se hizo
-está en `scripts/retirar-superbom.php`, con las razones dentro.
-
-> Aviso para quien lea esto suelto: **las cuatro redirecciones ya no existen**. Duraron media hora.
-> El arreglo bueno llegó el mismo día y está en la entrada de arriba.
-
-### 2026-08-14 — Diez botones de crear escondidos, y el CRM sin manera de empezar
-
-El dueño entró a mirar el ERP vacío y encontró lo primero que había que encontrar: en Contactos,
-Clientes y Proveedores **no había botón para crear nada**. Sin cliente no hay pedido de venta y
-sin proveedor no hay orden de compra, así que el ERP entero estaba cerrado por ahí.
-
-**Los botones estaban puestos.** Los cuatro, bien escritos, apuntando a las rutas correctas. Lo
-que estaba mal era una casilla: en Views, las zonas de cabecera tienen un *"Display even if view
-has no result"* que **viene apagada por defecto**, y apagada significa que la zona desaparece
-cuando la consulta no trae filas (`AreaPluginBase::isEmpty()`, línea 122 del núcleo). O sea el
-círculo vicioso perfecto: **el botón de crear el primer contacto solo aparecía cuando ya había
-contactos.**
-
-Llevaba así desde siempre y nadie se había enterado, porque con 22 fichas de prueba dentro la
-lista nunca estaba vacía. Lo destapó el borrado de la noche anterior.
-
-**Y no era un botón, eran diez, en siete pantallas.** El barrido de `empty: false` seguido de un
-enlace de crear los saca todos. Los que bloqueaban:
-
-- Las **tres del CRM** (`views.view.tec_crm_customers`): Contactos, Clientes y Proveedores, con
-  sus botones *+ Organization* y *+ Person*.
-- El bloque de **materiales del proveedor** (`views.view.tec_inventory`, "CRM Supplier Inventory
-  block"): al abrir un proveedor nuevo no había manera de añadirle su primer material.
-
-Los que no bloqueaban, y esto es lo interesante: **pedidos, productos y la pantalla principal de
-inventario ya tenían la casilla marcada**. El patrón correcto se conocía y se había aplicado en
-la mitad del ERP. No es un olvido de diseño, es un despiste repetido.
-
-Arreglado lo que bloqueaba, más la pantalla de colores por consistencia. Y se le puso a las tres
-del CRM el texto que faltaba para cuando no hay nada, en inglés: *"Nothing here yet. Use the
-buttons above to add an organization or a person."* Va **una sola vez en el display por defecto**
-y las tres pantallas lo heredan, en lugar de tres textos casi iguales: así se lee bien en las
-tres y hay un solo sitio que mantener.
-
-**Una errata de una letra, en un sitio que no importa.** El botón de añadir color de
-`views.view.tec_colors` apuntaba a `tec_colorss`, con dos eses, o sea un 404. Corregida. Está en
-un display cuya ruta es **`/asas`** —teclado aporreado— que es una pantalla de pruebas que nadie
-usa y que se puede borrar; aparece en la prueba de humo desde el principio y ahí sigue.
-
-**Un efecto secundario que conviene conocer antes de verlo.** Al guardar una vista por primera
-vez bajo Drupal 11, su exportación se normaliza: los `1` y `0` de `sortable`, `sticky`,
-`override` y `empty_column` pasan a ser `true` y `false` de verdad, y alguna clave cambia de
-sitio. Resultado: **un cambio de una palabra produce un diff de sesenta líneas**. No es daño y no
-hay que pelearse con él, pero la primera vez asusta y hace dudar de si se ha tocado algo más.
-
-**Y lo que hay que arreglar de verdad es por qué esto no lo encontró una máquina.** La prueba de
-humo descubre las vistas por su ruta propia, y las portadas del ERP no tienen ruta propia: son
-**nodos** con bloques de vista dentro. Así que llevaba meses sin pedir ni una de las doce
-pantallas por las que se entra a todo. Ahora las pide todas: de 20 pantallas a **31**, y con eso
-entraron `/p`, `/i`, `/o`, `/c`, `/c/customers`, `/c/suppliers`, `/cl`, `/bom` y cuatro nodos que
-no tienen alias (`/node/11` a `/node/14`). Todas responden 200.
-
-Queda un límite honesto: la prueba comprueba que la página responde, **no que el botón esté
-dentro**. Eso se verificó a mano esta vez, pidiendo las tres pantallas como usuario 1 y buscando
-los enlaces en el HTML. Si algún día hace falta automatizarlo, el sitio es la comprobación del
-ERP, no la de humo.
-
-### 2026-08-14 — El ERP se queda vacío: 7.003 fichas y 892 términos fuera, y el ERP en verde después
-
-El contenido de prueba ya no está. Sesenta y siete segundos de reloj para lo que llevaba semanas
-en la lista, y ni un solo error. Pero lo que se aprendió por el camino vale más que el borrado.
-
-**El recuento real era la mitad de lo que decía este backlog.** Aquí ponía "casi 15.000
-registros" desde el 12 de agosto. Eran **7.003 fichas de contenido y 892 términos**. La cifra
-vieja venía de sumar los 13.615 movimientos de inventario que se contaron una vez en la pantalla
-de inventario, y esa pantalla cuenta filas de una vista, no fichas: multiplicaba. Se descubrió al
-contar de verdad con `scripts/que-hay-dentro.php`, antes de tocar nada, y es el argumento a favor
-de contar antes de planificar: el plan que se había hecho para 15.000 registros incluía lotes,
-pausas y reintentos que no hacían falta.
-
-**El orden importaba de verdad, y hubo que averiguarlo en tres pasadas.** El primer mapa de
-dependencias salió de la configuración —qué campo apunta a qué—, y estaba incompleto: la
-configuración dice qué *puede* apuntar, no qué apunta. Hicieron falta dos guiones más
-(`quien-apunta-a-que.php` y `dos-riesgos.php`) leyendo las tablas de datos para encontrar tres
-cosas que no estaban en el plan: **catorce registros de producción**, **cuarenta y siete
-importaciones** y **treinta y una redirecciones** del servidor viejo. Ninguna aparecía en la
-lista original. Los dieciséis pasos finales se ejecutaron en cascada, de las hojas al tronco:
-producción, BoM de línea, BoM, movimientos, líneas, pedidos, variaciones,
-productos, fichas de CRM, materiales, nodos, redirecciones y por último los vocabularios.
-
-**El fallo de la bandera silenciosa no se activó ni una vez.** Era el riesgo serio: en este ERP,
-borrar un material que está en uso deja puesta una bandera de bloqueo, y una línea con esa
-bandera **deja de recalcular sin avisar a nadie**. Por eso los 29 procesos de ECA se apagaron
-antes de empezar y se volvieron a encender al acabar, y por eso el orden iba de las hojas al
-tronco: cuando le llegó el turno al material, ya no le colgaba nada. Al terminar, en todo el sitio
-quedaba **una sola bandera puesta, `tec_eca_gui_lock`**, que es la que debe estar en reposo.
-
-**Y apagar ECA tiene un precio que nadie cuenta: 7.033 errores en el registro.** El módulo sigue
-escuchando aunque sus procesos estén apagados, así que cada entidad borrada disparó el motor, que
-no encontró nada suscrito y lo anotó como error. No rompe nada y es inevitable mientras se apague
-así, pero conviene saberlo antes de verlo y pensar que algo ha ido mal.
-
-**El registro entero, a la basura, y con motivo.** Tenía **15.439 líneas desde el 4 de mayo de
-2024**: 7.822 errores de ECA, las 505 emergencias falsas de la errata que se arregló el día
-antes —el arreglo evita las nuevas, no borra las viejas—, 2.053 avisos de cron, 308 de
-`upgrade_status`, que ya ni está instalado. Todo eso es diagnóstico de una época de pruebas cuyos
-datos acaban de desaparecer. Un registro donde el próximo fallo de verdad va a aparecer como la
-línea 15.440 no es un registro, es un pajar. Vaciado. Si algún día hiciera falta, está entero en
-la copia de seguridad de esa noche.
-
-**Los 869 materiales salieron a CSV antes de morir, y de ahí salió una respuesta gratis.** El
-fichero está en `C:\laragon\backups\materiales-antes-del-borrado\materiales.csv`, 57 columnas,
-162 KB, fuera del proyecto porque lleva costes y proveedores dentro. Al escribirlo se contó
-cuántos materiales traían cada campo relleno, y eso contestó de golpe una pregunta que llevaba
-semanas abierta: **de los dos campos de proveedor, el que se usaba es `field_tec_vendor`** —38
-materiales— y `field_tec_suppliers` estaba **vacío en los 869**. Se iba a decidir a ojo y la
-decidieron los datos. El resto del retrato: solo ocho campos rellenos en todo el catálogo, precio
-en 50 materiales, coste en 15, plazo de entrega en 3, SKU en ninguno.
-
-**La comprobación del ERP cambió de oficio.** Vigilaba recuentos —4.773 BoM, 869
-materiales, 18 pedidos—, y contra una base vacía eso no avisa de nada. Ahora vigila que los
-**dieciséis tipos de contenido sigan declarados** en las seis entidades, que los vocabularios que
-se quedan tengan lo que tenían, y que los automatismos reaccionen. Esa última parte era la única
-que probaba algo de verdad, y era también la única que dependía de los datos de prueba: se
-apoyaba en un material cualquiera de los 869 y en una línea de pedido con precio. **Ahora se
-fabrica sus propios datos, los usa y los borra**, y se ha comprobado que dos pasadas seguidas dan
-lo mismo. Cuarenta comprobaciones, cuarenta en verde.
-
-Fabricar esos datos enseñó dos cosas sobre el ERP que no estaban escritas en ningún sitio:
-
-- **Una línea de pedido con precio y cantidad no calcula nada, y hace bien.** El primer maniquí
-  llevaba solo eso, y el total salía vacío. Parecía un fallo grave. No lo es: el proceso solo
-  escucha el evento de actualizar, y todo lo que calcula gira alrededor del BoM de la
-  talla. Una línea que no cuelga de una talla no es un caso real y el proceso la deja en paz. Con
-  la talla puesta, cambiar la cantidad a 6 con precio 12,50 da **75,00** al primer intento.
-- **Al guardar una línea, ECA crea por su cuenta un BoM de línea y lo engancha.** Nadie lo
-  pide y no se ve en ninguna pantalla. La primera sonda dejó uno huérfano y la comprobación
-  siguiente habría fallado por encontrar contenido donde debía haber cero, sin pista de por qué.
-  Ahora se va a buscar y se borra.
-
-**La prueba de humo perdió seis pantallas y ahora al menos lo dice.** Al quedarse sin datos no
-encuentra con qué pedir las vistas que llevan un identificador en la dirección, así que se las
-salta: `o/draft/%`, `po/draft/%`, las dos de imprimir, el PDF y `tec_crm/%/reorder`. Pasó de
-mirar veintiséis a mirar veinte **y el resumen seguía diciendo "todas cargan"**, que es la clase
-de frase con la que se despliega tranquilo sin motivo. Y la peor de las seis es `o/draft/%`,
-justo la que se rompió el día antes. Ahora las nombra una por una. Fabricarle un pedido de
-mentira, como hace ya la comprobación, queda apuntado arriba.
-
-**Donde se paró a propósito: Marcas y Patrones.** Sus términos se borraron, pero los vocabularios
-siguen ahí vacíos con sus campos, tres vistas y sus formularios. Al ir a retirarlos apareció el
-motivo para no hacerlo esa noche: **los dos procesos de duplicar producto copian
-`field_tec_brand` y `field_tec_pattern`**, así que borrar los campos rompe el duplicado de
-productos. Borrar datos y desmontar configuración son dos trabajos distintos, y mezclarlos a las
-tres de la mañana era la manera de no saber después qué había roto qué.
-
-Lo que se queda dentro: 32 colores, 22 tipos de material, 23 tipos de producto, 14 tallas, 13
-unidades, los 3 tipos de contacto —intactos, que ahí estaba el fallo que costaba caro—, 12 nodos
-de navegación, 8 enlaces de menú, 2 redirecciones y 3 importaciones. Y de paso se limpiaron
-**seis términos duplicados** que había creado el importador con sus erratas, entre ellos un color
-"Blue " con un espacio detrás.
-
-Guiones nuevos, todos en `scripts/`: `que-hay-dentro.php`, `quien-apunta-a-que.php`,
-`dos-riesgos.php`, `borrar-datos-de-prueba.php` y `exportar-materiales.php`.
-
-### 2026-08-14 — Las carpetas sobrantes, y un volcado de la base de datos que se descargaba sin contraseña
-
-Lo que iba a ser un borrado de dos minutos ha destapado tres cosas, una de ellas de seguridad.
-
-**Las dos carpetas de la restauración, fuera.** `config/sync.pre-restore-20260810023747` y
-`modules/custom.pre-restore-20260810023746`: 1.382 ficheros, 6,7 MB. Antes de borrarlas se han
-comprimido enteras en `C:\laragon\backups\restos-pre-restore-20260810.zip`, 1,2 MB, verificando que
-dentro están los 1.382 ficheros. Se ha archivado en vez de borrar por lo que salió al compararlas
-con lo actual, que es el motivo de no fiarse de la nota que decía "restos ya superados".
-
-**Había siete ficheros que no existían en ningún otro sitio.** No eran basura: eran una función
-entera del inventario. Un selector propio de materiales para el BoM —el plugin
-`tec_inventory:bom_material`, su controlador, su JavaScript, su enrutado y sus servicios— más un
-`menu-accent.css`. Nunca estuvieron en Git: el primer commit del repositorio, del 9 de agosto, se
-llama precisamente *"Baseline snapshot before tec_inventory redesign"* y no los contiene, así que
-eran trabajo empezado esa noche durante el rediseño y la restauración del 10 de agosto se lo llevó.
-Comprobado que su desaparición no dejó nada roto: **ni la configuración activa ni el código actual
-mencionan ese plugin**, o sea que ningún campo está pidiendo un manejador que ya no existe. La idea
-sí merece recordarse, porque el vocabulario de materiales tiene 869 términos y aquello era
-justamente un autocompletado con lista de etiquetas ligera en caché y filtrado local en JSON.
-
-**De los 62 objetos de configuración que solo estaban en la carpeta antigua, ninguno hacía falta.**
-Dieciséis son ocho procesos ECA, y los ocho están **desactivados** y son clones —con `(clone)` en el
-nombre— de dos automatizaciones que siguen vivas. El resto son restos de módulos ya desinstalados:
-`comment`, `color`, `ds_extras`, `features`, `file_mdm`, `shield`, `pace`, y tres campos
-`ai_interpolator_status` del interpolador de IA.
-
-**El riesgo que nadie había visto.** La carpeta estaba *dentro* de `modules/`, y Drupal rastrea ese
-directorio de forma recursiva buscando ficheros `.info.yml`. Es decir: había **dos copias de cinco
-módulos con el mismo nombre**, y cuál gana depende del orden de rastreo. Se comprobó antes de borrar,
-preguntándole a Drupal de qué ruta carga cada uno, y por suerte cargaba los actuales
-(`modules/custom/...`). Pero era suerte, no diseño. Ese es el argumento de verdad para no dejar
-copias de módulos dentro de `modules/`, por encima del sitio que ocupan.
-
-**Y lo de seguridad: un volcado completo de la base de datos de febrero de 2024, descargable sin
-credenciales.** En la raíz del sitio había una carpeta `private_` —con guión bajo al final, señal de
-que alguien la "desactivó" renombrándola— y dentro
-`backup_migrate/backup-2024-02-22T13-06-08.mysql.gz`. Esa carpeta **no** es el camino privado
-configurado: el de verdad es `sites/default/private`. Y no tenía `.htaccess`. Pedirla por el
-navegador devolvía **HTTP 200 y 660 KB**, es decir la base de datos entera, con su tabla de usuarios,
-sin pedir nada. El detalle de por qué pasaba desapercibido: el `.htaccess` de la raíz de Drupal
-bloquea una lista de extensiones en la que está `.yml` —de ahí el 403 al pedir un fichero de
-`backups/`— pero **`.gz` no está en esa lista**.
-
-Lo primero fue mirar si eso había viajado al servidor público, que es donde importaría de verdad:
-`tec.actafight.com` devuelve **404** en las tres rutas probadas, así que la exposición por web era
-solo local. El volcado se ha movido a `C:\laragon\backups\volcado-antiguo-2024-02-22\` —moverlo y no
-borrarlo, porque es el retrato más antiguo que queda de la base de datos— y la carpeta `private_` se
-ha borrado. Ahora la URL da 404. De paso se ha verificado que la carpeta privada de verdad sí está
-cerrada: trae `Require all denied` y pedir un fichero real de dentro devuelve 403.
-
-**Pero el volcado estaba dentro del repositorio, y eso no lo esperaba nadie.** Al borrar la carpeta,
-Git marcó los dos ficheros como eliminados, o sea que estaban siendo seguidos. Entró en
-`9cbcff83`, el **primer commit** del repositorio, y seguía en HEAD. El motivo es de una línea:
-`.gitignore` excluye `sites/*/private`, que es la carpeta privada de verdad, pero nadie escribió
-nada de `private_` con guión bajo. Así que 660 KB con la base de datos de febrero de 2024 se
-subieron a GitHub el 12 de agosto, en el mismo repositorio privado.
-
-Antes de decidir qué hacer con eso se ha mirado qué contiene de verdad, porque había una pregunta
-incómoda: la purga del historial del 12 de agosto quitó la clave de OpenAI de los objetos de Git,
-pero si la clave hubiera estado en la base de datos, este volcado la habría vuelto a meter.
-**Descomprimido y rastreado, el resultado es limpio**: 6,4 MB, 161 tablas, y cero coincidencias con
-la forma de una clave de OpenAI, de Google, de AWS o de GitHub, ni claves privadas SSH o RSA. Hubo
-un susto de dos coincidencias `AIza...` que resultaron ser un `default_config_hash` de Drupal:
-`Select-String` **no distingue mayúsculas si no se le pide**, y estaba encontrando `aiZa` en
-minúscula. Con `-CaseSensitive`, cero. De datos personales hay poco: una sola sentencia `INSERT` en
-`users_field_data` y nueve líneas con correos.
-
-Los dos ficheros se han quitado del repositorio y se han añadido reglas a `.gitignore` para que
-ningún volcado vuelva a colarse por la puerta del nombre. Lo que queda por decidir es si merece la
-pena reescribir el historial otra vez para borrarlo de `9cbcff83`; la recomendación es **no**,
-porque el repositorio es privado, dentro no hay ningún secreto y una reescritura obliga a un
-`push --force` que ya se sufrió una vez.
-
-**Y de camino aparecieron 111 MB más, estos sí bien guardados.** En
-`sites/default/private/backup_migrate` había **178 volcados** de la base de datos, de febrero a mayo
-de 2024, congelados desde que el cron dejó de disparar el programador de `backup_migrate`. Eran dos
-tercios de los 173 MB de la carpeta privada. Del navegador no se accedían —comprobado—, así que no
-eran un riesgo; el problema era que esa carpeta entra en las copias de seguridad, y cada copia subía
-esos 111 MB a Drive. Se han movido a `C:\laragon\backups\volcados-2024-backup-migrate\`. Antes se
-comprobó lo que había que comprobar: **cero** de esos ficheros están registrados en `file_managed`,
-así que mover no deja referencias muertas. La carpeta de destino se ha dejado en su sitio y vacía,
-porque el programador diario sigue **activo** en la configuración y volverá a escribir ahí en cuanto
-se arregle el cron. La carpeta privada pasa de 172,9 MB a **61,6 MB**.
-
-**Comprobado después de todo.** Git limpio, sin un solo cambio, porque las dos carpetas estaban
-excluidas del repositorio. Caché reconstruida y prueba de humo: **38 páginas, 0 con problemas**.
-
-### 2026-08-14 — Las 505 emergencias falsas del registro, y `upgrade_status` fuera
-
-Dos cabos sueltos de los baratos, cerrados de madrugada después de confirmar el arreglo del error
-500. Los dos han dado más información de la que prometían.
-
-**La errata del registro no era un carácter, eran dos.** El proceso `process_rxuimsq` escribía su
-mensaje de arranque con nivel 0, *Emergencia*, en vez de 7, *depuración*. Lo que aquí estaba
-apuntado —cambiar un carácter en `config/sync/eca.eca.process_rxuimsq.yml`, línea 166— habría
-funcionado justo hasta que alguien abriera el modelo en el editor de ECA, porque **la severidad
-está duplicada**: una vez en la configuración del proceso y otra dentro del XML del BPMN, en
-`eca.model.process_rxuimsq.yml`. Ese fichero es el dibujo, y el dibujo manda cuando se guarda desde
-la interfaz. Arreglar solo uno de los dos es dejar una mina.
-
-De paso salió el tamaño real del problema: **505 entradas de nivel Emergencia en el registro, y las
-505 son ese mensaje**. Ninguna de verdad. Eso es la mitad de la mala noticia y la mitad de la buena:
-significa que el ERP no ha tenido nunca una emergencia real, pero también que si la hubiera tenido
-habría entrado en una lista de 505 falsas y nadie la habría visto.
-
-Comprobado en marcha, que es la única forma de darlo por bueno: la última emergencia es de las
-18:22 del 13 de agosto, y las tres entradas de ese mismo mensaje posteriores al arreglo —de las
-00:24 del 14, generadas al pasar la comprobación— entran con nivel 7. El contador de emergencias
-queda congelado en 505. Esas 505 viejas siguen en el registro; se pueden borrar con una consulta si
-molestan, pero se han dejado porque el registro rota solo.
-
-**`upgrade_status` desinstalado, y una decisión que no se podía esquivar.** El módulo ya había
-cumplido. Lo que no era obvio es qué hacer con `update`, que estaba encendido solo porque
-`upgrade_status` lo arrastra como dependencia, y que era la otra mitad de las dos exclusiones
-permanentes que ensuciaban `config/sync`. Había que decidir algo sí o sí, porque desinstalar solo
-uno deja la cuenta igual de turbia.
-
-**Se queda `update`, y ahora a propósito.** Es el módulo del núcleo cuyo único trabajo es avisar de
-las alertas de seguridad, es decir exactamente lo que le faltó a este sitio mientras acumulaba
-ochenta y dos sin que nadie se enterara, una de ellas un CSRF crítico. Apagar el vigía justo después
-de esa historia sería la lección equivocada. En Drupal 11 ya no instala nada, solo informa, así que
-no añade superficie. Sus ajustes están exportados y el módulo sigue en `core.extension`, de modo que
-**`config:status` dice por fin "no differences"**, algo que no pasaba desde antes de la subida. Si
-algún día se quiere apagar, es un `drush pm:uninstall update` y bajar la cifra de la comprobación.
-
-**La comprobación queda en 35 de 35, con cuatro cifras actualizadas.** La de módulos sube a 146,
-porque `update` deja de contar como herramienta temporal y pasa a ser un módulo más; la lista
-`MODULOS_TEMPORALES` se queda vacía pero el mecanismo se deja puesto, que en la próxima subida hará
-falta otra vez. Y tres cifras de contenido suben —18 pedidos de venta, 101 líneas y 202 elementos de
-BoM— porque son **los pedidos 755 y 756 creados a mano anoche** para comprobar que la pantalla
-de líneas volvía a abrir, con ocho líneas cada uno. Se actualizan a propósito: una cifra que falla
-siempre por un motivo conocido deja de servir para avisar de nada.
-
-Y la trampa del UTF-16 volvió a picar, esta vez en `scripts/exportar-config.php`. Van tres sesiones
-seguidas. El detector ya está en la rutina de trabajo —mirar si el segundo byte es cero antes de dar
-nada por bueno— pero esto refuerza lo que hay apuntado más arriba: merece la pena montar el *hook*
-de Cursor que lo convierta solo.
-
-### 2026-08-13 — El error 500 al editar las líneas de un pedido: lo rompía un parche nuestro, no el módulo
-
-La revisión visual posterior al salto a Drupal 11 dio con un 500 en `/o/draft/755`, la pantalla
-donde se editan las líneas de un pedido, que es de las más usadas de la fábrica. Crear el pedido
-funcionaba y publicarlo también; lo que moría era volver a entrar a tocarlo.
-
-La causa inmediata era `views_entity_form_field` llamando a `getEntityTranslation()`, un método que
-Drupal 10 tenía marcado como obsoleto y que Drupal 11 ha borrado. Lo interesante es de dónde salía
-esa llamada. **El módulo publicado ya estaba corregido**: la 8.x-1.0 de drupal.org usa el nombre
-nuevo, `getEntityTranslationByRelationship()`. Quien la revertía era nuestro propio parche.
-
-**La trampa, que es lo que hay que recordar.** Ese parche nació el 12 de agosto, al reconciliar el
-sitio con Composer: la carpeta del disco era una versión antigua con el parche de AJAX aplicado a
-mano, y para no perderlo se sacó la diferencia con `git diff` contra el paquete oficial. El
-problema es que un `git diff` no distingue entre lo que añadiste tú y lo que el proyecto arregló
-mientras tu copia se quedaba quieta. Todo aparece como "cambio local". Así que el parche llevaba
-dentro, además del AJAX, **una vuelta atrás a la versión vieja del método**, invisible mientras el
-sitio corría en Drupal 10 porque allí el método viejo seguía existiendo. El día que se subió a la
-11, la página cayó.
-
-Se revisaron los trece parches del proyecto buscando lo mismo. Solo este se sacó de una carpeta
-instalada; los otros doce vienen de issues de drupal.org o se escribieron a mano para un fallo
-concreto, y ninguno revierte nada del núcleo. La trampa estaba aislada.
-
-**Cómo queda el parche.** Ya no toca esas tres llamadas: deja las dos que el módulo trae bien y
-corrige la tercera, que el propio módulo tiene mal (`getEntityTranslation($old, $row)`, que solo
-salta al guardar y por eso nadie lo había visto). Se deja a propósito una diferencia con el paquete
-oficial, apuntada en la cabecera: la versión publicada comprueba que `loadUnchanged()` haya
-devuelto algo antes de usarlo y la nuestra no. Con filas que vienen de una vista la entidad siempre
-existe, así que no da problemas, pero conviene saberlo si algún día se rehace el parche.
-
-**Y un detalle de fontanería que costó una hora.** En el tercer bloque del parche hay una línea que
-se quita y se vuelve a poner exactamente igual. Parece una tontería y lo es, pero convertirla en
-línea de contexto normal —que es lo correcto— hace que **GNU `patch` rechace el bloque entero**,
-mientras que `git apply` lo acepta sin pestañear. Y el que acaba aplicando los parches aquí es GNU
-`patch`, porque `composer-patches` intenta primero `git apply` desde dentro de la carpeta del
-módulo, que está dentro de un repositorio, y ahí Git resuelve las rutas contra la raíz del
-repositorio, no encuentra los ficheros y responde `Skipped patch`. Composer lo toma por un fallo y
-cae al respaldo. Peor todavía: GNU `patch` aplica los bloques que puede y deja un `.rej` con el que
-falló, así que un parche a medias deja el módulo **mitad parcheado**, que es el estado más
-confuso posible para diagnosticar. Se comprobó contra el paquete limpio, con la misma herramienta
-que usa Composer: con el par se aplica, sin el par no. Queda escrito en la cabecera del parche para
-que nadie lo "limpie" y lo vuelva a romper.
-
-**La prueba de humo tenía un agujero, y taparlo mal es peor que no taparlo.** `cargan-las-paginas.php`
-se saltaba a propósito las vistas con argumento, dando por hecho que las fichas de ejemplo ya las
-cubrían. No las cubren: la ficha va a la dirección canónica de la entidad, y las pantallas de
-trabajo del ERP son vistas con el identificador en la dirección. Por eso el 500 pudo sobrevivir un
-día entero diciendo la prueba que todo cargaba.
-
-El primer arreglo rellenaba el `%` con la entidad más reciente del tipo de la tabla base, y salió
-mal de una forma instructiva: la vista de líneas se apoya en `tec_line_item`, así que metía un
-identificador de línea donde va uno de pedido, y `/o/draft/4192` devolvía **200 pintando una tabla
-vacía**. Con cero filas el fallo no aparece, porque el módulo que se rompía solo trabaja dentro del
-bucle de filas. O sea, un aprobado falso, que es peor que no mirar. La versión definitiva pregunta
-a la propia vista de qué tabla y columna sale el argumento, coge valores que están en los datos y
-**ejecuta la vista antes de pedir la página**, aceptando solo los que traen filas. Ahora elige el
-755 él solo, que es justo el pedido que fallaba. Treinta y ocho páginas, todas con 200.
-
-De paso, el analizador de código obsoleto sobre este módulo: limpio. Lo único que señala es
-`views_ui_build_form_url()`, que solo se llama al editar la vista desde la interfaz de Views, donde
-ese módulo está cargado por definición, y un aviso de que `^10 || ^11` no servirá para Drupal 12.
-
-### 2026-08-13 — El `settings.php` del servidor, revisado: no había ningún agujero, y de paso se aprende a leerlo sin contraseña
-
-La sospecha era razonable y resultó infundada. `rebuild_access` está en **`FALSE`** en el
-servidor, así que nunca hubo nadie pudiendo vaciar las cachés del ERP sin identificarse. El
-fichero de allí no es una copia del de local: se generó desde cero durante el despliegue del 12
-de agosto, con los cinco ajustes de producción puestos a mano y explicados uno por uno. Mide
-1.569 bytes frente a los 37.314 del de local, que arrastra todos los comentarios del original de
-Drupal.
-
-Ya que se entraba a mirar, se comprobaron los cinco de una vez: `rebuild_access` en `FALSE`,
-`update_free_access` en `FALSE`, dominio de confianza únicamente `erp.anvfightgear.com`,
-archivos privados en `/var/www/erp-private` —fuera de la carpeta que sirve Apache— y errores al
-registro en vez de a la pantalla del cliente. Los cinco, correctos.
-
-**Lo que costó, y cómo se resolvió, que es la parte reutilizable.** El fichero es
-`root:www-data` con permisos `640`: el usuario con el que se entra por SSH (`david`) no lo puede
-leer, `root` no admite entrar directamente por SSH, y `sudo` pide una contraseña que solo tiene
-el dueño. Y desde fuera no sirve de nada pedir `/core/rebuild.php`, porque **redirige igual en
-los dos casos**: la única diferencia es que, si estuviera abierto, la petición vaciaría de
-verdad las cachés del sitio. O sea que la prueba obvia solo distingue haciendo el daño que
-quieres descartar, y en un servidor de 2 GB sin memoria de intercambio eso puede acabar en un
-sitio caído que además no podríamos levantar sin la contraseña.
-
-La salida es que **el código del ERP pertenece a `david`**, así que se puede dejar un `.php` de
-diez líneas en la raíz, pedirlo por el navegador y dejar que lo ejecute Apache, que sí es
-`www-data` y sí puede leer `settings.php`. El fichero solo responde si se le pasa un testigo
-aleatorio en la dirección, imprime los cinco ajustes y ni menciona la contraseña de la base de
-datos ni el `hash_salt`. Se borra en el mismo paso y se confirma con un 404 que ya no está.
-Estuvo vivo unos segundos. Es la forma de leer cualquier cosa de `settings.php` en el servidor
-sin despertar al dueño para pedirle la contraseña.
-
-### 2026-08-13 — El ERP corre en Drupal 11.4.5, y los ochenta y dos avisos de seguridad se quedan en cero
-
-El sitio empezó el día en **Drupal 10.2.4 con 82 avisos de seguridad**. Pasó por la 10.6.15, que
-los dejó en 2, y terminó en la **11.4.5 con ninguno**. Dos años y medio de parches sin aplicar,
-puestos al día.
-
-**El orden importó.** No se saltó del 10 al 11 de golpe. Primero se subieron los módulos
-contribuidos uno a uno sobre Drupal 10, en tandas, comprobando después de cada una. Cuando llegó
-el momento del núcleo, solo quedaban dos extensiones que rechazaran la 11, y las dos eran del
-tema de administración. Eso convirtió el salto grande en un trámite.
-
-**La herramienta que lo hizo posible.** A mitad de camino se escribió
-`scripts/quien-bloquea-la-11.php`, que hace extensión por extensión la misma pregunta que hará
-el núcleo al arrancar: ¿tu `core_version_requirement` acepta la 11.4? No pregunta a drupal.org,
-no interpreta informes: reproduce la comprobación real. Dio tres bloqueos exactos donde antes
-había una nube de sesenta módulos "por mirar". De los tres, uno se resolvió actualizando
-(`feeds_tamper` a la `2.0.0-rc1`) y los otros dos tenían que ir con el núcleo.
-
-**Lo que costó más de lo previsto fueron tres cosas que no estaban en el plan:**
-
-El paquete `drupal/color` seguía exigido en `composer.json` aunque el módulo lo había
-desinstalado `dxpr_theme` dos pasos antes. Pide `^9.4 || ^10`, así que bloqueaba la subida él
-solo, y no aparecía en ninguna lista de módulos porque ya no era un módulo: era solo una línea
-en un fichero.
-
-Los parches de etiqueta no bastaban. Para `editablefields`, `simple_popup_views` y
-`pdf_serialization` se habían escrito parches que amplían su `core_version_requirement` a
-`^10 || ^11`. Eso es lo que lee **Drupal** al arrancar, y funciona. Pero **Composer** no lee el
-`.info.yml`, lee el `composer.json` del paquete, y ahí seguían pidiendo la 10. Los parches se
-aplican *después* de resolver dependencias, así que llegan tarde por definición. La solución es
-`mglaman/composer-drupal-lenient`, un complemento que existe justo para esto: se le da una lista
-de paquetes y relaja su restricción de núcleo al resolver.
-
-Treinta y ocho paquetes de `vendor` estaban instalados desde git en vez de desde archivo.
-`core-vendor-hardening` les borra los tests y la documentación, así que git los veía sucios y
-Composer se negaba a tocarlos: *"Source directory has uncommitted changes"*. Se rehizo `vendor`
-entero desde archivo. Tardó seis minutos y se llevó por delante toda esa clase de problema.
-
-**Lo que entró con el núcleo:** Gin 5.0.15 y `gin_toolbar` 3.0.3, que piden `^11.2` y por eso no
-se podían poner antes. Drush 13.7.6, porque el 12 no vale para la 11. Symfony 7.
-
-**Un fallo de seguridad apagado de camino.** `rebuild_access` estaba en `TRUE` en `settings.php`
-desde hacía mucho. Eso permite entrar a `/core/rebuild.php` **sin ninguna credencial** y vaciar
-las cachés del sitio entero. En local es menor; en el servidor no lo sería. Queda comentado y
-explicado.
-
-**Una actualización que se reintentaba en bucle.** `dxpr_theme_helper` tiene una actualización,
-la 8003, que hace dos cosas: encender `media_library_form_element` y migrar dos imágenes de
-fondo del tema a entidades de medios. La segunda parte pide un servicio que no existe hasta
-Drupal 11.3, así que reventaba, dejaba la versión de esquema en 8002 y volvía a intentarlo en
-cada actualización. Se cerró a mano tras comprobar que las dos rutas de origen estaban vacías:
-no había ninguna imagen que migrar. El script (`scripts/cerrar-8003.php`) lo vuelve a comprobar
-y se niega a cerrar nada si alguna tuviera valor.
-
-**Una herramienta que mentía, corregida.** Un script propio dijo que `feeds_tamper` no tenía
-ninguna transformación configurada, y estuvo a punto de desinstalarse. Estaba mal: miraba en la
-raíz de la configuración del tipo de importación, y Feeds Tamper las guarda bajo
-`third_party_settings`. Sí había una, y es la que construye el título de las líneas de BoM
-al importar. Se corrigió el script antes de seguir, porque una herramienta de diagnóstico que da
-un falso negativo es peor que no tener ninguna.
-
-**La copia de seguridad, por fin hecha herramienta.** Hasta hoy se hacía a mano cada vez.
-`scripts/copia-de-seguridad.ps1` guarda las cinco piezas —base de datos, árbol del proyecto,
-núcleo y `vendor`, ficheros subidos, e historia de git— y **comprueba al terminar** que las
-cinco existen y pesan lo que deberían. Esa comprobación ya sirvió: el primer intento creó solo
-la base de datos porque el `tar` de Git for Windows lee `C:\algo` como si `C` fuese un servidor
-remoto, y el script lo cazó en vez de dejar una copia inútil con buena pinta. La historia de git
-va aparte y se guarda aunque haya un GitHub detrás, porque hay 27 commits sin subir y mientras
-tanto el único sitio donde existen es este disco.
-
-**Comprobado en la 11:** 35 de 35 en la comprobación funcional, 33 páginas cargan sin un solo
-fallo, los trece parches puestos, ninguna actualización de base pendiente, cero avisos de
-seguridad. La configuración exportada se puso al día: 41 elementos actualizados y 2 borrados que
-la 11 ya no usa. De los tres requisitos en rojo quedan dos, y ninguno es de la subida: el HTTPS,
-normal en local, y el descuadre de `tec_gui`, que ya venía de antes y está en Deuda técnica.
-
-Un detalle curioso: los tres falsos errores de ECA que ensuciaban el registro en cada
-comprobación —los *"Running: TEC Inventory: Calculation data"* que aparecían con nivel de
-emergencia— **han desaparecido** en la 11.
-
-### 2026-08-13 — Paso 1 hacia Drupal 11: ECA salta de la rama 1 a la 2 sin despeinarse, y de paso cae el último aviso de seguridad
-
-Era el paso que daba miedo: 36 procesos automáticos, 29 encendidos, todo el ERP colgando de ellos.
-Salió mejor de lo previsto.
-
-**Lo que se movió:** `eca` y sus seis submódulos de 1.1.13 a **2.1.22**, `bpmn_io` de 1.1.4 a
-2.0.12, `eca_flag` de 1.0.0 a 2.0.5 y `eca_tamper` de 1.0.6 a 2.0.10. Todo sobre el Drupal 10.6.15
-que ya corríamos, porque ECA 2 admite `^10.3 || ^11`. Composer no arrastró nada más: cinco
-paquetes, cero instalaciones, cero bajas.
-
-**Por qué la ruptura de ECA 2 no nos tocó.** ECA 2 rompe la API para quien la extienda desde
-código: los suscriptores de eventos desaparecen y `$tokenServices` pasa a llamarse
-`$tokenService`. Antes de tocar nada se revisaron nuestros módulos: ninguno extiende ECA. El único
-suscriptor de eventos que tenemos, `QueueTileRedirectSubscriber`, es de Symfony y redirige las
-baldosas de producción. Los 36 modelos son configuración pura.
-
-**Y la migración de los modelos no cambió ni una coma.** Se guardó una foto de los 73 objetos de
-configuración de ECA antes y otra después (`scripts/foto-eca.php`). Diferencia total entre las dos:
-**una línea**, el ajuste nuevo `service_user: ''` que ECA 2 añade vacío. Los 36 modelos, idénticos
-byte a byte. `drush eca:update` lo confirma por su cuenta: "36 modelos no necesitan cambios, 0
-errores".
-
-**El aviso de seguridad de Drupal, cerrado.** ECA 2.1.22 tapa `SA-CONTRIB-2026-074`, que era el
-último que quedaba. `composer audit` ahora solo señala `psy/psysh`, la consola interactiva que trae
-Drush: es una herramienta de línea de comandos, no está expuesta a la web y el fallo requiere
-ejecutar `drush php` dentro de un directorio con un fichero preparado. De 82 avisos en febrero a
-ninguno que afecte al sitio.
-
-**El atasco de Quick Tabs, que no era de ECA.** Al ir a ejecutar las actualizaciones apareció esto:
-*"la versión instalada del módulo Quick Tabs es demasiado antigua para actualizar"*. Herencia del
-salto del núcleo de esta mañana, que subió `quicktabs` de la rama 3 de desarrollo a la 4.3.1 y dejó
-dos cosas a medias. Bloqueaba **cualquier** actualización de **cualquier** módulo, así que había que
-resolverlo sí o sí:
-
-1. La versión de esquema se quedó en 8000 mientras la 4.3.1 declara haber borrado todo hasta la
-   103001. La única actualización borrada instalaba el módulo `js_cookie`, que la rama 4 ya no usa
-   porque la memoria de pestañas se guarda ahora en el navegador. `js_cookie` no está instalado,
-   que es justo el estado que la 4 espera, así que no faltaba trabajo: faltaba el número.
-2. La actualización posterior que añade el ajuste `remember_last_clicked_tab` **estaba anotada como
-   ejecutada sin haberse aplicado**: las cinco instancias seguían sin la clave. Que no fue una
-   anotación en bloque se sabe porque la *otra* actualización posterior de quicktabs, la de
-   `direct_linking`, sí dejó su marca en la configuración. Se desanotó y se dejó que el código del
-   propio módulo hiciera el trabajo, en vez de rellenar la configuración a mano.
-
-Vale la pena quedarse con esto: **una actualización puede constar como hecha sin haberse hecho.**
-Es un modo de fallo silencioso que no da error por ningún lado. Merece una revisión de las demás.
-
-**Herramientas nuevas, que hacían falta para esto y harán falta para los siete pasos que quedan:**
-
-- `scripts/cargan-las-paginas.php` — pide por dentro las 31 páginas que importan (producción,
-  vistas, y una ficha real de cada tipo de entidad, que se busca sola por la API) y comprueba que
-  responden. Hacía falta porque `comprobacion.php` mira datos y automatismos pero no dibuja ni una
-  pantalla, y dibujar es donde asoman las subidas malas: el fallo de `views_aggregator` de esta
-  mañana no rompió ni un dato, solo devolvía un 500 en la pantalla de pedidos.
-- `scripts/exportar-config.php` — exporta a `config/sync` solo los objetos que se le pidan. Hace
-  falta porque ahora mismo `drush config:export` a secas metería `update` y `upgrade_status`, que
-  están encendidos solo para diagnosticar la subida, en `core.extension` y de ahí al servidor.
-- `scripts/foto-eca.php`, `scripts/rutas-de-las-vistas.php`, `scripts/revisar-quicktabs.php` y
-  `scripts/arreglar-quicktabs.php`.
-
-**Comprobado al terminar:** 35 de 35 en la comprobación funcional (los seis automatismos siguen
-disparando: título de BoM, copia de cantidad, enganche a la talla, movimiento de inventario,
-título de color y recálculo del total de línea), 31 de 31 páginas cargando, y `config/sync` al día
-con los seis objetos que cambiaron.
-
-### 2026-08-13 — La otra mitad de la pregunta: hay versión para la 11 de todo menos de dos módulos
-
-El informe de `upgrade_status` dice si el código que tenemos usa cosas que Drupal 11 haya quitado.
-No dice si existe una versión publicada a la que actualizar, que es la mitad que decide el
-calendario. `scripts/hay-version-para-11.php` la responde: consulta el historial de versiones de
-drupal.org para cada uno de los 99 paquetes del proyecto y cruza la compatibilidad declarada.
-
-**El resultado, y es mejor de lo que cabía esperar:**
-
-| | paquetes |
-|---|---|
-| Ya están en una versión que admite la 11 | 37 |
-| Hay versión que admite la 10 **y** la 11 a la vez | 60 |
-| Solo hay versión que exige la 11 | **0** |
-| No hay ninguna versión para la 11 | 2 |
-
-Ese cero es el dato importante. Significa que **todo el proyecto se puede actualizar sobre Drupal
-10, módulo a módulo, con el ERP funcionando entre paso y paso.** No hay ni un solo paquete que
-obligue a moverse a la vez que el núcleo. El salto de la 11 queda reducido a mover el núcleo y
-nada más, que es la única forma de que sea depurable si algo falla.
-
-**Los dos que no tienen versión.** Los dos salían limpios de código en el informe de
-`upgrade_status` —están en el grupo de "solo les falta declarar la 11 en su `.info.yml`"—, así que
-el bloqueo es la etiqueta, no el código:
-
-- **`simple_popup_views` 8.x-1.2**, de noviembre de 2022. El proyecto figura como "mantenido
-  activamente" pero no publica nada desde entonces. Es el visor de fotos de ocho vistas:
-  productos, inventario, líneas de pedido, patrones y los dos BoM. Molesta perderlo, pero
-  no toca lógica de negocio.
-- **`pdf_serialization` 2.2.0**, de septiembre de 2023, y este es peor: drupal.org lo marca como
-  **`unsupported`**. Genera los PDF de las órdenes de compra. Ya le llevamos dos parches.
-
-Para los dos, la salida barata es un parche que cambie el `core_version_requirement` y probarlo.
-Para `pdf_serialization` hay además que decidir a medio plazo, porque un proyecto sin soporte no
-recibe avisos de seguridad y eso ya nos costó dieciséis meses de exposición con ECA.
-
-**Cuatro confirmaciones que cierran dudas del plan:**
-
-- **ECA 2.1.22 declara `^10.3 || ^11`**, así que el salto de la rama 1 a la 2 —la parte peligrosa—
-  se puede hacer sobre el Drupal 10 que corremos, sola y con la red puesta. Y de paso 2.1.22 es
-  justamente la versión que cierra `SA-CONTRIB-2026-074`, el último aviso de seguridad que queda.
-- **ECK 2.1.0 declara `^9.4 || ^10 || ^11`**. Igual: se hace antes del núcleo.
-- **`field_permissions` deja de ser un bloqueo expreso.** La 8.x-1.5 admite la 11 y está cubierta
-  por avisos. No hace falta el gancho de repuesto que habíamos pensado para `field_tec_cost`.
-- **`dxpr_theme` 8.1.5 declara `^9.3 || ^10 || ^11`.** Esto cambia el plan del tema a mejor: en
-  vez de parchear la dependencia de `core/modernizr` a mano, se actualiza el tema, y **también
-  sobre Drupal 10**, así que la rotura visual se ve y se arregla antes del salto. Eso sí, es un
-  salto de tres versiones mayores en el tema del sitio, así que de visual va a cambiar bastante.
-
-**Y un aviso que va en contra de lo que conseguimos esta mañana.** Ocho módulos solo tienen
-versión para la 11 fuera de la política de avisos de seguridad, y uno de ellos **solo tiene rama
-de desarrollo**: `editablefields`. Los otros siete son `conditional_fields` (alpha6), `context`
-(rc2), `feeds_tamper` (rc1), `filefield_paths` (rc1), `pwa` (beta7), `ultimate_cron` (beta1) y
-`float_labels` (estable, pero el proyecto renuncia a la cobertura). Acabamos de sacar el proyecto
-de las ramas de desarrollo precisamente porque nos escondieron un fallo crítico; subir a la 11
-mete a `editablefields` de vuelta ahí. Hay que decidirlo a conciencia, no de pasada.
-
-Dos paquetes no se pudieron consultar, `eca_ui` y `eca_modeller_bpmn`, y no es un problema: son
-submódulos del proyecto `eca` y no tienen página propia en drupal.org.
-
-### 2026-08-13 — El informe de compatibilidad con Drupal 11: cuatro módulos con trabajo real, y el tema deja de ser el bloqueante
-
-Tres horas y media de análisis, 115 proyectos, 47.000 líneas de informe en bruto. El resultado
-importa porque desmonta buena parte de lo que dábamos por hecho sobre lo que cuesta llegar a la
-versión 11.
-
-**El recuento, ya limpio:**
-
-| | proyectos |
-|---|---|
-| Sin nada que tocar | 45 |
-| Solo les falta declarar la 11 en su `.info.yml` | 60 |
-| Avisos únicamente en sus propios tests | 6 |
-| **Con código que hay que tocar de verdad** | **4** |
-
-Los cuatro son ocho hallazgos en total: `flag` llama tres veces a `user_roles()`,
-`views_entity_form_field` tres veces a `getEntityTranslation()`, `flood_control` una vez a
-`user_role_names()`, y ECA usa una constante de clase marcada para desaparecer. Las cuatro se
-arreglan actualizando el módulo, no escribiendo código.
-
-**Lo nuestro sale intacto, y esta vez con el sitio en marcha.** `tec_production`, el módulo
-grande, limpio del todo. `tec_crm_ux`, `tec_inventory`, `tec_brands`, `tec_crm` y
-`admin_form_styles` solo necesitan cambiar su línea `core_version_requirement`. Esto ya lo decía
-la auditoría de agosto, pero entonces se leyó el código a mano; ahora lo confirma un analizador
-estático pasando por cada fichero.
-
-**`dxpr_theme` ya no es el bloqueante que teníamos apuntado.** El punto 5 de la sección "Subir a
-Drupal 11" decía que era "la parte cara" por dos razones, y ninguna de las dos se sostiene ya. La
-primera, que declaraba necesitar `color`, un módulo que desapareció del núcleo: la dependencia
-sigue ahí, pero desde la Fase 1 tenemos el `color` de contrib anclado en `composer.json`, y ese
-sale limpio en el informe. La segunda, que su versión no admitiría la 11: la 5.2.1 que corremos
-declara `core_version_requirement: '>=9.3'`, que la incluye. Sigue siendo un tema congelado desde
-enero de 2024 y conviene actualizarlo, pero por mantenimiento, no porque cierre el paso.
-
-Con una salvedad que despista al leer el informe: el paquete de `dxpr_theme` trae dentro un
-`dxpr_theme_STARTERKIT`, una plantilla de ejemplo para hacerse un subtema, y **esa sí** declara
-`^9.3 || ^10`. Sale marcada en el informe y parece un problema, pero no lo es: no está instalada.
-Los temas activos son `dxpr_theme` (el del sitio), `gin` (el de administración), `bootstrap5`
-(base del primero) y los tres del núcleo.
-
-**Aviso sobre cómo leer estas cifras**, porque cuesta más de lo que parece. La herramienta reparte
-sus hallazgos en tres cajones y solo uno importa:
-
-- *Fix now* es código que Drupal 11 ya no tiene. Estos son los que cuentan.
-- *Fix later* sigue funcionando en la 11 y desaparece en la 12.
-- *Check manually* es casi todo ruido. Son 18.000 y pico avisos del tipo "llamada a método no
-  definido" que salen de analizar los tests de cada módulo sin tener PHPUnit delante. No
-  significan nada.
-
-Y una trampa concreta que costó tres intentos: **el informe parte la ruta del fichero en varias
-líneas cuando es larga**, dejando `FILE:` solo en la suya. Las rutas largas son justo las de
-`tests/`, las más hondas. Leído a lo bruto, eso hace que los avisos de los tests parezcan estar en
-el código del módulo: diez proyectos con trabajo pendiente en vez de cuatro. Queda resuelto en
-`scripts/resumir-informe.php`, que es lo que hay que usar para leer este informe y los que vengan.
-
-**Lo que el informe no dice**, y hay que tener presente: solo mira el código que tenemos. No dice
-si existe una versión compatible con la 11 publicada en drupal.org para cada módulo, que es la
-otra mitad de la pregunta. Eso se comprueba módulo a módulo cuando toque la Fase 4.
-
-### 2026-08-13 — La prueba del clon destapa un fallo crítico de seguridad que llevaba dieciséis meses escondido
-
-La prueba que nunca se había hecho: clonar el repositorio en una carpeta aparte, lanzar
-`composer install` desde cero y comparar el resultado con el sitio real. Sirve para saber si lo
-que hay en Git basta para levantar el ERP, que es exactamente lo que hace el servidor al
-desplegar.
-
-**Lo primero, la buena noticia.** Los **siete grupos de parches se aplicaron solos**, sin tocar
-nada. Los tres rescatados esa misma mañana incluidos. La red que montamos funciona.
-
-**Lo segundo, el fallo.** Comparando las dos copias aparecieron 44 ficheros distintos, todos en
-módulos que colgaban de una rama de desarrollo en vez de una versión publicada. La causa: para
-esos paquetes el `lock` apuntaba a un commit y en el disco había otro más nuevo que nadie
-apuntó. En ECA, que es el motor de los 36 automatismos del ERP, la diferencia eran **catorce
-meses**: el disco tenía la 1.1.7 y el `lock` un commit de febrero de 2024. Un `composer install`
-en el servidor habría retrasado el motor del ERP sin avisar.
-
-El inventario decía "cero descuadres" y no mentía. Los paquetes de rama no llevan número de
-versión en su `.info.yml`, así que era el único punto ciego que le quedaba. Se cubrió con dos
-guiones nuevos: `scripts/version-de-rama.php`, que compara la carpeta contra cada versión
-publicada, y `scripts/commit-de-rama.php`, que recorre el historial hasta dar con el commit
-exacto. Los dos usan el repositorio Git que Composer deja al clonar, así que no hace falta
-descargar nada.
-
-**Lo tercero, y es lo importante de verdad.** Al ponerle a ECA su número de versión real,
-Composer pudo por fin cruzarlo con la lista de avisos de seguridad, y saltó uno que hasta
-entonces era invisible: **`SA-CONTRIB-2025-031`, falsificación de peticiones entre sitios,
-calificado de crítico**, de abril de 2025. Afecta a todo lo anterior a la 1.1.12. Corríamos la
-1.1.7. Y la vía del ataque es el submódulo `eca_ui`, que en este sitio **está activado**.
-
-Llevábamos dieciséis meses expuestos y no aparecía en ningún informe, precisamente porque el
-módulo no tenía versión. Ese es el argumento de fondo contra las ramas de desarrollo, y aquí
-está medido: no es que sean inestables, es que **te dejan fuera del sistema de avisos**.
-
-Se subió ECA de la 1.1.7 a la **1.1.13**, última de la rama: once commits, 16 ficheros, todo
-arreglos dentro de la misma rama menor. Además del fallo de seguridad se lleva por delante dos
-problemas de cron que estaban sin diagnosticar aquí ("Multiple cron events not firing
-consistently" y un error del evento de cron), un fallo fatal al importar configuración y varias
-correcciones de acciones de lista. La pantalla de ECA carga con sus 36 procesos y las 35
-comprobaciones pasan.
-
-**Cómo quedan las siete ramas.** Cinco pasan a versión publicada, con el código idéntico al que
-ya corría —lo único que cambia es que ahora traen su `LICENSE.txt`, que drupal.org añade al
-empaquetar—: ECA a la 1.1.13, `bpmn_io` a la 1.1.4, `bootstrap_layout_builder` a la 2.1.2 y
-`mimemail` a la 1.0.0-alpha6. Las otras dos, `eck` y `conditional_fields`, están a medio camino
-entre dos versiones publicadas, así que se anclan a su commit exacto; igual que `ultimate_cron`,
-donde además el `lock` estaba desfasado. Anclar el commit no da avisos de seguridad, pero sí
-garantiza que una instalación desde cero reproduzca lo que corre hoy.
-
-Efecto secundario agradecido: de siete repositorios Git anidados que dejaba la instalación
-limpia se pasa a uno. Los paquetes con versión se bajan empaquetados; solo los anclados por
-commit se clonan.
-
-**Dos cosas menores que salieron por el camino.** `feeds_tamper` y `editablefields` estaban en
-disco como copias de repositorio en vez de versiones empaquetadas; el código era el mismo salvo
-tres métodos de `editablefields` que no llama nadie, comprobado en todos los módulos y temas del
-proyecto antes de quitarlos. Los dos se reinstalaron empaquetados. Y `drupal/address`, que sí
-tenía versión fijada, arrastraba un clon de 0,7 MB de una instalación vieja; reinstalado, ya es
-un paquete normal.
-
-**Cómo quedó la prueba.** Se repitió tres veces, clonando y reinstalando desde cero cada vez.
-La primera dio 44 ficheros distintos, la segunda 5 y la tercera **ninguno**: el repositorio
-reproduce el ERP exactamente. Repositorios Git anidados, de 7 a 3, y los tres que quedan son los
-anclados por commit a propósito. Y una cosa que conviene tener presente para el servidor: en la
-primera pasada Composer se plantó al no encontrar el `.git` de módulos que creía instalados
-desde repositorio. La salida es borrar esas carpetas y dejar que las ponga de nuevo; los
-ficheros están todos en Git, así que no se pierde nada.
-
-### 2026-08-13 — Disco y `composer.lock` por fin dicen lo mismo, y aparecen tres parches que nadie había apuntado
-
-Los veinticuatro descuadres entre lo que hay en disco y lo que Composer cree que hay resultaron
-ser **veintiocho**, y están todos resueltos. Pero lo importante de esta sesión no es esa cuenta:
-es lo que se encontró al ir a arreglarla.
-
-**El hallazgo: tres parches que solo existían en la carpeta del módulo.** Antes de dejar que
-Composer reinstalara veintiocho módulos había que asegurarse de que ninguno estaba retocado a
-mano, porque un módulo reinstalado vuelve a su estado de fábrica y se lleva por delante
-cualquier cambio no registrado. Ya nos pasó con `verf` en la Fase 2, y allí lo descubrimos
-*después*. Para no repetirlo se escribió `scripts/comparar-con-original.php`, que descarga de
-drupal.org el paquete oficial de cada módulo y lo compara fichero a fichero con el del disco.
-
-De 112 proyectos, **90 estaban intactos y 9 tocados**. Seis eran cosas conocidas o inofensivas.
-Los otros tres eran cambios reales que se habrían perdido sin decir nada:
-
-- **`tamper`** multiplicaba sin convertir a número: `$data * $value` con dos textos. El ERP usa
-  ese plugin a través de `eca_tamper` para calcular totales de línea, así que una multiplicación
-  mal hecha acaba en un pedido de venta. Alguien lo arregló a mano y dejó un fichero `.backup` al
-  lado. Ahora es `patches/tamper-math-multiplication-cast-to-float.patch`.
-- **`select2`** tenía aplicado el parche del issue #3279387, que evita un error de JavaScript
-  cuando la configuración del desplegable llega vacía. El fichero `.patch` estaba tirado dentro
-  de la carpeta del módulo, sin registrar en ningún sitio.
-- **`views_entity_form_field`**, que es la tabla editable de líneas de pedido, era la versión
-  8.x-1.0 con el parche de AJAX del issue #2998721 encima. **Este era el grave**: sin ese parche
-  no se puede guardar una línea sin recargar la página entera. El parche original de drupal.org
-  ya no encaja con la 8.x-1.0 publicada, así que se generó uno nuevo a partir de la diferencia
-  real y se comprobó que reproduce el disco byte a byte.
-
-Los tres están ahora en `patches/` y registrados en `composer.json`. Composer los aplica solo,
-y con `composer-exit-on-patch-failure` activo desde la Fase 0, si alguno dejara de encajar la
-instalación se para en voz alta en vez de seguir en silencio.
-
-**El aviso de seguridad de ECA no nos afecta.** Era el último que quedaba de los 82, y su
-solución oficial es saltar a ECA 2, que es la Fase 3 entera. Pero la letra pequeña del aviso
-dice que solo es explotable si el sitio usa la acción "Render: Twig" del submódulo `eca_render`.
-Ese submódulo **está desinstalado**, y ninguno de los 36 procesos lo menciona. El código
-vulnerable está en el disco pero Drupal no ejecuta módulos apagados. Conclusión: ECA 2 sigue
-siendo deseable, pero ya no es urgente ni es una decisión de seguridad.
-
-**La reconciliación.** Se hizo en dos rondas a propósito, para poder saber cuál había sido si
-algo se rompía: primero 23 módulos de salto pequeño, después los 5 con salto de verdad (`ds` de
-3.19 a 3.37, `feeds` de una beta a la 3.2.0 estable, `smtp`, `views_bootstrap` y `gin_toolbar`).
-Las 35 comprobaciones pasaron después de cada ronda. Diez ganchos de actualización tocaron ocho
-vistas y dos ajustes; se revisó uno a uno lo que cambiaban —renombrar opciones y convertir tipos,
-nada perdido— y se llevaron a `config/sync`. **Ahora el inventario da 0 descuadres.**
-
-**Los dos módulos que Composer no sabía que existían.** `quicktabs` y `views_entity_form_field`
-estaban en disco y activos pero fuera de `composer.json`, así que una instalación desde cero
-simplemente no los ponía. `views_entity_form_field` resultó ser la 8.x-1.0 parcheada, ya
-contada arriba. `quicktabs` era una copia del repositorio de la rama 3, no de una versión
-publicada: se notaba porque le faltaba el `LICENSE.txt` y le sobraban los ficheros de
-integración continua. Se intentó anclarlo a esa rama y Composer lo instaló **clonando**, con
-lo que dejaba un repositorio Git anidado de 1 MB dentro del proyecto y los 59 ficheros con
-finales de línea de Windows. Eso es exactamente el problema que costó una tarde al montar
-GitHub el 12 de agosto, así que se descartó y se subió a la **4.3.1**, que es versión publicada,
-soporta Drupal 11 y migró las cinco instancias de pestañas con dos ganchos que dicen
-expresamente que dejan el comportamiento anterior intacto. Comprobado a ojo: las tres pestañas
-de la ficha de CRM (compras, inventario, detalles) se siguen dibujando.
-
-**Lo que se miró por encargo.** `ief_table_view_mode`, que dibuja la tabla de líneas del pedido,
-tenía en disco una instantánea de rama de desarrollo de 2023 donde el `lock` pedía la 3.0.0. Se
-comparó con la 3.0.1 publicada y **solo cambia la metadata**: ni una línea de código. Se subió a
-la 3.0.1 sin riesgo. De paso salió una cosa que no es un fallo pero conviene saber: esa tabla
-sale con las columnas genéricas de Inline Entity Form (Título, Tipo, Operaciones) porque el
-formulario **no tiene modo de vista configurado**. Es así desde antes de tocar nada —la
-configuración en Git es idéntica— pero significa que el módulo no está haciendo lo único que
-sabe hacer. Merece una mirada cuando haya tiempo.
-
-**Cómo queda.** `composer validate` dice *valid* por primera vez: `composer.json` y
-`composer.lock` cuadran. Cero descuadres entre disco y `lock`. 14 páginas del ERP responden 200,
-incluidas las de pedidos, cola de producción, control de existencias y CRM. 35 de 35
-comprobaciones.
-
-**Un tropiezo del que aprender.** A mitad de faena se lanzó un `composer require --dry-run` para
-ver qué proponía. Ese comando **escribe en `composer.json` aunque sea un simulacro**, así que se
-deshizo con `git checkout composer.json`, y eso se llevó por delante hora y media de ediciones
-—los parches registrados y las siete restricciones ajustadas— mientras el `lock` y el disco ya
-tenían los cambios nuevos. Hubo que rehacerlas. La lección: `--dry-run` de `require` no es de
-solo lectura, y `git checkout` sobre un fichero con trabajo sin confirmar no perdona.
-
-### 2026-08-13 — Fase 2: el ERP corre en Drupal 10.6.15, la página de pedidos vuelve a abrir y quedan 2 alertas de seguridad de 82
-
-Dos años y medio de parches sin aplicar, puestos en una noche. **El núcleo pasa de 10.2.4 a
-10.6.15**, la última de la rama 10, que es la puerta obligatoria para llegar algún día a Drupal
-11. Las 35 comprobaciones del ERP pasan, las páginas que se probaron responden y no ha hecho
-falta tocar nada del contenido.
-
-**Cómo se hizo, y por qué así.** El ensayo de una actualización completa resolvía sin
-conflictos, pero eran 107 cambios a la vez. Se hizo la versión acotada: subir solo el núcleo y
-lo que arrastra. Resultado, **27 actualizaciones en vez de 107, y de módulos contribuidos se
-movió uno solo**, `entity_browser` (2.10 → 2.17), porque el suyo no servía para el núcleo nuevo.
-ECA, ECK, los temas y todo lo demás se quedaron donde estaban, que era justo la intención.
-
-De paso Composer **borró del disco los 48 módulos muertos**: las carpetas de `modules/contrib`
-bajaron de 157 a 109. Ahí se fue el código de la IA que llevaba desde el 12 de agosto esperando
-a poder quitarse, más Commerce entero, `search_api`, `shield`, `quicklink` y `memcache`.
-
-**Las alertas de seguridad, de 82 en 10 paquetes a 2 en 2.** Las que quedan son `eca` —de
-gravedad baja, se va con el salto a ECA 2— y `psy/psysh`, que es una dependencia de Drush y solo
-afecta en local. Por el camino se actualizó también `mail_login` de la 3.0.0 a la 4.2.2, que
-tenía un aviso **crítico de salto de control de acceso** (SA-CONTRIB-2025-088).
-
-**La página de pedidos ya abre**, y no fue como yo había anticipado. Dije que subir el núcleo la
-arreglaría sola porque `views_aggregator` pedía 10.3; me equivoqué. Eso era la declaración de
-compatibilidad del módulo, no la causa del error 500. El fallo era suyo: `getCellRaw()` promete
-devolver texto, pero varias de sus ramas pueden devolver `false` —`reset()` sobre un array
-vacío, un campo booleano— y eso tumba la página entera con un `TypeError`. Está arreglado con un
-parche nuestro, registrado en Composer, que devuelve celda vacía en esos casos. `/tec_order/348`
-pasa de 500 a 200 con 352 KB.
-
-**Cuatro tropiezos que conviene tener anotados**, porque los tres primeros volverán a pasar en
-el servidor.
-
-1. **Composer se plantó a mitad.** `vendor/symfony/css-selector` estaba instalado desde git y
-   tenía "cambios sin confirmar", así que Composer se negó a borrarlo. No era corrupción: es el
-   propio plugin `core-vendor-hardening` de Drupal, que elimina las carpetas `Tests/` de
-   `vendor` por seguridad, y Git las ve como borrados pendientes. Hay **43 paquetes instalados
-   desde git y 18 de ellos están así**. Se resolvió borrando a mano las tres carpetas que
-   Composer necesitaba mover y relanzando. Si vuelve a pasar, es lo mismo.
-2. **`drush updatedb` no funciona en este equipo.** Drush se relanza a sí mismo en un
-   subproceso con la ruta en barras normales, y `cmd.exe` no la reconoce. Además no existe
-   `vendor\bin\drush.bat`. Se hizo un script propio, `scripts/actualizar-bd.php`, que llama a
-   la misma interfaz de Drupal sin subprocesos.
-3. **Y ese script tenía un fallo silencioso muy feo.** Las cuatro actualizaciones se ejecutaban
-   pero **la versión del esquema no se guardaba**, así que volvían a salir como pendientes una y
-   otra vez. La causa está en `core/includes/update.inc` línea 213: solo apunta la versión si
-   `$context['finished']` vale 1, y esa clave únicamente se rellena sola cuando la actualización
-   trabaja por lotes. Hay que inicializarla a mano. Ya está corregido y verificado:
-   `system` 10201 → 10600, `entity_browser` 8201 → 8202, `locale` 10100 → 10300.
-4. **El andamiaje del núcleo se llevó por delante `.gitattributes`**, y con él la línea
-   `*.patch text eol=lf` que se había puesto esa misma noche en la Fase 0. O sea que el arreglo
-   duró unas horas. Ahora está resuelto de verdad: la línea vive en
-   `scaffold/gitattributes-append.txt` y `composer.json` le dice al andamiaje que la **añada**
-   en cada instalación en vez de sobrescribir el fichero. Verificado relanzando el andamiaje.
-
-**Dos regresiones que se detectaron a tiempo, y lo que enseñan.** Al reinstalar los módulos que
-Composer no conocía, escribió las versiones publicadas encima de código que estaba por delante.
-`file_uploader` perdió el arreglo de los validadores de ficheros de Drupal 10.2 y `verf` perdió
-tres parches. Se vieron comparando con Git antes de confirmar.
-
-- `file_uploader` se dejó en la **1.1.0**, porque esa versión ya trae el arreglo de arriba. Lo
-  que había en el disco era un parcheo manual que además **había fallado a medias**: quedaban un
-  `.orig` y un `.rej` en la carpeta, que son los restos de una aplicación rechazada.
-- `verf` se devolvió a la **2.0.2** con sus tres parches ahora registrados en Composer. El que
-  importaba de verdad hace que el desplegable del filtro ofrezca **solo los valores que están en
-  uso**, con una consulta directa, en vez de cargar todas las entidades. Con 869 materiales en el
-  ERP eso se nota. El código quedó byte a byte como estaba.
-- `views_aggregator` tenía otro apaño manual, un puente para `renderInIsolation()` que no existía
-  en Drupal 10.2. Composer lo borró y esta vez está bien: en 10.6 ese método ya existe.
-
-La lección es la de siempre en este proyecto, y ahora con tres casos más: **cada módulo tocado a
-mano es una bomba de relojería** hasta que su cambio esté en un fichero de `patches/` y
-declarado en `composer.json`. Con los de hoy quedan seis parches registrados y aplicándose
-solos. Siguen fuera `quicktabs` y `views_entity_form_field`.
-
-**Y la Fase 1 se cerró de rebote.** El paso 11, sincronizar el `lock`, estaba bloqueado
-precisamente por `views_aggregator`. Al subir el núcleo se desbloqueó, y `composer validate`
-ya no da ni un aviso: **`composer.json` y `composer.lock` cuadran por primera vez**.
-
-### 2026-08-13 — Fase 1: `composer.json` por fin describe la realidad, y aparece por qué falla la página de pedidos
-
-La fase consistía en poner al día el fichero que dice qué módulos tiene este proyecto, sin mover
-ni una versión. Estaba muy lejos de la realidad. El inventario cruzado de cuatro fuentes —lo que
-pide Composer, lo que tiene apuntado, lo que hay en el disco y lo que Drupal usa de verdad—
-salía así: Composer pedía 100 módulos, tenía apuntados 136, en el disco había 160 y Drupal
-usaba 148.
-
-Lo que se hizo, todo con `--no-update` para que no se instalara ni se borrara nada:
-
-- **Anclados 12 módulos que entraban por la puerta de atrás.** Estaban en uso pero nadie los
-  pedía: llegaban como dependencia de otra cosa. Entre ellos `inline_entity_form` —el del parche
-  delicado—, `flag`, `token`, `tamper` y `color`. Si el día de mañana se quita el módulo que los
-  arrastraba, desaparecen sin avisar.
-- **Quitados 38 que sobraban.** Y aquí una corrección a lo que dijimos el 13 por la mañana: **no
-  son paquetes fantasma**. Los 38 están en el disco, con su código y todo; lo que pasa es que
-  Drupal no los tiene encendidos. Quitarlos del fichero no borra nada hoy. Es la retirada de
-  Commerce entero, la IA, `search_api`, `shield`, `quicklink`, `memcache` y compañía. Antes de
-  tocarlos se comprobó que `settings.php` no menciona ninguno.
-- **Fuera el `merge-plugin`.** Apuntaba a `modules/contrib/charts/modules/charts_billboard/composer.json`.
-  Ni el fichero ni la carpeta `charts` existen, y el módulo no está instalado. El plugin llevaba
-  quién sabe cuánto sin hacer nada.
-- **Metidos 16 de los 18 huérfanos**, cada uno con la versión exacta que corre, verificada una a
-  una contra drupal.org antes de escribirla.
-- **Fijados los seis comodines.** Un `*` significa "cualquier versión", que es lo contrario de
-  reproducible.
-
-**Los tres módulos con historia.** De los 18 huérfanos, 15 eran versiones publicadas normales.
-Los otros tres:
-
-- `pdf_serialization` **ya está resuelto**: es la 2.2.0 más dos parches que estaban tirados
-  dentro de su propia carpeta como `4.patch` y `6.patch`. Se comprobó dos veces que aplicados
-  sobre la 2.2.0 original reproducen exactamente el código del disco. Ahora viven en `patches/`
-  con nombres que se entienden y están declarados en `composer.json`, así que Composer los
-  aplicará solo.
-- `quicktabs` **no es una versión publicada, es un clon de la rama de desarrollo**. Trae
-  `.gitlab-ci.yml` y `phpstan.neon`, que solo aparecen en clones de git, y va por delante de la
-  alpha7. Los cambios que lleva de más son de arriba, no manipulaciones de nadie: el JavaScript
-  cambia `$.cookie` por `window.Cookies`, que es el arreglo conocido para Drupal 10. Se queda
-  fuera de Composer hasta que se decida a qué versión llevarlo.
-- `views_entity_form_field` también se queda fuera, por lo mismo que ya estaba anotado: la
-  versión del disco es anterior a la 8.x-1.2 y su parche no aplica sobre ella.
-
-**Las siete ramas de desarrollo se quedan como están**, a propósito. Son `eca`, `eck`, `bpmn_io`,
-`conditional_fields`, `bootstrap_layout_builder`, `mimemail` y `ultimate_cron`. Fijarlas
-significaría moverlas de versión, y esta fase no mueve versiones. El `lock` ya guarda el commit
-exacto de cada una, así que una instalación desde cero sí es reproducible; el riesgo es solo si
-alguien lanza un `composer update` a pelo.
-
-**El paso que falta y por qué.** Queda sincronizar el `lock`, y no se puede. El ensayo acotado
-falla con un mensaje que lo explica todo: **`views_aggregator` 2.1.1 exige núcleo `^10.3 || ^11`
-y nosotros corremos 10.2.4**. Es el único módulo del disco en esa situación.
-
-Y esto cierra un círculo. Es exactamente el error 500 de la página de pedidos que diagnosticamos
-leyendo el código el 13 de agosto, solo que ahora lo dice Composer por su cuenta y con otras
-palabras. No era una casualidad ni un fallo raro del módulo: el sitio lleva tiempo ejecutando un
-módulo fuera del rango de versiones que su propio autor declara soportar. **La Fase 1 no se
-puede terminar sin subir el núcleo**, y subir el núcleo arregla la página de pedidos de paso.
-
-**El ensayo completo, que es el dato gordo del día.** Un `composer update` de todo, simulado sin
-tocar nada, **resuelve sin un solo conflicto**: 29 instalaciones, 107 actualizaciones y 69
-retiradas. El núcleo llegaría a 10.6.15 y los avisos de seguridad bajarían **de 82 a uno**.
-
-No se hizo, y no se debe hacer así. Serían las fases 2, 3 y 4 de una sentada, con 107 cambios a
-la vez y ninguna forma de saber cuál rompió qué si algo falla. Pero deja probado que el camino
-entero está despejado, que era la duda de fondo. Ojo a dos cosas que aparecen en esa lista y hay
-que tratar con cuidado cuando toque: `eca_ui` saltaría de la 1.1.5 a la 2.1.22, y `eca` movería
-de commit. Eso mueve las transacciones de inventario.
-
-**El informe de `upgrade_status`, que terminó esa misma noche.** 165 proyectos, 84.396 líneas.
-23 hallazgos de "arreglar ya" y 18.936 de "revisar a mano". Los 18.936 son ruido de la
-herramienta —"llamada a método no definido", "acceso a propiedad no definida"—, los falsos
-positivos típicos de analizar código ajeno sin contexto completo. De los 23 importantes,
-**ninguno está en nuestro código** y la mayoría están en ficheros de prueba que no se ejecutan
-en producción. Los reales son funciones que Drupal 11 retira, en `eck`, `entity_browser`, `flag`
-y `flood_control`, y las versiones nuevas de esos módulos ya las tienen arregladas. Ocho
-proyectos salen completamente limpios, y uno de ellos es **`TEC Production`**, nuestro módulo
-grande.
-
-El inventario quedó guardado como `scripts/inventario-composer.php`. Se vuelve a lanzar con
-`drush scr scripts/inventario-composer.php` y no modifica nada, solo cuenta.
-
-### 2026-08-13 — Fase 0 de la actualización: la red de seguridad, y un parche que llevaba meses sin poder aplicarse solo
-
-Antes de tocar una línea del núcleo había que poder volver atrás y poder saber si algo se
-rompió. Eso es esta fase. Salieron tres cosas, y la tercera era una bomba de relojería.
-
-**La copia de seguridad, y dos descubrimientos incómodos.** El primero: **todo el trabajo del 12
-y el 13 de agosto estaba sin confirmar en Git**: unos 140 ficheros de configuración, la limpieza
-de 43 módulos, la retirada de la IA y el backlog entero, todo en el aire.
-
-El segundo: **la carpeta `sites/default/private`, con 1.389 ficheros, no estaba en ninguna copia
-y tampoco está en GitHub.** La copia de ficheros del 12 de agosto no la incluía. Llevaba desde
-entonces sin respaldo. Ya está copiada.
-
-Se guardó todo lo que Git no protege, en `C:\laragon\backups\pre-actualizacion-*`: la base de
-datos (6,6 MB comprimidos, 88 MB de SQL), el árbol de trabajo con `config`, `docs`, `patches`,
-`composer.json`, `composer.lock` y `modules/custom` (2.648 ficheros), `core` con `vendor` (35.941
-ficheros, 173 MB) y `private` (1.491 entradas, 171 MB). Los ficheros de usuario siguen cubiertos
-por la copia del 12, porque lo único que ha cambiado desde entonces son ficheros de caché
-regenerados.
-
-**Y se probó la restauración, que no es lo mismo que probar que el fichero se lee.** El volcado
-se cargó entero en una base de datos aparte y se compararon los recuentos: **449 tablas en ambas,
-y cero diferencias** en BoM, líneas, pedidos, materiales, usuarios y procesos de ECA. Las
-únicas tres entradas de configuración que faltaban eran las que crea `upgrade_status`, instalado
-después del volcado. La base de datos de prueba se borró al terminar.
-
-De paso se aprendió que **empaquetar el proyecto entero no funciona en esta máquina**: el
-antivirus inspecciona cada fichero y `tar` se quedó dieciséis minutos sin escribir un solo byte.
-Hay que copiar por partes. Y un detalle que hace perder tiempo: si se añade Git al PATH, `tar`
-deja de ser el de Windows y pasa a ser el de Unix, que interpreta `c:/...` como un servidor
-remoto y falla. Con Git en el PATH hay que llamar a `C:\Windows\System32\tar.exe` por su ruta.
-
-**La lista de comprobación ya es un programa.** Estaba en la cabeza y en el chat; ahora está en
-`scripts/comprobacion.php` y se ejecuta con `drush scr scripts/comprobacion.php`. Hace **35
-comprobaciones**: cuenta todo el contenido contra las cifras de referencia, verifica los 146
-módulos y los 36 procesos de ECA, crea entidades de verdad para ver si los seis automatismos
-reaccionan, y revisa que no queden banderas de bloqueo colgadas ni errores nuevos en el
-registro. Lo que crea lo borra y lo que modifica lo restaura. Se pasó tres veces esta noche,
-siempre 35 de 35. **Es la orden que hay que ejecutar después de cada paso de la actualización.**
-
-**El parche de `inline_entity_form` llevaba sin poder aplicarse solo desde siempre, y nadie
-sabía por qué.** El arreglo estaba en el fichero, pero puesto a mano, con un comentario que
-decía literalmente *"composer patch could not auto-apply on this machine"*.
-
-La causa, encontrada esta noche, tiene tres capas. La superficial: **el fichero del parche tenía
-finales de línea de Windows y el módulo los tiene de Unix**, y Composer aplica los parches
-primero con `git apply`, que es estricto y rechaza esa mezcla de plano, y luego con el programa
-`patch`, que sí la tolera pero **no estaba en el PATH**. Sin las dos vías, el parche fallaba
-siempre.
-
-La segunda: **Composer no estaba configurado para detenerse ante un parche fallido**, así que
-seguía adelante diciendo que todo había ido bien.
-
-Y la de abajo del todo, que es la que explica por qué el problema era eterno: **Git en esta
-máquina tiene `core.autocrlf = true`, y el `.gitattributes` que trae Drupal fija finales Unix
-para `.php`, `.module` y `.yml`, pero no dice nada de `.patch`.** O sea que Git sacaba el parche
-convertido a finales de Windows **en cada checkout**. Cualquiera que lo hubiera arreglado a mano
-lo habría visto romperse otra vez a la siguiente descarga del repositorio, sin motivo aparente.
-
-Se arregló en cuatro pasos: una línea `*.patch text eol=lf` en `.gitattributes`, que es el
-arreglo de verdad y el único permanente; el parche convertido a finales Unix; el fichero del
-módulo dejado exactamente como lo produce el parche, porque antes había dos versiones distintas
-del mismo arreglo; y `"composer-exit-on-patch-failure": true` en `composer.json`.
-
-Se comprobó del modo que importa: se borró el parche, se dejó que Git lo sacara de nuevo, y sale
-con finales Unix y aplicando limpio. Ahora, además, `git apply --check --reverse` sirve para
-saber si el parche está puesto, cosa que antes era imposible.
-
-**Y se comprobó solo, por accidente.** Al instalar `upgrade_status`, Composer decidió borrar y
-reinstalar `inline_entity_form` para volver a parchearlo — cosa que hace sin avisar y por su
-cuenta. Esta vez el parche se aplicó bien. Sin el arreglo de esta noche, ese `composer require`
-inocente y sin relación ninguna se habría llevado el arreglo por delante en silencio. **El
-programa `patch` está en `C:\laragon\bin\git\usr\bin`**, y hay que añadir esa carpeta al PATH
-antes de lanzar cualquier orden de Composer.
-
-**El informe de `upgrade_status` confirma lo que decía la auditoría del código propio.** Se
-instaló la versión 4.3.10 (cinco paquetes nuevos, cero cambios en lo ya instalado) y se analizó
-el código nuestro: **ni una sola llamada a funciones que Drupal 11 elimine**. `tec_production`,
-el módulo grande, sale limpio del todo. Los otros cinco solo necesitan cambiar la línea
-`core_version_requirement`. Dos de ellos, `tec_brands` y `tec_crm`, ni siquiera están instalados.
-
-### 2026-08-13 — Diagnóstico de Composer: el bloqueo era menor de lo que creíamos, y el descuadre mayor
-
-Cuatro comandos de solo lectura, ninguno modificó un fichero (comprobado por huella digital
-antes y después). Tres conclusiones que cambian el plan:
-
-**La subida del núcleo no está bloqueada.** Simulada con `composer update drupal/core-recommended
---with-all-dependencies --dry-run`, resuelve sin un solo conflicto y llega hasta la **10.6.15**,
-no solo la 10.3. Son 22 actualizaciones y 3 retiradas, y no toca ningún módulo contribuido.
-
-La idea de que "en este proyecto no se puede actualizar" no venía de meses de intentos: nació el
-9 de agosto, cuando un `composer update` a pelo rompió `inline_entity_form`, y se dio por buena
-sin volver a comprobarla. Cuatro días de suposición, no meses. Lo que está atascado es el
-`update` general; una actualización dirigida no lo está.
-
-**El descuadre de versiones es de 24 módulos, no de 5.** Y lo importante es *por qué* nadie lo
-vio: Composer no lee los ficheros de los módulos, se fía de su contabilidad interna en
-`vendor/composer/installed.json`, que sigue diciendo `ds` 3.19.0 cuando en disco hay un 3.22.
-Por eso `composer install --dry-run` responde "nada que hacer" con total tranquilidad. El
-detalle está en el apartado 8.
-
-**Hay 82 avisos de seguridad conocidos**, 42 de ellos del núcleo y varios críticos, más Twig
-(16), Guzzle (9 más 4 de `psr7`), y uno suelto en `eca`, `entity_browser` y `mail_login`. La
-subida del núcleo se lleva por delante casi todos.
-
-De paso, `composer validate` confirmó que **el `lock` no está sincronizado con `composer.json`**,
-y catalogó los 15 comodines `*` y las 11 ramas de desarrollo.
-
-### 2026-08-13 — Prueba funcional tras la limpieza: el ERP está intacto, y un problema viejo que salió a la luz
-
-Después de quitar 43 módulos y tocar los procesos de ECA, la pregunta era simple: ¿el ERP hace
-lo mismo que antes? **Sí.** Se probaron seis automatismos creando entidades de verdad y
-comprobando si reaccionaban. Los seis funcionan:
-
-- Un artículo de BoM nuevo **se pone el título solo** a partir del material.
-- Al modificarlo, **copia la cantidad** al campo de entrada.
-- Si lleva talla, **se engancha solo a la variación de talla** (la talla pasó de 24 a 25).
-- Un movimiento de inventario **se engancha solo al material** (pasó de 2 a 3 movimientos).
-- Una variación de color **se pone el título sola** a partir del color.
-- Una línea de pedido **recalcula su total**: 1.200 × 2 dio 2.400.
-
-Todo lo creado durante la prueba se borró después, y la comprobación final lo confirma.
-
-**La prueba de que no se ha perdido nada.** Se cargó la copia de las 02:58 —anterior a que se
-tocara el primer módulo— en una base de datos aparte y se compararon los recuentos de todas las
-tablas de contenido contra las de ahora: **cero diferencias**. Los 4.773 artículos de
-BoM, los 178 elementos de BoM de línea, las 85 líneas de venta, los 869
-materiales, los 315 ficheros, los 7 usuarios y hasta las banderas, todo igual. La base de datos
-de pruebas se eliminó al terminar.
-
-**Lo que salió por el camino, y que es anterior a nosotros.** Una de las siete comprobaciones
-falló al principio, y perseguirla destapó un problema viejo que conviene conocer:
-
-De 85 líneas de venta, elegí la 1567 al azar y resultó ser una de las cinco averiadas. Al
-cambiarle la cantidad, el proceso arranca, escribe *"Running"* en el registro y **se para en
-seco**: sin error, sin excepción, sin aviso. El total no se recalcula y, peor, **la bandera de
-bloqueo se queda puesta**. Esa bandera existe para que el proceso no entre en bucle al
-guardarse a sí mismo, y mientras esté puesta ese proceso no volverá a ejecutarse nunca para esa
-línea. Falla en silencio y se queda averiado para siempre.
-
-La causa: la línea 1567 tiene 24 elementos de BoM, y **cuatro de ellos apuntan a
-materiales que ya no existen** (los términos 2321, 2456 y 2524). El proceso recorre el
-BoM, intenta cargar el material fantasma, no lo encuentra y muere ahí.
-
-Y el alcance es mayor de lo que parecía: **2.439 de los 4.773 artículos de BoM apuntan a
-materiales borrados**, 88 materiales fantasma en total, más 12 movimientos de inventario y 8
-elementos de BoM de línea. Alguien borró esos 88 materiales en su día sin limpiar las
-2.459 referencias que apuntaban a ellos.
-
-**No es cosa nuestra, y está demostrado.** En la copia de las 02:58, anterior a toda la
-limpieza, esos tres términos ya no existían, los mismos cuatro elementos ya apuntaban a ellos,
-la línea 1567 ya tenía cantidad 10 y total 9.500, y ya había exactamente 44 líneas con total.
-Nunca hemos borrado términos de taxonomía: desinstalar un módulo se lleva campos y
-configuración, no contenido.
-
-Dos cosas que quedan apuntadas de aquí: el borrado de datos de prueba se lleva por delante casi
-todo esto, pero **el fallo silencioso no**, y volverá a morder con datos reales el día que
-alguien borre un material que esté en uso. Está en deuda técnica.
-
-Una nota para el futuro: los mensajes que ECA escribe en el registro **no son errores** aunque
-algunos aparezcan como tales. Son mensajes de traza con los que los procesos van contando por
-dónde van, y casi todos están puestos en nivel *depuración*. Ver "Running: ..." en el registro
-es normal. La excepción, que es una errata, está apuntada en deuda técnica.
-
-### 2026-08-13 — Fuera la IA: de 148 a 146, y una cascada que casi se lleva nueve automatismos
-
-Quedaban dos módulos de la aventura de la inteligencia artificial del programador anterior,
-`ai_interpolator` y `ai_interpolator_eca`. Ya no están. El ERP se queda en **146 módulos**.
-
-Lo que bloqueaba quitarlos eran cuatro procesos de ECA que, sobre el papel, llamaban a la IA.
-Al leerlos apareció lo que de verdad pasaba: **la IA ya estaba muerta desde hacía tiempo, solo
-que nadie lo había rematado.**
-
-- En los dos procesos que estaban encendidos, `process_p2q045n` (poner los datos de un artículo
-  de BoM) y `process_uhiwdqa` (importar artículos de BoM), la acción de IA seguía
-  en el fichero pero **no la apuntaba nadie**: le habían cortado todas las conexiones de
-  entrada. Alguien incluso las había renombrado a mano a "(disabled)" y "(disabled — local
-  parse)". Ese "local parse" sugiere que el cálculo se sustituyó por uno hecho en el propio
-  servidor, sin IA.
-- Los otros dos, `process_utltgmh` y `process_lygeesg`, eran **clones apagados**, las versiones
-  1.3 y 1.4 de un proceso cuya versión viva es la 0.1. Nunca se activaron. Se han borrado
-  enteros por decisión del dueño; quedan en el historial de Git y en las copias.
-
-El campo propio de la IA, `ai_interpolator_status`, tenía 4.651 filas y ni un dato de negocio:
-4.579 decían `pending` y 72 `finished`. Es decir, se lanzó sobre 4.651 artículos y se abandonó
-habiendo terminado 72. Desapareció solo al desinstalar.
-
-**Una trampa que había que desactivar antes.** En ECA cada proceso vive por duplicado: el
-diagrama que se dibuja en el editor visual y la configuración compilada que es la que de verdad
-se ejecuta. Aquí **no coincidían**: en la compilada la IA estaba desconectada, pero en el
-diagrama seguía enchufada, porque quien la desactivó editó el YAML a mano y no tocó el dibujo.
-Con el editor visual instalado, como lo está, habría bastado que alguien abriera ese proceso y
-le diera a guardar para que la IA volviera. Se ha limpiado también el BPMN de los dos diagramas
-y ahora dibujo y ejecución dicen lo mismo.
-
-**El susto de la noche.** Al desinstalar, Drupal borró **nueve procesos de ECA** que no tenían
-nada que ver con la IA: duplicar producto, duplicar color, duplicar talla, los datos de línea de
-pedido, el gestor de mutaciones de stock y tres más. El mecanismo es el que hay que recordar:
-esos procesos dependen de campos como `field_tec_inventory` o `field_tec_colors`, y esos campos
-llevaban ajustes del módulo de IA colgando. Drupal arregló los campos, pero **arrastró en
-cascada y borró entero todo lo que dependía de ellos**. Se recuperaron los nueve importando solo
-esos ficheros desde `config/sync` con `--partial`, que no borra nada de lo demás. Verificado
-después: 36 procesos en base de datos y 36 en disco, los mismos que había menos los dos clones.
-
-**La lección, para la próxima vez que se desinstale un módulo con muchos tentáculos:** mirar
-antes qué configuración depende de la que va a cambiar, y contar los procesos de ECA antes y
-después. La cuenta de módulos sale bien aunque por debajo se hayan perdido automatismos.
-
-Comprobado al terminar: cero rastro de `ai_interpolator` en la configuración y en la base de
-datos, configuración y disco sincronizados, ningún error nuevo en el registro, y las páginas
-`/`, `/o/queue`, `/stock`, `/production/log` y el listado y el editor de ECA cargando bien. Hizo
-falta, otra vez, vaciar las tablas de caché a mano: el editor visual siguió ofreciendo la acción
-de IA en su paleta hasta que se vaciaron.
-
-Copia previa en `c:\laragon\backups\pre-quitar-ia-20260813.sql.gz`, y los nueve procesos
-rescatados en `c:\laragon\backups\eca-restaurar-20260813`.
-
-### 2026-08-13 — Cuarenta y un módulos fuera: de 189 a 148
-
-El ERP tenía 189 módulos activos. Ahora tiene 148. Ninguna pantalla se ha resentido.
-
-La pregunta de partida era cuánto de lo que dejó instalado el programador anterior no servía
-para nada. Para responderla se lanzaron cuatro revisiones en paralelo: una construyó el árbol
-de qué módulo depende de cuál, otra buscó pruebas de uso real de cada uno de los 189, otra
-comprobó en drupal.org la compatibilidad de cada uno con Drupal 11, y la cuarta revisó nuestro
-propio código.
-
-**Cruzar las cuatro fue lo que evitó tres estropicios.** Por separado, la revisión de uso daba
-por muertos a `csv_serialization` y a `media_library_form_element`, y el árbol de dependencias
-demostró que el primero lo necesita `views_data_export` —que genera los PDF y los Excel— y el
-segundo lo necesita `bootstrap_styles`. Y daba por muerto a `smtp` porque está apagado; lo
-está, pero porque **todavía no lo hemos configurado**, y es justo lo que hace falta para que
-funcionen las recuperaciones de contraseña. Los tres se quedaron.
-
-Lo que se fue, en cuatro tandas y de uno en uno:
-
-- **Veintiuno muertos del todo**, sin nadie que dependiera de ellos ni configuración que los
-  citara: `autocomplete_deluxe`, `state_machine`, `physical`, `workflows`, `profile`,
-  `batch_jobs`, `queue_ui`, `entity_reference_modal`, `entity_reference_revisions`,
-  `field_tools`, `base_field_override_ui`, `layout_builder_tabs`, `layout_builder_blocks`,
-  `prepopulate`, `comment`, `history`, `selective_better_exposed_filters` y los cuatro de
-  `jquery_ui` que no usaba nadie.
-- **Nueve submódulos de ECA** que no aportaban ni un plugin a los 38 procesos montados:
-  `eca_access`, `eca_cache`, `eca_config`, `eca_form`, `eca_misc`, `eca_queue`, `eca_render`,
-  `eca_user` y `eca_vbo`.
-- **Siete instalados y apagados a mano**: `shield`, `automated_cron`, `pwa_extras`, `quicklink`,
-  `entity_browser_enhanced`, `ds_extras` y `file_resup_media_library`. El caso de `quicklink`
-  resume bien el conjunto: estaba configurado para no ejecutarse ni con el usuario identificado
-  ni en rutas de administración, o sea, nunca, porque en un ERP eso es el cien por cien del
-  tiempo.
-- **Cuatro que necesitaban un paso previo**: `features` antes que `config_update`, `pace`, y
-  `file_resup`, que hubo que liberar antes borrando su línea en `tec_inventory.info.yml`.
-
-**Ese último detalle merece quedar escrito.** Nuestro propio módulo de inventario declaraba
-como dependencias obligatorias tres experimentos del programador anterior: `ai_interpolator`,
-`ai_interpolator_eca` y `file_resup`. Por eso Drupal se negaba a desinstalarlos. No es que el
-inventario los usara; es que alguien escribió que los necesitaba. La línea de `file_resup` se
-quitó ese día y las dos de la IA esa misma noche, al desinstalar los dos módulos (ver la entrada
-anterior). También las declaraban `tec_brands` y `tec_crm`, pero esos dos módulos no están
-instalados, así que no estorbaban.
-
-**Dos sustos, los dos resueltos.** El primero: nada más terminar, el sitio devolvía error 500
-al entrar. La causa era la caché rancia del servidor web, que seguía llamando al módulo de
-comentarios recién desinstalado; se arregló vaciando las dieciocho tablas de caché
-directamente en la base de datos, que es el mismo remedio que hizo falta la vez anterior que se
-tocaron módulos.
-
-El segundo fue más instructivo. Un pedido de venta, el 348, seguía dando error 500 después de
-la limpieza. En lugar de suponer, se restauró la copia de seguridad **anterior** a la limpieza
-y se cargó ese mismo pedido: **también fallaba antes**. O sea que el error ya estaba ahí y no lo
-había provocado la limpieza. Es el fallo de `views_aggregator` descrito en la sección 9. Los
-otros ocho pedidos de venta que se probaron cargan bien.
-
-Comprobado al terminar: los 38 procesos de ECA intactos, la configuración exportada sin
-diferencias con la base de datos, y nueve pantallas más seis fichas de datos cargando sin un
-solo error, entre ellas la cola de producción, el tablero de stock, el registro de producción,
-un producto, un pedido, una orden de compra, un material y las fichas de un cliente y un
-proveedor.
-
-Las copias de seguridad de antes y después están en `c:\laragon\backups`, como
-`pre-limpieza-modulos-20260813.sql` y `post-limpieza-modulos-20260813.sql`.
-
-**Falta llevarlo al servidor**, y hay un orden obligado: primero sube solo la configuración, con
-el código de los módulos todavía presente, para que Drupal pueda ejecutar sus rutinas de
-desinstalación; y solo después, en un segundo viaje, se borra el código. Al revés dejaría restos
-en la base de datos.
-
-### 2026-08-12 — El ERP, publicado en internet
-
-Está en **`https://erp.anvfightgear.com`**, en el servidor de Singapur. Desde el primer envío
-de archivos hasta tener la página de acceso funcionando con certificado pasaron unos cuarenta
-minutos.
-
-Lo que se montó: el código traído desde GitHub con una llave de despliegue de solo lectura
-—el servidor puede descargar el repositorio pero nunca escribir en él, así que aunque alguien
-entrara en la máquina no podría tocar el código—, los 254 paquetes de Composer, la base de
-datos con sus 460 tablas, los 3.950 archivos de imágenes y documentos, Apache, y el
-certificado de Let's Encrypt con renovación automática ya probada en simulacro.
-
-Los tres ajustes de `settings.php` quedaron corregidos, y de paso dos más que no estaban en la
-lista: los errores ya no se enseñan en pantalla sino que van al registro, y el ERP se conecta a
-la base de datos con un usuario propio en vez de con `root`. El propio `settings.php` está
-puesto de forma que solo lo pueden leer el sistema y el servidor web, y comprobado desde fuera
-que devuelve un 403.
-
-**Dos sustos que conviene recordar.** El primero: el comprimido hecho con Windows solo
-descomprimía 659 de los 3.950 archivos y se paraba en silencio, sin dar error, porque Windows
-no guarda los permisos que Linux necesita. Y engañaba dos veces, porque la prueba de
-integridad del comprimido decía que estaba perfecto y el tamaño en disco coincidía byte a
-byte. Solo se detecta contando los archivos ya descomprimidos. De haber pasado por alto,
-el ERP habría abierto con casi todas las imágenes rotas. Se rehizo con `tar` y entraron todos.
-
-El segundo: **`docs/backlog.md`, este mismo archivo, se podía descargar desde internet sin
-contraseña**, con los planes del servidor, el historial del incidente de la clave y las notas
-internas dentro. Drupal bloquea por su cuenta los `.yml` y los `.php`, pero los `.md` no los
-conoce porque no existían cuando se escribieron esas reglas. Ya está bloqueado, junto con el
-README y los `.txt` de instalación, en los dos ficheros de configuración de Apache — importa
-que sean los dos, porque Certbot hace una copia para la versión segura del sitio y desde ese
-momento las dos van por su cuenta.
-
-Ambos están documentados como trampas 8 y 9 en el procedimiento de despliegue del README de
-`tec_production`, junto con el resto de correcciones que el ensayo en local no pudo anticipar.
-
-Veinte minutos después de publicarlo, un rastreador automático de internet (LeakIX) ya había
-encontrado el formulario de acceso e intentado entrar. Es ruido de fondo, le pasa a cualquier
-cosa que se publique, y el sitio lo rechazó — pero es el motivo por el que ninguna cuenta
-puede quedarse con una contraseña floja.
-
-### 2026-08-12 — El servidor de Singapur, creado
-
-Existe y responde. Se llama `erp-anv-sgp1`, su dirección pública es **188.166.255.1**, corre
-Ubuntu 24.04.4 LTS con 2 GB de memoria, 1 CPU y 50 GB de disco, y cuesta 15,60 al mes con las
-copias diarias incluidas, que se hacen de 3 a 7 de la madrugada hora de Tailandia.
-
-Se entra con llave SSH, sin contraseñas. La llave se creó ese mismo día en el PC del dueño
-(`C:\Users\Acer\.ssh\id_ed25519`, tipo ed25519, sin frase de paso para que los despliegues no
-pidan teclear nada). Hay copia de la mitad privada en LastPass, en una nota segura llamada
-"Llave SSH - servidor ERP (erp-anv-sgp1)", así que perder el ordenador ya no significa perder
-el acceso al servidor.
-
-Conviene saber además que perder la llave nunca sería fatal: como la cuenta de DigitalOcean es
-del dueño, siempre se puede entrar por la consola web del panel, restablecer el acceso y
-registrar una llave nueva. Sería un rato de incordio, no un desastre.
-
-La razón de todo el traslado quedó medida: desde el PC de la fábrica, el servidor de Singapur
-responde en **33 milisegundos**, frente a los 250 del de Nueva York. Siete veces más rápido,
-que es la diferencia entre un ERP que va suelto y uno que va a tirones.
-
-Un detalle para la configuración: la máquina no tiene memoria de intercambio (*swap*)
-configurada. Con 2 GB reales conviene añadirla, porque `composer install` necesita cerca de
-1 GB él solo y, si se queda corto, Linux mata el proceso a media faena sin explicar por qué.
-
-### 2026-08-12 — Las copias, fuera del disco duro
-
-Los dos zips ya están en Google Drive, en `Backups ERP-ANV / 2026-08-12`, con el mismo tamaño
-que en el disco (7,4 MB la base de datos y 545,8 MB el proyecto), lo que confirma que la
-subida terminó entera. Con esto el ERP deja de depender de un solo disco, que era el punto más
-frágil que había.
-
-Con una pega, detectada después: se subieron por la mañana, antes de la limpieza de
-credenciales de la tarde, así que llevan dentro la clave de OpenAI del programador anterior.
-No es un problema de seguridad, porque Drive es privado y la clave no es nuestra, pero sí de
-etiquetado: el procedimiento de despliegue usa esos zips como ingrediente, y usar estos
-resucitaría la clave en el servidor nuevo. De ahí las tres tareas repartidas por la lista,
-renombrar la carpeta, hacer copias nuevas el día del despliegue y borrar las viejas después.
-
-Recuperar desde estos zips tampoco sería un desastre, porque la limpieza sí está en GitHub: se
-restaura el zip y se importa encima la configuración limpia del repositorio. Las dos copias se
-complementan.
-
-### 2026-08-12 — Limpieza de todo lo que quedaba del programador anterior
-
-El ERP guardaba una clave de OpenAI en texto plano, en `config/sync/openai.settings.yml`,
-apuntando a la cuenta personal del programador que montó el sistema original. Era la cuenta
-que había que ir recargando con dinero. Seis procesos automáticos llamados *"TEC Inventory
-term: Calculate units"* preguntaban a GPT las conversiones de unidades **cada vez que se
-creaba o modificaba un material**; con más de ochocientos materiales, ahí estaba el gasto.
-Esos seis ya estaban desactivados desde hacía tiempo, pero cuatro campos seguían armados:
-tres de las unidades de medida y el de color.
-
-Se hizo lo siguiente: vaciar la clave y el identificador de organización, apagar esos cuatro
-campos, bloquear su cuenta de usuario `uid 3` (activa, con rol de dirección y sin usarse
-desde julio de 2024) y cambiar el correo del sitio, que era el suyo, por
-`erp@anvfightgear.com`.
-
-Al apagar el último interpolador, el propio módulo retiró tres campos suyos que ya no hacían
-falta. Eso es normal, no es un daño.
-
-Una auditoría completa confirmó que no queda nada más: su dominio aparecía en un solo sitio
-del código, la clave era la única credencial de los 1.255 objetos de configuración, los
-repositorios externos de Composer apuntan solo a Drupal y GitHub, el remoto de Git es el
-propio, y la configuración de SMTP estaba vacía. Sí había **cuatro copias del fichero de la
-clave** en el disco; dos estaban obsoletas y se vaciaron también, y una de ellas vivía dentro
-de `sites/default/files`, o sea que habría viajado al servidor de Singapur dentro del zip.
-
-Queda un frente que no se puede auditar desde aquí: el servidor de Nueva York, que montó él y
-donde probablemente sigue instalada su llave de acceso. Se resuelve solo, porque el servidor
-nuevo se crea desde cero y el viejo se destruye.
-
-### 2026-08-12 — El historial de Git, reescrito para purgar la clave
-
-La clave estaba en 28 de los 29 commits del repositorio, y se había subido a GitHub esa misma
-mañana. Se descartó empezar de cero, porque el historial documenta el rediseño del
-inventario, la ampliación del CRM y el módulo de stock control, y esos mensajes valen. En su
-lugar se reescribieron los 30 commits eliminando ese único fichero, y luego se devolvió con
-los campos vacíos en el último.
-
-Se comprobó de dos maneras. Buscando la clave en los 30 commits: cero apariciones. Y
-comparando el inventario completo de archivos antes y después: de 17.457 entradas, la única
-diferencia es la desaparición de ese fichero. Los otros 17.456 son idénticos hash a hash, así
-que la reescritura no tocó nada más.
-
-El historial anterior está íntegro en `c:\laragon\backups\git-history-20260812`.
-
-El repositorio de GitHub se borró y se recreó vacío, en vez de forzar la subida, porque
-forzándola los commits viejos habrían seguido accesibles en los servidores de GitHub durante
-un tiempo. Sobre el repositorio nuevo se subieron los 31 commits ya limpios.
-
-La comprobación no se hizo mirando la copia local, sino descargando de GitHub una copia
-independiente y revisándola commit a commit: los 31 están limpios y el fichero de la clave
-llega con los dos campos vacíos.
-
-### 2026-08-12 — Ensayo de despliegue en local
-
-Se reconstruyó el ERP entero desde cero en una carpeta desechable, usando solo tres
-ingredientes: el repositorio de GitHub, el volcado de la base de datos y el zip del proyecto.
-Funcionó: el sitio reconstruido servía los pedidos con sus totales calculados, el tablero de
-stock con sus columnas, el registro de producción y las imágenes, sin un solo error de PHP.
-
-Pero no salió limpio, y de ahí salieron cuatro hallazgos que se habrían pagado caros en el
-servidor.
-
-**`composer install` miente.** Hicieron falta tres pasadas. La primera murió con una descarga
-corrupta. La segunda informó de 243 instalaciones y terminó con éxito, pero había dejado 45
-de 156 carpetas de módulos vacías y `themes/contrib` sin nada. La tercera instaló los 157
-paquetes que faltaban. La regla que queda es no creerse el mensaje final: hay que contar las
-carpetas.
-
-**113 archivos del núcleo de Drupal se copiaron con 0 bytes**, entre ellos `backbone.js` y
-tres piezas del editor de texto, que rompen la administración. El archivo descargado estaba
-dañado y se reutilizaba en cada intento; encima machacó con ficheros vacíos otros que venían
-bien desde GitHub.
-
-**El parche de `inline_entity_form` no se aplica nunca.** Falló las cuatro veces. Composer,
-para parchear, primero *borra* el módulo y lo reinstala; luego intenta aplicar el parche con
-Git, que lo descarta en silencio porque el módulo vive dentro del propio repositorio del
-proyecto; y después recurre al programa `patch`, que si no está instalado deja el módulo sin
-parchear mientras Composer termina diciendo que todo fue bien. Ese borrado previo es el
-mecanismo del incidente antiguo en el que Composer "desinstaló" el módulo por su cuenta.
-
-**Faltaba un ingrediente en la receta:** `sites/default/private` tiene 1.384 archivos reales
-y no está en GitHub, solo dentro del zip del proyecto. Sin él se rompen las descargas de
-archivos privados.
-
-Los dos primeros fallos huelen a antivirus de Windows entrometiéndose mientras Composer
-descomprime, así que probablemente no se repitan en Ubuntu. Los dos últimos sí van a
-aparecer, y ya están cubiertos en el procedimiento.
-
-Aguantaron bien la protección del `.htaccess` (intacta tras cuatro pasadas de Composer, o sea
-que el arreglo del 11 de agosto funciona), los cuatro módulos que no gestiona Composer, los
-diecisiete convertidos esa misma mañana, y la base de datos, que se importó fiel: 123
-pedidos, 4.987 artículos, 214 productos, 583 líneas.
-
-El procedimiento definitivo, con las trampas y una lista de comprobación con cifras de
-referencia, quedó escrito en `modules/custom/tec_production/README.md`. Del ensayo no queda
-nada: carpeta, base de datos de prueba y configuración de Apache borradas, y `tec.test`
-intacto.
-
-### 2026-08-12 — El proyecto entero en GitHub
-
-Se creó el repositorio privado `github.com/daviddogu-code/ERP-ANV` y se subió el proyecto
-completo, unos 17.456 archivos. La identidad de Git (`daviddogu-code` con el correo oculto de
-GitHub) está configurada **solo en este repositorio**, no en el Windows entero, para que
-otros proyectos puedan llevar la suya. La rama se llama `main`.
-
-Quedan fuera del repositorio, a propósito, el motor de Drupal (`/core` y `/vendor`, se
-recuperan con `composer install`), las imágenes de `sites/default/files` y la base de datos.
-Esos dos últimos están en los zips de copia de seguridad.
-
-También se bloquearon en `.gitignore` dos volcados de base de datos con nombres corruptos,
-una carpeta `backups/` dentro del proyecto, restos de dos restauraciones antiguas y cinco
-scripts `tmp_` de pruebas.
-
-### 2026-08-12 — Diecisiete módulos que llegaban vacíos
-
-Diecisiete módulos contrib se habían instalado desde código fuente, así que cada uno traía
-su propio historial de Git dentro y el repositorio padre solo guardaba una referencia. Un
-clon habría producido diecisiete carpetas vacías, entre ellas `eck`, sobre el que están
-construidos todos los tipos de datos a medida del ERP, y `eca`, que mueve las transacciones
-de inventario. Ahora se guardan como archivos normales.
-
-Dos de ellos llevaban parches hechos a mano que no existían en ningún otro sitio:
-`views_entity_form_field` tiene el arreglo de AJAX del caso #2998721-64, y
-`pdf_serialization` lleva los parches 4 y 6 más una clase `PdfManagerInterface` que el
-módulo original no incluye. Ninguno de los dos lo gestiona Composer, así que no se pueden
-registrar en `composer.json`; su única protección es estar en el repositorio.
-
-Los diecisiete historiales internos **no se borraron**: están en
-`c:\laragon\backups\nested-git-20260812`. Si algún día hiciera falta deshacer esto, se
-devuelven a su sitio.
-
-En `composer.json` se fijó `preferred-install` a `dist` para que una instalación futura no
-vuelva a crear repositorios anidados y deshaga el trabajo.
-
-### 2026-08-12 — Copia de seguridad local
-
-`c:\laragon\backups\actatec-db-20260812.zip` (7,4 MB, la base de datos) y
-`c:\laragon\backups\tec-project-20260812.zip` (545,8 MB, el proyecto completo con las
-imágenes). Pendiente subirlos a Drive.
-
-### 2026-08-12 — Saneado de DigitalOcean
-
-La factura pasó de 70,37 a unos 44 dólares al mes, unos 314 al año.
-
-Se destruyó el servidor `thailivestream` (1 vCPU, 2 GB, Bangalore), que llevaba meses al
-1,8% de uso por un proyecto abandonado y costaba 14,40 al mes con sus copias. Antes se le
-hizo la foto `thailivestream-final-2026-08-12` (11,2 GB, 0,56 al mes), desde la cual se
-puede resucitar la web entera si algún día se retoma. El sistema es Ubuntu 20.04, sin
-soporte desde 2025, así que habría que actualizarlo antes de exponerlo a internet.
-
-Se borraron seis de los siete snapshots del ERP, todos de entre julio de 2024 y agosto de
-2025, incluido uno etiquetado `before-field-conversion`. Se conservó el más reciente,
-`actafight.com-1755603370919` (38,68 GB). Todos quedaban superados por la copia local, que
-además ya está en GitHub.
-
-No hay direcciones IP reservadas huérfanas ni cortafuegos configurados.
-
-### Estado actual de la infraestructura
-
-| Qué | Dónde | Detalle |
-| :-- | :-- | :-- |
-| Servidor del ERP | DigitalOcean, `nyc3` | `actafight.com`, 2 vCPU / 4 GB / 120 GB, 32 USD/mes |
-| ERP viejo publicado en | `tec.actafight.com` | Nunca se llegó a usar; solo datos de prueba |
-| Dominio objetivo | `anvfightgear.com` | Namecheap, DNS propio de Namecheap (BasicDNS) |
-| Correo del dominio | Google Workspace | Registros gestionados desde Mail Settings de Namecheap |
-| Web pública | No existe | `www` apunta a la página de aparcamiento de Namecheap |
-| Código | `github.com/daviddogu-code/ERP-ANV` | Privado, rama `main` |
-| Copia local | `c:\laragon\www\tec` | Drupal 10.2.4, PHP 8.3.30, MySQL 8.4.3, 197 módulos activos |
-| Correo del ERP | `erp@anvfightgear.com` | Declarado, pero el buzón aún no existe y el envío no está configurado |

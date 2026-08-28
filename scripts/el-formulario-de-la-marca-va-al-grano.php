@@ -234,9 +234,12 @@ print str_repeat('-', 70) . "\n";
 // marca nueva. Su ficha tiene que decirlo y ofrecer la puerta de todos modos, o
 // una marca abierta hoy no tiene por donde recibir su primer producto.
 $mirar('una marca sin productos lo dice en su ficha',
-  str_contains($html, 'No products in this brand yet'));
+  str_contains($html, 'Nothing to show here yet'));
 $mirar('y ofrece el boton de crear el primero con su marca pegada',
-  str_contains($html, 'brand_id=' . $tid));
+  str_contains($html, 'brand_id=' . $tid)
+  && !str_contains($html, 'add/tec_product?brand_id=' . $tid . '&destination=/taxonomy/term/'));
+$mirar('y el boton de ordenar al lado, que no depende de la pestana',
+  str_contains($html, '/taxonomy/term/' . $tid . '/organize'));
 
 $respuesta = $pedir('/admin/content/tec_product/add/tec_product?brand_id=' . $tid);
 $html = (string) $respuesta->getContent();

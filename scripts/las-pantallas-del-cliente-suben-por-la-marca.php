@@ -14,6 +14,12 @@
  *   page_2    /tec_crm/N/reorder, la de ordenar productos a mano
  *   block_2   un duplicado de block_4 que hoy no cuelga de ningun sitio
  *
+ * De esas tres **`page_2` ya no existe**: se retiro la noche del 19 de agosto de
+ * 2026, cuando el orden de los productos paso a ser de la marca. Sigue nombrada
+ * aqui porque este guion la trata como lo que es -- una pantalla que puede no estar
+ * -- y porque leerlo sin ella no explicaria por que el argumento de las otras dos
+ * quedo como quedo.
+ *
  * Las tres pasan a subir por la marca, igual que ya hizo la consulta del pedido de
  * un clic: producto -> su marca -> quien compra esa marca.
  *
@@ -186,47 +192,35 @@ foreach ($pantallas as $cual => $pantalla) {
 print "\nLos botones escritos a mano\n";
 print str_repeat('-', 70) . "\n";
 
-$ordenar = '<div class="text-align-right">' . "\r\n"
-  . '<span class="btn-default">' . "\r\n"
-  . '<strong><a href="/tec_crm/{{ raw_arguments.id }}/reorder?destination=/tec_crm/{{ raw_arguments.id }}">Organize products</a></strong>' . "\r\n"
-  . '</span>' . "\r\n"
-  . '</div>';
-
 // Sin productos no se ofrece un boton que no sabria a que marca mandarlos: se dice
 // donde se crean y se abre la puerta.
 $sinProductos = '<div class="text-align-center"><h4>No products yet</h4></div>' . "\r\n"
   . '<div class="text-align-center">A product belongs to a brand. Add it from the brand page.<br>' . "\r\n"
   . '<strong><a href="/b">Brands</a></strong></div>';
 
-// Solo en las tres del cliente. Hay mas botones de «+ Product» en la vista y no son
-// de aqui: el de la pantalla por defecto lleva a la portada de productos, y el del
-// catalogo de la marca ya rellena la marca, que es justo el que se quiere conservar.
+// Solo el mensaje de «no hay productos». Aqui se reescribia tambien la cabecera, con
+// un boton «Organize products» que llevaba a /tec_crm/N/reorder; esa pantalla se
+// retiro la noche del 19 de agosto de 2026 -- el orden de los productos es de la
+// marca y no del cliente -- y las cabeceras que la citaban se borraron. Escribirlo
+// otra vez seria devolver un boton a una direccion que ya no responde. Donde se
+// ordena ahora se llega desde el titulo de cada grupo de marca de esta misma
+// pestaña, y eso lo escribe scripts/la-pestana-agrupa-por-marca.php.
 foreach (RECIBEN as $cual) {
   if (!isset($pantallas[$cual])) {
     continue;
   }
   $opciones = &$pantallas[$cual]['display_options'];
-  foreach (['header', 'footer', 'empty'] as $zona) {
-    foreach ($opciones[$zona] ?? [] as $id => $trozo) {
-      if (!is_array($trozo) || ($trozo['plugin_id'] ?? '') !== 'text_custom') {
-        continue;
-      }
-      $dice = (string) ($trozo['content'] ?? '');
-      if (!str_contains($dice, 'tec_product/add')) {
-        continue;
-      }
-      // La de ordenar no lleva el boton de ordenar dentro de si misma.
-      if ($zona !== 'empty' && $cual === 'page_2') {
-        continue;
-      }
-      $nuevo = $zona === 'empty' ? $sinProductos : $ordenar;
-      if ($dice !== $nuevo) {
-        $opciones[$zona][$id]['content'] = $nuevo;
-        $puestas++;
-        printf("  %-18s %s/%s reescrito%s\n", $cual, $zona, $id,
-          str_contains($dice, '}}?destination') ? ' (llevaba dos «?»)' : '');
-      }
+  foreach ($opciones['empty'] ?? [] as $id => $trozo) {
+    if (!is_array($trozo) || ($trozo['plugin_id'] ?? '') !== 'text_custom') {
+      continue;
     }
+    $dice = (string) ($trozo['content'] ?? '');
+    if (!str_contains($dice, 'tec_product/add') || $dice === $sinProductos) {
+      continue;
+    }
+    $opciones['empty'][$id]['content'] = $sinProductos;
+    $puestas++;
+    printf("  %-18s empty/%s reescrito\n", $cual, $id);
   }
 }
 

@@ -6,14 +6,14 @@
 // here so the two fields move while the purchase cost is being typed.
 (function (Drupal, once) {
   'use strict';
-
+  
   Drupal.behaviors.inventoryCostCalculator = {
     attach: function (context) {
       const form = once('inventory-cost-form', '.taxonomy-term-tec-inventory-form', context).shift();
       if (!form) {
         return;
       }
-
+      
       const numberField = (name) => form.querySelector('#edit-' + name + '-0-value');
 
       const purchaseCost = numberField('field-tec-cost');

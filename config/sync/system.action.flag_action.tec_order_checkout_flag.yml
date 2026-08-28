@@ -1,0 +1,15 @@
+uuid: 56abf4c9-19af-432e-9181-346fdf2f700b
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_order_checkout
+  module:
+    - flag
+id: flag_action.tec_order_checkout_flag
+label: '<img src="/sites/default/files/000-next-21.png" title="Checkout">Checkout'
+type: tec_order
+plugin: 'flag_action:tec_order_checkout_flag'
+configuration:
+  flag_id: tec_order_checkout
+  flag_action: flag

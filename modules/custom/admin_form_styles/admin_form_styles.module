@@ -65,22 +65,22 @@ function admin_form_styles_library_info_alter(array &$libraries, string $extensi
  */
 function admin_form_styles_page_attachments(array &$attachments) {
   $route_match = \Drupal::routeMatch();
-
+  
   // SAFETY CHECK - prevent 500 errors
   if (!$route_match) {
     return;
   }
-
+  
   $route_name = $route_match->getRouteName();
-
+  
   // Additional safety check for route name
   if (!$route_name) {
     return;
   }
-
+  
   $current_path = \Drupal::service('path.current')->getPath();
   $request = \Drupal::request();
-
+  
   // The purchase draft used to load a second calculator here, on top of the one
   // in asset_injector.js.draft_for_ace_company_view. Both wrote the same cells,
   // so while they agreed nobody noticed. They stopped agreeing the day the draft
@@ -90,20 +90,20 @@ function admin_form_styles_page_attachments(array &$attachments) {
   //
   // Nothing was added back in its place. The injected script already totals the
   // rows and draws the foot, and it does it for the sales draft too.
-
+  
   // Load on taxonomy add/edit forms (original functionality)
   if (strpos($route_name, 'entity.taxonomy_term.add_form') !== FALSE ||
       strpos($route_name, 'entity.taxonomy_term.edit_form') !== FALSE) {
     $attachments['#attached']['library'][] = 'admin_form_styles/form-styles';
   }
-
+  
   // ONLY load on inventory transaction forms - be more specific
   if (strpos($current_path, '/admin/content/tec_inventory/add/tec_inventory_transaction') !== FALSE) {
     $attachments['#attached']['library'][] = 'admin_form_styles/form-styles';
   }
-
+  
   // Force load ONLY on inventory modal wrapper format requests
-  if ($request->query->get('_wrapper_format') === 'drupal_modal' &&
+  if ($request->query->get('_wrapper_format') === 'drupal_modal' && 
       strpos($current_path, 'tec_inventory_transaction') !== FALSE) {
     $attachments['#attached']['library'][] = 'admin_form_styles/form-styles';
   }
@@ -182,7 +182,7 @@ function admin_form_styles_form_alter(&$form, $form_state, $form_id) {
   ], TRUE)) {
     $form['#after_build'][] = 'admin_form_styles_tec_product_delete_after_build';
   }
-
+  
   // ONLY target the inventory transaction form - be very specific
   if ($form_id === 'tec_inventory_tec_inventory_transaction_form') {
     $form['#attached']['library'][] = 'admin_form_styles/form-styles';

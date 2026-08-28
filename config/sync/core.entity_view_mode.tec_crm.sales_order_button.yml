@@ -1,11 +1,11 @@
-uuid: bc9a0549-7454-46e0-8445-f71a81cc29c5
+uuid: ddf73324-dd1d-42c0-8150-5910d0535492
 langcode: en
 status: true
 dependencies:
   module:
     - eck
-id: tec_crm.excel_lover_button
-label: 'Excel lover button'
+id: tec_crm.sales_order_button
+label: 'Sales order button'
 description: 'Render the Flag link in difficult places, such as empty view texts.'
 targetEntityType: tec_crm
 cache: true

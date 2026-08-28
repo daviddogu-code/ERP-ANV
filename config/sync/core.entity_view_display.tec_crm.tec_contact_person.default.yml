@@ -157,7 +157,7 @@ content:
     third_party_settings: {  }
     weight: 5
     region: content
-  flag_tec_draft_order_excel_lover:
+  flag_tec_order_draft_sales:
     settings: {  }
     third_party_settings: {  }
     weight: 10

@@ -24,7 +24,11 @@
  *    columna pedida tres veces (Name en name, inventory_name y name_2) y la misma
  *    idea escrita con espacios y con guion bajo (Material Type y Material_type,
  *    Unit of Use y Unit_of_use). Se queda una columna por dato.
- *  - Se mapean los nueve campos obligatorios y once opcionales.
+ *  - Se mapean los nueve campos obligatorios y doce opcionales.
+ *  - Las cabeceras del CSV son las etiquetas del formulario de anadir material,
+ *    no nombres inventados: Material name, Traceable, Purchase Cost (No VAT),
+ *    MOQ (UoP), Active, etc. Asi quien rellena el Excel ve lo mismo que en
+ *    /admin/structure/taxonomy/manage/tec_inventory/add.
  *  - El proveedor va a field_tec_vendor, el obligatorio que apunta al CRM, y NO
  *    a field_tec_suppliers, que esta vacio y pendiente de retirarse.
  *  - La autocreacion se apaga en todas las referencias. Es un ajuste del mapeo,
@@ -56,7 +60,7 @@ const MAPA = [
   // --- las nueve obligatorias -----------------------------------------------
   [
     'clave' => 'name',
-    'columna' => 'Name',
+    'columna' => 'Material name',
     'destino' => 'name',
     'unica' => TRUE,
     'nota' => 'nombre del material; es la clave, si se repite actualiza en vez de crear',
@@ -75,7 +79,7 @@ const MAPA = [
   ],
   [
     'clave' => 'purchase_cost',
-    'columna' => 'Purchase Cost',
+    'columna' => 'Purchase Cost (No VAT)',
     'destino' => 'field_tec_cost',
     'nota' => 'coste de una unidad de compra, sin IVA; punto decimal, no coma',
   ],
@@ -119,7 +123,7 @@ const MAPA = [
   ],
   [
     'clave' => 'traceability',
-    'columna' => 'Traceability',
+    'columna' => 'Traceable',
     'destino' => 'field_tec_traceability',
     'nota' => 'OJO: escribir 1 o 0. Cualquier otro texto, incluido "No", cuenta como 1',
   ],
@@ -137,7 +141,7 @@ const MAPA = [
   ],
   [
     'clave' => 'importer_item_id',
-    'columna' => 'Importer Item ID',
+    'columna' => 'Importer item ID',
     'destino' => 'field_tec_importer_item_id',
     'nota' => 'identificador de la fila en el fichero de origen, para poder rastrearla',
   ],
@@ -149,19 +153,19 @@ const MAPA = [
   ],
   [
     'clave' => 'moq_quantity',
-    'columna' => 'Minimum Order Quantity (MOQ)',
+    'columna' => 'MOQ (UoP)',
     'destino' => 'field_tec_moq_quantity',
     'nota' => 'pedido minimo en unidades de compra; numero entero',
   ],
   [
     'clave' => 'reorder_point',
-    'columna' => 'Reorder Point (ROP)',
+    'columna' => 'Reorder Point (ROP) (UoS)',
     'destino' => 'field_tec_reorder_point',
     'nota' => 'nivel de stock al que hay que volver a pedir',
   ],
   [
     'clave' => 'safety_stock',
-    'columna' => 'Safety Stock Qty',
+    'columna' => 'Safety Stock Qty (UoS)',
     'destino' => 'field_tec_safety_stock',
     'nota' => 'stock de seguridad en unidades de inventario',
   ],
@@ -176,6 +180,12 @@ const MAPA = [
     'columna' => 'Volume per Purchase UoM (CBM)',
     'destino' => 'field_tec_volume_cbm',
     'nota' => 'metros cubicos que ocupa una unidad de compra',
+  ],
+  [
+    'clave' => 'active',
+    'columna' => 'Active',
+    'destino' => 'status',
+    'nota' => '1 activo, 0 inactivo, vacio deja el default (activo). Escribir Inactive cuenta como 1',
   ],
 ];
 
@@ -220,13 +230,18 @@ if (!$abortar) {
   printf("    los %d destinos del mapa existen y son mapeables\n", count(MAPA));
 }
 
-// El campo viejo de proveedores no se toca y tiene que seguir vacio.
-$filasViejas = (int) \Drupal::database()->select('taxonomy_term__field_tec_suppliers')->countQuery()->execute()->fetchField();
-if ($filasViejas > 0) {
-  $abortar[] = sprintf('field_tec_suppliers tiene %d filas y se esperaban 0', $filasViejas);
+// El campo viejo de proveedores no se toca. Si la tabla ya no existe, mejor.
+if (\Drupal::database()->schema()->tableExists('taxonomy_term__field_tec_suppliers')) {
+  $filasViejas = (int) \Drupal::database()->select('taxonomy_term__field_tec_suppliers')->countQuery()->execute()->fetchField();
+  if ($filasViejas > 0) {
+    $abortar[] = sprintf('field_tec_suppliers tiene %d filas y se esperaban 0', $filasViejas);
+  }
+  else {
+    echo "    field_tec_suppliers sigue vacio y no se mapea: correcto\n";
+  }
 }
 else {
-  echo "    field_tec_suppliers sigue vacio y no se mapea: correcto\n";
+  echo "    field_tec_suppliers ya no existe y no se mapea: correcto\n";
 }
 
 // Y ningun campo obligatorio puede quedarse fuera del mapa.

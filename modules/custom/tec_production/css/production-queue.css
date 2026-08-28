@@ -1,3 +1,10 @@
+/* This file loads only on /o/queue. DXPR caps .container at 1580px, which
+   leaves grey bands beside a table that is already built to use the leftover
+   width. Other screens keep the boxed layout. */
+.html .main-container.container {
+  max-width: none;
+}
+
 .tec-queue__summary {
   margin: 0.5rem 0 1rem;
 }
@@ -46,6 +53,8 @@
   overflow-x: auto;
   border: 1px solid #c8c8c8;
   scrollbar-width: none;
+  width: max-content;
+  max-width: 100%;
 }
 
 .tec-queue__table-wrap::-webkit-scrollbar {
@@ -88,6 +97,8 @@
   border-collapse: separate;
   border-spacing: 0;
   margin: 0;
+  width: max-content;
+  max-width: none;
 }
 
 #tec-production-queue th,
@@ -186,6 +197,14 @@
   background: #ead1dc;
 }
 
+#tec-production-queue th.tec-queue__total-col,
+#tec-production-queue td.tec-queue__total-cell {
+  width: 1%;
+  white-space: nowrap;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
 /* TOTAL row (like row 4 of the sheet). */
 #tec-production-queue tr.tec-queue__totals td {
   background: #f3f3f3;
@@ -265,6 +284,16 @@
 #tec-production-queue .tec-queue__deadline {
   font-weight: 600;
   white-space: nowrap;
+}
+
+/* DEADLINE / PRODUCED / REMAINING: shrink to the date or number, do not
+   share leftover table width. width 1% is the same trick as NO / ORDER. */
+#tec-production-queue th.tec-queue__end-col,
+#tec-production-queue td.tec-queue__end-cell {
+  width: 1%;
+  white-space: nowrap;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 #tec-production-queue .tec-queue__status-cell {

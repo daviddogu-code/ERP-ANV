@@ -146,9 +146,28 @@ $o['filter_groups'] = [
 ];
 
 // ---------------------------------------------------------------------------
-// El orden: producto, variacion y talla. La talla por el peso de su termino.
+// El orden: el sitio del producto dentro de su marca, y luego variacion y talla.
+//
+// El sitio va primero desde el 19 de agosto de 2026: es el que se arrastra en la
+// pestana Organize products de la marca, y el que sigue la proforma. El nombre
+// del producto se queda detras como desempate, para una marca que nadie haya
+// arrastrado todavia. Y ojo, que quien manda de verdad en el color y en la talla
+// es CatalogueOrder, que reordena en PHP despues de la consulta -- estos dos son
+// el orden con el que le llegan las filas.
 // ---------------------------------------------------------------------------
 $o['sorts'] = [
+  'field_tec_catalogue_position_value' => [
+    'id' => 'field_tec_catalogue_position_value',
+    'table' => \Drupal\tec_production\CataloguePosition::TABLE,
+    'field' => \Drupal\tec_production\CataloguePosition::COLUMN,
+    'relationship' => REL_PRODUCTO,
+    'group_type' => 'group',
+    'admin_label' => '',
+    'plugin_id' => 'standard',
+    'order' => 'ASC',
+    'expose' => ['label' => ''],
+    'exposed' => FALSE,
+  ],
   'field_product_name_value' => [
     'id' => 'field_product_name_value',
     'table' => 'tec_product__field_product_name',
@@ -335,6 +354,6 @@ print "=====================================================================\n\n
 printf("  Filas: una por talla\n");
 printf("  Columnas: %s\n", implode(' | ', $visibles));
 printf("  Campos puestos: %s\n", implode(', ', $puestos));
-printf("  Orden: producto, variacion, y talla por el peso de su termino\n");
+printf("  Orden: %s\n", implode(', ', array_keys($pantallas[PANTALLA]['display_options']['sorts'] ?? [])));
 printf("  Argumento: el termino de la marca, por %s\n", REL_MARCA);
 print "\n  Queda exportar la configuracion.\n\n";

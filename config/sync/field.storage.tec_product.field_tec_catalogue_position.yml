@@ -1,0 +1,20 @@
+uuid: 25acf418-c83c-483a-9a42-d60db82a01f8
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: tec_product.field_tec_catalogue_position
+field_name: field_tec_catalogue_position
+entity_type: tec_product
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

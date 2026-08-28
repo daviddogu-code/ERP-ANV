@@ -705,10 +705,11 @@ something about the order, not about a line. The arithmetic is
 three of them cannot end up disagreeing.
 
 Both screens used to borrow their total from `attachment_1`, an attachment
-**shared with the two sales screens**. They no longer do; `attachment_1` still
-serves `block_1` and `page_4` exactly as before. Sales was left alone on purpose:
-what VAT is charged to a customer is a different question and copying this answer
-would be guessing at it.
+**shared with the two sales screens**. They stopped, and three days later sales
+stopped too (see *The foot goes inside the table* below), so that attachment no
+longer exists. Sales was left alone on the VAT question on purpose: what VAT is
+charged to a customer is a different question, and copying this answer would be
+guessing at it.
 
 Three cases, because they look different:
 
@@ -790,7 +791,7 @@ the footer below it would disagree on the same page.
 > was worth* below.
 
 Two presentation fixes on the draft, both in
-`asset_injector.css.tec_excel_lover_orders`:
+`asset_injector.css.tec_order_draft_screens`:
 
 - The quantity box was the full width of its cell for the sake of four digits.
 - **Quantity** was printed above every box, which the column heading already
@@ -919,6 +920,260 @@ and Drupal 11 is stricter about it than 10 was. All eleven keys are described.
   that the link on the supplier card quotes the live rate rather than a hardcoded
   one. It puts the rate back as it found it, so it is safe to run on a live site.
 - Guardian: five more checks in section 7.
+
+### The foot goes inside the table (19 August 2026)
+A sales order ends in one more row **of its own table**: the piece count under
+`Qty.`, the money under `Item total`. It used to end in a second little table
+glued underneath (`attachment_1`), which is why the count added that morning
+could only float against the right edge. Two tables never agree on their column
+widths — the browser sizes each one on its own contents — so a figure in the
+lower one lands under a column of the upper one by luck, and stops the moment a
+product name runs long. No CSS fixes that. The only place a figure lines up with
+a column is inside the same table.
+
+`src/OrderFoot.php`, called from `hook_preprocess_views_view_table()`. It names
+the two screens it serves — `block_1`, the Line items tab, and `page_4`, the
+printed Pro Forma — because the same view draws nine others, and the drafts in
+particular must not get a second foot on top of the one their script writes. It
+is drawn on the server because one of those two is a piece of paper handed to a
+customer, and paper cannot depend on a script having run.
+
+The column is found **by name and never by counting**, the rule the draft's
+script already followed: Views names every cell after the field that fills it.
+The quantity is the sixth column of eight on the order page and the third of
+eight on the Pro Forma; both move the day somebody adds a column, and now both
+feet move with them.
+
+Removing the attachment took the **last aggregated field of that view** with it,
+and with the field went the trap it carried: an aggregated field is drawn by a
+different handler, one that reads `separator` as the thousands separator. That is
+why the total had read `฿44, 090.00` since the day it was built. This foot is
+written by `number_format()`, like the purchase foot and like the draft's, so the
+three of them finally write a thousand the same way.
+
+One claim three sections up is now half wrong, and worth correcting rather than
+leaving: *there is no honest way to line a table up with a column that is not the
+last one*. True of a table drawn underneath, false of a row drawn inside. The
+purchase foot is still a table underneath, and stays — three amounts, all of them
+belonging at the right edge, none of them owing itself to a particular column —
+but the door is open the day one does.
+
+- Built by `scripts/el-pie-del-pedido-se-mete-en-la-tabla.php`, which only takes
+  the attachment away; the row itself is code. Safe to run twice.
+- Test: `scripts/se-cuentan-las-piezas-del-pedido.php` draws both screens and
+  works out which column each cell of the foot begins in, by adding up the
+  colspans before it. That is the only way to catch a figure one column out,
+  which on screen reads as a number in the wrong place and nowhere as an error.
+- Guardian: section 24.
+
+### The brand decides the order of its products (19 August 2026)
+A pro forma comes out in the order the factory reads it, and that order has four
+levels, each decided by a different thing:
+
+| Level | Where it comes from |
+|---|---|
+| Brand | the order of `field_tec_brands` on the customer's card |
+| Product | `field_tec_catalogue_position`, dragged on the brand's own screen |
+| Colour | the order of `field_tec_color_variations` on the product |
+| Size | the weight of the term in the `tec_sizes` vocabulary |
+
+Three of the four already existed and were being ignored. Colours have been
+draggable on the product form since the form was built (the `table_view_mode`
+widget of inline_entity_form), sizes have carried a deliberate global weight
+since `scripts/poner-las-tallas-en-su-orden.php` — XXS to XXL and then the
+ounces — and the customer's brand list has been draggable since brands moved
+onto the card. What was missing was the level in the middle, and without it the
+other three could not be used.
+
+**The product order used to belong to the customer, and that was the fault.**
+It was dragged on `/tec_crm/{id}/reorder` and stored by *draggableviews*, which
+keys its weights by view, display **and arguments** — so eight customers meant
+eight orders of the same catalogue. None of them could be used by a pro forma:
+the view that creates the lines runs for one customer and cannot read another
+one's order, and a brand's catalogue page has no customer at all. The same
+weights were also what the line-item screens sorted by, joining a *line* id
+against a *product* id (see the section above about the production paper).
+
+So the number now lives on the product: `field_tec_catalogue_position`, integer,
+hidden in both the form and the view display because it is not typed, it is
+dragged. Every list of products reads it — the brand catalogue, the two product
+blocks, the customer's Products tab — so the catalogue and the pro forma cannot
+tell two different stories.
+
+**The screen is a tab on the brand**, *Organize products*
+(`/taxonomy/term/{tid}/organize`, `src/Form/BrandProductOrderForm.php`), because
+the order it edits is the brand's. Core tabledrag, thumbnail of the first
+colour, the colour count, and the row numbers renumber live while dragging. Its
+access check is the brand's own `update` permission — being able to change what
+every customer sees is the same job as editing the brand — which is also what
+keeps the tab off the other vocabularies, since Drupal hides a local task whose
+route the user cannot reach. The customer's Products tab, which groups by brand,
+carries an **Organize** button in each brand heading with a `destination` back to
+the customer: the order is the brand's, but the person who wants it changed is
+usually looking at a customer.
+
+**A new product goes to the end of its brand's list**
+(`hook_tec_product_presave()`). Arriving with no place at all would sort it
+ahead of everything somebody dragged on purpose. A duplicated product is given a
+new place too, since the duplicate arrives carrying its source's one and two
+products cannot claim the same row.
+
+**The number is written straight into its field table**, which is the one place
+in this module that bypasses the entity API. Saving a product wakes
+"TEC Product: Set references on sub-entities" (`process_dxgyftk`), which walks
+and re-saves every colour and size variation of it: 0.2–1.1 s per product and
+two log lines each, measured. Dragging a twenty-product brand would take twenty
+seconds and leave forty log lines behind for a number no automatism reads.
+`CataloguePosition::write()` does it in 0.005 s and invalidates the cache tags by
+hand, which is the part the save would have done. It is safe here and nowhere
+else: nothing computes anything from this number and no ECA model listens to it.
+
+**The pro forma is sorted in PHP, after the query.** Two of the four levels are
+the position of a value inside a multi-value field, and Views can only reach that
+by joining the field's table a second time — a join that is not tied to the row,
+so every row comes back once per value in the list (measured on the customer's
+Products tab: three products, six rows). `CatalogueOrder::apply()` is called from
+`hook_views_post_execute()`, not from `hook_views_pre_render()`, because **the
+screen that matters most is never rendered**: the *+ Order* button hands the view
+to ECA, which executes it and walks the rows creating one line item each. Sorting
+after the query is the last point both paths still share. It is affordable and
+safe because neither screen has a pager — both show every row — and the sort is
+stable, so whatever SQL already got right is kept.
+
+**Then the order freezes**, which is the part the owner asked for in one
+sentence: re-dragging a brand next month must not reshuffle a pro forma already
+sent. It does not, because the order becomes the sequence of the line ids the
+moment the lines are created, and all seven screens that list lines sort by that
+id. Same rule the prices follow.
+
+That last bit carries a trap that bit on the day: **a display that aggregates
+must not sort at all.** Views puts whatever it sorts by into the `GROUP BY`, so
+adding `id ASC` to the `default` display turned the totals block into one row per
+line, each with its own total. The line-listing displays carry the sort
+individually and `default` carries none.
+
+- **On deployment run these three, in this order**, since the config export
+  carries the views but not the field values:
+  1. `scripts/la-marca-ordena-sus-productos.php` — creates the field and seeds
+     it alphabetically within each brand, natural sort so `Glove 2` precedes
+     `Glove 10`. This is the one that matters on the server: the development
+     database has two products with a brand, the real catalogue has hundreds.
+  2. `scripts/las-pantallas-siguen-el-orden-de-la-marca.php` — the view sorts,
+     the Organize buttons, and the retirement of the old screen:
+     `tec_products:page_2` deleted, its `draggableviews_structure` rows dropped.
+  3. `scripts/la-proforma-nace-ordenada.php` — the line sorts, and the sorts
+     explicitly removed from the six aggregating displays.
+
+  All three are safe to run twice. `draggableviews` is left installed and idle;
+  uninstalling it is a separate two-minute job noted in the backlog.
+- Test: `scripts/la-marca-manda-en-el-orden.php` builds two brands, one customer
+  and four products whose names, colours and sizes are chosen so that the correct
+  order and the alphabetical one differ **at every one of the four levels** — an
+  order that happens to be alphabetical proves nothing here, since alphabetical
+  is what the ERP did before. It drags through the real form, presses the real
+  flag, and then re-drags the brand to prove the issued order does not move while
+  the next one does.
+- Guardian: section 25, nine checks, including that no product with a brand has
+  been left without a place.
+
+### A half-made product does not vanish from its brand (19 August 2026)
+The brand catalogue is a list of sizes. That is what makes it the screen
+where prices are typed, and it is also a trapdoor: a product with no colour
+has no size, so it has no row, and the *+ Product* button lives on that very
+page. The owner walked into it on 19 August 2026 creating *RISE THAI KICK PAD
+1 STRAP* from Rise Fight Gear: Save sent him back to the brand, the product
+had been created, and the table could not show it.
+
+**The destination on *+ Product* is gone.** ECK's own redirect lands on the
+product page, which is where *+ Variation* and *+ Size* are. The empty-state
+copy no longer says "No products in this brand yet" — that was a lie the
+moment a product existed without a size — and says "Nothing to show here yet"
+instead.
+
+**Organize sits next to *+ Product*** on the catalogue header, the same pair
+the customer's Products tab already had. The *Organize products* tab is still
+there, but the tabs block of the front theme is limited to the administrator
+role, so for everyone else the tab did not exist.
+
+**What the table cannot draw is named underneath it.** `BrandGaps` lists the
+products of the brand that have no colour, or that have a colour with no
+size, newest first, with a link to each and the reason. A colour with no
+sizes is a gap of its own even when the product has other colours that do
+have them: that colour's prices are nowhere to be typed. The same question
+marks the same rows on Organize products, which now has a Sizes column: the
+rule lives in `BrandGaps::of()` and nowhere else.
+
+- Recipe: `scripts/el-producto-nuevo-no-se-pierde-en-la-marca.php` — the
+  destination, the Organize button, the empty-state copy. Safe to run twice.
+  The notice itself is code: hung from `hook_views_post_render()` and painted
+  after Views wraps the price table in a form, which is what used to throw
+  the footer away.
+- Test: `scripts/el-catalogo-nombra-lo-que-no-puede-ensenar.php` builds a
+  brand with four products (blank, colour only, complete, and one colour
+  without a size next to one that has them), and checks the table, the
+  notice and Organize agree about which three are missing. Completing the
+  colour-only product drops it from the notice and puts it on the table.
+- Guardian: section 26.
+
+### One column per order on the stock board (19 August 2026)
+The owner opened `/stock` with ten orders on the queue and could not read it. The
+table was not broken — 27 header cells, 27 cells in every row — which is exactly
+why nothing caught it: every test asking "does the page load" said yes.
+
+**Each order used to take two columns**, the checkbox in one and the quantity in
+the other. The quantity was right-aligned in its own column, so a short figure — a
+`0`, a `30` — ended up a few pixels from the **next** order's checkbox and three
+centimetres from its own. The board read `30 ☐` while the header said `☐ 26-001`.
+There was a 2px rule separating the groups and it changed nothing: proximity beats
+a line every time.
+
+So the checkbox and the quantity now share one cell, touching, with the slack on
+the left. What separates two orders is empty space; what joins a checkbox to its
+quantity is that they are next to each other. The header of each column carries
+the order number on one line and the master checkbox on the next, and that master
+sits exactly above the column of checkboxes below it because it is followed by a
+spacer of the same width as a quantity — `.tec-stock__qty` and
+`.tec-stock__pair-gap` are declared together for that reason, and the test checks
+they still are.
+
+Ten orders now cost ten columns instead of twenty, which is the whole point: the
+board has to stay readable as the queue grows, and the queue is the one thing on
+this screen nobody controls.
+
+Every column also got a **gridline**, because with twenty-odd columns on screen a
+column whose edge you cannot see is a column you cannot follow down.
+
+**The `Ordered (UoP)` column was a second bug in the same screen**, and the owner
+had to point at it twice. The cell holds the figure plus one link per purchase
+order it is waiting on, and those links were *beside* the figure. Two things came
+of that: the cell is right-aligned, so a run of `45 PO PO PO` left the `45` at the
+far left with the heading sitting over the last link, and a material waiting on six
+orders made this one cell wider than three columns.
+
+The first attempt was a `max-width` on the cell, and it made things worse in a way
+worth writing down: **the table is sized at `max-content`**, so a column always
+takes the width its content asks for, and a `max-width` clips nothing but the box —
+the text carries on over the two columns to its right. It was printing `-561.99` on
+top of `636.99`. The width now lives on a block *inside* the cell, which is what
+the column measures itself against, so the links wrap instead of spilling; and they
+sit **under** the figure, which puts the figure back beneath its own heading.
+
+Bootstrap needed undoing inside the cell: `.form-check` reserves 1.5em of padding
+on the left and floats the input back into it with a negative margin, which in a
+flex row reopens the exact gap this layout closes.
+
+- No recipe: the board is code, so a `git pull` is the whole deployment.
+- Test: `scripts/el-tablero-de-stock-se-lee-con-muchos-pedidos.php` reads the real
+  board — no fixtures, whatever is on the queue — and checks the rule that matters
+  rather than the pixels: one column per queue order, one checkbox and one quantity
+  per cell, both carrying the **same** `data-order`, and the checkbox first. It also
+  refuses the old classes, so splitting the pair again fails loudly, and it refuses
+  a `max-width` on the `Ordered` cell, which is the fix that looked right and was
+  not. Two of its measurements are read out of the CSS rather than the HTML,
+  because they are load-bearing coincidences: the header spacer must stay the width
+  of a quantity, and the width of the links block must stay on the block.
+- The test orders on the queue are deliberate, and stay. They are what made this
+  visible here instead of on the server with employees looking at it.
 
 ## Backlog / future ideas
 - Auto-advance order status from the production log: when SUM(produced) >=

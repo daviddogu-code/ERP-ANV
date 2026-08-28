@@ -1,13 +1,13 @@
-uuid: 99883d58-98ac-4bdf-ae45-12c205fec689
+uuid: 968e19ba-98c2-4246-a1b1-f1d232eb874b
 langcode: en
 status: true
 dependencies:
   module:
     - system
-id: tec_excel_lover_orders
-label: 'TEC Excel lover orders'
+id: tec_order_draft_screens
+label: 'TEC Order draft screens'
 code: |-
-  /* Excel lover orders */
+  /* Order draft screens */
 
   /*.ajax-progress {
     display: none;

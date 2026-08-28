@@ -10,7 +10,7 @@ dependencies:
     - field.storage.tec_order.field_tec_po_status
     - field.storage.tec_order.field_tec_priority
     - field.storage.tec_order.field_tec_vendor
-    - flag.flag.tec_draft_order_excel_lover
+    - flag.flag.tec_order_draft_sales
     - flag.flag.tec_order_draft_po
     - system.menu.main
     - user.role.administrator
@@ -2896,7 +2896,7 @@ display:
           plugin_id: entity
           empty: true
           target: '{{ raw_arguments.id }}'
-          view_mode: excel_lover_button
+          view_mode: sales_order_button
           tokenize: true
           bypass_access: false
       arguments:
@@ -2966,7 +2966,7 @@ display:
           entity_type: tec_crm
           plugin_id: flag_relationship
           required: false
-          flag: tec_draft_order_excel_lover
+          flag: tec_order_draft_sales
           user_scope: any
       display_description: ''
       header:
@@ -2995,7 +2995,7 @@ display:
         - 'config:field.storage.tec_order.field_tec_customer'
         - 'config:field.storage.tec_order.field_tec_order_status'
         - 'config:field.storage.tec_order.field_tec_priority'
-        - flag.flag.tec_draft_order_excel_lover
+        - flag.flag.tec_order_draft_sales
   block_3:
     id: block_3
     display_title: 'CRM Suppliers orders list'

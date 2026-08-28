@@ -1,24 +1,24 @@
-uuid: c56725f1-6f89-4e44-933e-6e63d706a984
+uuid: aade8551-babc-42b9-8577-dadc97da4a7c
 langcode: en
-status: true
+status: false
 dependencies:
   module:
     - eck
-id: tec_draft_order_excel_lover
-label: 'TEC Order: Draft Sales order'
+id: tec_order_checkout
+label: 'TEC Order: Checkout'
 bundles: {  }
-entity_type: tec_crm
+entity_type: tec_order
 global: true
-flag_short: '+ Order'
-flag_long: 'This will create an open order that you can edit until a payment is made against it.'
+flag_short: '<img src="/sites/default/files/000-next-21.png" title="Checkout">Checkout'
+flag_long: 'Continuing to checkout will e-mail a pro-forma invoice.'
 flag_message: ''
-unflag_short: 'Unset + Order'
+unflag_short: Unset
 unflag_long: ''
 unflag_message: ''
 unflag_denied_text: ''
 weight: 0
-flag_type: 'entity:tec_crm'
-link_type: reload
+flag_type: 'entity:tec_order'
+link_type: confirm
 flagTypeConfig:
   show_in_links: {  }
   show_as_field: true
@@ -27,7 +27,7 @@ flagTypeConfig:
   extra_permissions:
     owner: '0'
 linkTypeConfig:
-  flag_confirmation: 'Create a new order?'
+  flag_confirmation: 'Are you sure?'
   unflag_confirmation: 'Unset?'
   flag_create_button: 'Yes, continue'
   flag_delete_button: Unset

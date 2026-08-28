@@ -1,0 +1,15 @@
+uuid: 8348d53c-5898-41c4-b336-da15f4024627
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_order_draft_sales
+  module:
+    - flag
+id: flag_action.tec_order_draft_sales_flag
+label: '+ Order'
+type: tec_crm
+plugin: 'flag_action:tec_order_draft_sales_flag'
+configuration:
+  flag_id: tec_order_draft_sales
+  flag_action: flag

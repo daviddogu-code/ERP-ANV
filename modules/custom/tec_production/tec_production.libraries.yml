@@ -54,6 +54,21 @@ receive:
     - core/drupal
     - core/once
 
+brand_products:
+  css:
+    theme:
+      css/brand-products.css: {}
+  js:
+    js/brand-products.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+brand_gaps:
+  css:
+    theme:
+      css/brand-gaps.css: {}
+
 receipt_state:
   css:
     theme:

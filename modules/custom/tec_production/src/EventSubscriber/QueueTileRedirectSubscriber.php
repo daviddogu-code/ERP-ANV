@@ -32,6 +32,7 @@ class QueueTileRedirectSubscriber implements EventSubscriberInterface {
     'report_tile_nid' => 'tec_production.report',
     'stock_tile_nid' => 'tec_production.stock',
     'purchase_tile_nid' => 'tec_production.purchase_list',
+    'po_control_tile_nid' => 'tec_production.purchase_queue',
   ];
 
   protected ConfigFactoryInterface $configFactory;

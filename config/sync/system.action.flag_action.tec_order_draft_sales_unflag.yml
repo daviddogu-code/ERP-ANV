@@ -1,0 +1,15 @@
+uuid: 15bfaa2f-18ee-4376-a6a0-a60f7f1ff555
+langcode: en
+status: true
+dependencies:
+  config:
+    - flag.flag.tec_order_draft_sales
+  module:
+    - flag
+id: flag_action.tec_order_draft_sales_unflag
+label: 'Unset + Order'
+type: tec_crm
+plugin: 'flag_action:tec_order_draft_sales_unflag'
+configuration:
+  flag_id: tec_order_draft_sales
+  flag_action: unflag

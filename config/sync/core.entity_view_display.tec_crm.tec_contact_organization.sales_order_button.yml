@@ -1,9 +1,9 @@
-uuid: 9b0e9b28-bce6-42b1-81bf-d4e2035664b3
+uuid: a6d02c8a-e17e-4313-a99d-215764411691
 langcode: en
 status: true
 dependencies:
   config:
-    - core.entity_view_mode.tec_crm.excel_lover_button
+    - core.entity_view_mode.tec_crm.sales_order_button
     - eck.eck_type.tec_crm.tec_contact_organization
     - field.field.tec_crm.tec_contact_organization.field_tec_address
     - field.field.tec_crm.tec_contact_organization.field_tec_brands
@@ -24,12 +24,12 @@ third_party_settings:
   layout_builder:
     enabled: false
     allow_custom: false
-id: tec_crm.tec_contact_organization.excel_lover_button
+id: tec_crm.tec_contact_organization.sales_order_button
 targetEntityType: tec_crm
 bundle: tec_contact_organization
-mode: excel_lover_button
+mode: sales_order_button
 content:
-  flag_tec_draft_order_excel_lover:
+  flag_tec_order_draft_sales:
     settings: {  }
     third_party_settings: {  }
     weight: 0

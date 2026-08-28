@@ -134,31 +134,72 @@ function tec_production_views_pre_render(\Drupal\views\ViewExecutable $view): vo
 }
 
 /**
+ * Implements hook_views_post_execute().
+ *
+ * Puts the catalogue in order before anything reads it: brand, product, colour,
+ * size.
+ *
+ * Here and not in hook_views_pre_render() because the screen that matters most
+ * is never rendered. The + Order button hands the view to ECA, which executes it
+ * and walks the rows creating one line item each, so by the time a pro forma
+ * exists the rows have long since been read. This hook runs the moment the query
+ * comes back, which is the last point both paths still share.
+ *
+ * CatalogueOrder has the four levels and why two of them cannot be sorted in
+ * SQL.
+ */
+function tec_production_views_post_execute(\Drupal\views\ViewExecutable $view): void {
+  \Drupal\tec_production\CatalogueOrder::apply($view);
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for views-view-table.html.twig.
+ *
+ * Gives a sales order's table its last row: how many pieces and how much money.
+ *
+ * A row of the table and not a block underneath it, because the count has to
+ * land under the column it counts, and a figure in a second table can only ever
+ * float at the right edge. OrderFoot has the whole of the reasoning, and the
+ * list of which two screens get one.
+ */
+function tec_production_preprocess_views_view_table(array &$variables): void {
+  \Drupal\tec_production\OrderFoot::add($variables);
+}
+
+/**
+ * Implements hook_views_post_render().
+ *
+ * Makes a brand's catalogue admit what it cannot show.
+ *
+ * Its rows are sizes, so a product with no colour, or a colour with no size, is
+ * missing from a screen that carries the button that created it. BrandGaps has
+ * the whole of the reasoning. The notice is hung here and painted later, after
+ * Views has wrapped the rows in a form and emptied the footer it came with.
+ */
+function tec_production_views_post_render(\Drupal\views\ViewExecutable $view, array &$output, $cache): void {
+  \Drupal\tec_production\BrandGaps::attach($view, $output);
+}
+
+/**
  * Implements hook_ENTITY_TYPE_presave() for tec_order.
  *
- * Stamps a new order with the two things it must not be left to decide for
- * itself: its number, and the VAT rate it was raised under.
+ * Stamps an order with the two things it must not be left to decide for itself:
+ * its number, and the VAT rate it was raised under.
  *
- * Both only happen on creation, and for the same reason. These two end up
- * printed on a document that is sent to somebody outside the company, and a
- * document that quietly says something different next month is worse than no
- * document. What a purchase order says is what was agreed on the day.
+ * Both end up printed on a document that is sent to somebody outside the
+ * company, and a document that quietly says something different next month is
+ * worse than no document. What a purchase order says is what was agreed on the
+ * day.
  */
 function tec_production_tec_order_presave($order) {
+  // A name, so that nothing lands in a list as a blank row. Not its number:
+  // since 19 August 2026 that waits for somebody to press Save, which is a fact
+  // about a form and not about an entity -- see OrderNumber::earn() for why, and
+  // tec_production_form_alter() for where.
+  \Drupal\tec_production\OrderNumber::provisional($order);
+
   if (!$order->isNew()) {
     return;
-  }
-
-  // The number. Here and nowhere else: before this, three places built order
-  // numbers -- two ECA processes and the purchase list -- and all three could
-  // hand out a number another order already had. Whoever creates an order does
-  // not get a say in what it is called, which is the point, because the title
-  // of an order is its number and a number nobody controls is not a number.
-  if (\Drupal\tec_production\OrderNumber::handles($order->bundle())) {
-    $name = \Drupal\tec_production\OrderNumber::forOrder($order);
-    if ($name !== '') {
-      $order->set('title', $name);
-    }
   }
 
   // The VAT rate, from the supplier's card. Copied rather than looked up on
@@ -177,6 +218,168 @@ function tec_production_tec_order_presave($order) {
 
     $order->set($rate_field, \Drupal\tec_production\Vat::forContact($supplier));
   }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for tec_product.
+ *
+ * Gives a product the last place in its brand when it has no place of its own.
+ *
+ * The order of a brand's products is dragged on its Organize products screen
+ * and read by every list of products, the pro forma included -- see
+ * CataloguePosition. A product that arrives without a place would sort ahead of
+ * all of them, so a new one goes to the end of the list instead, where it
+ * disturbs nothing that was put in order on purpose.
+ *
+ * A new product is given a place even if it arrives with one, because the one
+ * route that brings a place along is duplicating a product, and a duplicate
+ * sharing its source's place is two products claiming the same row.
+ *
+ * A product moved to another brand keeps its number and can land in the middle
+ * of the new one. Nothing is broken by that -- the screens fall back to the
+ * name when two products share a place -- and the next save of that brand's
+ * order renumbers the whole list from 1, which is where it sorts itself out.
+ */
+function tec_production_tec_product_presave($product) {
+  $field = \Drupal\tec_production\CataloguePosition::FIELD;
+  if ($product->bundle() !== 'tec_product' || !$product->hasField($field)) {
+    return;
+  }
+  if (!$product->isNew() && (int) $product->get($field)->value > 0) {
+    return;
+  }
+
+  $brand_field = \Drupal\tec_production\CataloguePosition::BRAND_FIELD;
+  $brand = $product->hasField($brand_field) && !$product->get($brand_field)->isEmpty()
+    ? (int) $product->get($brand_field)->target_id
+    : 0;
+  if ($brand < 1) {
+    // No brand, no list to be part of. It shows up in /orphans instead.
+    return;
+  }
+
+  $product->set($field, \Drupal\tec_production\CataloguePosition::nextFor($brand));
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Puts "earn the number" behind every Save that can mean an order is being kept.
+ *
+ * Since 19 August 2026 an order is numbered when somebody saves it and not when
+ * it is created (OrderNumber::earn() has the why). Being saved by a person is a
+ * fact about a form, not about an entity -- code saves orders all day for its
+ * own reasons -- so the forms that mean it are named here, and nothing else in
+ * the ERP hands out a number except the purchase list, whose button creates the
+ * orders and keeps them in one go.
+ *
+ * Two forms mean it:
+ *
+ * - The draft screens, /o/draft/N and /po/draft/N, which is where the work is
+ *   done. Matched by the path, because "o/draft" says which screen this is and
+ *   "page_2" does not. Their Save saves the lines -- one entity each -- and
+ *   never touches the order behind them, so the handler has to find that order
+ *   itself, from the argument in the path.
+ * - The order's own form, a rarer route to the same act.
+ *
+ * They are wired differently because Drupal takes submit handlers from two
+ * places. A views form leaves its button bare, so the form's own list is the one
+ * that runs. An entity form's Save carries its own list -- ::submitForm and
+ * ::save -- and a button's list wins over the form's, so ours has to go there.
+ *
+ * Either way it goes last, behind the writing. A number spent on a save that
+ * then fell over would be a hole in a customer's sequence, which is the very
+ * thing this is here to stop, and the order of the two says what Save means:
+ * what the owner typed is kept first, and the order becomes real because of it.
+ */
+function tec_production_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state, string $form_id): void {
+  if (_tec_production_draft_screen($form_state)) {
+    $form['#after_build'][] = '_tec_production_earn_the_number_last';
+    return;
+  }
+
+  $entity = _tec_production_form_order($form_state);
+  if ($entity && isset($form['actions']['submit']['#submit'])) {
+    $form['actions']['submit']['#submit'][] = '_tec_production_earn_the_number';
+  }
+}
+
+/**
+ * Implements #after_build.
+ *
+ * Adding the handler in the alter hook would put it in front of the one that
+ * saves the lines: views_entity_form_field adds that one from a #process
+ * callback, and processing happens after every module has had its say on the
+ * form. After_build is the next thing to run after processing, so this is the
+ * first place from which the end of the list really is the end.
+ */
+function _tec_production_earn_the_number_last(array $form, \Drupal\Core\Form\FormStateInterface $form_state): array {
+  $form['#submit'][] = '_tec_production_earn_the_number';
+
+  return $form;
+}
+
+/**
+ * Gives the order behind a form the number that pressing Save has earned it.
+ *
+ * Loaded again rather than taken from the form: on the draft screens the order
+ * is not what the form was editing, and on its own form the copy in hand is the
+ * one that was just written, so re-reading is the only way to be sure of what is
+ * in the database before adding to it.
+ */
+function _tec_production_earn_the_number(array $form, \Drupal\Core\Form\FormStateInterface $form_state): void {
+  $view = _tec_production_draft_screen($form_state);
+  $id = $view
+    ? (int) ($view->args[0] ?? 0)
+    : (int) (($order = _tec_production_form_order($form_state)) ? $order->id() : 0);
+  if (!$id) {
+    return;
+  }
+
+  $order = \Drupal::entityTypeManager()->getStorage('tec_order')->loadUnchanged($id);
+  if ($order && \Drupal\tec_production\OrderNumber::earn($order)) {
+    $order->save();
+  }
+}
+
+/**
+ * The view behind a draft screen's form, or NULL for any other form.
+ *
+ * Views does not put its view in the form state, though everyone expects it to:
+ * it passes it as a build argument, so that is where it is looked for.
+ */
+function _tec_production_draft_screen(\Drupal\Core\Form\FormStateInterface $form_state): ?\Drupal\views\ViewExecutable {
+  foreach ($form_state->getBuildInfo()['args'] ?? [] as $argument) {
+    if ($argument instanceof \Drupal\views\ViewExecutable) {
+      $path = (string) $argument->getPath();
+      return str_starts_with($path, 'o/draft') || str_starts_with($path, 'po/draft') ? $argument : NULL;
+    }
+  }
+
+  return NULL;
+}
+
+/**
+ * The numbered order a form is editing, or NULL for any other form.
+ *
+ * Deleting is not keeping, so the delete form is left out. It would do no harm
+ * -- by the time its submit handlers run there is nothing left to load -- but a
+ * number-giving handler hanging off a delete button is a thing somebody would
+ * have to think about twice.
+ */
+function _tec_production_form_order(\Drupal\Core\Form\FormStateInterface $form_state) {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof \Drupal\Core\Entity\EntityFormInterface
+    || $form_object->getOperation() === 'delete') {
+    return NULL;
+  }
+
+  $entity = $form_object->getEntity();
+  if ($entity->getEntityTypeId() !== 'tec_order' || !\Drupal\tec_production\OrderNumber::handles($entity->bundle())) {
+    return NULL;
+  }
+
+  return $entity;
 }
 
 /**

@@ -1,0 +1,58 @@
+/**
+ * @file
+ * The note under a brand's catalogue listing the products it cannot show.
+ *
+ * Deliberately quiet: it is not an error, and on a finished brand it is not
+ * there at all. It reads as a footnote to the table above -- same width, a rule
+ * along the left to say it is a remark about that list and not a second list.
+ * The one thing it is not allowed to be is easy to miss, because the product
+ * somebody just created is only named here.
+ */
+
+.tec-brand-gaps {
+  margin: 0.75rem 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid #e0a800;
+  background: #fffbf0;
+  font-size: 0.9rem;
+}
+
+.tec-brand-gaps__head {
+  font-weight: 700;
+}
+
+.tec-brand-gaps__help {
+  margin-bottom: 0.35rem;
+  color: #6c6c6c;
+}
+
+.tec-brand-gaps__list {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.tec-brand-gaps__list li {
+  margin: 0.1rem 0;
+}
+
+.tec-brand-gaps__product {
+  font-weight: 700;
+}
+
+/* The reason hangs off the name in the same line, so the eye reads "name, what
+   it needs" and can stop there. */
+.tec-brand-gaps__missing::before {
+  content: ' \2014\00a0';
+}
+
+.tec-brand-gaps__missing {
+  color: #6c6c6c;
+}
+
+/* Nobody prints a list of what is unfinished, and on the pro forma side of the
+   ERP a stray note is the kind of thing that reaches a customer. */
+@media print {
+  .tec-brand-gaps {
+    display: none;
+  }
+}

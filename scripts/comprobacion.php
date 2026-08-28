@@ -151,7 +151,11 @@ const REFERENCIA_VARIOS = [
   // compra, del mismo dia. El 72 y el 73 son las dos primeras fotos de producto
   // del ERP, subidas el 19 de agosto a los colores Black y White del guante RISE
   // en cuanto el catalogo de la marca tuvo una columna donde ensenarlas.
-  'ficheros' => 73,
+  // El 74 ya estaba de mas respecto a la cuenta del 19 (el guardián fallaba en
+  // el despliegue por uno). El 75 es el icono de PO CONTROL, 20 de agosto de 2026:
+  // /supplier-orders/queue existia y el menu la nombraba, pero en /start no habia
+  // baldosa.
+  'ficheros' => 75,
   // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
   // Super BOM, porque su funcion la hace ya el tablero de stock. Y volvieron a ser
   // doce el 15, al rehacer la portada de marcas, que llevaba borrada desde antes de
@@ -159,7 +163,8 @@ const REFERENCIA_VARIOS = [
   // se podia crear ni una marca ni, por tanto, un producto. Son trece desde ese
   // mismo dia, al anadir el icono de la lista de compra: /purchase existia pero
   // no habia manera de llegar sin escribir la direccion a mano.
-  'nodos' => 13,
+  // Son catorce desde el 20 de agosto de 2026, al anadir el icono de PO CONTROL.
+  'nodos' => 14,
   // Fueron seis unas horas: se pusieron cuatro para que los iconos de la cola, el
   // registro, el informe y el stock llevaran a su pantalla. Vuelven a ser dos
   // porque el arreglo bueno llego el mismo dia: el enlace sale ahora del campo
@@ -1078,10 +1083,21 @@ titulo('6. Cada pedido tiene su numero, y solo uno');
 // distinto y dos de ellos solo veian pedidos publicados, cuando todos nacen sin
 // publicar, asi que el segundo pedido de un cliente recibia el numero que ya
 // tenia el primero. Dos pedidos con el mismo numero no son una numeracion.
+//
+// Y desde el 19 de agosto un pedido **se gana el numero la primera vez que
+// alguien lo guarda**, no al crearse. Antes de eso lleva un nombre que dice lo
+// que es -- "Draft order for Kajenta" -- y no gasta numero. Asi que un pedido sin
+// numero ya no es un fallo: es un borrador que nadie ha guardado todavia, y aqui
+// se cuenta como dato. Lo que si es un fallo es un pedido **sin numero y con
+// cantidades escritas**: las cantidades solo llegan a la base de datos cuando
+// alguien pulsa Guardar en la pantalla del borrador, y ese es justo el boton que
+// tiene que numerar. Si hay cantidades y no hay numero, el gancho no ha corrido.
 $formato = '/^(?:.{1,6} )?\d{2}-\d{3}$/';
 $malFormato = [];
 $repetidos = [];
 $sinCodigo = [];
+$sinNumero = [];
+$sinNumeroConPiezas = [];
 $vistos = [];
 $cuantosPedidos = 0;
 
@@ -1092,6 +1108,24 @@ foreach ($etm->getStorage('tec_order')->loadMultiple() as $pedidoNum) {
   }
   $cuantosPedidos++;
   $nombre = (string) $pedidoNum->label();
+
+  // Se pregunta a la clase que reparte los numeros si este nombre es uno de los
+  // suyos, en vez de escribir aqui la forma por segunda vez.
+  if (!\Drupal\tec_production\OrderNumber::isNumber($nombre)) {
+    $piezas = 0;
+    if ($pedidoNum->hasField('field_tec_line_items')) {
+      foreach ($pedidoNum->get('field_tec_line_items')->referencedEntities() as $lineaNum) {
+        $piezas += (int) ($lineaNum->hasField('field_tec_quantity') ? $lineaNum->get('field_tec_quantity')->value : 0);
+      }
+    }
+    if ($piezas > 0) {
+      $sinNumeroConPiezas[] = $pedidoNum->id() . ': "' . $nombre . '" con ' . $piezas . ' piezas';
+    }
+    else {
+      $sinNumero[] = $pedidoNum->id();
+    }
+    continue;
+  }
 
   if (!preg_match($formato, $nombre)) {
     $malFormato[] = $pedidoNum->id() . ': "' . $nombre . '"';
@@ -1118,12 +1152,15 @@ foreach ($etm->getStorage('tec_order')->loadMultiple() as $pedidoNum) {
   }
 }
 
-comprobar($resultados, 'todos los pedidos con el formato CODIGO AA-NNN', !$malFormato,
-  $malFormato ? implode(', ', $malFormato) : $cuantosPedidos . ' pedidos');
+comprobar($resultados, 'todos los pedidos numerados con el formato CODIGO AA-NNN', !$malFormato,
+  $malFormato ? implode(', ', $malFormato) : ($cuantosPedidos - count($sinNumero)) . ' de ' . $cuantosPedidos . ' pedidos');
 comprobar($resultados, 'ningun numero repartido dos veces', !$repetidos,
   $repetidos ? 'REPETIDOS: ' . implode(', ', $repetidos) : 'todos distintos');
 comprobar($resultados, 'el codigo del contacto esta en el nombre', !$sinCodigo,
   $sinCodigo ? implode('; ', $sinCodigo) : 'ninguno se quedo sin codigo');
+comprobar($resultados, 'ningun pedido con cantidades se ha quedado sin numero', !$sinNumeroConPiezas,
+  $sinNumeroConPiezas ? implode('; ', $sinNumeroConPiezas) : 'guardar numera');
+informar('borradores esperando su primer guardado', count($sinNumero));
 
 // El campo del codigo corto, uno solo y en las dos clases de ficha. Faltaba en
 // las de persona, y una persona puede ser cliente: el selector de cliente de un
@@ -1360,7 +1397,7 @@ comprobar($resultados, 'y alguien que no es administrador lo tiene',
 $esquema = \Drupal::service('config.typed');
 comprobar($resultados, 'los ajustes del modulo tienen esquema',
   $esquema->hasConfigSchema('tec_production.settings'),
-  $esquema->hasConfigSchema('tec_production.settings') ? 'las once claves' : 'SIN ESQUEMA');
+  $esquema->hasConfigSchema('tec_production.settings') ? 'las doce claves' : 'SIN ESQUEMA');
 
 // Y la puerta desde la ficha, que es donde surge la pregunta.
 $estilosEnlace = file_get_contents(DRUPAL_ROOT . '/modules/custom/admin_form_styles/admin_form_styles.module');
@@ -1441,17 +1478,15 @@ foreach (['block_2' => 'la ficha del pedido', 'page_3' => 'el impreso'] as $pant
     implode(', ', $pieIva) ?: 'SIN PIE');
 }
 
-// Y ninguna de las dos usa ya el total de antes, o saldrian dos totales que
-// dicen cosas distintas, uno encima del otro.
-$atiendeA = array_keys($pantallasIva['attachment_1']['display_options']['displays'] ?? []);
-comprobar($resultados, 'y ya no arrastran el total sin IVA de antes',
-  !array_intersect(['block_2', 'page_3'], $atiendeA),
-  implode(', ', $atiendeA));
-
-// El mismo trozo sigue poniendo el total en ventas, que no se ha tocado.
-comprobar($resultados, 'ventas conserva el suyo intacto',
-  !array_diff(['block_1', 'page_4'], $atiendeA),
-  implode(', ', $atiendeA));
+// Y ninguna de las dos arrastra ya el total de antes, o saldrian dos totales
+// que dicen cosas distintas, uno encima del otro. Aquel total vivia en
+// `attachment_1`, una pantalla pegada debajo que compartian ventas y compras;
+// compras la solto el 16 de agosto y ventas el 19, cuando su pie se metio
+// dentro de la tabla para que la cuenta de piezas cayera bajo su columna. Ya no
+// existe, y que no vuelva es la comprobacion.
+comprobar($resultados, 'y nadie arrastra el total sin IVA de antes',
+  !isset($pantallasIva['attachment_1']),
+  'attachment_1 ha vuelto: ' . implode(', ', array_keys($pantallasIva['attachment_1']['display_options']['displays'] ?? [])));
 
 comprobar($resultados, 'el manejador esta dado de alta en Views',
   isset(\Drupal::service('views.views_data')->get('views')['tec_purchase_vat_totals']['area']),
@@ -1521,7 +1556,7 @@ comprobar($resultados, 'y el papel que se manda al proveedor, tambien',
 
 // La cabecera ya dice Quantity; encima de cada casilla es ruido. La regla existia
 // pero con un solo selector, y ese solo cogia la pantalla de ventas.
-$cssBorrador = (string) \Drupal::config('asset_injector.css.tec_excel_lover_orders')->get('code');
+$cssBorrador = (string) \Drupal::config('asset_injector.css.tec_order_draft_screens')->get('code');
 comprobar($resultados, 'la casilla de cantidad va corta y sin rotulo encima',
   str_contains($cssBorrador, '.views-field-form-field-field-tec-quantity-1 label')
     && str_contains($cssBorrador, '.views-field-form-field-field-tec-quantity-1 input'),
@@ -1707,6 +1742,26 @@ comprobar($resultados, 'la pantalla tiene ruta',
   (bool) \Drupal::service('router.route_provider')->getRoutesByNames(['tec_production.purchase_queue']));
 comprobar($resultados, 'y una entrada en el menu principal, que las pestanas no se ven en este tema',
   \Drupal::service('plugin.manager.menu.link')->hasDefinition('tec_production.purchase_queue'));
+$tituloCola = '';
+if (\Drupal::service('plugin.manager.menu.link')->hasDefinition('tec_production.purchase_queue')) {
+  $tituloCola = (string) \Drupal::service('plugin.manager.menu.link')->getDefinition('tec_production.purchase_queue')['title'];
+}
+comprobar($resultados, 'y se llama igual que el icono de la portada',
+  $tituloCola === 'PO CONTROL', $tituloCola ?: 'sin titulo');
+$tituloRutaCola = (string) (\Drupal::service('router.route_provider')->getRouteByName('tec_production.purchase_queue')->getDefault('_title') ?? '');
+comprobar($resultados, 'y la pantalla tambien',
+  $tituloRutaCola === 'PO CONTROL', $tituloRutaCola ?: 'sin titulo');
+
+$iconoCola = FALSE;
+foreach ($portadas as $portadaCola) {
+  if ($portadaCola->hasField('field_tec_target') && !$portadaCola->get('field_tec_target')->isEmpty()
+    && $portadaCola->get('field_tec_target')->first()->getUrl()->toString() === '/supplier-orders/queue'
+    && $portadaCola->label() === 'PO CONTROL') {
+    $iconoCola = TRUE;
+    break;
+  }
+}
+comprobar($resultados, 'y hay un icono en /start con ese nombre y esa pantalla', $iconoCola);
 
 foreach (['tec_manager', 'tec_executive'] as $rolCompras) {
   $rolCargado = \Drupal\user\Entity\Role::load($rolCompras);
@@ -1964,7 +2019,7 @@ const BANDERAS_MOMENTANEAS = [
   'tec_product_duplicate',
   'tec_product_import_size_bom',
   'tec_order_cancel_sales_order',
-  'tec_order_checkout_excel',
+  'tec_order_checkout',
   'tec_delete_order',
   'tec_eca_inventory_lock',
   'tec_eca_line_item_lock',
@@ -2162,8 +2217,8 @@ titulo('18. El pedido de un clic sale de la marca');
 // nombre y no se enteran si la otra cambia: una ECA que la bandera dispara, y una
 // vista que la ECA consulta. Aqui se vigila el cable entre las dos, porque si se
 // suelta la bandera no da error: hace un pedido vacio, o no hace ninguno.
-$vistaLover = 'tec_order_eca_create_draft_excel_lover';
-$pantallasLover = \Drupal::config('views.view.' . $vistaLover)->get('display') ?? [];
+$vistaDelClic = 'tec_order_eca_create_draft_sales';
+$pantallasLover = \Drupal::config('views.view.' . $vistaDelClic)->get('display') ?? [];
 $argumentoLover = $pantallasLover['default']['display_options']['arguments']['id']['relationship'] ?? '';
 
 comprobar($resultados, 'la consulta que hace los pedidos busca al cliente por su marca',
@@ -2186,7 +2241,7 @@ $quienPregunta = [];
 foreach (\Drupal::configFactory()->listAll('eca.eca.') as $nombreEca) {
   foreach (\Drupal::config($nombreEca)->get('actions') ?? [] as $paso) {
     if (($paso['plugin'] ?? '') === 'eca_views_query'
-      && ($paso['configuration']['view_id'] ?? '') === $vistaLover) {
+      && ($paso['configuration']['view_id'] ?? '') === $vistaDelClic) {
       $quienPregunta[] = $nombreEca . ' / ' . ($paso['configuration']['display_id'] ?? '?');
     }
   }
@@ -2452,24 +2507,33 @@ comprobar($resultados, 'el documento ordena los productos por su primera linea',
 // de una linea contra el de un producto arrastrado en la pantalla de un cliente,
 // y acertaba solo porque las lineas nuevas van por numeros que en esa tabla no
 // existen: en los pedidos viejos si coinciden, y ahi se desordenaba.
+//
+// No se cuentan las pantallas, se mira la regla: la que ordene, que ordene por el
+// numero de la linea y por nada mas. Contarlas hacia fallar al guardian cada vez
+// que una pantalla nueva hacia lo correcto.
 $pantallasLineas = \Drupal::config('views.view.tec_order_sales_order_line_items')->get('display') ?? [];
-$porNumeroDeLinea = 0;
-$conPesoFantasma = [];
+$porNumeroDeLinea = [];
+$conOtroOrden = [];
 foreach ($pantallasLineas as $nombrePantalla => $pantallaLineas) {
-  foreach (($pantallaLineas['display_options']['sorts'] ?? []) as $orden) {
-    if (($orden['table'] ?? '') === 'draggableviews_structure') {
-      $conPesoFantasma[] = $nombrePantalla;
-    }
-    elseif (($orden['table'] ?? '') === 'tec_line_item_field_data' && ($orden['field'] ?? '') === 'id') {
-      $porNumeroDeLinea++;
-    }
+  $ordenPantalla = $pantallaLineas['display_options']['sorts'] ?? NULL;
+  if (!is_array($ordenPantalla) || $ordenPantalla === []) {
+    continue;
+  }
+  $porNumero = array_keys($ordenPantalla) === ['id']
+    && ($ordenPantalla['id']['table'] ?? '') === 'tec_line_item_field_data'
+    && ($ordenPantalla['id']['order'] ?? '') === 'ASC';
+  if ($porNumero) {
+    $porNumeroDeLinea[] = $nombrePantalla;
+  }
+  else {
+    $conOtroOrden[] = $nombrePantalla . ' (' . implode(', ', array_keys($ordenPantalla)) . ')';
   }
 }
-comprobar($resultados, 'las lineas de un pedido se ordenan por su numero',
-  $porNumeroDeLinea === 4 && !$conPesoFantasma,
-  $conPesoFantasma
-    ? 'peso de arrastrar en ' . implode(', ', $conPesoFantasma)
-    : $porNumeroDeLinea . ' pantallas ordenan por el numero de la linea, se esperaban 4');
+comprobar($resultados, 'la que ordena lineas lo hace por su numero, y por nada mas',
+  !$conOtroOrden,
+  $conOtroOrden
+    ? implode(', ', $conOtroOrden)
+    : count($porNumeroDeLinea) . ' pantallas, todas por el numero de la linea');
 
 // -----------------------------------------------------------------------------
 titulo('23. La foto crece al pasar el raton');
@@ -2489,6 +2553,342 @@ comprobar($resultados, 'la regla del raton existe, suelta y en la biblioteca del
   && in_array('modules/custom/admin_form_styles/css/popup-on-hover.css', $hojasPopup, TRUE)
   && function_exists('admin_form_styles_library_info_alter'),
   $cssRaton === '' ? 'falta css/popup-on-hover.css' : 'hojas del popup: ' . implode(', ', $hojasPopup));
+
+// -----------------------------------------------------------------------------
+titulo('24. Cuantas piezas lleva el pedido, y el nombre que se fue');
+
+// La misma pregunta en dos pantallas y con dos maquinarias: el pedido guardado
+// lo suma el servidor, y el borrador lo suma el navegador porque alli las cifras
+// se mueven mientras se teclea.
+//
+// El del servidor es **una fila mas de la tabla**, escrita en PHP. Tiene que
+// serlo: la cuenta va debajo de la columna Qty, y una tablita pegada debajo no
+// comparte anchos con la de arriba -- el navegador mide cada tabla por su
+// contenido -- asi que desde fuera la cifra solo puede flotar a la derecha.
+$pieDelPedido = \Drupal\tec_production\OrderFoot::SCREENS['tec_order_sales_order_line_items'] ?? [];
+comprobar($resultados, 'el pie del pedido guardado es una fila de su propia tabla',
+  function_exists('tec_production_preprocess_views_view_table') && $pieDelPedido === ['block_1', 'page_4'],
+  !function_exists('tec_production_preprocess_views_view_table')
+    ? 'el gancho no esta'
+    : 'pantallas: ' . (implode(', ', $pieDelPedido) ?: 'ninguna'));
+
+// Y busca sus dos columnas por el nombre, nunca contandolas, que es la misma
+// regla que sigue el guion del borrador. Si una pantalla deja de tener la que
+// cuenta o la que suma, el pie se queda a medias sin dar ningun error.
+$vistaLineas = \Drupal::config('views.view.tec_order_sales_order_line_items');
+foreach (['block_1' => 'la ficha del pedido', 'page_4' => 'la Pro Forma'] as $pantallaPie => $comoSeLlamaPie) {
+  $columnasPie = $vistaLineas->get('display.' . $pantallaPie . '.display_options.style.options.columns') ?? [];
+  comprobar($resultados, $comoSeLlamaPie . ' conserva la columna que se cuenta y la que se suma',
+    ($columnasPie[\Drupal\tec_production\OrderFoot::PIECES] ?? '') === \Drupal\tec_production\OrderFoot::PIECES
+    && ($columnasPie[\Drupal\tec_production\OrderFoot::MONEY] ?? '') === \Drupal\tec_production\OrderFoot::MONEY,
+    implode(' + ', array_intersect([
+      \Drupal\tec_production\OrderFoot::PIECES,
+      \Drupal\tec_production\OrderFoot::MONEY,
+    ], array_keys($columnasPie))) ?: 'no esta ninguna de las dos');
+}
+
+// Queda un campo agregado en dos pantallas de esa vista, y con el la trampa que
+// traen: cuando Views agrega un campo lo dibuja otro manejador, y ese lee
+// `separator` como separador de millares. Estaba en coma y espacio: `฿44, 090.00`.
+$millares = [];
+foreach (\Drupal::config('views.view.tec_order_sales_order_line_items')->get('display') ?? [] as $nombrePie => $pantallaPie) {
+  foreach ($pantallaPie['display_options']['fields'] ?? [] as $clavePie => $campoPie) {
+    if (($campoPie['group_type'] ?? 'group') !== 'group' && ($campoPie['separator'] ?? ',') !== ',') {
+      $millares[] = $nombrePie . '/' . $clavePie;
+    }
+  }
+}
+comprobar($resultados, 'y los millares de lo que suma llevan coma y nada mas', !$millares,
+  $millares ? implode(', ', $millares) : 'coma');
+
+$guionBorrador = (string) \Drupal::config('asset_injector.js.draft_for_ace_company_view')->get('code');
+comprobar($resultados, 'el pie del borrador de ventas cuenta piezas bajo su columna',
+  str_contains($guionBorrador, 'grand-total-pieces') && str_contains($guionBorrador, 'function columnOf'),
+  $guionBorrador === '' ? 'no esta el guion' : 'ha vuelto a montar la fila a ciegas');
+
+// La casilla del precio del catalogo, en la linea de su fila. Hacen falta las dos
+// reglas: sin margenes la celda mide lo que la casilla, y centradas las celdas el
+// medio de la casilla cae donde el de las palabras.
+$hojaCatalogoPrecio = DRUPAL_ROOT . '/modules/custom/admin_form_styles/css/brand-catalogue.css';
+$cssCatalogoPrecio = is_file($hojaCatalogoPrecio) ? (string) file_get_contents($hojaCatalogoPrecio) : '';
+comprobar($resultados, 'la casilla del precio va en la linea de su fila',
+  str_contains($cssCatalogoPrecio, 'views-field-form-field-field-tec-price .form-item')
+  && (bool) preg_match('/^\.view-id-tec_products\.view-display-id-brand_catalogue td\s*\{[^}]*vertical-align:\s*middle/m', $cssCatalogoPrecio),
+  $cssCatalogoPrecio === '' ? 'falta css/brand-catalogue.css' : 'falta una de las dos reglas');
+
+// Y el nombre que Oscar le puso al pedido de un clic. Se fue de la configuracion
+// el 19 de agosto, incluida la direccion del boton, que es la que se ve al pasar
+// el raton y la que se pega en un correo. Se vigila entero porque un nombre asi
+// vuelve en cuanto alguien duplique una vista vieja.
+$rastroViejo = [];
+$mirarRastro = function ($valor, string $donde) use (&$mirarRastro, &$rastroViejo): void {
+  if (is_array($valor)) {
+    foreach ($valor as $clave => $hijo) {
+      if (is_string($clave) && preg_match('/excel[ _-]?lover/i', $clave)) {
+        $rastroViejo[] = $donde . ' (clave)';
+      }
+      $mirarRastro($hijo, $donde);
+    }
+    return;
+  }
+  if (is_string($valor) && preg_match('/excel[ _-]?lover/i', $valor)) {
+    $rastroViejo[] = $donde;
+  }
+};
+// Y se mira tambien el nombre de cada objeto, que no se ve mirando dentro. Al
+// borrar las banderas viejas, el modulo Flag no encontro sus cuatro acciones
+// -- las busca por identificador y el identificador ya era el nuevo -- y se
+// quedaron cuatro objetos llamados con el nombre viejo y llenos del nuevo.
+$nombresRetirados = [
+  'tec_draft_order_excel_lover',
+  'tec_order_checkout_excel',
+  'tec_excel_lover_orders',
+  'tec_excel_lover_form',
+  'excel_lover_button',
+  'tec_order_eca_create_draft_excel_lover',
+  'tec_order_eca_create_draft_po_excel_lover',
+];
+foreach (\Drupal::configFactory()->listAll() as $nombreConfig) {
+  foreach ($nombresRetirados as $retirado) {
+    if (str_contains($nombreConfig, $retirado)) {
+      $rastroViejo[] = $nombreConfig . ' (el nombre del objeto)';
+      break;
+    }
+  }
+  $mirarRastro(\Drupal::config($nombreConfig)->getRawData(), $nombreConfig);
+}
+comprobar($resultados, 'no queda ningun excel lover en la configuracion, ni en el nombre de un objeto',
+  !$rastroViejo,
+  $rastroViejo ? implode(', ', array_unique(array_slice($rastroViejo, 0, 6))) : 'ni en una clave');
+
+comprobar($resultados, 'la bandera del pedido de un clic se llama tec_order_draft_sales',
+  (bool) $etm->getStorage('flag')->load('tec_order_draft_sales')
+  && !$etm->getStorage('flag')->load('tec_draft_order_excel_lover'),
+  'la vieja sigue ahi o la nueva no esta');
+
+// El modo con el que la ficha dibuja ese boton se nombra en dos sitios que no se
+// hablan: la configuracion de dos vistas y una linea de PHP.
+$fuenteCrmUx = (string) @file_get_contents(DRUPAL_ROOT . '/modules/custom/tec_crm_ux/tec_crm_ux.module');
+comprobar($resultados, 'y el modo de la ficha se llama igual en el PHP y en las vistas',
+  str_contains($fuenteCrmUx, "'sales_order_button'")
+  && (\Drupal::config('views.view.tec_orders_orders')->get('display.block_2.display_options.empty.entity_tec_crm.view_mode') === 'sales_order_button'),
+  'el PHP y la vista no dicen el mismo modo');
+
+// -----------------------------------------------------------------------------
+titulo('25. El orden de la marca manda, y la proforma nace ordenada');
+
+// Una proforma sale ordenada en cuatro niveles y cada uno lo decide otra cosa: la
+// lista de marcas de la ficha del cliente, el sitio del producto dentro de su
+// marca, la lista de colores de la ficha del producto y el peso de la talla en su
+// vocabulario. Los dos de los extremos son de otro dueño y ya se vigilan aparte;
+// aqui se vigila el del producto, que es el que se estreno el 19 de agosto.
+$campoSitio = \Drupal\tec_production\CataloguePosition::FIELD;
+comprobar($resultados, 'el sitio de un producto es un campo suyo, y no se ensena',
+  (bool) \Drupal::config('field.field.tec_product.tec_product.' . $campoSitio)->getRawData()
+  && array_key_exists($campoSitio, \Drupal::config('core.entity_form_display.tec_product.tec_product.default')->get('hidden') ?? [])
+  && array_key_exists($campoSitio, \Drupal::config('core.entity_view_display.tec_product.tec_product.default')->get('hidden') ?? []),
+  'falta el campo o alguna pantalla lo ensena');
+
+// Un producto que llega sin sitio se ordenaria por delante de todos, asi que el
+// gancho de guardado le da el ultimo de su marca. Y no hay pantalla para
+// escribirlo a mano: se arrastra.
+comprobar($resultados, 'un producto nuevo recibe el ultimo sitio de su marca',
+  function_exists('tec_production_tec_product_presave'),
+  'no esta el gancho que lo reparte');
+
+comprobar($resultados, 'y se arrastra en una pestaña de la ficha de la marca',
+  \Drupal::service('router.route_provider')
+    ->getRoutesByPattern('/taxonomy/term/{taxonomy_term}/organize')->count() === 1
+  && class_exists('\Drupal\tec_production\Form\BrandProductOrderForm'),
+  'no esta la ruta o no esta el formulario');
+
+// Todas las listas de productos leen ese sitio. Si una se queda sin la
+// ordenacion, saca el catalogo en otro orden que el de la proforma, y son dos
+// pantallas de la misma cosa contandola distinta.
+$vistaProductos = \Drupal::config('views.view.tec_products');
+$sinSitio = [];
+foreach ([
+  'brand_catalogue' => 'el catalogo de la marca',
+  'block_1' => 'la lista de productos',
+  'block_2' => 'los productos de un cliente',
+  'block_4' => 'la pestaña Products de la ficha',
+  'block_5' => 'la lista con fotos',
+] as $pantallaSitio => $comoSeLlamaSitio) {
+  $ordenSitio = $vistaProductos->get('display.' . $pantallaSitio . '.display_options.sorts') ?? [];
+  if (!isset($ordenSitio[$campoSitio . '_value'])) {
+    $sinSitio[] = $pantallaSitio . ' (' . $comoSeLlamaSitio . ')';
+  }
+}
+comprobar($resultados, 'las cinco listas de productos ordenan por ese sitio', !$sinSitio,
+  $sinSitio ? implode(', ', $sinSitio) : 'las cinco');
+
+// Antes el orden era del cliente: se arrastraba en /tec_crm/N/reorder y vivia en
+// la tabla de pesos de draggableviews, una fila por cliente y producto. Ocho
+// clientes eran ocho ordenes del mismo catalogo y ninguno le servia a la
+// proforma, que corre para un cliente y no puede leer el de otro.
+$citanArrastre = [];
+foreach (\Drupal::configFactory()->listAll('views.view.') as $nombreVista) {
+  if (str_contains(json_encode(\Drupal::config($nombreVista)->getRawData()), 'draggableviews')) {
+    $citanArrastre[] = substr($nombreVista, strlen('views.view.'));
+  }
+}
+$pesosSueltos = \Drupal::database()->schema()->tableExists('draggableviews_structure')
+  ? (int) \Drupal::database()->select('draggableviews_structure', 'd')->countQuery()->execute()->fetchField()
+  : 0;
+comprobar($resultados, 'y la pantalla vieja del cliente no ha vuelto, ni sus pesos',
+  $vistaProductos->get('display.page_2') === NULL && !$citanArrastre && $pesosSueltos === 0,
+  $vistaProductos->get('display.page_2') !== NULL
+    ? 'ha vuelto tec_products:page_2'
+    : ($citanArrastre ? 'aun la citan: ' . implode(', ', $citanArrastre) : $pesosSueltos . ' filas de pesos'));
+
+// Un producto con marca y sin sitio se colaria por delante de todo el catalogo.
+// Se mide en la tabla del campo, que es donde escribe la pantalla de arrastrar.
+$consultaSinSitio = \Drupal::database()->select(\Drupal\tec_production\CataloguePosition::BRAND_TABLE, 'b');
+$consultaSinSitio->leftJoin(\Drupal\tec_production\CataloguePosition::TABLE, 'p', 'p.entity_id = b.entity_id AND p.deleted = 0');
+$consultaSinSitio->condition('b.deleted', 0);
+$consultaSinSitio->condition('b.bundle', 'tec_product');
+$consultaSinSitio->isNull('p.' . \Drupal\tec_production\CataloguePosition::COLUMN);
+$huerfanosDeSitio = (int) $consultaSinSitio->countQuery()->execute()->fetchField();
+comprobar($resultados, 'ningun producto con marca se ha quedado sin sitio', $huerfanosDeSitio === 0,
+  $huerfanosDeSitio . ' productos sin sitio, que saldrian los primeros');
+
+// Y la proforma. La vista que ECA recorre no ordena en SQL a proposito: dos de
+// los cuatro niveles son la posicion en una lista, y para leerla Views tendria
+// que enganchar la tabla del campo por segunda vez -- medido: tres productos
+// devolvian seis filas. Lo ordena PHP despues de la consulta.
+$ordenProforma = \Drupal\tec_production\CatalogueOrder::SCREENS['tec_order_eca_create_draft_sales'] ?? [];
+comprobar($resultados, 'la vista que crea las lineas la ordena PHP, y no la consulta',
+  (\Drupal::config('views.view.tec_order_eca_create_draft_sales')->get('display.default.display_options.sorts') ?: []) === []
+  && function_exists('tec_production_views_post_execute')
+  && in_array('default', $ordenProforma, TRUE),
+  'pantallas que ordena: ' . (implode(', ', $ordenProforma) ?: 'ninguna'));
+
+// Y ordenar despues de la consulta solo vale si la consulta trajo TODAS las
+// filas. Con paginador cada pagina saldria ordenada por dentro y el conjunto
+// desordenado, y en la vista que crea las lineas seria peor que un orden malo:
+// la proforma nacería sin las lineas de la segunda pagina. CatalogueOrder da por
+// hecho en su docblock que ninguna de sus pantallas pagina; esto lo vigila.
+$conPaginador = [];
+foreach (\Drupal\tec_production\CatalogueOrder::SCREENS as $vistaOrdenada => $pantallasOrdenadas) {
+  $vistaConfig = \Drupal::config('views.view.' . $vistaOrdenada);
+  foreach ($pantallasOrdenadas as $pantallaOrdenada) {
+    if ($vistaConfig->get('display.' . $pantallaOrdenada) === NULL) {
+      $conPaginador[] = $vistaOrdenada . ':' . $pantallaOrdenada . ' (no existe)';
+      continue;
+    }
+    // Sin paginador propio hereda el de la pantalla por defecto.
+    $tipoPaginador = $vistaConfig->get('display.' . $pantallaOrdenada . '.display_options.pager.type')
+      ?: $vistaConfig->get('display.default.display_options.pager.type');
+    if ($tipoPaginador !== 'none') {
+      $conPaginador[] = $vistaOrdenada . ':' . $pantallaOrdenada . ' (' . ($tipoPaginador ?: 'sin decir') . ')';
+    }
+  }
+}
+comprobar($resultados, 'y ninguna de las que ordena PHP pagina, o partiria el orden', !$conPaginador,
+  $conPaginador
+    ? implode(', ', $conPaginador)
+    : array_sum(array_map('count', \Drupal\tec_production\CatalogueOrder::SCREENS)) . ' pantallas, todas enteras');
+
+// Y en cuanto las lineas existen, el orden se congela: cada pantalla que las
+// lista ordena por el numero de la linea, que es el orden en que se crearon.
+// Volver a arrastrar la marca cambia la proforma siguiente, no las emitidas.
+$sinNumero = [];
+foreach ([
+  'page_1' => 'el borrador de compra',
+  'page_2' => 'el borrador de venta',
+  'page_3' => 'el impreso de compra',
+  'page_4' => 'la Pro Forma',
+  'block_1' => 'la ficha del pedido de venta',
+  'block_2' => 'la ficha del pedido de compra',
+  'block_4' => 'las lineas que se pueden escribir',
+] as $pantallaLineas => $comoSeLlamaLineas) {
+  $ordenLineas = $vistaLineas->get('display.' . $pantallaLineas . '.display_options.sorts');
+  if (!is_array($ordenLineas) || array_keys($ordenLineas) !== ['id'] || ($ordenLineas['id']['order'] ?? '') !== 'ASC') {
+    $sinNumero[] = $pantallaLineas . ' (' . $comoSeLlamaLineas . ')';
+  }
+}
+comprobar($resultados, 'las siete pantallas de lineas ordenan por el numero de la linea', !$sinNumero,
+  $sinNumero ? implode(', ', $sinNumero) : 'las siete');
+
+// La trampa que trae eso, y que ya salto una vez: quien agrega no puede ordenar.
+// Views mete en el GROUP BY todo lo que ordena, asi que un orden por el numero de
+// la linea convierte el bloque de totales en una fila por linea.
+$ordenanYSuman = [];
+foreach (['default', 'attachment_2', 'attachment_3', 'attachment_4', 'attachment_8', 'block_5'] as $pantallaSuma) {
+  $ordenSuma = $vistaLineas->get('display.' . $pantallaSuma . '.display_options.sorts');
+  if (is_array($ordenSuma) && $ordenSuma !== []) {
+    $ordenanYSuman[] = $pantallaSuma . ' (' . implode(', ', array_keys($ordenSuma)) . ')';
+  }
+}
+comprobar($resultados, 'y las que suman no ordenan por nada, o partirian la suma', !$ordenanYSuman,
+  $ordenanYSuman ? implode(', ', $ordenanYSuman) : 'ninguna ordena');
+
+// -----------------------------------------------------------------------------
+titulo('26. Un producto a medias no desaparece de la marca');
+
+// El catalogo es una lista de tallas. Un producto sin color, o un color sin
+// talla, no tiene fila. El 19 de agosto el dueno creo uno desde la marca y Save
+// le devolvio a esa lista, donde el producto no estaba. Tres cosas lo tapan:
+// el destination se va, Organize se pone al lado del + Product, y BrandGaps
+// nombra debajo lo que la tabla no puede pintar.
+$cabeceraCatalogo = (string) ($catalogo['header']['area_text_custom']['content'] ?? '');
+$vacioCatalogo = (string) ($catalogo['empty']['area_text_custom']['content'] ?? '');
+comprobar($resultados, 'el + Product de la marca ya no te tira a la marca',
+  str_contains($cabeceraCatalogo, 'add/tec_product?brand_id={{ raw_arguments.tid }}')
+  && !preg_match('/add\/tec_product\?brand_id=[^"]*&destination=/', $cabeceraCatalogo . $vacioCatalogo),
+  $cabeceraCatalogo ?: 'sin cabecera');
+
+comprobar($resultados, 'y Organize esta en la cabecera, no solo en la pestana',
+  str_contains($cabeceraCatalogo, '/organize'),
+  $cabeceraCatalogo ?: 'sin cabecera');
+
+comprobar($resultados, 'una marca sin tallas no dice que no tiene productos',
+  str_contains($vacioCatalogo, 'Nothing to show here yet')
+  && !str_contains($vacioCatalogo, 'No products in this brand yet'),
+  $vacioCatalogo ?: 'sin vacio');
+
+comprobar($resultados, 'el aviso de lo que falta lo escribe BrandGaps',
+  class_exists('\Drupal\tec_production\BrandGaps')
+  && function_exists('tec_production_views_post_render')
+  && in_array('brand_catalogue', \Drupal\tec_production\BrandGaps::SCREENS['tec_products'] ?? [], TRUE),
+  'no esta la clase, el gancho o la pantalla');
+
+$codigoOrganize = file_get_contents(DRUPAL_ROOT . '/modules/custom/tec_production/src/Form/BrandProductOrderForm.php') ?: '';
+comprobar($resultados, 'Organize cuenta las tallas y marca lo que BrandGaps nombra',
+  str_contains($codigoOrganize, 'BrandGaps::of')
+  && str_contains($codigoOrganize, 'Sizes')
+  && str_contains($codigoOrganize, 'tec-brand-order__row--gap'),
+  'falta la columna o la marca');
+
+// -----------------------------------------------------------------------------
+titulo('27. Una variacion creada con + Variation sale en la ficha del producto');
+
+// El 20 de agosto Black se creo pero la ficha de RISE THAI KICK PAD 1 STRAP
+// seguia vacia: edit[field_tec_product] no rellenaba el campo, ECA no enganchaba
+// el color a field_tec_color_variations, y Layout Builder no pintaba nada.
+$vistaProducto = \Drupal::entityTypeManager()->getStorage('view')->load('tec_product_elements');
+$botonVariacion = (string) ($vistaProducto?->getDisplay('embed_4')['display_options']['fields']['nothing']['alter']['text'] ?? '');
+$botonTalla = (string) ($vistaProducto?->getDisplay('embed_5')['display_options']['fields']['nothing']['alter']['text'] ?? '');
+$configProductoColor = \Drupal::config('field.field.tec_product.tec_color_variation.field_tec_product');
+$configColorTalla = \Drupal::config('field.field.tec_product.tec_size_variation.field_tec_color_variation');
+
+comprobar($resultados, '+ Variation ya no usa edit[field_tec_product]',
+  str_contains($botonVariacion, 'product_id={{ id_1 }}')
+  && !str_contains($botonVariacion, 'edit[field_tec_product]'),
+  $botonVariacion ?: 'sin embed_4');
+
+comprobar($resultados, '+ Size ya no usa edit[field_tec_color_variation]',
+  str_contains($botonTalla, 'color_id={{ id_1 }}')
+  && !str_contains($botonTalla, 'edit[field_tec_color_variation]'),
+  $botonTalla ?: 'sin embed_5');
+
+comprobar($resultados, 'EPP rellena field_tec_product desde product_id',
+  ($configProductoColor->get('third_party_settings.epp.value') ?? '') === '[current-page:query:product_id]',
+  (string) ($configProductoColor->get('third_party_settings.epp.value') ?? 'vacio'));
+
+comprobar($resultados, 'EPP rellena field_tec_color_variation desde color_id',
+  ($configColorTalla->get('third_party_settings.epp.value') ?? '') === '[current-page:query:color_id]',
+  (string) ($configColorTalla->get('third_party_settings.epp.value') ?? 'vacio'));
 
 // -----------------------------------------------------------------------------
 // Resumen.

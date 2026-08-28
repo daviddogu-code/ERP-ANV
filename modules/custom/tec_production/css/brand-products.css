@@ -1,0 +1,118 @@
+.tec-brand-order__head {
+  margin: 0.5rem 0 0.25rem;
+}
+
+.tec-brand-order__brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.tec-brand-order__count {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.tec-brand-order__help {
+  max-width: 70ch;
+  margin-bottom: 1rem;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.tec-brand-order__buyers {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+#tec-brand-products {
+  border: 1px solid #c8c8c8;
+}
+
+#tec-brand-products th {
+  white-space: nowrap;
+}
+
+/* NO and the thumbnail shrink to their content; the name takes the rest. */
+#tec-brand-products td.tec-brand-order__no-cell,
+#tec-brand-products td.tec-brand-order__img-cell {
+  width: 1%;
+  white-space: nowrap;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+#tec-brand-products td.tec-brand-order__no-cell {
+  color: #666;
+  min-width: 56px;
+}
+
+/* Undo core tabledrag's float + negative margin, which drops the drag icon
+   on top of the NO number in cells this compact. Same fix as the queue. */
+#tec-brand-products .draggable a.tabledrag-handle {
+  float: none;
+  display: inline-block;
+  vertical-align: middle;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+}
+
+#tec-brand-products a.tabledrag-handle .handle {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  background-position: center;
+}
+
+#tec-brand-products .tec-brand-order__no {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 5px;
+}
+
+#tec-brand-products .tec-brand-order__img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+#tec-brand-products td.tec-brand-order__name-cell a {
+  font-weight: 600;
+}
+
+#tec-brand-products .tec-brand-order__type {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+#tec-brand-products td.tec-brand-order__num,
+#tec-brand-products th.tec-brand-order__num {
+  text-align: right;
+}
+
+#tec-brand-products .tec-brand-order__colours,
+#tec-brand-products .tec-brand-order__sizes {
+  color: #6b7280;
+  cursor: help;
+}
+
+/* A product the catalogue cannot show: no colour, or a colour with no size.
+   The same yellow as the notice under the brand page, so the two screens name
+   the same fact the same way. */
+#tec-brand-products tr.tec-brand-order__row--gap td {
+  background: #fffbf0;
+}
+
+#tec-brand-products .tec-brand-order__sizes--gap {
+  color: #9a6b00;
+  font-weight: 700;
+}
+
+#tec-brand-products tr.drag td {
+  background: #fffbdd;
+}

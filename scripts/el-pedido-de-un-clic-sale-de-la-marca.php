@@ -2,12 +2,12 @@
 
 /**
  * @file
- * La consulta del «Excel lover» sube por la marca y no por el cliente del
+ * La consulta del «+ Order» sube por la marca y no por el cliente del
  * producto.
  *
  *   php vendor\bin\drush.php scr scripts/el-pedido-de-un-clic-sale-de-la-marca.php
  *
- * La bandera «Excel lover» de la ficha de un cliente crea de un clic un borrador
+ * La bandera «+ Order» de la ficha de un cliente crea de un clic un borrador
  * de pedido con una linea por cada talla de cada producto de ese cliente. Por
  * dentro son dos piezas: una ECA que la bandera dispara, y esta vista, que la ECA
  * consulta por su nombre pasandole el numero del cliente.
@@ -35,14 +35,14 @@
  * Se puede lanzar dos veces: comprueba antes de escribir.
  */
 
-const VISTA = 'views.view.tec_order_eca_create_draft_excel_lover';
+const VISTA = 'views.view.tec_order_eca_create_draft_sales';
 const PANTALLA = 'default';
 const NUEVA = 'reverse__tec_crm__field_tec_brands';
 const VIEJA = 'field_tec_customer';
 
 $config = \Drupal::configFactory()->getEditable(VISTA);
 if ($config->isNew()) {
-  print "\n  No esta la vista del Excel lover. No sigo.\n\n";
+  print "\n  No esta la vista del pedido de un clic. No sigo.\n\n";
   return;
 }
 

@@ -5,7 +5,7 @@ dependencies:
   config:
     - eca.eca.process_sclj26d
 id: process_sclj26d
-label: 'TEC Order: Create Sales order - Excel lover'
+label: 'TEC Order: Create Sales order'
 tags:
   - untagged
 documentation: ''
@@ -13,7 +13,7 @@ filename: ''
 modeldata: |
   <?xml version="1.0" encoding="UTF-8"?>
   <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:qa="http://some-company/schema/bpmn/qa" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
-    <bpmn2:process id="Process_sclj26d" name="TEC Order: Create Sales order - Excel lover" isExecutable="true" camunda:versionTag="1.4">
+    <bpmn2:process id="Process_sclj26d" name="TEC Order: Create Sales order" isExecutable="true" camunda:versionTag="1.4">
       <bpmn2:startEvent id="Event_05bhyol" name="Flag" camunda:modelerTemplate="org.drupal.event.flag:flag">
         <bpmn2:extensionElements>
           <camunda:properties>
@@ -39,7 +39,7 @@ modeldata: |
           </camunda:field>
           <camunda:field name="message">
             <camunda:string>Session user [session_user:uid]&lt;br&gt;
-  Running: "TEC Order: Create Sales order - Excel lover" ECA model.&lt;br&gt;</camunda:string>
+  Running: "TEC Order: Create Sales order" ECA model.&lt;br&gt;</camunda:string>
           </camunda:field>
         </bpmn2:extensionElements>
         <bpmn2:incoming>Flow_0n35u89</bpmn2:incoming>
@@ -55,7 +55,7 @@ modeldata: |
             <camunda:string>sizeVariations</camunda:string>
           </camunda:field>
           <camunda:field name="view_id">
-            <camunda:string>tec_order_eca_create_draft_excel_lover</camunda:string>
+            <camunda:string>tec_order_eca_create_draft_sales</camunda:string>
           </camunda:field>
           <camunda:field name="display_id">
             <camunda:string>default</camunda:string>
@@ -152,7 +152,7 @@ modeldata: |
             <camunda:string>7</camunda:string>
           </camunda:field>
           <camunda:field name="message">
-            <camunda:string>Finished: "TEC Order: Create Sales order - Excel lover"  ECA Model.</camunda:string>
+            <camunda:string>Finished: "TEC Order: Create Sales order"  ECA Model.</camunda:string>
           </camunda:field>
         </bpmn2:extensionElements>
         <bpmn2:incoming>Flow_0hmzd7r</bpmn2:incoming>
@@ -548,7 +548,7 @@ modeldata: |
             <camunda:property name="pluginid" value="eca_flag_entity_is_flagged"/>
           </camunda:properties>
           <camunda:field name="flag_name">
-            <camunda:string>tec_draft_order_excel_lover</camunda:string>
+            <camunda:string>tec_order_draft_sales</camunda:string>
           </camunda:field>
           <camunda:field name="negate">
             <camunda:string>no</camunda:string>

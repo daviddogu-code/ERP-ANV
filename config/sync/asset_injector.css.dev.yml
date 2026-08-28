@@ -520,7 +520,7 @@ code: |-
       box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
   }
 
-  /* Excel lover editable views */
+  /* Order draft editable views */
   /* Pronounced actions bar */
   .block-views-blocktec-order-sales-order-line-items-block-1 #edit-actions {
       display: block !important;
@@ -673,7 +673,7 @@ code: |-
 
   /* Line items */
   /* Rendered entity when empty */
-  .flag.flag-tec-draft-order-excel-lover {
+  .flag.flag-tec-order-draft-sales {
       text-align: center;
       font-weight: bold;
   }
@@ -732,7 +732,7 @@ code: |-
   .path-frontpage .main-container {
       background-color: transparent;
       box-shadow: none !important;
-      margin: 12% auto;
+      margin: 1.5rem auto 2rem;
   }
 
 

@@ -1,15 +1,16 @@
 /**
  * @file
- * The one thing the brand's catalogue needed: a box the size of a price.
+ * The two things the brand's catalogue needed: a box the size of a price, and
+ * that box on the same line as the rest of its row.
  *
  * The widget arrives as wide as the column it sits in -- around 210 pixels for
  * six digits -- and in a table of six rows it was the loudest thing on screen.
- * Nothing else about the table is touched from here on purpose: it was asked for
- * and then unasked for, and the table reads as the theme draws every other table
- * in the ERP.
+ * The redesign of the table itself was asked for and then unasked for, and it
+ * stays unasked for: what is here is the price cell and the line its row sits
+ * on, nothing about colours, borders or spacing.
  *
  * The order drafts have the same box narrowed the same way, in
- * asset_injector.css.tec_excel_lover_orders, tied to /o/draft and /po/draft. This
+ * asset_injector.css.tec_order_draft_screens, tied to /o/draft and /po/draft. This
  * one is a stylesheet in the module and is attached to the display rather than to
  * an address, because the catalogue is embedded in the brand's term page and
  * could be embedded somewhere else tomorrow.
@@ -26,4 +27,24 @@
 
 .view-id-tec_products.view-display-id-brand_catalogue td.views-field-form-field-field-tec-price input {
   width: 5.25rem;
+}
+
+/* And on the line the rest of the row is on. Every other cell holds one line of
+   text; this one holds a form widget, and Drupal wraps every widget in a
+   .form-item that carries a top and a bottom margin -- room for a label that is
+   here hidden. The top margin is what pushed the box below the row it belongs
+   to, and the bottom one is what made the row taller than anything in it.
+   Without the margins the cell is exactly as tall as the box, and centring the
+   cells puts the middle of the box on the middle of the words. Both halves are
+   needed: centring alone would still hang the box half a margin high.
+
+   Every table in the ERP that mixes typing and reading does the same -- the
+   purchase list, the purchase queue, the production log, the receiving screen.
+   This is that rule, scoped to this display. */
+.view-id-tec_products.view-display-id-brand_catalogue td.views-field-form-field-field-tec-price .form-item {
+  margin: 0;
+}
+
+.view-id-tec_products.view-display-id-brand_catalogue td {
+  vertical-align: middle;
 }

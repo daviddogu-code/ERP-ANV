@@ -77,7 +77,7 @@ class ProductionQueueForm extends FormBase {
     'MMA Gloves' => ['ນວມ ເອັມ ເອັມ ເອ', 'green'],
     'Shin guards' => ['ສະນັບແຂ້ງ', 'blue'],
     'Head guards' => ['ຫົວ', 'blue'],
-    'Thai pads' => ['ເປົ້າເຕະ', 'yellow'],
+    'Kick Pads' => ['ເປົ້າເຕະ', 'yellow'],
     'Belly pads' => ['ເຂັມຂັດ', 'yellow'],
     'Focus mitts' => ['ເປົ້າມື', 'yellow'],
     'Kick shields' => ['ເປົ້າເຕະສີ່ຫຼ່ຽມ', 'yellow'],
@@ -241,7 +241,7 @@ class ProductionQueueForm extends FormBase {
     ];
 
     // Queue table, laid out like the Google Sheet:
-    // NO | ORDER | status | categories | TOTAL | Deadline | X | Y.
+    // NO | ORDER | status | categories | TOTAL | Deadline | Produced | Remaining.
     $header = [
       ['data' => $this->headerCell('NO', 'ລຳດັບ'), 'class' => ['tec-queue__no-col']],
       ['data' => $this->headerCell('ORDER', 'ອໍເດີ')],
@@ -255,9 +255,9 @@ class ProductionQueueForm extends FormBase {
       ];
     }
     $header[] = ['data' => $this->headerCell('TOTAL', 'ທັງໝົດ'), 'class' => ['tec-queue__total-col']];
-    $header[] = ['data' => $this->headerCell('DEADLINE', '')];
-    $header[] = ['data' => $this->headerCell('X · PRODUCED', '')];
-    $header[] = ['data' => $this->headerCell('Y · REMAINING', '')];
+    $header[] = ['data' => $this->headerCell('DEADLINE', ''), 'class' => ['tec-queue__end-col']];
+    $header[] = ['data' => $this->headerCell('PRODUCED', ''), 'class' => ['tec-queue__end-col']];
+    $header[] = ['data' => $this->headerCell('REMAINING', ''), 'class' => ['tec-queue__end-col']];
     $header[] = $this->t('Weight');
 
     $form['table'] = [
@@ -295,16 +295,19 @@ class ProductionQueueForm extends FormBase {
     }
     $totals_row['total'] = [
       '#markup' => '<strong>' . number_format($total_pieces, 0) . '</strong>',
-      '#wrapper_attributes' => ['class' => ['tec-queue__num']],
+      '#wrapper_attributes' => ['class' => ['tec-queue__num', 'tec-queue__total-cell']],
     ];
-    $totals_row['deadline'] = ['#markup' => ''];
+    $totals_row['deadline'] = [
+      '#markup' => '',
+      '#wrapper_attributes' => ['class' => ['tec-queue__end-cell']],
+    ];
     $totals_row['produced'] = [
       '#markup' => '<strong>' . number_format($total_produced, 0) . '</strong>',
-      '#wrapper_attributes' => ['class' => ['tec-queue__num']],
+      '#wrapper_attributes' => ['class' => ['tec-queue__num', 'tec-queue__end-cell']],
     ];
     $totals_row['remaining'] = [
       '#markup' => '<strong>' . number_format($backlog_all, 0) . '</strong>',
-      '#wrapper_attributes' => ['class' => ['tec-queue__num']],
+      '#wrapper_attributes' => ['class' => ['tec-queue__num', 'tec-queue__end-cell']],
     ];
     $totals_row['weight'] = ['#markup' => ''];
     $form['table']['totals'] = $totals_row;
@@ -405,19 +408,19 @@ class ProductionQueueForm extends FormBase {
       ];
       $element['deadline'] = [
         '#markup' => '<span class="tec-queue__deadline">' . ($row['deadline'] ? date('j M Y', $row['deadline']) : '—') . '</span>',
-        '#wrapper_attributes' => ['class' => ['tec-queue__num', 'tec-queue__deadline-cell']],
+        '#wrapper_attributes' => ['class' => ['tec-queue__num', 'tec-queue__deadline-cell', 'tec-queue__end-cell']],
       ];
-      // X is owned by the Daily Production Log and read-only here for
+      // Produced is owned by the Daily Production Log and read-only here for
       // everyone. Production (including initial balances for legacy orders)
       // is registered only on /production/log, so a stale queue tab can
       // never overwrite log-calculated values.
       $element['produced'] = [
         '#markup' => '<span class="tec-queue__produced-locked" title="' . $this->t('Calculated from the Daily Production Log') . '">' . number_format($row['produced'], 0) . '</span>',
-        '#wrapper_attributes' => ['class' => ['tec-queue__num']],
+        '#wrapper_attributes' => ['class' => ['tec-queue__num', 'tec-queue__end-cell']],
       ];
       $element['remaining'] = [
         '#markup' => '<span class="tec-queue__remaining">' . number_format($row['remaining'], 0) . '</span>',
-        '#wrapper_attributes' => ['class' => ['tec-queue__num']],
+        '#wrapper_attributes' => ['class' => ['tec-queue__num', 'tec-queue__end-cell']],
       ];
       $element['weight'] = [
         '#type' => 'weight',

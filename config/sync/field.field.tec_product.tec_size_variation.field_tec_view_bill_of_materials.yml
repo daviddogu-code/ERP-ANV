@@ -33,7 +33,7 @@ settings:
     block_content: '0'
     draggableviews_demo: '0'
     eca_log: '0'
-    tec_order_eca_create_draft_excel_lover: '0'
+    tec_order_eca_create_draft_sales: '0'
     feeds_feed: '0'
     feeds_import_logs: '0'
     files: '0'

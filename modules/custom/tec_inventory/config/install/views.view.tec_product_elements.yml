@@ -1126,7 +1126,7 @@ display:
           exclude: false
           alter:
             alter_text: true
-            text: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\">\r\n<strong><a href=\"/admin/content/tec_product/add/tec_color_variation?edit[field_tec_product][widget][0][target_id]={{ id_1 }}&destination=/tec_product/{{ id_1 }}\">+ Variation</a></strong>\r\n</div></div>"
+            text: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\">\r\n<strong><a href=\"/admin/content/tec_product/add/tec_color_variation?product_id={{ id_1 }}&destination=/tec_product/{{ id_1 }}\">+ Variation</a></strong>\r\n</div></div>"
             make_link: false
             path: ''
             absolute: false
@@ -1325,7 +1325,7 @@ display:
           exclude: false
           alter:
             alter_text: true
-            text: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\">\r\n<strong><a href=\"/admin/content/tec_product/add/tec_size_variation?edit[field_tec_color_variation][widget][0][target_id]={{ id_1 }}&destination=/tec_product/{{ id }}#{{ id_1 }}\">+ Size</a></strong>\r\n</div></div>"
+            text: "<div class=\"text-align-right\">\r\n<div class=\"btn-default\">\r\n<strong><a href=\"/admin/content/tec_product/add/tec_size_variation?color_id={{ id_1 }}&destination=/tec_product/{{ id }}#{{ id_1 }}\">+ Size</a></strong>\r\n</div></div>"
             make_link: false
             path: ''
             absolute: false

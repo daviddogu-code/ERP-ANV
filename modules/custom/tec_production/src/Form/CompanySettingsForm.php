@@ -11,8 +11,8 @@ use Drupal\tec_production\Vat;
  * The handful of settings that belong to the company and not to one screen.
  *
  * Two things live here so far. The VAT rate, which is one number for the whole
- * company and was previously only reachable from a command line. And the five
- * home page icons, whose pairing with the screens they open was in the same
+ * company and was previously only reachable from a command line. And the home
+ * page icons, whose pairing with the screens they open was in the same
  * place and just as unreachable.
  *
  * The capacity settings deliberately stayed on the queue screen. They are read

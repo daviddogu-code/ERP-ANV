@@ -374,6 +374,20 @@ function fichasDeEjemplo(): array {
   // Los materiales y las unidades son terminos de taxonomia, no entidades del
   // ERP, asi que se quedaban fuera. Y el material es el dato que mas se edita.
   $terminos = $gestor->getStorage('taxonomy_term');
+
+  // La pantalla de ordenar los productos de una marca. Es un formulario nuestro
+  // y no una vista, asi que no la recoge nadie mas: la lista de pantallas de
+  // vista se hace sola, y esta se quedaria fuera para siempre.
+  $marcas = $terminos->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('vid', 'tec_brands')
+    ->sort('tid', 'DESC')
+    ->range(0, 1)
+    ->execute();
+  if ($marcas) {
+    $rutas[] = '/taxonomy/term/' . reset($marcas) . '/organize';
+  }
+
   foreach (array_keys($gestor->getStorage('taxonomy_vocabulary')->loadMultiple()) as $vocabulario) {
     $ids = $terminos->getQuery()
       ->accessCheck(FALSE)

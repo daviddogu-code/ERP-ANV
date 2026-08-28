@@ -64,6 +64,21 @@ final class OrderNumber {
   ];
 
   /**
+   * What a number looks like once it has been handed out.
+   *
+   * The counter is padded to three digits and the year is two, so "KJ 26-001",
+   * "POLYTE 26-014" and "26-007" all match, and a name that is waiting for its
+   * number -- "Draft order for Kajenta" -- does not. The shape lives here
+   * because this is the class that builds it; asking "has this been numbered
+   * yet" anywhere else would mean writing the shape down twice.
+   *
+   * A title somebody typed by hand that happens to end in a year and three
+   * digits reads as numbered, and that is the safe way round: the worst it does
+   * is leave a name alone.
+   */
+  private const SHAPE = '/^(?:.+ )?\d{2}-\d{3,}$/';
+
+  /**
    * Whether orders of this kind get a number from here.
    */
   public static function handles(string $bundle): bool {
@@ -78,7 +93,105 @@ final class OrderNumber {
   }
 
   /**
+   * Hands an order the number it has earned, and says whether that changed it.
+   *
+   * The rule, since 19 August 2026: **an order earns its number the first time
+   * somebody saves it.** Until then it carries a name that says what it is --
+   * "Draft order for Kajenta" -- and costs nothing.
+   *
+   * It used to be numbered the moment it was created, and creating one is a
+   * single click on "+ Order" on a contact's card, which builds a shopping list:
+   * one empty line per size that customer could buy. Plenty of those clicks are
+   * a look rather than an order, and the ones nobody filled in are countable. Of
+   * the thirty-six orders on the site the day this changed, **sixteen had not a
+   * single quantity in them**, and each was holding a number of its contact's
+   * sequence for ever, because a number handed out is never given back. KJ's
+   * counter stood at 24 with ten of those numbers empty.
+   *
+   * Saving is the moment, rather than a button that says Confirm or the first
+   * quantity typed. There is a Checkout on every order and an Accounting
+   * verified, and nobody has ever pressed either -- all twenty-nine purchase
+   * orders had no status at all and all seven sales orders were still Open -- so
+   * a rule waiting on one of those would have numbered nothing. A first quantity
+   * was the other candidate and it is too clever: it names an order behind the
+   * owner's back while he is still typing, and it refuses to name the one he
+   * deliberately saves empty to come back to tomorrow. Pressing Save is the act
+   * that says "keep this", which is exactly what a number means.
+   *
+   * So who calls this is the whole design, and it is not a presave hook. Code
+   * saves orders for its own reasons all day -- an ECA attaching a contact, a
+   * status changing, a line being counted -- and none of that is a person
+   * keeping an order. It is called from the Save buttons that can mean it (see
+   * tec_production_form_alter()) and from the purchase list, whose "create the
+   * orders" button is the same act under another name.
+   *
+   * What it does **not** do is take a number back. An order emptied out to
+   * nothing keeps the number it earned: it may already be on a document somebody
+   * outside the company is holding, which is the whole reason the counter only
+   * ever climbs.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $order
+   *   The order. Its contact field is read for the short code, so it has to be
+   *   filled in by the time this is called -- which is why both ECA processes
+   *   attach the contact before their first save.
+   *
+   * @return bool
+   *   TRUE when the title was changed, so the caller knows it has something
+   *   worth saving.
+   */
+  public static function earn(EntityInterface $order): bool {
+    if (!self::handles($order->bundle()) || self::isNumber($order->label())) {
+      return FALSE;
+    }
+
+    $order->set('title', self::forOrder($order));
+
+    return TRUE;
+  }
+
+  /**
+   * Names an order that arrived with no name at all, and not with a number.
+   *
+   * A safety net rather than the usual path: both flag-driven processes name
+   * their own draft, and a name somebody typed is left alone. What this catches
+   * is code creating an order and leaving the title empty -- which used not to
+   * matter, because the next line of the presave hook numbered it. Now that the
+   * number waits for a Save, an order with an empty title would sit in the list
+   * as a blank line nobody can click on.
+   *
+   * The wording copies the two processes, down to the odd capital in "Draft
+   * Purchase order", so that a list of orders does not show two spellings of the
+   * same thing.
+   */
+  public static function provisional(EntityInterface $order): bool {
+    if (!self::handles($order->bundle()) || trim((string) $order->label()) !== '') {
+      return FALSE;
+    }
+
+    $what = $order->bundle() === 'tec_purchase_order' ? 'Draft Purchase order' : 'Draft order';
+    $field = self::CONTACT_FIELD[$order->bundle()];
+    $contact = $order->hasField($field) && !$order->get($field)->isEmpty()
+      ? $order->get($field)->entity
+      : NULL;
+
+    $order->set('title', $contact ? $what . ' for ' . $contact->label() : $what);
+
+    return TRUE;
+  }
+
+  /**
+   * Whether this name is a number this class has handed out.
+   */
+  public static function isNumber(?string $title): bool {
+    return (bool) preg_match(self::SHAPE, trim((string) $title));
+  }
+
+  /**
    * The name this order should carry.
+   *
+   * Asking spends a number, so this is called from earn() and nowhere else.
+   * Anything that only wants to know whether an order is numbered should ask
+   * isNumber().
    *
    * @param \Drupal\Core\Entity\EntityInterface $order
    *   The order. Its contact field is read for the short code, so it has to be

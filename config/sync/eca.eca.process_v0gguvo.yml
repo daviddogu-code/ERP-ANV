@@ -9,7 +9,7 @@ dependencies:
     - flag
 id: process_v0gguvo
 modeller: bpmn_io
-label: 'TEC Order: Excel lover checkout'
+label: 'TEC Order: Checkout'
 version: '1.0'
 weight: 10
 events:
@@ -29,7 +29,7 @@ conditions:
       negate: false
       case: false
       left: '[flag]'
-      right: tec_order_checkout_excel
+      right: tec_order_checkout
       operator: equal
       type: value
 gateways: {  }
@@ -76,8 +76,8 @@ actions:
     plugin: action_message_action
     label: 'Show a message'
     configuration:
-      replace_tokens: false
       message: |-
         <strong>Checkout successful.
         Further magic will happen here in the next release.</strong>
+      replace_tokens: false
     successors: {  }

@@ -5,7 +5,7 @@ dependencies:
   config:
     - eca.eca.process_v0gguvo
 id: process_v0gguvo
-label: 'TEC Order: Excel lover checkout'
+label: 'TEC Order: Checkout'
 tags:
   - untagged
 documentation: ''
@@ -13,7 +13,7 @@ filename: ''
 modeldata: |
   <?xml version="1.0" encoding="UTF-8"?>
   <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:qa="http://some-company/schema/bpmn/qa" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
-    <bpmn2:process id="Process_v0ggUVO" name="TEC Order: Excel lover checkout" isExecutable="true" camunda:versionTag="1.0">
+    <bpmn2:process id="Process_v0ggUVO" name="TEC Order: Checkout" isExecutable="true" camunda:versionTag="1.0">
       <bpmn2:startEvent id="Event_1y2gwcn" name="Flag&#10;" camunda:modelerTemplate="org.drupal.event.flag:flag">
         <bpmn2:extensionElements>
           <camunda:properties>
@@ -46,7 +46,7 @@ modeldata: |
             <camunda:string>equal</camunda:string>
           </camunda:field>
           <camunda:field name="right">
-            <camunda:string>tec_order_checkout_excel</camunda:string>
+            <camunda:string>tec_order_checkout</camunda:string>
           </camunda:field>
           <camunda:field name="type">
             <camunda:string>value</camunda:string>

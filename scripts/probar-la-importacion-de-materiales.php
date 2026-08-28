@@ -81,10 +81,10 @@ printf("      la plantilla trae %d columnas y %d filas de ejemplo\n", count($cab
 
 // Se marcan los nombres para poder distinguir despues lo que ha metido la prueba
 // de lo que ya hubiera, y no borrar nada que no sea suyo.
-$posicionNombre = array_search('Name', $cabecera, TRUE);
+$posicionNombre = array_search('Material name', $cabecera, TRUE);
 $posicionUnidad = array_search('Purchase UoM', $cabecera, TRUE);
 if ($posicionNombre === FALSE || $posicionUnidad === FALSE) {
-  print "      la plantilla no trae las columnas Name y Purchase UoM: algo va mal\n\n";
+  print "      la plantilla no trae las columnas Material name y Purchase UoM: algo va mal\n\n";
   return;
 }
 
@@ -398,7 +398,7 @@ printf("      fichas de importacion: %d\n", $fichas);
 
 print "\n" . str_repeat('=', 82) . "\n";
 if ($todoIgual && count($creados) === count($nombresEsperados) && !$inventada && !$trampaCreada && !$camposVacios && !$fallo) {
-  print " BIEN: importa los 20 campos, rechaza la basura y no deja rastro\n";
+  print " BIEN: importa los 21 campos, rechaza la basura y no deja rastro\n";
 }
 else {
   print " MIRAR: algo no ha salido como se esperaba, esta arriba\n";

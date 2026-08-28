@@ -5,3 +5,11 @@ tec_production.po_receive:
   base_route: entity.tec_order.canonical
   title: 'Receive'
   weight: 5
+
+tec_production.brand_products:
+  route_name: tec_production.brand_products
+  # Next to View and Edit on the term page, and only on brands: the route
+  # forbids every other vocabulary and Drupal hides the tabs it cannot reach.
+  base_route: entity.taxonomy_term.canonical
+  title: 'Organize products'
+  weight: 5

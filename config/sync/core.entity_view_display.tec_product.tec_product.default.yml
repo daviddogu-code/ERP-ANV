@@ -6,6 +6,7 @@ dependencies:
     - eck.eck_type.tec_product.tec_product
     - field.field.tec_product.tec_product.field_product_name
     - field.field.tec_product.tec_product.field_tec_brand
+    - field.field.tec_product.tec_product.field_tec_catalogue_position
     - field.field.tec_product.tec_product.field_tec_color_embed_vm
     - field.field.tec_product.tec_product.field_tec_color_variations
     - field.field.tec_product.tec_product.field_tec_create_color
@@ -1382,6 +1383,7 @@ content:
 hidden:
   changed: true
   field_product_name: true
+  field_tec_catalogue_position: true
   field_tec_color_embed_vm: true
   field_tec_product_material: true
   field_tec_product_type: true

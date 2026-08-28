@@ -8,6 +8,7 @@ log_tile_nid: 0
 report_tile_nid: 0
 stock_tile_nid: 0
 purchase_tile_nid: 0
+po_control_tile_nid: 0
 # Thailand's standard rate, as a percentage. Here rather than on each supplier
 # card so that the day it changes it is changed once. Which suppliers charge it
 # is a separate question, answered per contact -- see src/Vat.php.

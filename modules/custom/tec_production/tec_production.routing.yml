@@ -90,7 +90,7 @@ tec_production.purchase_queue:
   path: '/supplier-orders/queue'
   defaults:
     _form: '\Drupal\tec_production\Form\PurchaseQueueForm'
-    _title: 'Purchase Control'
+    _title: 'PO CONTROL'
   requirements:
     _permission: 'access tec purchase queue'
 
@@ -117,6 +117,22 @@ tec_production.po_invoice:
     parameters:
       tec_order:
         type: 'entity:tec_order'
+
+# Hangs off the brand page and not off /b, because the brand it orders is the
+# one you are looking at. The custom check is what limits it to brands: on any
+# other vocabulary the route is forbidden and Drupal then hides the tab.
+tec_production.brand_products:
+  path: '/taxonomy/term/{taxonomy_term}/organize'
+  defaults:
+    _form: '\Drupal\tec_production\Form\BrandProductOrderForm'
+    _title: 'Organize products'
+  requirements:
+    _custom_access: '\Drupal\tec_production\Form\BrandProductOrderForm::access'
+    taxonomy_term: \d+
+  options:
+    parameters:
+      taxonomy_term:
+        type: 'entity:taxonomy_term'
 
 tec_production.stock_adjust:
   path: '/stock/{taxonomy_term}/adjust'

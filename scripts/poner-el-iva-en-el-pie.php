@@ -13,6 +13,12 @@
  * attachment exactly as it is: the sales side of VAT is a different question
  * and has not been answered yet.
  *
+ * Written 16 August 2026. **On 19 August the attachment was deleted** -- sales
+ * moved its own foot inside the table so the piece count could sit under the Qty
+ * column, and nothing was left using it. Step 1 below is therefore a no-op now
+ * and says so rather than quietly building half an attachment back out of a
+ * reference to a key that is not there.
+ *
  * Run: drush scr scripts/poner-el-iva-en-el-pie.php
  */
 
@@ -34,17 +40,22 @@ if (!$vista) {
 $displays = $vista->get('display');
 
 // 1. The shared attachment stops attaching to the purchase screens.
-$attachment = &$displays['attachment_1']['display_options']['displays'];
-$quitados = [];
-foreach (PANTALLAS_DE_COMPRA as $pantalla) {
-  if (isset($attachment[$pantalla])) {
-    unset($attachment[$pantalla]);
-    $quitados[] = $pantalla;
-  }
+if (!isset($displays['attachment_1'])) {
+  print "  attachment_1 ya no existe: se fue el 19 de agosto y no le atiende a nadie.\n";
 }
-unset($attachment);
-printf("  attachment_1 deja de poner su total en: %s\n", $quitados ? implode(', ', $quitados) : 'nada, ya estaba fuera');
-printf("  y lo sigue poniendo en: %s\n", implode(', ', array_keys($displays['attachment_1']['display_options']['displays'])));
+else {
+  $attachment = &$displays['attachment_1']['display_options']['displays'];
+  $quitados = [];
+  foreach (PANTALLAS_DE_COMPRA as $pantalla) {
+    if (isset($attachment[$pantalla])) {
+      unset($attachment[$pantalla]);
+      $quitados[] = $pantalla;
+    }
+  }
+  unset($attachment);
+  printf("  attachment_1 deja de poner su total en: %s\n", $quitados ? implode(', ', $quitados) : 'nada, ya estaba fuera');
+  printf("  y lo sigue poniendo en: %s\n", implode(', ', array_keys($displays['attachment_1']['display_options']['displays'])));
+}
 
 // 2. The purchase screens get their own foot.
 foreach (PANTALLAS_DE_COMPRA as $pantalla) {
@@ -87,8 +98,10 @@ foreach (PANTALLAS_DE_COMPRA as $pantalla) {
   );
 }
 foreach (['block_1', 'page_4'] as $pantalla) {
-  printf("  %-8s (ventas, no se toca)   attachment_1 le atiende: %s\n",
+  printf("  %-8s (ventas)   attachment_1 le atiende: %s\n",
     $pantalla,
-    isset($displays['attachment_1']['display_options']['displays'][$pantalla]) ? 'si' : 'NO, y deberia'
+    isset($displays['attachment_1']['display_options']['displays'][$pantalla])
+      ? 'si'
+      : 'no, y bien: desde el 19 de agosto su pie es una fila de su propia tabla'
   );
 }

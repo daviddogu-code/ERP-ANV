@@ -3,7 +3,7 @@
 # strip out of the flow and drops it over the sticky header, and the block that
 # prints it is limited to the administrator role. See README, "Receiving".
 tec_production.purchase_queue:
-  title: 'Purchase Control'
+  title: 'PO CONTROL'
   description: 'Orders placed and not yet arrived: where they are, when they were promised and how long they have taken.'
   route_name: tec_production.purchase_queue
   menu_name: main

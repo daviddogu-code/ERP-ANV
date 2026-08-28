@@ -1079,7 +1079,7 @@ content:
     third_party_settings: {  }
     weight: 10
     region: blb_region_col_1
-  flag_tec_order_checkout_excel:
+  flag_tec_order_checkout:
     settings: {  }
     third_party_settings: {  }
     weight: 9

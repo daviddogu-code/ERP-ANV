@@ -6,6 +6,12 @@ dependencies:
     - eck.eck_type.tec_product.tec_color_variation
     - eck.eck_type.tec_product.tec_size_variation
     - field.storage.tec_product.field_tec_color_variation
+  module:
+    - epp
+third_party_settings:
+  epp:
+    value: '[current-page:query:color_id]'
+    on_update: 0
 id: tec_product.tec_size_variation.field_tec_color_variation
 field_name: field_tec_color_variation
 entity_type: tec_product

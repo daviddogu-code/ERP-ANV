@@ -84,9 +84,18 @@ if (!isset($opciones['fields'][NUMERO])) {
 
 // El titulo del bloque. Va el ultimo de la lista de campos porque un campo de texto
 // solo puede nombrar a los que vienen antes que el.
+//
+// Lleva dos botones. El de crear un producto en esa marca, y desde el 19 de agosto
+// de 2026 el de ordenar los productos de esa marca: el orden es de la marca, pero
+// quien lo quiere cambiar suele estar mirando un cliente, y los dos vuelven aqui al
+// guardar. Este es el mismo texto que escribe
+// scripts/las-pantallas-siguen-el-orden-de-la-marca.php, y las dos recetas tienen
+// que decir lo mismo o la que se lance despues borrara el boton de la otra.
 $escrito = '<a href="/taxonomy/term/{{ ' . NUMERO . ' }}">{{ ' . MARCA . ' }}</a>'
   . ' <span class="btn-default"><strong><a href="/admin/content/tec_product/add/tec_product'
-  . '?brand_id={{ ' . NUMERO . ' }}&destination=/tec_crm/{{ raw_arguments.id }}">+ Product</a></strong></span>';
+  . '?brand_id={{ ' . NUMERO . ' }}&destination=/tec_crm/{{ raw_arguments.id }}">+ Product</a></strong></span>'
+  . ' <span class="btn-default"><strong><a href="/taxonomy/term/{{ ' . NUMERO . ' }}/organize'
+  . '?destination=/tec_crm/{{ raw_arguments.id }}">Organize</a></strong></span>';
 
 if (($opciones['fields'][TITULO]['alter']['text'] ?? '') !== $escrito) {
   unset($opciones['fields'][TITULO]);

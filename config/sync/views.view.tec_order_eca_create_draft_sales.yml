@@ -1,4 +1,4 @@
-uuid: 749d265e-ee7b-406a-8d08-ff7b6b8fd676
+uuid: d2ee2c06-65b4-4eca-993b-f248e4bef6fe
 langcode: en
 status: true
 dependencies:
@@ -8,8 +8,8 @@ dependencies:
     - better_exposed_filters
     - eck
     - taxonomy
-id: tec_order_eca_create_draft_excel_lover
-label: 'ECA Order: Create draft order - Excel lover style ECA Model'
+id: tec_order_eca_create_draft_sales
+label: 'ECA Order: Create draft sales order'
 module: views
 description: ''
 tag: ''

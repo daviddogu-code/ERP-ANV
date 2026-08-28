@@ -93,23 +93,40 @@ class StockControlForm extends FormBase {
       'after_queue_uop' => ['data' => $this->t('Stock after queue (UoP)'), 'class' => ['tec-stock__h-num']],
       'required' => ['data' => $this->t('∑ Required (UoU)'), 'class' => ['tec-stock__h-num']],
     ];
+    // Un pedido es UNA columna, y su cabecera dos lineas: arriba el numero,
+    // abajo la casilla que marca la columna entera, puesta justo encima de las
+    // de las filas. Fueron dos columnas hasta el 19 de agosto de 2026, casilla
+    // y cantidad por separado, y con diez pedidos en la cola eso eran veinte
+    // columnas que no se podian leer: la cantidad se pegaba al borde derecho de
+    // su celda y acababa junto a la casilla del pedido SIGUIENTE, a un dedo de
+    // distancia, mientras la suya quedaba a tres. Se leia «30 ☐» cuando la
+    // verdad era «☐ 30».
     foreach ($orders as $order) {
       $oid = $order['id'];
-      $header['chk_' . $oid] = [
-        'data' => [
-          '#markup' => '<input type="checkbox" class="tec-stock__master" data-order="' . $oid . '" title="'
-            . $this->t('Toggle the whole @order column', ['@order' => Html::escape($order['label'])]) . '">',
-          // #markup is XSS-filtered with Xss::filterAdmin(), which strips
-          // <input>; allow it explicitly or the header checkbox vanishes.
-          '#allowed_tags' => ['input'],
-        ],
-        'class' => ['tec-stock__h-chk'],
-      ];
       $header['ord_' . $oid] = [
         'data' => [
-          '#type' => 'link',
-          '#title' => $order['label'],
-          '#url' => Url::fromRoute('entity.tec_order.canonical', ['tec_order' => $oid]),
+          'label' => [
+            '#type' => 'link',
+            '#title' => $order['label'],
+            '#url' => Url::fromRoute('entity.tec_order.canonical', ['tec_order' => $oid]),
+            '#attributes' => [
+              'class' => ['tec-stock__ord-link'],
+              // El nombre va recortado para que un pedido de nombre largo no
+              // ensanche su columna y empuje a los demas fuera de la pantalla.
+              'title' => $order['label'],
+            ],
+          ],
+          'master' => [
+            // El hueco de detras mide lo que mide una cantidad, y es lo que
+            // deja esta casilla en la misma vertical que las de abajo.
+            '#markup' => '<span class="tec-stock__pair">'
+              . '<input type="checkbox" class="tec-stock__master" data-order="' . $oid . '" title="'
+              . $this->t('Toggle the whole @order column', ['@order' => Html::escape($order['label'])]) . '">'
+              . '<span class="tec-stock__pair-gap"></span></span>',
+            // #markup is XSS-filtered with Xss::filterAdmin(), which strips
+            // <input>; allow it explicitly or the header checkbox vanishes.
+            '#allowed_tags' => ['input', 'span'],
+          ],
         ],
         'class' => ['tec-stock__h-ord'],
       ];
@@ -211,31 +228,48 @@ class StockControlForm extends FormBase {
           '#wrapper_attributes' => ['class' => ['tec-stock__c-sup']],
         ];
 
-      // The number, and then the orders it is waiting on. Whoever watches this
-      // column is the same person who signs for the delivery, so the order they
-      // have to open is right here rather than three screens away.
+      // The number, and under it the orders it is waiting on. Whoever watches
+      // this column is the same person who signs for the delivery, so the order
+      // they have to open is right here rather than three screens away.
+      //
+      // Under it and not beside it, since 19 August 2026. Beside it the links
+      // pushed the figure away from its own heading -- the cell is right
+      // aligned, so a run of "45 PO PO PO" puts the 45 at the far left and the
+      // heading over the last link -- and a material waiting on six orders made
+      // this one cell wider than three columns. Capping the cell did not work
+      // either: the table is sized at max-content, so the column takes whatever
+      // width the content asks for and a max-width only clips the box, leaving
+      // the text to spill over the two columns to the right. It was printing
+      // -561.99 on top of 636.99. The width lives on the block of links now, so
+      // the column is as wide as that block and the links wrap inside it.
       $row['on_order'] = [
-        '#wrapper_attributes' => ['class' => ['tec-stock__c-num']],
+        '#wrapper_attributes' => ['class' => ['tec-stock__c-num', 'tec-stock__c-onorder']],
         'quantity' => [
-          '#markup' => '<span class="' . ($incoming > 0 ? '' : 'tec-stock__muted') . '"'
+          '#markup' => '<span class="tec-stock__onorder-num' . ($incoming > 0 ? '' : ' tec-stock__muted') . '"'
             . ($uop_name !== '' ? ' title="' . Html::escape($uop_name) . '"' : '') . '>'
             . $this->fmt($incoming) . '</span>',
         ],
       ];
-      foreach ($waiting_on as $oid => $entry) {
-        $row['on_order']['po_' . $oid] = [
-          '#type' => 'link',
-          '#title' => $entry['order']->label(),
-          '#url' => Url::fromRoute('tec_production.po_receive', ['tec_order' => $oid]),
-          '#attributes' => [
-            'class' => ['tec-stock__receive'],
-            'title' => $this->t('Receive against purchase order @number: @quantity @unit still to come', [
-              '@number' => $entry['order']->label(),
-              '@quantity' => $this->fmt($entry['quantity']),
-              '@unit' => $uop_name !== '' ? $uop_name : $this->t('purchase units'),
-            ]),
-          ],
+      if ($waiting_on) {
+        $row['on_order']['waiting'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['tec-stock__waiting']],
         ];
+        foreach ($waiting_on as $oid => $entry) {
+          $row['on_order']['waiting']['po_' . $oid] = [
+            '#type' => 'link',
+            '#title' => $entry['order']->label(),
+            '#url' => Url::fromRoute('tec_production.po_receive', ['tec_order' => $oid]),
+            '#attributes' => [
+              'class' => ['tec-stock__receive'],
+              'title' => $this->t('Receive against purchase order @number: @quantity @unit still to come', [
+                '@number' => $entry['order']->label(),
+                '@quantity' => $this->fmt($entry['quantity']),
+                '@unit' => $uop_name !== '' ? $uop_name : $this->t('purchase units'),
+              ]),
+            ],
+          ];
+        }
       }
 
       $row['after_queue_uop'] = [
@@ -256,22 +290,29 @@ class StockControlForm extends FormBase {
         $oid = $order['id'];
         $qty = (float) ($per_order[$oid] ?? 0.0);
 
-        $row['chk_' . $oid] = [
-          '#type' => 'checkbox',
-          '#default_value' => !empty($checks[$oid][$tid]) ? 1 : 0,
-          '#attributes' => [
-            'class' => ['tec-stock__chk'],
-            'data-order' => (string) $oid,
+        // Casilla y cantidad en la MISMA celda y pegadas, con el hueco a la
+        // izquierda: asi lo que separa a un pedido del siguiente es aire, y lo
+        // que junta a una casilla con su cantidad es que se tocan.
+        $row['ord_' . $oid] = [
+          '#wrapper_attributes' => ['class' => ['tec-stock__c-ord']],
+          'pair' => [
+            '#type' => 'container',
+            '#attributes' => ['class' => ['tec-stock__pair']],
+            'chk' => [
+              '#type' => 'checkbox',
+              '#default_value' => !empty($checks[$oid][$tid]) ? 1 : 0,
+              '#attributes' => [
+                'class' => ['tec-stock__chk'],
+                'data-order' => (string) $oid,
+              ],
+            ],
+            'qty' => [
+              '#markup' => '<span class="tec-stock__qty' . ($qty > 0 ? ' has-qty' : ' is-zero') . '"'
+                . ' data-qty="' . $qty . '" data-order="' . $oid . '"'
+                . ($uou_name !== '' ? ' title="' . Html::escape($uou_name) . '"' : '') . '>'
+                . $this->fmt($qty) . '</span>',
+            ],
           ],
-          '#wrapper_attributes' => ['class' => ['tec-stock__c-chk']],
-        ];
-
-        $row['qty_' . $oid] = [
-          '#markup' => '<span class="tec-stock__qty' . ($qty > 0 ? ' has-qty' : ' is-zero') . '"'
-            . ' data-qty="' . $qty . '" data-order="' . $oid . '"'
-            . ($uou_name !== '' ? ' title="' . Html::escape($uou_name) . '"' : '') . '>'
-            . $this->fmt($qty) . '</span>',
-          '#wrapper_attributes' => ['class' => ['tec-stock__c-qty']],
         ];
       }
 

@@ -133,9 +133,12 @@
   border-radius: 4px;
 }
 
-/* Numeric columns. */
+/* Numeric columns. The line on the left is there for the same reason a
+   spreadsheet has gridlines: with twenty-odd columns on screen, a column
+   nobody can see the edge of is a column nobody can follow down. */
 .tec-stock__c-num,
 .tec-stock__h-num {
+  border-left: 1px solid #ededed;
   text-align: right;
   min-width: 5.2rem;
 }
@@ -144,6 +147,32 @@
   max-width: 10rem;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Ordered (UoP): the figure on one line and, under it, one link per purchase
+   order it is waiting on.
+   The width is declared on the block of links and NOT as a max-width on the
+   cell: the table is sized at max-content, so a cell always gets the width its
+   content asks for and a max-width does nothing but clip the box while the text
+   spills over the columns to the right. A fixed width on a block inside the
+   cell is what the column measures itself against, so the links wrap instead. */
+.tec-stock__table .tec-stock__c-onorder {
+  white-space: normal;
+}
+
+/* On its own line, so the figure lands under its own heading instead of being
+   pushed left by the links. */
+.tec-stock__onorder-num {
+  display: block;
+}
+
+.tec-stock__waiting {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.1rem 0.4rem;
+  width: 12rem;
+  margin-top: 0.1rem;
 }
 
 /* Stock number is read-only on the board. */
@@ -186,39 +215,89 @@
   color: #b5b5b5;
 }
 
-/* The purchase orders an Ordered figure is waiting on. Small and after the
-   number, so the column still reads as a column of numbers. */
+/* The purchase orders an Ordered figure is waiting on. Small and under the
+   number, so the column still reads as a column of numbers. No margin of its
+   own: the block above spaces them with a gap, and a margin on the first link
+   of a wrapped line would push that line off the right edge. */
 .tec-stock__receive {
-  margin-left: 0.35rem;
   font-size: 0.72rem;
   white-space: nowrap;
 }
 
-/* Per-order pair: narrow checkbox column + qty column. */
-.tec-stock__table .tec-stock__h-chk,
-.tec-stock__table .tec-stock__c-chk {
-  border-left: 2px solid #d8d8d8;
-  width: 26px;
-  min-width: 26px;
-  text-align: center;
-  padding-left: 0.25rem;
-  padding-right: 0.15rem;
-}
-
+/* One column per order: the checkbox and the quantity share a cell, touching,
+   with the slack on the left. That is the whole point of the layout. When the
+   two lived in columns of their own a short quantity ended up a few pixels from
+   the NEXT order's checkbox and three centimetres from its own, so the board
+   read one pairing while the header showed the other. Proximity wins over any
+   separator line, so the fix is proximity: what separates two orders is empty
+   space, and what joins a checkbox to its quantity is that they touch. */
 .tec-stock__table .tec-stock__h-ord,
-.tec-stock__table .tec-stock__c-qty {
+.tec-stock__table .tec-stock__c-ord {
+  border-left: 1px solid #dcdcdc;
   text-align: right;
-  min-width: 3.6rem;
-  padding-right: 0.6rem;
+  padding-right: 0.5rem;
 }
 
-.tec-stock__h-ord a {
+.tec-stock__pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Drupal wraps a checkbox in the table in its own form-item div, and Bootstrap
+   then positions the box with a trick that has to be undone here: .form-check
+   reserves 1.5em of padding on the left and the input floats back into it with a
+   negative margin. Inside a flex row that leaves the checkbox 1.5em adrift from
+   its own quantity, which is the very distance this layout exists to close --
+   and the float takes the input out of the wrapper's height on the way.
+
+   Two classes deep on purpose, so these win over Bootstrap's own without an
+   !important: module CSS loads before theme CSS, so a tie goes to the theme. */
+.tec-stock__pair .form-check,
+.tec-stock__pair .js-form-item,
+.tec-stock__pair .form-item {
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.tec-stock__pair .form-check .form-check-input,
+.tec-stock__pair .tec-stock__chk {
+  float: none;
+  margin: 0;
+}
+
+/* Fixed width so every quantity in a column ends on the same vertical, which
+   is what puts every checkbox on the same vertical too -- including the master
+   one in the header, whose gap span is this same width. Tabular figures so a 1
+   is as wide as a 7 and the digits line up as well. */
+.tec-stock__qty,
+.tec-stock__pair-gap {
+  display: inline-block;
+  min-width: 4.6rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The order number, capped: without this a "Draft order for Such and Such"
+   makes its column four times as wide as the rest and pushes the orders after
+   it off the screen. The full name is in the title attribute. */
+.tec-stock__ord-link {
+  display: block;
+  max-width: 8rem;
+  /* Pushed right so the number sits over its own column even when the cell
+     turns out wider than the cap. */
+  margin: 0 0 0.15rem auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-decoration: none;
   font-weight: 600;
   color: #222;
 }
 
-.tec-stock__h-ord a:hover {
+.tec-stock__ord-link:hover {
   color: #0550ae;
 }
 
@@ -232,8 +311,8 @@
   vertical-align: middle;
 }
 
-/* Checked pair looks "done": fade the qty. */
-.tec-stock__c-qty.is-checked .tec-stock__qty {
+/* Checked looks "done": fade the qty. */
+.tec-stock__c-ord.is-checked .tec-stock__qty {
   color: #9aa5b1;
   text-decoration: line-through;
   font-weight: 400;

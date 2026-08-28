@@ -175,4 +175,4 @@ hidden:
   field_tec_supplier_invoice: true
   field_tec_vat_rate: true
   flag_tec_order_accounting_verified: true
-  flag_tec_order_checkout_excel: true
+  flag_tec_order_checkout: true

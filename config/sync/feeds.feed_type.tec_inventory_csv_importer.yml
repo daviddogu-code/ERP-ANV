@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - core.base_field_override.taxonomy_term.tec_inventory.name
+    - core.base_field_override.taxonomy_term.tec_inventory.status
     - field.field.taxonomy_term.tec_inventory.field_tec_colors
     - field.field.taxonomy_term.tec_inventory.field_tec_cost
     - field.field.taxonomy_term.tec_inventory.field_tec_importer_item_id
@@ -78,8 +79,8 @@ processor_configuration:
   owner_id: 0
 custom_sources:
   name:
-    value: Name
-    label: Name
+    value: 'Material name'
+    label: 'Material name'
     machine_name: name
     type: csv
   material_type:
@@ -93,8 +94,8 @@ custom_sources:
     machine_name: supplier
     type: csv
   purchase_cost:
-    value: 'Purchase Cost'
-    label: 'Purchase Cost'
+    value: 'Purchase Cost (No VAT)'
+    label: 'Purchase Cost (No VAT)'
     machine_name: purchase_cost
     type: csv
   purchase_uom:
@@ -128,8 +129,8 @@ custom_sources:
     machine_name: description
     type: csv
   traceability:
-    value: Traceability
-    label: Traceability
+    value: Traceable
+    label: Traceable
     machine_name: traceability
     type: csv
   colors:
@@ -143,8 +144,8 @@ custom_sources:
     machine_name: internal_sku
     type: csv
   importer_item_id:
-    value: 'Importer Item ID'
-    label: 'Importer Item ID'
+    value: 'Importer item ID'
+    label: 'Importer item ID'
     machine_name: importer_item_id
     type: csv
   lead_time_days:
@@ -153,18 +154,18 @@ custom_sources:
     machine_name: lead_time_days
     type: csv
   moq_quantity:
-    value: 'Minimum Order Quantity (MOQ)'
-    label: 'Minimum Order Quantity (MOQ)'
+    value: 'MOQ (UoP)'
+    label: 'MOQ (UoP)'
     machine_name: moq_quantity
     type: csv
   reorder_point:
-    value: 'Reorder Point (ROP)'
-    label: 'Reorder Point (ROP)'
+    value: 'Reorder Point (ROP) (UoS)'
+    label: 'Reorder Point (ROP) (UoS)'
     machine_name: reorder_point
     type: csv
   safety_stock:
-    value: 'Safety Stock Qty'
-    label: 'Safety Stock Qty'
+    value: 'Safety Stock Qty (UoS)'
+    label: 'Safety Stock Qty (UoS)'
     machine_name: safety_stock
     type: csv
   scrap_margin:
@@ -176,6 +177,11 @@ custom_sources:
     value: 'Volume per Purchase UoM (CBM)'
     label: 'Volume per Purchase UoM (CBM)'
     machine_name: volume_cbm
+    type: csv
+  active:
+    value: Active
+    label: Active
+    machine_name: active
     type: csv
 mappings:
   -
@@ -322,5 +328,11 @@ mappings:
     target: field_tec_volume_cbm
     map:
       value: volume_cbm
+    settings:
+      language: null
+  -
+    target: status
+    map:
+      value: active
     settings:
       language: null

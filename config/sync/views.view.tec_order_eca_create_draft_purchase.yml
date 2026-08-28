@@ -1,4 +1,4 @@
-uuid: 6eb6db92-a21c-4664-b4cd-b327195e7562
+uuid: da2543fc-c0f1-4d93-ac3a-889b0121c3fe
 langcode: en
 status: true
 dependencies:
@@ -7,8 +7,8 @@ dependencies:
   module:
     - eck
     - taxonomy
-id: tec_order_eca_create_draft_po_excel_lover
-label: 'ECA Order: Create draft purchase order - Excel lover style ECA Model'
+id: tec_order_eca_create_draft_purchase
+label: 'ECA Order: Create draft purchase order'
 module: views
 description: ''
 tag: ''

@@ -5,15 +5,15 @@
  * El pedido de un clic sale de las marcas del cliente, no del cliente pegado a
  * cada producto.
  *
- *   php vendor\bin\drush.php scr scripts/el-excel-lover-mira-las-marcas.php
+ *   php vendor\bin\drush.php scr scripts/el-boton-de-pedido-mira-las-marcas.php
  *
  * QUE ES ESTO.
  *
- * En la ficha de un cliente hay una bandera, «Excel lover», que crea de golpe un
+ * En la ficha de un cliente hay una bandera, «+ Order», que crea de golpe un
  * borrador de pedido con una linea por cada talla de cada producto de ese
  * cliente. Es la puerta por la que entran los pedidos de venta, y por dentro son
  * dos piezas: una ECA que la bandera dispara, y una vista que la ECA consulta por
- * su nombre -`tec_order_eca_create_draft_excel_lover`, pantalla `default`- pasando
+ * su nombre -`tec_order_eca_create_draft_sales`, pantalla `default`- pasando
  * el numero del cliente.
  *
  * Esa vista contestaba «las tallas de los productos cuyo cliente es este»,
@@ -47,7 +47,7 @@
 
 use Drupal\views\Views;
 
-const VISTA = 'tec_order_eca_create_draft_excel_lover';
+const VISTA = 'tec_order_eca_create_draft_sales';
 const PANTALLA = 'default';
 
 $gestor = \Drupal::entityTypeManager();
@@ -60,7 +60,7 @@ $contactos = $gestor->getStorage('tec_crm');
 $problemas = 0;
 $creadas = [];
 
-// Todo lo que monta esta prueba se llama «PRUEBA excel lover algo», y lo primero
+// Todo lo que monta esta prueba se llama «PRUEBA boton de pedido algo», y lo primero
 // que hace es barrer lo que lleve ese nombre: si una vez se murio a medias, la de
 // hoy empieza limpia en vez de acumular clientes de mentira.
 //
@@ -72,7 +72,7 @@ $creadas = [];
 // otra prueba necesitaba. El prefijo largo hace imposible volver a confundirlos, y
 // que siga empezando por PRUEBA es a proposito: asi la escoba de la casa recoge
 // tambien lo de esta prueba si algun dia hace falta.
-const RASTRO = 'PRUEBA excel lover';
+const RASTRO = 'PRUEBA boton de pedido';
 
 $barrer = function () use ($gestor, $terminos, $productos, $contactos): int {
   $barridas = 0;
@@ -304,7 +304,7 @@ print str_repeat('-', 70) . "\n";
 // misma que el usuario pulsa en la ficha, y se mira que sale por el otro lado. Se
 // hace con los dos clientes: el de siempre prueba que el camino de antes sigue
 // entero, y el otro que el nuevo llega hasta el final.
-$bandera = $gestor->getStorage('flag')->load('tec_draft_order_excel_lover');
+$bandera = $gestor->getStorage('flag')->load('tec_order_draft_sales');
 $pedidos = $gestor->getStorage('tec_order');
 
 /**

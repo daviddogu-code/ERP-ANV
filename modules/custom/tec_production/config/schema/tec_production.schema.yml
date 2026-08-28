@@ -40,6 +40,9 @@ tec_production.settings:
     purchase_tile_nid:
       type: integer
       label: 'Node of the icon that opens the purchase list'
+    po_control_tile_nid:
+      type: integer
+      label: 'Node of the icon that opens PO CONTROL'
 
     # The rate, once, for the whole company. Which suppliers charge it is a
     # separate question answered on each contact card -- see src/Vat.php.
