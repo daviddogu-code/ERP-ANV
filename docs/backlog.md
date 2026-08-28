@@ -4,7 +4,7 @@
 > Escrito en español porque el lector principal es el dueño del proyecto.
 > Las otras notas de `docs/` están en inglés y son documentación técnica; esta no.
 >
-> Última actualización: 2026-08-28 (tarde).
+> Última actualización: 2026-08-28 (noche).
 
 ## Cómo usar este archivo
 
@@ -13,12 +13,127 @@ de Windows (`C:\laragon\www\tec\docs\backlog.md`) o desde el móvil en GitHub, e
 `github.com/daviddogu-code/ERP-ANV`, carpeta `docs`.
 
 **Está ordenado de más urgente a menos.** Lo de arriba es lo que hay que mirar hoy; lo de
-abajo puede esperar meses sin que pase nada. Si abres el archivo agobiado, quédate solo con
-las dos primeras secciones y cierra.
+abajo puede esperar meses sin que pase nada. Si abres el archivo agobiado, quédate con
+**quién opera** y las dos primeras secciones, y cierra.
 
 Cuando una tarea se termina, se mueve a la sección "Hecho" con la fecha y una línea
 explicando por qué se hizo. Esa explicación es lo que evita rehacer trabajo o deshacer
 por error algo que estaba puesto a propósito.
+
+---
+
+## Quién opera y adónde va el trabajo
+
+Fijado el 28 de agosto de 2026. **Nunca se ha usado el ERP en el negocio.** Corre en Google
+Sheets. El ERP está publicado; las pantallas copian esas hojas. Caduca el plan de agosto de
+«Lukpla solo revisa y luego entran tres empleados» (secciones 1 y 3, tachadas).
+
+### Quién es quién
+
+- **David:** dueño. Ya no está en la fábrica a diario (hace ~3 meses). Va **una vez por
+  semana**. Sigue siendo el hombre orquesta y está saturado; el destino es **CEO** y más
+  adelante casi fuera, porque **opera, además de este, otros negocios**. Las Google Sheets las
+  **diseñó él**, pero **no las usa cada día** y no recuerda toda la lógica. **Las ventas las
+  hace todas él:** desde que encuentra al cliente (o el cliente le encuentra) **hasta que
+  cierra**. Hoy eso es **sin SOPs ni protocolos, totalmente manual**. El supervisor **no
+  vendió nunca**. El customer service por WhatsApp y email **le satura**.
+
+- **Lukpla:** dueña del negocio (socia). Está en la fábrica todos los días. Es parte de la
+  empresa; no se va. Opera otras partes del negocio que no están en el ERP y además hace todo
+  el trabajo del supervisor que se fue, con la ayuda de un familiar. Ese familiar ayuda de
+  forma temporal. Lukpla y su familiar, que se llama **Noi**, trabajan con las Google Sheets
+  cada día. Lukpla es quien tiene que **testear el ERP**. Puede usar cualquier cuenta del ERP
+  (`executive`, `manager`, `supervisor`, etc.). Si, cuando el ERP esté del todo desarrollado,
+  siguen existiendo tareas de supervisor, se contratará a alguien para esas tareas y esa
+  persona usará la cuenta `supervisor`. El rol Drupal de la cuenta `lukpla` (*tec_supervisor*)
+  no es el puesto de supervisor que no se quiere volver a montar.
+
+- **El supervisor que se fue:** 1,5 años. Entonces David **sí estaba** en la fábrica y lo
+  formó a fondo. Lo trajo **de otro país** para bajar el riesgo de que usara la información
+  confidencial para competir. Se fue igual: **pérdida de tiempo y de dinero**; formar a
+  alguien así es largo y caro. **No hacía ventas** (ni buscar cliente ni cerrar). Recogía
+  **las cantidades de los pedidos** —sobre todo **re-orders** de quien David ya había
+  cerrado— y ejecutaba **los procesos que le correspondían** (proforma, BoM, stock, PO,
+  recepción, packing, facturas, etc.). El puesto **tal como era** (un humano que unía esos
+  procesos, con acceso a casi todo) **no se vuelve a montar**. Lo que quede de “supervisor”
+  **después** del ERP, si queda, es un puesto **más estrecho**, con esa cuenta, no otra
+  formación de 1,5 años sobre el negocio entero.
+
+- **Planta (~55 personas):** ya empaquetan. El recuento de stock **ya no es solo de oficina**:
+  hay un sistema para que **empleados de planta** cuenten e introduzcan datos en sheets (antes
+  no podían por el **inglés / alfabeto**). En el ERP existe el **production log**.
+
+### Qué hacía el supervisor
+
+Nunca el cierre de una venta. Partía de cantidades de pedidos —re-orders— de clientes ya
+cerrados por David.
+
+- Recoger **las cantidades de los pedidos** (WhatsApp y email) y seguir los procesos de
+  fábrica que de ahí salen
+- **Proformas**, envío al cliente; **mockups** si había producto o color nuevo
+- **BoMs:** calcular materiales de productos nuevos y de antiguos mal calculados
+- Meter esas BoMs en **Google Sheets diseñadas por David**. Después las metía en **otra
+  sheet** que cogía las cantidades de las **proformas** y sacaba el **cálculo de required
+  material por proforma** (archivos incompletos y con **errores humanos** → por eso el ERP)
+- Eso iba al **stock control** (la sheet con la que se dibujó `/stock`)
+- De ahí: qué falta y **armar POs**
+- Mandar POs a **grupos de LINE** (casi todos los proveedores locales; **muy pocos por
+  email**) y preguntar **ETA**
+- **Recibir** las materias primas, **comprobar que estuvieran bien**, **contarlas** y
+  **meterlas en el stock**
+- Contar stock
+- Empaquetar y **packing list**
+- **Facturas**
+
+### Cómo se opera ahora, y el destino
+
+- **Nunca se ha usado el ERP en el negocio.** Corre en **Google Sheets**.
+- **Fase de prueba:** ERP **y** sheets **a la vez**. Se ve qué falla o falta, se pule. Cuando
+  aguante, **se cierra Drive**.
+- **Sueño:** el máximo de ese trabajo en ERP + Lukpla + planta + agentes; David fuera de la
+  operación. **Realista:** no es el 100 % de cada cosa; es un **% alto en muchos sitios**, y
+  eso en conjunto es enorme.
+
+**Ventas** (primer contacto → **cierre**): hoy **solo David**, a mano, sin protocolo. Hay que
+**sacar esa tarea de su cabeza** y partirla en dos:
+
+- **Captación:** web OEM con **SEO potente** (encargo en
+  [`docs/web-anvfightgear.md`](web-anvfightgear.md)), para que el cliente llegue solo.
+- **Sistematización:** **SOP de cliente nuevo** (aún por decidir y redactar; es complejo). La
+  máxima información posible para **cerrar la venta** y **sistematizar el negocio**: límites
+  claros de lo que se hace y de lo que no, **MOQs**, **materias primas** que se usan,
+  **colores**, etc.
+
+**Re-orders** (el cliente ya cerrado vuelve a pedir): recoger cantidades y el resto de
+procesos → hoy Lukpla (+ Noi); destino **portal + ERP + agente**. Mientras los clientes no
+usen el portal, **lo usáis vosotros como si fuerais ellos**. Luego se van pasando **clientes
+viejos**. **Clientes nuevos, una vez cerrados: solo portal** para pedir.
+
+### Qué puede hacer un agente de IA dentro del ERP
+
+**Todo proceso que el ERP sepa hacer**, el agente lo puede ejecutar: crear y confirmar pedidos
+y POs, generar y enviar proformas y PDFs, escribir ETAs, recibir y meter stock, packing list,
+facturas, explosión de BoM, lista de compra, avisos. El techo no es “solo propone”: es **lo
+que esté construido y con datos**. Lukpla (u otra persona) solo entra en lo que **no esté en
+pantalla ni en el SOP** —cierre de venta, mockup, receta de un producto que aún no existe,
+excepción que el sistema no contempla.
+
+Para **actuar hacia fuera** hace falta un canal que el sistema pueda usar (email/SMTP, LINE
+Official Account, WhatsApp Business, portal). Los grupos personales de LINE/WhatsApp no son
+ese canal hasta que haya cuenta de empresa; mientras tanto ese tramo sigue siendo humano o no
+se automatiza. No es una regla de “el agente no debe”: es que **no hay API** en el móvil de
+alguien.
+
+Sin el ERP en uso (hoy todo está en Sheets) el agente no tiene sobre qué operar. El orden es:
+**mudar el negocio al ERP** → portal y SOPs → el agente pisa cada proceso que ya esté en el
+sistema. El % que se come es el de esos procesos, no un chat genérico.
+
+### Cómo testea Lukpla (David fuera del medio)
+
+- No hay un chat de tres en Cursor. Lo útil: **~1 h a la semana** ella comparte pantalla,
+  David tiene Cursor, se corrige en la llamada; entre medias **captura + 4 líneas** (pantalla,
+  sheet, qué esperaba, qué salió).
+- Empezar por **una** hoja de las que ellas tocan cada día, no por las doce.
 
 ---
 
@@ -56,7 +171,13 @@ por error algo que estaba puesto a propósito.
   aquí se decía que el precio era la cuenta de Lukpla, que existía en el servidor y no en local, y
   ese precio ha desaparecido porque ese día se crearon aquí las tres cuentas de los empleados
   —`lukpla`, `coo` y `manager`—, así que viajan con la base. ~~Lo único que hay que hacer al llegar es
-  ponerles la contraseña.~~ **Hecho el 28 de agosto de 2026** en producción. Aun así, antes hay que pasar `drush config:status` **en el servidor** y
+  ponerles la contraseña.~~ **Hecho el 28 de agosto de 2026** en producción.
+
+  **Caducado el 28 de agosto de 2026 si hay operación en producción:** el día que Lukpla (o
+  Noi) meta datos reales en el servidor, **ya no se pisa esa base con un volcado de local**.
+  Local sigue sin ser el negocio; producción sí puede serlo. Ver [Quién opera](#quién-opera-y-adónde-va-el-trabajo).
+
+  Aun así, antes hay que pasar `drush config:status` **en el servidor** y
   contar los procesos de ECA, que allí deben ser **36** antes de desplegar y **30** después. La
   explicación de por qué bajan cuatro está unas líneas más abajo, en la comprobación de los
   procesos.
@@ -119,20 +240,27 @@ Fase 0, el saneado de Composer, la preparación del último tramo y el salto a D
 
 El ERP ya está publicado en `https://erp.anvfightgear.com` desde el 12 de agosto.
 
-**La revisión de Lukpla queda aparcada** por decisión del dueño el 13 de agosto: se le dirá que
-de momento no entre, para poder trabajar sin la restricción de no romperle nada. Lo que hay
-preparado para cuando se retome:
+- **Lukpla testa el ERP en paralelo con las Google Sheets** (con Noi). Dual run hasta que el
+  ERP aguante; entonces se cierra Drive. Detalle y plantilla de bugs en
+  [Quién opera](#quién-opera-y-adónde-va-el-trabajo).
+
+~~**La revisión de Lukpla queda aparcada** por decisión del dueño el 13 de agosto: se le dirá que
+de momento no entre, para poder trabajar sin la restricción de no romperle nada.~~ **Caducado el
+28 de agosto de 2026.** Ya no es una revisión aplazada: Lukpla entra a **usar y testear** (ERP +
+sheets a la vez). El encargo concreto y “dónde apunta lo que vea” siguen teniendo sentido, pero
+como dual run, no como visita de inspección. Lo que había preparado para cuando se retomara:
 
 - ~~**Crear la cuenta de Lukpla.**~~ Hecha, con rol *supervisor*, directamente en el servidor. Y
   **desde el 15 de agosto existe también en local**, con las de `coo` y `manager`, así que deja de
-  ser una cuenta que solo vive en un lado.
+  ser una cuenta que solo vive en un lado. El rol Drupal no es el puesto de supervisor que no se
+  quiere volver a montar (ver [Quién opera](#quién-opera-y-adónde-va-el-trabajo)).
 - ~~**Llevar al servidor la limpieza de módulos del 13 de agosto**~~ Cubierto por el despliegue del
-  20 de agosto. Si Lukpla retoma la revisión, volver a pasar `drush config:status` en el servidor
-  antes de cualquier `cim` desde local.
+  20 de agosto. Si se importa configuración desde local a un servidor que ya tenga datos de
+  prueba de Lukpla, volver a pasar `drush config:status` antes de cualquier `cim`.
 - **Preparar dónde apunta lo que vea**, aunque sea una hoja de cálculo compartida. Por chat
   se evapora en tres días.
-- **Darle un encargo concreto**, empezando por compras, en vez de un "míralo a ver qué te
-  parece".
+- **Darle un encargo concreto**, empezando por **una** sheet de las que tocan cada día, en vez
+  de un "míralo a ver qué te parece".
 - **Confirmar si se maneja en inglés**, que es el idioma en el que está el ERP entero. Y no es una
   pregunta de cortesía: el tailandés que hay configurado **no traduce nada del ERP**, solo cuatro
   palabras del menú de administración de Drupal. Está explicado en el apartado de idiomas de la
@@ -268,20 +396,22 @@ preparado para cuando se retome:
 
 ## 3. Antes de que entren los empleados
 
-Esto va en dos fases, decidido el 12 de agosto. **Primero entra solo Lukpla, y no a trabajar
+~~Esto va en dos fases, decidido el 12 de agosto. **Primero entra solo Lukpla, y no a trabajar
 sino a revisar**: tiene que ver el ERP entero y proponer cambios antes de que se empiece a usar,
 porque hay partes del negocio, compras sobre todo, cuya lógica conoce ella y no el dueño. Ese es
 el motivo de querer publicarlo cuanto antes. Después, ya con sus cambios hechos, entran los tres
-empleados a usarlo de verdad.
+empleados a usarlo de verdad.~~ **Caducado el 28 de agosto de 2026.** El negocio no ha usado el
+ERP nunca; el siguiente paso no es “tres empleados a trabajar”, es **Lukpla + Noi en dual run
+con las sheets**. Quién es quién y qué pasa con un supervisor futuro está en
+[Quién opera](#quién-opera-y-adónde-va-el-trabajo).
 
 **La primera fase se completó el 12 de agosto**: servidor configurado, los tres ajustes de
 `settings.php` corregidos, parche verificado, publicado en `erp.anvfightgear.com` con
-certificado. El detalle está abajo, en Hecho. Lo que falta para que Lukpla empiece está en la
-sección 1.
+certificado. El detalle está abajo, en Hecho.
 
-El resto de esta lista es el "no publicar sin esto" de la segunda fase, la de los tres
-empleados. Casi todo es trabajo técnico y no requiere decisiones del dueño, salvo los tres
-puntos de correo.
+El resto de esta lista es trabajo técnico que **sigue haciendo falta** (correo sobre todo), no
+el relato de quién entra. Casi todo no requiere decisiones del dueño, salvo los tres puntos de
+correo.
 
 - **Programar el cron.** ~~**Lo único que queda es pegar una línea en el servidor el día del
   despliegue**~~ **Hecho el 20 de agosto de 2026:** `/etc/cron.d/erp-cron` cada 15 minutos como
@@ -1935,6 +2065,14 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-28 — Quién opera: Lukpla testa, no hay supervisor a lo antiguo
+
+El dueño fijó el organigrama y el destino del trabajo del supervisor que se fue (1,5 años).
+Lukpla es socia y testa el ERP **en paralelo con las Google Sheets** (con Noi). Las ventas
+(primer contacto → cierre) son solo de David; el supervisor nunca vendió, recogía cantidades
+de re-orders. El plan de agosto «Lukpla solo revisa y luego entran tres empleados» queda
+tachado en las secciones 1 y 3. Texto vivo al principio de este archivo.
 
 ### 2026-08-28 — GitHub al día; Cursor ya ve Git
 
