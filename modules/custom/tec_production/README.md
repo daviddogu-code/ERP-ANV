@@ -654,21 +654,22 @@ edited on **Configuration → TEC → Company settings** (`/admin/config/tec/com
 and there is a link straight to it under the VAT treatment field on every supplier
 card, showing the rate in force: *"VAT is currently 7% — change it"*.
 
-**What the order keeps.** `field_tec_vat_rate` on `tec_purchase_order`, written by
-`hook_tec_order_presave()` at creation from the supplier's card, and editable on
-the order afterwards for a one-off. Copied rather than looked up on demand for the
-same reason the order number is: an order printed in March must still say in
-December what it said in March, whatever happened in between to the rate or to the
-supplier's registration. Anything already filled in is left alone, because that is
-somebody overriding it deliberately.
+**What the order keeps.** `field_tec_vat_rate` on both purchase and sales
+orders, written by `hook_tec_order_presave()` at creation. Purchases copy it
+from the supplier's VAT treatment. Sales copy it from the customer's country:
+Thailand is the standard rate, anywhere else is 0%. Copied rather than looked
+up on demand for the same reason the order number is: an order printed in March
+must still say in December what it said in March. Anything already filled in is
+left alone.
 
-Sales orders do **not** get this field. What VAT is charged to a customer is a
-different conversation and will not be solved by copying this one.
+Sales do **not** reuse `field_tec_vat_treatment`. That list is whether a
+supplier charges Thai VAT on a purchase. The same company can be a customer and
+a supplier, and those answers conflict. Destination is enough for a sale.
 
-`src/Vat.php` holds all of it: the three treatments, the rate, the decision for a
-given contact, and `Vat::on()` for the arithmetic — rounded there and only there,
-so a screen, a printed order and whatever comes next cannot each round it their own
-way and disagree by a satang.
+`src/Vat.php` holds all of it: the three supplier treatments, `forCustomer()`
+for a sale, the rate, and `Vat::on()` for the arithmetic — rounded there and
+only there, so a screen, a printed order and the portal cannot each round it
+their own way and disagree by a satang.
 
 **A card nobody has filled in yet is treated as charging VAT.** Getting it wrong in
 that direction shows up: somebody sees VAT on an order that should not have it and
@@ -707,9 +708,12 @@ three of them cannot end up disagreeing.
 Both screens used to borrow their total from `attachment_1`, an attachment
 **shared with the two sales screens**. They stopped, and three days later sales
 stopped too (see *The foot goes inside the table* below), so that attachment no
-longer exists. Sales was left alone on the VAT question on purpose: what VAT is
-charged to a customer is a different question, and copying this answer would be
-guessing at it.
+longer exists.
+
+Sales VAT is a different rule (destination, not the supplier list) but the same
+three lines. They sit **inside** the line table, via `OrderFoot`, so the piece
+count can stay under Qty. The portal `/my` grid and `/o/order` draw the same
+three lines from `Vat::breakdown()`.
 
 Three cases, because they look different:
 
@@ -882,18 +886,19 @@ no order changed value.
   matters: **every stored line is worth its own price times its own quantity**.
 
 ### Company settings, and the settings that had no screen (16 August 2026)
-`/admin/config/tec/company`, `src/Form/CompanySettingsForm.php`. Two things on it:
-the VAT rate, and which page each home tile opens.
+`/admin/config/tec/company`, `src/Form/CompanySettingsForm.php`. Letterhead first
+(legal name, address, tax ID, phone, email, website, logo), then the VAT rate,
+then the bank account for the proforma, then the home-page icon pairings closed
+at the bottom.
 
-Both were only reachable from a command line before. That is fine for whoever
-builds the ERP and no use at all to whoever runs the company, which is the person
-who finds out the rate has changed.
+The rate and the icon nodes were only reachable from a command line before.
+The address was HTML pasted into the purchase-order print Views. Both are now
+the same record, `src/Company.php`, so a printed order does not have a second
+copy of the street.
 
 It sits under **Configuration** rather than beside the `/admin/tec/*` screens
 because those are bare paths with no menu entry anywhere, so a link into that
-family would arrive with a breadcrumb leading nowhere. The `/admin/config/tec`
-section also gives the settings that come next — currency, company address — a
-place to be.
+family would arrive with a breadcrumb leading nowhere.
 
 The permission is its own, `administer tec company settings`, held by
 `tec_manager` and `tec_executive`. Using Drupal's `administer site configuration`
@@ -912,14 +917,24 @@ quietly opening the wrong screen.
 **`tec_production.settings` finally has a schema.** It never had one — the module
 has no `config/schema` directory before this. It did not matter while nothing wrote
 those settings through a form; a `ConfigFormBase` over schemaless config complains,
-and Drupal 11 is stricter about it than 10 was. All eleven keys are described.
+and Drupal 11 is stricter about it than 10 was. Identity, VAT, bank and the
+icon keys are described.
 
 - Test: `scripts/se-tocan-los-ajustes.php` checks the three ways this could quietly
   stop working — the page stops loading, the permission stops holding anyone out,
-  saving stops writing — plus that saving does not unhook the five home tiles, and
-  that the link on the supplier card quotes the live rate rather than a hardcoded
-  one. It puts the rate back as it found it, so it is safe to run on a live site.
-- Guardian: five more checks in section 7.
+  saving stops writing — plus that saving does not unhook the home tiles or wipe
+  the factory address, and that the link on the supplier card quotes the live
+  rate rather than a hardcoded one. It puts the rate and the letterhead back as
+  it found them, so it is safe to run on a live site.
+- Guardian: section 7, including that `legal_name` is on the schema.
+
+### Company letterhead on the settings screen (30 August 2026)
+The factory name, Pattaya address and phone that used to be hardcoded on
+`/po/{id}/print` are now the defaults of `Company`. Tax ID, logo and bank stay
+empty until someone types them: those were never on the paper, and inventing
+them would print a lie. Print still reads the Views HTML until the proforma
+template is rewritten; the record it will read is this one. The site chrome
+(sidebar, tab icon) stays in Appearance, not here.
 
 ### The foot goes inside the table (19 August 2026)
 A sales order ends in one more row **of its own table**: the piece count under

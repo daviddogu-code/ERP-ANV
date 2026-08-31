@@ -38,15 +38,28 @@ final class PortalRedirectSubscriber implements EventSubscriberInterface {
 
   /**
    * Sends a portal customer off factory screens.
+   *
+   * /o/draft/{id} is the old Oscar sales form. Factory goes to /o/order/{id};
+   * a portal customer goes to /my/order/{id}. Runs for everyone so a bookmark
+   * or a leftover pencil cannot open Save/Cancel/Delete again.
    */
   public function onRequest(RequestEvent $event): void {
     if (!$event->isMainRequest()) {
       return;
     }
+    $path = rtrim($event->getRequest()->getPathInfo(), '/') ?: '/';
+    if (preg_match('#^/o/draft/(\d+)#', $path, $m)) {
+      $route = $this->companies->isPortalCustomer($this->currentUser)
+        ? 'tec_portal.order'
+        : 'tec_portal.factory_order';
+      $event->setResponse(new RedirectResponse(
+        Url::fromRoute($route, ['tec_order' => $m[1]])->toString()
+      ));
+      return;
+    }
     if (!$this->companies->isPortalCustomer($this->currentUser)) {
       return;
     }
-    $path = rtrim($event->getRequest()->getPathInfo(), '/') ?: '/';
     $to = $this->portalPath($path);
     if ($to === NULL) {
       return;
@@ -61,7 +74,7 @@ final class PortalRedirectSubscriber implements EventSubscriberInterface {
     if ($path === '/' || $path === '/start') {
       return Url::fromRoute('tec_portal.home')->toString();
     }
-    if (preg_match('#^/tec_order/(\d+)#', $path, $m)) {
+    if (preg_match('#^/tec_order/(\d+)#', $path, $m) || preg_match('#^/o/order/(\d+)#', $path, $m)) {
       return Url::fromRoute('tec_portal.order', ['tec_order' => $m[1]])->toString();
     }
     foreach (['/customer/', '/tec_crm/', '/tec_product/', '/tec_line_item/', '/tec_inventory/'] as $prefix) {

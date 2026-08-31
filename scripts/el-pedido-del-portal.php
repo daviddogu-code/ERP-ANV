@@ -135,6 +135,7 @@ try {
     'field_tec_customer_code' => 'ZZOA',
     'field_tec_contact_type' => $tipoCliente->id(),
     'field_tec_brands' => [$marcaA->id()],
+    'field_tec_address' => [['country_code' => 'TH']],
   ]));
   $orgB = $guardar($crm->create([
     'type' => 'tec_contact_organization',
@@ -142,6 +143,7 @@ try {
     'field_tec_customer_code' => 'ZZOB',
     'field_tec_contact_type' => $tipoCliente->id(),
     'field_tec_brands' => [$marcaB->id()],
+    'field_tec_address' => [['country_code' => 'IT']],
   ]));
 
   $personaA = $guardar($crm->create([
@@ -202,9 +204,10 @@ try {
   $mirar('A entra a pedir', $pagina['code'] === 200, (string) $pagina['code']);
   $mirar('A ve su producto', stripos($pagina['body'], MARCA . ' producto A') !== FALSE);
   $mirar('A no ve el producto de B', stripos($pagina['body'], MARCA . ' producto B') === FALSE);
-  $mirar('A ve su marca', str_contains($pagina['body'], MARCA . ' marca A'));
-  $mirar('el formulario trae la talla de A', str_contains($pagina['body'], 'b' . $marcaA->id()) && str_contains($pagina['body'], (string) $tallaA->id()));
-  $mirar('el formulario no trae la talla de B', !str_contains($pagina['body'], 'b' . $marcaB->id()));
+  $mirar('una sola lista, no fieldset de marca', !str_contains($pagina['body'], 'b' . $marcaA->id()) && substr_count($pagina['body'], 'tec-portal__table') === 1);
+  $mirar('un solo Total, no Grand total', str_contains($pagina['body'], '>Total<') && !str_contains($pagina['body'], 'Grand total'));
+  $mirar('el formulario trae la talla de A', str_contains($pagina['body'], 'lines[' . $tallaA->id() . ']') && str_contains($pagina['body'], (string) $tallaA->id()));
+  $mirar('el formulario no trae la talla de B', !str_contains($pagina['body'], 'lines[' . $tallaB->id() . ']'));
   $mirar('el listado /my ofrece pedir', str_contains($pedir('/my', $userA)['body'], 'Place an order'));
   $mirar('A sigue sin createAccess de ECK', !$gestor->getAccessControlHandler('tec_order')->createAccess('tec_sales_order', $userA));
 
@@ -223,15 +226,9 @@ try {
     $formulario = PlaceOrderForm::create(\Drupal::getContainer());
     $estado = new FormState();
     $construido = $formulario->buildForm([], $estado);
-    $estado->setValue('b' . $marcaA->id(), [
-      'lines' => [
-        $tallaA->id() => ['qty' => 4],
-      ],
-    ]);
-    $estado->setValue('b' . $marcaB->id(), [
-      'lines' => [
-        $tallaB->id() => ['qty' => 9],
-      ],
+    $estado->setValue('lines', [
+      $tallaA->id() => ['qty' => 4],
+      $tallaB->id() => ['qty' => 9],
     ]);
     $formulario->submitForm($construido, $estado);
   }
@@ -284,10 +281,8 @@ try {
     $formulario = PlaceOrderForm::create(\Drupal::getContainer());
     $estado = new FormState();
     $construido = $formulario->buildForm([], $estado);
-    $estado->setValue('b' . $marcaA->id(), [
-      'lines' => [
-        $tallaA->id() => ['qty' => 0],
-      ],
+    $estado->setValue('lines', [
+      $tallaA->id() => ['qty' => 0],
     ]);
     $formulario->submitForm($construido, $estado);
   }

@@ -65,3 +65,122 @@ function tec_production_update_10002() {
     $schema->createTable('tec_stock_check', $spec['tec_stock_check']);
   }
 }
+
+/**
+ * Hide Short code on contact persons. Order numbers read it from the organisation.
+ */
+function tec_production_update_10003(): void {
+  $field = \Drupal\field\Entity\FieldConfig::loadByName('tec_crm', 'tec_contact_person', 'field_tec_customer_code');
+  if ($field) {
+    $field->setRequired(FALSE);
+    $field->setDescription('Unused on a person. Order numbers take the short code from the organisation.');
+    $field->save();
+  }
+
+  $forms = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+  $form = $forms->load('tec_crm.tec_contact_person.default');
+  if ($form && $form->getComponent('field_tec_customer_code')) {
+    $form->removeComponent('field_tec_customer_code');
+    $form->save();
+  }
+
+  $views = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+  foreach (['tec_crm.tec_contact_person.default', 'tec_crm.tec_contact_person.full_details', 'tec_crm.tec_contact_person.compact'] as $id) {
+    $view = $views->load($id);
+    if (!$view) {
+      continue;
+    }
+    $changed = FALSE;
+    if ($view->getComponent('field_tec_customer_code')) {
+      $view->removeComponent('field_tec_customer_code');
+      $changed = TRUE;
+    }
+    $settings = $view->getThirdPartySettings('layout_builder');
+    $sections = $settings['sections'] ?? [];
+    foreach ($sections as $section) {
+      if (!is_object($section) || !method_exists($section, 'getComponents')) {
+        continue;
+      }
+      foreach ($section->getComponents() as $uuid => $component) {
+        $plugin = $component->getPluginId();
+        if ($plugin === 'field_block:tec_crm:tec_contact_person:field_tec_customer_code') {
+          $section->removeComponent($uuid);
+          $changed = TRUE;
+        }
+      }
+    }
+    if ($changed) {
+      $view->setThirdPartySetting('layout_builder', 'sections', $sections);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * Factory sales statuses: drop Accounting Verified and QC, rename the rest.
+ */
+function tec_production_update_10004(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('tec_order');
+  foreach (\Drupal\tec_production\SalesStatus::MIGRATE as $from => $to) {
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('field_tec_order_status', $from)
+      ->execute();
+    if (!$ids) {
+      continue;
+    }
+    foreach ($storage->loadMultiple($ids) as $order) {
+      $order->set('field_tec_order_status', $to);
+      $order->save();
+    }
+  }
+
+  $field = \Drupal\field\Entity\FieldStorageConfig::loadByName('tec_order', 'field_tec_order_status');
+  if ($field) {
+    $field->setSetting('allowed_values', \Drupal\tec_production\SalesStatus::allowedValues());
+    $field->save();
+    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+  }
+
+  $eca = \Drupal::configFactory()->getEditable('eca.eca.process_aomcnxm');
+  if (!$eca->isNew()) {
+    $eca->set('status', FALSE)->save();
+  }
+
+  if (\Drupal::moduleHandler()->moduleExists('flag')) {
+    $flag = \Drupal::entityTypeManager()->getStorage('flag')->load('tec_order_draft_sales');
+    if ($flag) {
+      $flag->set('flag_short', 'Place an order');
+      $flag->save();
+    }
+  }
+}
+
+/**
+ * Put VAT % on sales orders, same field purchases already stamp.
+ *
+ * Destination Thailand is 7%, anywhere else is 0%. The figure lives on the
+ * order so a proforma printed in March still says March's rate in December.
+ * Hidden on the entity form and view: the foot of the page is where it is
+ * read, not a line that says VAT %: 7.00.
+ */
+function tec_production_update_10005(): void {
+  tec_production_ensure_sales_vat_rate();
+}
+
+/**
+ * Store the factory letterhead that used to be pasted into the print Views.
+ *
+ * Name, street and phone were already on the purchase-order paper. Tax ID,
+ * bank and logo were not, and stay empty until someone fills them in.
+ */
+function tec_production_update_10006(): void {
+  tec_production_ensure_company_identity();
+}
+
+/**
+ * Order status label on the card is not the colour of the pill.
+ */
+function tec_production_update_10007(): void {
+  tec_production_ensure_status_label_plain();
+}

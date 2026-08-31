@@ -9,7 +9,33 @@ report_tile_nid: 0
 stock_tile_nid: 0
 purchase_tile_nid: 0
 po_control_tile_nid: 0
+supplier_orders_tile_nid: 0
 # Thailand's standard rate, as a percentage. Here rather than on each supplier
 # card so that the day it changes it is changed once. Which suppliers charge it
 # is a separate question, answered per contact -- see src/Vat.php.
 vat_rate: 7
+legal_name: 'Acta Non Verba Co., LTD.'
+tax_id: ''
+phone: '+66 (0) 910 699 203'
+email: ''
+website: 'https://anvfightgear.com'
+logo: 0
+address:
+  langcode: en
+  country_code: TH
+  administrative_area: '20'
+  locality: Pattaya
+  dependent_locality: ''
+  postal_code: '20150'
+  sorting_code: ''
+  address_line1: '67, 29 Nongmaikaen Rd.'
+  address_line2: 'Bang Lamung District'
+  address_line3: ''
+  organization: ''
+  given_name: ''
+  additional_name: ''
+  family_name: ''
+bank_name: ''
+bank_holder: ''
+bank_account: ''
+bank_swift: ''

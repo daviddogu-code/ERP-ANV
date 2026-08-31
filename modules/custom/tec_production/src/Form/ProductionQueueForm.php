@@ -2,6 +2,7 @@
 
 namespace Drupal\tec_production\Form;
 
+use Drupal\tec_production\SalesStatus;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -20,53 +21,26 @@ class ProductionQueueForm extends FormBase {
   /**
    * Sales order statuses that appear on the queue.
    *
-   * EXW: responsibility ends at shipment, so Completed and Ready for
-   * Delivery stay on the queue until Shipped/Delivered (or Cancelled).
+   * EXW: Completed and Ready for collection stay until Shipped.
    */
-  const ACTIVE_STATUSES = [
-    'draft',
-    'pending_deposit',
-    'accounting_verified',
-    'in_progress_processing',
-    'ready_for_production',
-    'production_started',
-    'quality_control_inspection',
-    'completed',
-    'ready_for_delivery',
-  ];
+  const ACTIVE_STATUSES = SalesStatus::ACTIVE;
 
   /**
-   * Post-manufacturing statuses still on the queue (admin / ready to ship).
+   * Post-manufacturing statuses still on the queue (admin / waiting pickup).
    *
    * They do not consume manufacturing capacity or the deadline chain.
-   * Completed = mfg done, invoice + packing list in progress.
-   * Ready for Delivery = admin done, waiting to ship.
+   * Completed = packing list + invoice. Ready for collection = EXW pickup.
    */
-  const POST_MFG_STATUSES = [
-    'completed',
-    'ready_for_delivery',
-  ];
+  const POST_MFG_STATUSES = SalesStatus::POST_MFG;
 
   /**
-   * Forward-only status transitions available from the queue.
+   * Forward-only status transitions from the queue and the order card.
    *
-   * Key = current status, value = next status. No downgrades. The last
-   * step (Ready for Delivery → Shipped/Delivered) removes the order from
-   * the queue. Corrections that go backwards stay on the order edit form.
+   * Open is sealed with Confirm, not from here. The last step (Ready for
+   * collection → Shipped) removes the order from the queue. Corrections
+   * that go backwards stay on the order edit form.
    */
-  const STATUS_NEXT = [
-    // Phone orders skip the portal: Open → Accounting Verified.
-    'draft' => 'accounting_verified',
-    // Portal Confirm: still unpaid, grey row, one click when the deposit is in.
-    'pending_deposit' => 'accounting_verified',
-    'accounting_verified' => 'in_progress_processing',
-    'in_progress_processing' => 'ready_for_production',
-    'ready_for_production' => 'production_started',
-    'production_started' => 'quality_control_inspection',
-    'quality_control_inspection' => 'completed',
-    'completed' => 'ready_for_delivery',
-    'ready_for_delivery' => 'shipped_delivered',
-  ];
+  const STATUS_NEXT = SalesStatus::NEXT;
 
   /**
    * Column metadata taken from the "Orders on Queue" Google Sheet.
@@ -318,11 +292,6 @@ class ProductionQueueForm extends FormBase {
 
     $delta = max(count($rows), 1);
     $display_weight = 0;
-    $status_options = [];
-    $defs = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('tec_order');
-    if (isset($defs['field_tec_order_status'])) {
-      $status_options = $defs['field_tec_order_status']->getSetting('allowed_values') ?: [];
-    }
     foreach ($rows as $row) {
       $display_weight++;
       $oid = $row['id'];
@@ -330,13 +299,13 @@ class ProductionQueueForm extends FormBase {
       if ($row['is_open']) {
         $classes[] = 'tec-queue__row--open';
       }
-      elseif ($row['status'] === 'production_started') {
+      elseif ($row['status'] === SalesStatus::ON_PRODUCTION) {
         $classes[] = 'tec-queue__row--producing';
       }
-      elseif ($row['status'] === 'completed') {
+      elseif ($row['status'] === SalesStatus::COMPLETED) {
         $classes[] = 'tec-queue__row--completed';
       }
-      elseif ($row['status'] === 'ready_for_delivery') {
+      elseif ($row['status'] === SalesStatus::READY_FOR_COLLECTION) {
         $classes[] = 'tec-queue__row--ready';
       }
 
@@ -346,6 +315,7 @@ class ProductionQueueForm extends FormBase {
           'data-remaining' => $row['remaining'],
           'data-open' => $row['is_open'] ? '1' : '0',
           'data-post-mfg' => $row['is_post_mfg'] ? '1' : '0',
+          'data-status' => $row['status'],
         ],
       ];
       $element['no'] = [
@@ -361,22 +331,18 @@ class ProductionQueueForm extends FormBase {
       ];
       // Status is read-only; advance is a forward-only button (no dropdown,
       // no downgrade). Corrections backwards stay on the order edit form.
+      $status_label = SalesStatus::label($row['status']);
+      $pill = SalesStatus::pill($row['status']);
+      $pill['#attributes']['class'][] = 'tec-queue__status';
+      $pill['#attributes']['title'] = $status_label;
       $element['status'] = [
         '#type' => 'container',
         '#wrapper_attributes' => ['class' => ['tec-queue__status-cell']],
-        'label' => [
-          '#type' => 'html_tag',
-          '#tag' => 'span',
-          '#value' => $row['status_label'],
-          '#attributes' => [
-            'class' => ['tec-queue__status'],
-            'title' => $row['status_label'],
-          ],
-        ],
+        'label' => $pill,
       ];
-      $next = self::STATUS_NEXT[$row['status']] ?? NULL;
+      $next = SalesStatus::next($row['status']);
       if ($next !== NULL) {
-        $next_label = (string) ($status_options[$next] ?? $next);
+        $next_label = SalesStatus::label($next);
         // Arrow only — next status lives in the tooltip so the current
         // status label stays readable in the narrow STATUS column.
         $element['status']['advance'] = [
@@ -468,28 +434,24 @@ class ProductionQueueForm extends FormBase {
       return;
     }
 
-    $current = $order->get('field_tec_order_status')->value ?: 'draft';
-    $allowed_next = self::STATUS_NEXT[$current] ?? NULL;
+    $current = SalesStatus::of($order);
+    $allowed_next = SalesStatus::next($current);
     if ($allowed_next === NULL || $allowed_next !== $expected_next) {
       $this->messenger()->addWarning($this->t(
         '@order status changed meanwhile (@status). Refresh and try again.',
         [
           '@order' => $order->label() ?: ('#' . $oid),
-          '@status' => $current,
+          '@status' => SalesStatus::label($current),
         ]
       ));
       $form_state->setRedirect('tec_production.queue');
       return;
     }
 
-    $order->set('field_tec_order_status', $allowed_next);
-    $order->save();
+    $applied = SalesStatus::applyNext($order);
+    $next_label = SalesStatus::label($applied ?? $allowed_next);
 
-    $defs = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('tec_order');
-    $status_options = $defs['field_tec_order_status']->getSetting('allowed_values') ?? [];
-    $next_label = (string) ($status_options[$allowed_next] ?? $allowed_next);
-
-    if ($allowed_next === 'shipped_delivered') {
+    if ($allowed_next === SalesStatus::SHIPPED) {
       $this->messenger()->addStatus($this->t(
         '@order marked @status and left the queue.',
         [
@@ -560,7 +522,7 @@ class ProductionQueueForm extends FormBase {
     $storage = $this->entityTypeManager->getStorage('tec_order');
     $ids = $storage->getQuery()
       ->condition('type', 'tec_sales_order')
-      ->condition('field_tec_order_status', self::ACTIVE_STATUSES, 'IN')
+      ->condition('field_tec_order_status', array_merge(self::ACTIVE_STATUSES, array_keys(SalesStatus::MIGRATE)), 'IN')
       ->accessCheck(FALSE)
       ->execute();
 
@@ -568,16 +530,9 @@ class ProductionQueueForm extends FormBase {
       return [];
     }
 
-    $status_options = [];
-    $defs = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('tec_order');
-    if (isset($defs['field_tec_order_status'])) {
-      $status_options = $defs['field_tec_order_status']->getSetting('allowed_values');
-    }
-
     $rows = [];
     foreach ($storage->loadMultiple($ids) as $order) {
-      $status = $order->get('field_tec_order_status')->value ?: 'draft';
-
+      $status = SalesStatus::of($order);
       $total = 0.0;
       $cats = [];
       if ($order->hasField('field_tec_line_items')) {
@@ -614,7 +569,7 @@ class ProductionQueueForm extends FormBase {
         'id' => $oid,
         'label' => $order->label() ?: ('#' . $oid),
         'status' => $status,
-        'status_label' => (string) ($status_options[$status] ?? $status),
+        'status_label' => SalesStatus::label($status),
         'is_open' => in_array($status, ['draft', 'pending_deposit'], TRUE),
         'is_post_mfg' => in_array($status, self::POST_MFG_STATUSES, TRUE),
         'categories' => $cats,

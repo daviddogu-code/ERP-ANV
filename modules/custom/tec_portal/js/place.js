@@ -1,5 +1,8 @@
 /**
- * Live Item total on /my/order/new: qty × price, same as the factory draft.
+ * Live Item total and VAT foot on /my/order and /o/order.
+ *
+ * Lines stay net. The foot is Subtotal, VAT, Total when drupalSettings
+ * has tecPortalVat.rate; otherwise the single Total it used to be.
  */
 (function (Drupal, once) {
   'use strict';
@@ -10,6 +13,19 @@
 
   function pieces(amount) {
     return String(Math.round(amount)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function vatOn(net, rate) {
+    return Math.round((net * rate / 100) * 100) / 100;
+  }
+
+  function vatRate() {
+    const given = (window.drupalSettings || {}).tecPortalVat;
+    if (!given || given.rate === undefined || given.rate === null || given.rate === '') {
+      return null;
+    }
+    const rate = parseFloat(given.rate);
+    return isNaN(rate) ? null : rate;
   }
 
   function priceOf(row, qty) {
@@ -32,10 +48,8 @@
   }
 
   function recount(form) {
-    let allQty = 0;
-    let allMoney = 0;
-
-    form.querySelectorAll('.tec-portal__group:not(.tec-portal__group--grand) .tec-portal__table').forEach(function (table) {
+    const rate = vatRate();
+    form.querySelectorAll('.tec-portal__table').forEach(function (table) {
       let qtySum = 0;
       let moneySum = 0;
       table.querySelectorAll('tbody tr').forEach(function (row) {
@@ -50,25 +64,30 @@
         moneySum += line;
       });
       const qEl = table.querySelector('.tec-portal__sum-qty');
-      const aEl = table.querySelector('.tec-portal__sum-amount');
       if (qEl) {
         qEl.textContent = pieces(qtySum);
       }
-      if (aEl) {
-        aEl.textContent = money(moneySum);
+      if (rate === null) {
+        const aEl = table.querySelector('.tec-portal__sum-amount');
+        if (aEl) {
+          aEl.textContent = money(moneySum);
+        }
+        return;
       }
-      allQty += qtySum;
-      allMoney += moneySum;
+      const vat = vatOn(moneySum, rate);
+      const netEl = table.querySelector('.tec-portal__sum-net');
+      const vatEl = table.querySelector('.tec-portal__sum-vat');
+      const grossEl = table.querySelector('.tec-portal__sum-gross');
+      if (netEl) {
+        netEl.textContent = money(moneySum);
+      }
+      if (vatEl) {
+        vatEl.textContent = money(vat);
+      }
+      if (grossEl) {
+        grossEl.textContent = money(moneySum + vat);
+      }
     });
-
-    const gq = form.querySelector('.tec-portal__grand-qty');
-    const ga = form.querySelector('.tec-portal__grand-amount');
-    if (gq) {
-      gq.textContent = pieces(allQty);
-    }
-    if (ga) {
-      ga.textContent = money(allMoney);
-    }
   }
 
   Drupal.behaviors.tecPortalPlace = {

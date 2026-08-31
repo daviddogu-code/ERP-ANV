@@ -32,7 +32,7 @@ configuration_data:
           args: ''
       block_content:
         options:
-          bid: 'views_block:tec_order_sales_order_line_items-block_1'
+          bid: tec_portal_sales_order_lines
           block_title: ''
           display_title: false
       qtabs_content:

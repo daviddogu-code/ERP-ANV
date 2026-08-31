@@ -4,19 +4,21 @@
  * @file
  * Checks the company settings screen: the door, the lock, and the saving.
  *
- * The VAT rate used to be reachable only from a command line, which is fine for
- * whoever built the thing and no use to whoever runs the company. This is the
- * screen that fixed that, and there are three ways it could quietly stop
+ * The company letterhead and the VAT rate used to live in two bad places: HTML
+ * pasted into a Views header, and a config file with no screen. This is the
+ * screen that holds both, and there are three ways it could quietly stop
  * working: the page stops loading, the permission stops holding anyone out, or
  * saving stops writing. Each is checked here.
  *
- * The rate is put back exactly as it was found, so this can be run on a live
- * site without changing what anybody is charged.
+ * The rate and the letterhead are put back exactly as they were found, so this
+ * can be run on a live site without changing what anybody is charged or what
+ * the next proforma would print.
  *
  * Run: php vendor\bin\drush.php scr scripts/se-tocan-los-ajustes.php
  */
 
 use Drupal\Core\Session\UserSession;
+use Drupal\tec_production\Company;
 use Drupal\tec_production\EventSubscriber\QueueTileRedirectSubscriber;
 use Drupal\tec_production\Vat;
 use Symfony\Component\HttpFoundation\Request;
@@ -68,16 +70,41 @@ $campos_de = function (string $html): array {
   foreach ($buscar->query('//input') as $input) {
     $nombre = $input->getAttribute('name');
     $tipo = strtolower($input->getAttribute('type'));
-    if ($nombre === '' || $tipo === 'submit' || $tipo === 'button') {
+    if ($nombre === '' || $tipo === 'submit' || $tipo === 'button' || $tipo === 'file') {
       continue;
     }
     $campos[$nombre] = $input->getAttribute('value');
   }
+  foreach ($buscar->query('//select') as $select) {
+    $nombre = $select->getAttribute('name');
+    if ($nombre === '') {
+      continue;
+    }
+    $valor = '';
+    foreach ($select->getElementsByTagName('option') as $option) {
+      if ($option->hasAttribute('selected') && $option->getAttribute('selected') !== 'false') {
+        $valor = $option->getAttribute('value');
+      }
+    }
+    $campos[$nombre] = $valor;
+  }
+  foreach ($buscar->query('//textarea') as $area) {
+    $nombre = $area->getAttribute('name');
+    if ($nombre !== '') {
+      $campos[$nombre] = $area->textContent;
+    }
+  }
   return $campos;
 };
 
-$antes = Vat::standardRate();
+tec_production_ensure_company_identity();
+
+$antes_iva = Vat::standardRate();
 $ajustes = \Drupal::configFactory()->getEditable('tec_production.settings');
+$antes_identidad = [];
+foreach (array_keys(Company::defaults()) as $clave) {
+  $antes_identidad[$clave] = $ajustes->get($clave);
+}
 
 try {
   // ---------------------------------------------------------------------------
@@ -114,6 +141,25 @@ try {
   }
   $html = (string) $respuesta->getContent();
 
+  $mirar('the legal name is on it', str_contains($html, 'name="legal_name"'));
+  $mirar('and it is ANV until someone changes it',
+    str_contains($html, 'Acta Non Verba Co., LTD.'),
+    Company::legalName());
+  $mirar('the address is the same widget the CRM uses',
+    str_contains($html, 'name="address[country_code]"')
+    || str_contains($html, 'name="address[country_code][country_code]"'));
+  $mirar('Pattaya is already filled in', str_contains($html, 'Nongmaikaen'));
+  $mirar('tax ID, phone, email, website and logo are on it',
+    str_contains($html, 'name="tax_id"')
+    && str_contains($html, 'name="phone"')
+    && str_contains($html, 'name="email"')
+    && str_contains($html, 'name="website"')
+    && str_contains($html, 'name="logo[fids]"'));
+  $mirar('and so is the bank',
+    str_contains($html, 'name="bank_name"')
+    && str_contains($html, 'name="bank_holder"')
+    && str_contains($html, 'name="bank_account"')
+    && str_contains($html, 'name="bank_swift"'));
   $mirar('the rate is on it', str_contains($html, 'name="vat_rate"'));
   foreach (array_keys(QueueTileRedirectSubscriber::TILES) as $icono) {
     $mirar('and so is the icon setting ' . $icono, str_contains($html, 'name="' . $icono . '"'));
@@ -135,6 +181,7 @@ try {
   }
 
   $campos['vat_rate'] = '10.5';
+  $campos['legal_name'] = 'Prueba ANV Co., Ltd.';
   $campos['op'] = 'Save configuration';
   $respuesta = $pedir(AJUSTES, 'POST', $campos);
 
@@ -143,6 +190,14 @@ try {
   $mirar('and it reaches the setting', Vat::standardRate() === 10.5, (string) Vat::standardRate());
   $mirar('so a new order would now be raised at that rate',
     Vat::forContact(NULL) === 10.5, (string) Vat::forContact(NULL));
+  $mirar('the legal name reaches the setting too',
+    \Drupal::config('tec_production.settings')->get('legal_name') === 'Prueba ANV Co., Ltd.',
+    (string) \Drupal::config('tec_production.settings')->get('legal_name'));
+  $direccion = \Drupal::config('tec_production.settings')->get('address') ?? [];
+  $mirar('and the factory address was not wiped',
+    ($direccion['country_code'] ?? '') === 'TH'
+    && str_contains((string) ($direccion['address_line1'] ?? ''), 'Nongmaikaen'),
+    (string) json_encode($direccion));
 
   $iconos_despues = [];
   foreach (array_keys(QueueTileRedirectSubscriber::TILES) as $icono) {
@@ -182,9 +237,17 @@ try {
   }
 }
 finally {
-  $ajustes->set('vat_rate', $antes)->save();
+  foreach ($antes_identidad as $clave => $valor) {
+    if ($valor === NULL) {
+      $ajustes->clear($clave);
+    }
+    else {
+      $ajustes->set($clave, $valor);
+    }
+  }
+  $ajustes->set('vat_rate', $antes_iva)->save();
   $cambiador->switchBack();
-  print "\nRate put back to " . $antes . ".\n";
+  print "\nRate put back to " . $antes_iva . ".\n";
 }
 
 print "\n" . ($problemas === 0 ? "All good." : $problemas . " thing(s) wrong.") . "\n";

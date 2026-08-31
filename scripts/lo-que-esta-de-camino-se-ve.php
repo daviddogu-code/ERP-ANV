@@ -520,12 +520,15 @@ try {
       $bloques[] = $bloque->getPluginId();
     }
   }
+  $impreso = \Drupal::service('entity_display.repository')
+    ->getViewDisplay('tec_order', 'tec_purchase_order', 'pdf');
   $mirar('la ficha coloca el estado deducido y no el campo crudo',
     in_array('extra_field_block:tec_order:tec_purchase_order:tec_progress', $bloques, TRUE)
     && !in_array('field_block:tec_order:tec_purchase_order:field_tec_po_status', $bloques, TRUE));
-
-  $impreso = \Drupal::service('entity_display.repository')
-    ->getViewDisplay('tec_order', 'tec_purchase_order', 'pdf');
+  $mirar('y el enlace de la factura, que no se manda en el pdf',
+    in_array('extra_field_block:tec_order:tec_purchase_order:tec_invoice', $bloques, TRUE)
+    && $impreso->getComponent('tec_invoice') === NULL
+    && $impreso->getComponent('field_tec_supplier_invoice') === NULL);
   $mirar('el impreso tambien, y ya no se puede escribir dentro',
     $impreso->getComponent('tec_progress') !== NULL
     && $impreso->getComponent('field_tec_po_status') === NULL);
@@ -550,6 +553,50 @@ try {
   $mirar('y avisa de que al A todavia le falta mercancia',
     str_contains($ventana, 'stays on the screen'));
 
+  $ventanaD = (string) $pedir('/tec_order/' . $d->id() . '/invoice')->getContent();
+  $mirar('el D, que ya tiene factura, ofrece bajarla',
+    str_contains($ventanaD, 'Already filed') && str_contains($ventanaD, 'Download'));
+  $mirar('Download guarda el archivo, no abre una pestana',
+    str_contains($ventanaD, '/invoice/file') && str_contains($ventanaD, 'tec-invoice__download')
+    && !preg_match('/tec-invoice__download[^>]*target="_blank"/', $ventanaD));
+  $mirar('el nombre del archivo abre el scan',
+    str_contains($ventanaD, 'tec-invoice__open') && str_contains($ventanaD, 'target="_blank"'));
+  $mirar('y avisa de que el archivo nuevo pisa el actual',
+    str_contains($ventanaD, 'This replaces the current file.'));
+  $mirar('y deja quitarla para devolver el pedido a la cola',
+    str_contains($ventanaD, 'Remove invoice'));
+  $mirar('el A, sin factura, no habla de sustituir',
+    !str_contains($ventana, 'This replaces the current file.')
+    && !str_contains($ventana, 'Remove invoice'));
+
+  $listaD = (string) $pedir('/supplier-orders')->getContent();
+  $mirar('y la lista de pedidos ofrece el icono de la factura',
+    str_contains($listaD, '000-invoice-16.png'));
+  $mirar('y al hacer clic se abre el mismo dialogo de archivar',
+    str_contains($listaD, '/tec_order/' . $d->id() . '/invoice')
+    && str_contains($listaD, 'data-dialog-type="modal"'));
+  $mirar('y al pasar el raton se ve el pdf',
+    str_contains($listaD, 'tec-po-invoice-preview')
+    && str_contains($listaD, 'data-preview="pdf"')
+    && str_contains($listaD, 'data-preview-url'));
+  $mirar('y las filas de esa lista caben en una linea',
+    str_contains($listaD, 'supplier-orders.css'));
+
+  $fichaD = (string) $pedir('/tec_order/' . $d->id())->getContent();
+  $mirar('y la ficha del D nombra el archivo',
+    str_contains($fichaD, MARCA . '-factura.pdf') && !str_contains($fichaD, 'Placeholder for the'));
+  $mirar('y en la ficha tambien se puede ver al pasar el raton',
+    str_contains($fichaD, 'tec-po-invoice-preview'));
+  $mirar('y desde la ficha se puede sustituir',
+    str_contains($fichaD, 'tec-po-invoice-replace')
+    && str_contains($fichaD, '/tec_order/' . $d->id() . '/invoice'));
+
+  $d->set('field_tec_supplier_invoice', [])->save();
+  $mirar('sin papel el D vuelve a Delivered', Purchasing::progress($d) === 'delivered', Purchasing::progress($d));
+  $cola = $filas((string) $pedir(PANTALLA)->getContent());
+  $mirar('y reaparece en PO CONTROL', $fila_de($cola, $d->label()) !== NULL, $d->label());
+  $d->set('field_tec_supplier_invoice', ['target_id' => $factura->id()])->save();
+
   // Un pedido de venta no tiene facturas de proveedor, y la ruta lo sabe.
   $venta = $gestor->getStorage('tec_order')->getQuery()
     ->condition('type', 'tec_sales_order')
@@ -560,6 +607,27 @@ try {
     $codigo = $pedir('/tec_order/' . reset($venta) . '/invoice')->getStatusCode();
     $mirar('y no se abre para un pedido de venta', $codigo === 403, 'estado ' . $codigo);
   }
+
+  $reloj = new \DateTimeImmutable('now', new \DateTimeZone('Asia/Bangkok'));
+  $stem = Purchasing::invoiceFileStem($d);
+  $esperado = 'INV_PO_' . $reloj->format('dmY') . '_' . $stem . '.pdf';
+  $mirar('POLYTE 26-013 pasa a POLYTE_26-013',
+    Purchasing::invoiceFileStem('POLYTE 26-013') === 'POLYTE_26-013');
+  $mirar('y un titulo con barras no las deja en el disco',
+    Purchasing::invoiceFileStem('A/B:C*D') === 'A_B_C_D');
+  $mirar('el archivo se llama INV_PO_fecha_pedido',
+    Purchasing::invoiceFileName($d, $factura) === $esperado, Purchasing::invoiceFileName($d, $factura));
+  $mirar('si el nombre ya estaba, se anade el id',
+    Purchasing::invoiceFileName($d, $factura, TRUE) === 'INV_PO_' . $reloj->format('dmY') . '_' . $stem . '_' . $d->id() . '.pdf');
+
+  $tmp = \Drupal::service('file.repository')
+    ->writeData('%PDF-1.4 nombre', 'private://supplier-invoices/' . $reloj->format('Y') . '/' . MARCA . '-tmp.pdf', FileExists::Replace);
+  $tmp->setPermanent();
+  $tmp->save();
+  $puesto = Purchasing::placeInvoice($tmp, $d, $factura);
+  $basura['factura_nombre'] = $puesto;
+  $mirar('y al guardarlo en disco queda ese nombre',
+    $puesto->getFilename() === $esperado, (string) $puesto->getFilename());
 
   echo "\nLa fecha de llegada sale del almacen y de ningun campo\n";
   echo str_repeat('-', 78) . "\n";

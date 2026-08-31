@@ -2,7 +2,13 @@
 
 namespace Drupal\tec_production;
 
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileExists;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Url;
+use Drupal\file\FileInterface;
 
 /**
  * Purchasing arithmetic shared by the Stock Control board and the Purchase List.
@@ -315,6 +321,212 @@ final class Purchasing {
     }
 
     return $dates;
+  }
+
+  /**
+   * The supplier invoice filed against a purchase order, if there is one.
+   *
+   * The file lives on the order, in the private filesystem. Returning null is
+   * what lets a listing hide the download rather than print a broken icon.
+   */
+  public static function invoice($order): ?FileInterface {
+    if (!$order instanceof EntityInterface
+      || !$order->hasField('field_tec_supplier_invoice')
+      || $order->get('field_tec_supplier_invoice')->isEmpty()) {
+      return NULL;
+    }
+    $file = $order->get('field_tec_supplier_invoice')->entity;
+    return $file instanceof FileInterface ? $file : NULL;
+  }
+
+  /**
+   * Bangkok date for invoice filenames: the factory's day, not Singapore's.
+   */
+  public static function invoiceClock(): \DateTimeImmutable {
+    return new \DateTimeImmutable('now', new \DateTimeZone('Asia/Bangkok'));
+  }
+
+  /**
+   * The order title as it can live in a ZIP: spaces to _, no Windows poison.
+   */
+  public static function invoiceFileStem($order): string {
+    $label = trim((string) ($order instanceof EntityInterface ? $order->label() : $order));
+    $label = preg_replace('/\s+/u', '_', $label) ?? '';
+    $label = preg_replace('/[^A-Za-z0-9._-]+/', '_', $label) ?? '';
+    $label = preg_replace('/_+/', '_', $label) ?? '';
+    $label = trim($label, '._');
+    if ($label === '') {
+      $label = 'PO';
+    }
+    if (strlen($label) > 80) {
+      $label = rtrim(substr($label, 0, 80), '._');
+    }
+    return $label;
+  }
+
+  /**
+   * INV_PO_30082026_POLYTE_26-013.pdf — upload day, then the order number.
+   *
+   * $with_id is for two orders that sanitize to the same stem the same day.
+   */
+  public static function invoiceFileName($order, FileInterface $file, bool $with_id = FALSE): string {
+    $ext = strtolower(pathinfo((string) $file->getFilename(), PATHINFO_EXTENSION) ?: 'bin');
+    $name = 'INV_PO_' . self::invoiceClock()->format('dmY') . '_' . self::invoiceFileStem($order);
+    if ($with_id && $order instanceof EntityInterface) {
+      $name .= '_' . $order->id();
+    }
+    return $name . '.' . $ext;
+  }
+
+  /**
+   * Private URI that file should occupy after filing.
+   *
+   * Ignores $ignore (the scan being replaced) so a same-day replace keeps the
+   * name. Another living file on that URI gets the order id on the end.
+   */
+  public static function invoiceDestination($order, FileInterface $file, ?FileInterface $ignore = NULL): string {
+    $dir = 'private://supplier-invoices/' . self::invoiceClock()->format('Y');
+    $dest = $dir . '/' . self::invoiceFileName($order, $file);
+    if (self::invoiceUriTaken($dest, $file, $ignore)) {
+      $dest = $dir . '/' . self::invoiceFileName($order, $file, TRUE);
+    }
+    return $dest;
+  }
+
+  /**
+   * Move the scan onto that name. The scanner's 1893728.jpg is not kept.
+   */
+  public static function placeInvoice(FileInterface $file, $order, ?FileInterface $ignore = NULL): FileInterface {
+    $dest = self::invoiceDestination($order, $file, $ignore);
+    $dir = 'private://supplier-invoices/' . self::invoiceClock()->format('Y');
+    \Drupal::service('file_system')->prepareDirectory($dir, FileSystemInterface::CREATE_DIRECTORY);
+    if ($file->getFileUri() !== $dest) {
+      $file = \Drupal::service('file.repository')->move($file, $dest, FileExists::Replace);
+    }
+    // Drupal's move keeps the scanner name on the file entity even after the
+    // URI has changed. The ZIP for the accountant needs the INV_PO name.
+    $file->setFilename(basename(str_replace('\\', '/', $dest)));
+    $file->setPermanent();
+    $file->save();
+    return $file;
+  }
+
+  /**
+   * Another file entity already sits on this URI, and it is not the new scan
+   * or the one this filing is about to drop.
+   */
+  protected static function invoiceUriTaken(string $uri, FileInterface $incoming, ?FileInterface $ignore): bool {
+    $ids = \Drupal::entityTypeManager()->getStorage('file')->getQuery()
+      ->condition('uri', $uri)
+      ->accessCheck(FALSE)
+      ->execute();
+    foreach ($ids as $id) {
+      if ((int) $id === (int) $incoming->id()) {
+        continue;
+      }
+      if ($ignore && (int) $id === (int) $ignore->id()) {
+        continue;
+      }
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * The URL that downloads that invoice for whoever can see the order.
+   */
+  public static function invoiceUrl($order): ?Url {
+    $file = self::invoice($order);
+    if (!$file) {
+      return NULL;
+    }
+    $path = $file->createFileUrl();
+    if (!$path) {
+      return NULL;
+    }
+    return str_starts_with($path, '/')
+      ? Url::fromUserInput($path)
+      : Url::fromUri($path);
+  }
+
+  /**
+   * Same file, as an attachment. The dialog Download uses this, not invoiceUrl():
+   * that one is for the hover preview, which has to show the scan inline.
+   */
+  public static function invoiceDownloadUrl($order): ?Url {
+    if (!self::invoice($order)) {
+      return NULL;
+    }
+    $id = $order instanceof EntityInterface ? $order->id() : $order;
+    return Url::fromRoute('tec_production.po_invoice_file', ['tec_order' => $id]);
+  }
+
+  /**
+   * The File invoice dialog, with a way back to the screen that opened it.
+   *
+   * Purchase Control used to be the only door. Closed orders leave that list,
+   * so Supplier Orders has to open the same form or there is nowhere to replace
+   * a bad scan. Destination is whatever page rendered the link: after save the
+   * staff land there, not always on Purchase Control.
+   */
+  public static function invoiceDialogUrl($order): Url {
+    $id = $order instanceof EntityInterface ? $order->id() : $order;
+    return Url::fromRoute('tec_production.po_invoice', ['tec_order' => $id], [
+      'query' => \Drupal::destination()->getAsArray(),
+    ]);
+  }
+
+  /**
+   * Attributes that open that form in the same modal Purchase Control uses.
+   */
+  public static function invoiceDialogAttributes(array $classes = []): array {
+    $classes[] = 'use-ajax';
+    return [
+      'class' => array_values(array_unique(array_filter($classes))),
+      'data-dialog-type' => 'modal',
+      'data-dialog-options' => Json::encode(['width' => 520]),
+    ];
+  }
+
+  /**
+   * Marks the invoice link so a hover preview can open, photo or PDF.
+   *
+   * Views rewrites the icon through a token, and that path strips an iframe
+   * out of the markup. The list icon now points at the replace dialog, so the
+   * file URL is on data-preview-url rather than href; javascript fills the box
+   * from that, and still falls back to href on the order card download.
+   */
+  public static function invoicePreview(FileInterface $file, array $trigger, ?Url $preview_url = NULL): array {
+    $classes = $trigger['#attributes']['class'] ?? [];
+    if (is_string($classes)) {
+      $classes = preg_split('/\s+/', trim($classes)) ?: [];
+    }
+    $classes[] = 'tec-po-invoice-preview';
+    $trigger['#attributes']['class'] = array_values(array_unique($classes));
+    $kind = self::invoiceKind($file);
+    if ($kind !== 'other') {
+      $trigger['#attributes']['data-preview'] = $kind;
+    }
+    if ($preview_url) {
+      $trigger['#attributes']['data-preview-url'] = $preview_url->toString();
+    }
+    $trigger['#attached']['library'][] = 'tec_production/supplier_orders';
+    return $trigger;
+  }
+
+  /**
+   * Photo, PDF from the scanner, or something we cannot preview.
+   */
+  public static function invoiceKind(FileInterface $file): string {
+    $mime = strtolower((string) $file->getMimeType());
+    $name = strtolower($file->getFilename());
+    if (str_starts_with($mime, 'image/') || preg_match('/\.(jpe?g|png|webp|gif|heic|heif)$/', $name)) {
+      return 'image';
+    }
+    if ($mime === 'application/pdf' || str_ends_with($name, '.pdf')) {
+      return 'pdf';
+    }
+    return 'other';
   }
 
   /**

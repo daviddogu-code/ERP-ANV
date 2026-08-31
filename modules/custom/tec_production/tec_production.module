@@ -19,6 +19,11 @@ function tec_production_page_attachments(array &$attachments) {
   // paints them with a DXPR colour that is nearly the page background (see
   // css/dxpr-checkbox-fix.css). Harmless anywhere the box is already visible.
   $attachments['#attached']['library'][] = 'tec_production/dxpr_checkbox_fix';
+
+  // Sales status colours: the order lists still wrap the label in a div
+  // whose class is the words of the label. This file paints those and the
+  // pills. Harmless on pages without an order status.
+  $attachments['#attached']['library'][] = 'tec_production/sales_status';
 }
 
 /**
@@ -45,8 +50,52 @@ function tec_production_entity_extra_field_info() {
     'weight' => 0,
     'visible' => FALSE,
   ];
+  $extra['tec_order']['tec_purchase_order']['display']['tec_invoice'] = [
+    'label' => t('Invoice'),
+    'description' => t("The supplier's invoice, scanned or photographed. Shown on the order card so it can be opened after the row has left Purchase Control, and replaced from there if the scan is wrong."),
+    'weight' => 6,
+    'visible' => FALSE,
+  ];
 
   return $extra;
+}
+
+/**
+ * Implements hook_preprocess_field().
+ *
+ * The order card printed the status as plain text. Oscar's colours only
+ * matched two labels. This draws the factory pill from the stored value.
+ */
+function tec_production_preprocess_field(array &$variables): void {
+  if (($variables['element']['#field_name'] ?? '') !== 'field_tec_order_status') {
+    return;
+  }
+  $entity = $variables['element']['#object'] ?? NULL;
+  if (!$entity || $entity->getEntityTypeId() !== 'tec_order' || $entity->bundle() !== 'tec_sales_order') {
+    return;
+  }
+  if (empty($variables['items'][0])) {
+    return;
+  }
+  $variables['items'][0]['content'] = \Drupal\tec_production\SalesStatus::pill(
+    \Drupal\tec_production\SalesStatus::of($entity)
+  );
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ *
+ * The card still has Oscar's "Update to Accounting verified" flag. That
+ * flag always wrote the same status. The slot now advances one step on
+ * the factory map, the same click as the arrow on /o/queue.
+ */
+function tec_production_entity_view_alter(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display): void {
+  if ($entity->getEntityTypeId() !== 'tec_order' || $entity->bundle() !== 'tec_sales_order') {
+    return;
+  }
+  if (isset($build['flag_tec_order_accounting_verified'])) {
+    $build['flag_tec_order_accounting_verified'] = \Drupal\tec_production\SalesStatus::advanceBuild($entity);
+  }
 }
 
 /**
@@ -55,6 +104,10 @@ function tec_production_entity_extra_field_info() {
  * Draws the status pill wherever a display has asked for it.
  */
 function tec_production_tec_order_view(array &$build, $entity, $display, $view_mode) {
+  if ($entity->bundle() === 'tec_sales_order' && isset($build['flag_tec_order_accounting_verified'])) {
+    $build['flag_tec_order_accounting_verified'] = \Drupal\tec_production\SalesStatus::advanceBuild($entity);
+  }
+
   if ($entity->bundle() !== 'tec_purchase_order') {
     return;
   }
@@ -69,40 +122,81 @@ function tec_production_tec_order_view(array &$build, $entity, $display, $view_m
   // into it or throws it away. On an ordinary display the question is real --
   // nothing would remove an unwanted field -- and getComponent() answers it
   // properly.
-  if (!$display->getThirdPartySetting('layout_builder', 'enabled') && !$display->getComponent('tec_progress')) {
-    return;
+  $layout = (bool) $display->getThirdPartySetting('layout_builder', 'enabled');
+
+  if ($layout || $display->getComponent('tec_progress')) {
+    $progress = \Drupal\tec_production\Purchasing::progress($entity);
+    $build['tec_progress'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'span',
+      '#value' => \Drupal\tec_production\Purchasing::PROGRESS[$progress] ?? $progress,
+      '#attributes' => ['class' => ['tec-po-status', 'tec-po-status--' . $progress]],
+      '#attached' => ['library' => ['tec_production/purchase_progress']],
+    ];
+
+    // The reading comes from the lines, and saving a line invalidates the line
+    // rather than the order that holds it. Without this the card would keep
+    // showing "Nothing received" after a delivery was booked in.
+    foreach ($entity->get('field_tec_line_items')->referencedEntities() as $line) {
+      $build['tec_progress']['#cache']['tags'] = array_merge(
+        $build['tec_progress']['#cache']['tags'] ?? [],
+        $line->getCacheTags()
+      );
+    }
   }
 
-  $progress = \Drupal\tec_production\Purchasing::progress($entity);
-  $build['tec_progress'] = [
-    '#type' => 'html_tag',
-    '#tag' => 'span',
-    '#value' => \Drupal\tec_production\Purchasing::PROGRESS[$progress] ?? $progress,
-    '#attributes' => ['class' => ['tec-po-status', 'tec-po-status--' . $progress]],
-    '#attached' => ['library' => ['tec_production/purchase_progress']],
-  ];
-
-  // The reading comes from the lines, and saving a line invalidates the line
-  // rather than the order that holds it. Without this the card would keep
-  // showing "Nothing received" after a delivery was booked in.
-  foreach ($entity->get('field_tec_line_items')->referencedEntities() as $line) {
-    $build['tec_progress']['#cache']['tags'] = array_merge(
-      $build['tec_progress']['#cache']['tags'] ?? [],
-      $line->getCacheTags()
-    );
+  // The scan is an internal paper. The PDF that goes to the supplier must not
+  // grow a download even if the extra field is placed there later.
+  if ($view_mode !== 'pdf' && ($layout || $display->getComponent('tec_invoice'))) {
+    $file = \Drupal\tec_production\Purchasing::invoice($entity);
+    $url = \Drupal\tec_production\Purchasing::invoiceUrl($entity);
+    if ($file && $url) {
+      $build['tec_invoice'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['tec-po-invoice-wrap']],
+        'file' => \Drupal\tec_production\Purchasing::invoicePreview($file, [
+          '#type' => 'link',
+          '#title' => $file->getFilename(),
+          '#url' => $url,
+          '#attributes' => [
+            'class' => ['tec-po-invoice'],
+            'target' => '_blank',
+          ],
+        ], $url),
+        'replace' => [
+          '#type' => 'link',
+          '#title' => t('Replace'),
+          '#url' => \Drupal\tec_production\Purchasing::invoiceDialogUrl($entity),
+          '#attributes' => \Drupal\tec_production\Purchasing::invoiceDialogAttributes(['tec-po-invoice-replace']),
+        ],
+        '#cache' => ['tags' => $entity->getCacheTags()],
+        '#attached' => ['library' => ['tec_production/supplier_orders']],
+      ];
+    }
+    else {
+      // An empty extra field still has to occupy its placeholder, or Layout
+      // Builder prints "Placeholder for the Invoice extra field".
+      $build['tec_invoice'] = ['#markup' => ''];
+    }
   }
 }
 
 /**
  * Implements hook_views_pre_render().
  *
- * Hands the purchase draft the VAT rate of the order it is editing.
+ * Two unrelated jobs share this hook because both have to run before the view
+ * is drawn, and Drupal only offers the one hook for that moment.
  *
- * Every other screen draws its own foot on the server. The draft cannot: it is
- * a form, and the whole point is that the figures move as quantities are typed,
- * before anything is saved. So its total is added up in the browser, and the
- * browser has no way of knowing the rate -- it is on the order, not on any of
- * the rows in front of it.
+ * The supplier lists get a stylesheet that keeps each row on one line: the
+ * date format wraps at the hyphen, and the action icons stack, unless the
+ * cells are told not to wrap.
+ *
+ * The purchase draft gets the VAT rate of the order it is editing. Every other
+ * screen draws its own foot on the server. The draft cannot: it is a form, and
+ * the whole point is that the figures move as quantities are typed, before
+ * anything is saved. So its total is added up in the browser, and the browser
+ * has no way of knowing the rate -- it is on the order, not on any of the rows
+ * in front of it.
  *
  * Nothing is handed over unless the order really is a purchase order with a
  * rate stamped on it. The sales draft runs the same script, and it must keep
@@ -110,6 +204,10 @@ function tec_production_tec_order_view(array &$build, $entity, $display, $view_m
  * somebody has answered.
  */
 function tec_production_views_pre_render(\Drupal\views\ViewExecutable $view): void {
+  if (in_array($view->id(), ['tec_supplier_orders', 'tec_orders_orders'], TRUE)) {
+    $view->element['#attached']['library'][] = 'tec_production/supplier_orders';
+  }
+
   if ($view->id() !== 'tec_order_sales_order_line_items') {
     return;
   }
@@ -198,25 +296,32 @@ function tec_production_tec_order_presave($order) {
   // tec_production_form_alter() for where.
   \Drupal\tec_production\OrderNumber::provisional($order);
 
-  if (!$order->isNew()) {
+  $rate_field = \Drupal\tec_production\Vat::RATE_FIELD;
+  if (!$order->hasField($rate_field) || !$order->get($rate_field)->isEmpty()) {
     return;
   }
 
-  // The VAT rate, from the supplier's card. Copied rather than looked up on
-  // demand so that a supplier registering for VAT in October cannot rewrite
-  // what was printed in March. Anything already filled in is left alone: that
-  // is somebody deliberately overriding it for a one-off, which is allowed.
-  $rate_field = \Drupal\tec_production\Vat::RATE_FIELD;
-  if ($order->bundle() === 'tec_purchase_order'
-    && $order->hasField($rate_field)
-    && $order->get($rate_field)->isEmpty()) {
+  $contact_field = \Drupal\tec_production\OrderNumber::contactField($order->bundle());
+  $contact = $contact_field && $order->hasField($contact_field) && !$order->get($contact_field)->isEmpty()
+    ? $order->get($contact_field)->entity
+    : NULL;
 
-    $supplier_field = \Drupal\tec_production\OrderNumber::contactField($order->bundle());
-    $supplier = $supplier_field && $order->hasField($supplier_field) && !$order->get($supplier_field)->isEmpty()
-      ? $order->get($supplier_field)->entity
-      : NULL;
+  // Purchases: only at creation, so an old order is not given today's rate.
+  // Sales: at creation, and again while the order is still Open if the country
+  // was filled in later. A confirmed order that never had a rate keeps none.
+  if ($order->bundle() === 'tec_purchase_order' && $order->isNew()) {
+    $order->set($rate_field, \Drupal\tec_production\Vat::forContact($contact));
+    return;
+  }
 
-    $order->set($rate_field, \Drupal\tec_production\Vat::forContact($supplier));
+  if ($order->bundle() === 'tec_sales_order'
+    && \Drupal\tec_production\Vat::customerCountry($contact) !== '') {
+    $status = $order->hasField('field_tec_order_status')
+      ? (string) $order->get('field_tec_order_status')->value
+      : '';
+    if ($order->isNew() || $status === 'draft' || $status === '') {
+      $order->set($rate_field, \Drupal\tec_production\Vat::forCustomer($contact));
+    }
   }
 }
 
@@ -275,11 +380,12 @@ function tec_production_tec_product_presave($product) {
  *
  * Two forms mean it:
  *
- * - The draft screens, /o/draft/N and /po/draft/N, which is where the work is
- *   done. Matched by the path, because "o/draft" says which screen this is and
- *   "page_2" does not. Their Save saves the lines -- one entity each -- and
+ * - The purchase draft screen, /po/draft/N, which is where that work is
+ *   done. Matched by the path, because "po/draft" says which screen this is and
+ *   "page_1" does not. Save saves the lines -- one entity each -- and
  *   never touches the order behind them, so the handler has to find that order
- *   itself, from the argument in the path.
+ *   itself, from the argument in the path. Sales Open is /o/order, a PHP form
+ *   whose Place order already earned the number.
  * - The order's own form, a rarer route to the same act.
  *
  * They are wired differently because Drupal takes submit handlers from two
@@ -460,3 +566,112 @@ function _tec_production_recompute_produced(int $order_id): void {
     $order->save();
   }
 }
+
+/**
+ * Creates field_tec_vat_rate on tec_sales_order if it is missing.
+ *
+ * Safe to run twice. Called from the update hook and from the sales VAT test,
+ * because `drush updatedb` on this host often fails before it reaches 10005.
+ */
+function tec_production_ensure_sales_vat_rate(): void {
+  $storage = \Drupal\field\Entity\FieldStorageConfig::loadByName('tec_order', \Drupal\tec_production\Vat::RATE_FIELD);
+  if (!$storage) {
+    return;
+  }
+
+  if (!\Drupal\field\Entity\FieldConfig::loadByName('tec_order', 'tec_sales_order', \Drupal\tec_production\Vat::RATE_FIELD)) {
+    \Drupal\field\Entity\FieldConfig::create([
+      'field_name' => \Drupal\tec_production\Vat::RATE_FIELD,
+      'entity_type' => 'tec_order',
+      'bundle' => 'tec_sales_order',
+      'label' => 'VAT %',
+      'description' => 'The rate this sale was raised under, from the customer\'s country. Thailand is the standard rate; anywhere else is 0%.',
+      'required' => FALSE,
+      'translatable' => TRUE,
+      'settings' => [],
+    ])->save();
+  }
+
+  foreach ([
+    'entity_form_display' => 'tec_order.tec_sales_order.default',
+    'entity_view_display' => 'tec_order.tec_sales_order.default',
+  ] as $type => $id) {
+    $display = \Drupal::entityTypeManager()->getStorage($type)->load($id);
+    if ($display && $display->getComponent(\Drupal\tec_production\Vat::RATE_FIELD)) {
+      $display->removeComponent(\Drupal\tec_production\Vat::RATE_FIELD)->save();
+    }
+  }
+}
+
+/**
+ * Writes the factory letterhead into company settings when the keys are missing.
+ *
+ * Safe to run twice. Called from the update hook and from the settings test,
+ * because `drush updatedb` on this host often fails before it reaches 10006.
+ * Keys already saved are left alone, so a tax ID typed yesterday is not
+ * replaced by the empty default.
+ */
+function tec_production_ensure_company_identity(): void {
+  $config = \Drupal::configFactory()->getEditable(\Drupal\tec_production\Company::CONFIG);
+  $changed = FALSE;
+  foreach (\Drupal\tec_production\Company::defaults() as $key => $value) {
+    if ($config->get($key) !== NULL) {
+      continue;
+    }
+    if ($key === 'address' && is_array($value)) {
+      foreach ($value as $part_key => $part) {
+        $value[$part_key] = $part === NULL ? '' : (string) $part;
+      }
+    }
+    $config->set($key, $value);
+    $changed = TRUE;
+  }
+  if ($changed) {
+    $config->save();
+  }
+}
+
+/**
+ * Stops the order-card "Order status" label inheriting the pill colour.
+ *
+ * Field Formatter Class put the status words on the whole field wrapper.
+ * CSS then painted that wrapper (label included). Safe to run twice.
+ */
+function tec_production_ensure_status_label_plain(): void {
+  $display = \Drupal::entityTypeManager()
+    ->getStorage('entity_view_display')
+    ->load('tec_order.tec_sales_order.default');
+  if (!$display) {
+    return;
+  }
+
+  $changed = FALSE;
+  $token = '[tec_order:field_tec_order_status]';
+  foreach ($display->getThirdPartySetting('layout_builder', 'sections') ?? [] as $section) {
+    if (!is_object($section) || !method_exists($section, 'getComponents')) {
+      continue;
+    }
+    foreach ($section->getComponents() as $component) {
+      if ($component->getPluginId() !== 'field_block:tec_order:tec_sales_order:field_tec_order_status') {
+        continue;
+      }
+      $config = $component->get('configuration');
+      if (!is_array($config)) {
+        continue;
+      }
+      $class = (string) ($config['formatter']['third_party_settings']['field_formatter_class']['class'] ?? '');
+      if (!str_contains($class, $token)) {
+        continue;
+      }
+      $kept = trim(str_replace($token, '', $class));
+      $config['formatter']['third_party_settings']['field_formatter_class']['class'] = $kept === '' ? 'inline-block' : $kept;
+      $component->setConfiguration($config);
+      $changed = TRUE;
+    }
+  }
+
+  if ($changed) {
+    $display->save();
+  }
+}
+

@@ -37,6 +37,15 @@ function tec_production_views_data_alter(array &$data): void {
     ],
   ];
 
+  $data['tec_order_field_data']['tec_invoice'] = [
+    'title' => t('Supplier invoice'),
+    'help' => t('Download of the supplier invoice filed against the order. Prints nothing when none has been filed.'),
+    'field' => [
+      'id' => 'tec_purchase_invoice',
+      'click sortable' => FALSE,
+    ],
+  ];
+
   // On the global table rather than on the order, because it belongs at the
   // foot of a page and not in a row, and because the displays that use it list
   // line items: the order is the argument, not the subject of the rows.

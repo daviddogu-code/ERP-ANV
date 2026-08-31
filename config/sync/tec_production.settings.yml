@@ -11,4 +11,30 @@ report_tile_nid: 13
 stock_tile_nid: 14
 purchase_tile_nid: 15
 po_control_tile_nid: 16
+supplier_orders_tile_nid: 17
 vat_rate: 7.0
+legal_name: 'Acta Non Verba Co., LTD.'
+tax_id: ''
+phone: '+66 (0) 910 699 203'
+email: ''
+website: 'https://anvfightgear.com'
+logo: 0
+address:
+  langcode: en
+  country_code: TH
+  administrative_area: '20'
+  locality: Pattaya
+  dependent_locality: ''
+  postal_code: '20150'
+  sorting_code: ''
+  address_line1: '67, 29 Nongmaikaen Rd.'
+  address_line2: 'Bang Lamung District'
+  address_line3: ''
+  organization: ''
+  given_name: ''
+  additional_name: ''
+  family_name: ''
+bank_name: ''
+bank_holder: ''
+bank_account: ''
+bank_swift: ''

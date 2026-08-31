@@ -5,34 +5,20 @@ namespace Drupal\tec_production;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
- * Whether a purchase carries Thai VAT, and at what rate.
+ * Thai VAT on a purchase or a sale, and the rate stamped on the order.
  *
- * Three situations look different and are the same question. A supplier abroad
- * does not charge Thai VAT. A small Thai supplier who is not registered for VAT
- * does not charge it either. A registered Thai supplier does. So there is no
- * rule about countries with exceptions bolted on; there is one fact per
- * supplier, and it is whether they are registered and charging.
+ * Purchases ask the supplier card how they are treated (registered, small Thai,
+ * or foreign). Sales ask only the destination: Thailand is the standard rate,
+ * anywhere else is zero. The two must not share the supplier list -- the same
+ * company can be a customer and a supplier, and the answers mean different
+ * things.
  *
- * That fact is a short list rather than a yes/no box on purpose. Two of the
- * three answers mean the same zero, but for different reasons, and the reason
- * is worth keeping: a small supplier may register next year, a foreign one
- * never will, and a year from now nobody could tell them apart from a ticked or
- * unticked box. It also means the small ones can be listed and asked.
- *
- * The rate itself is not on the supplier. It sits in one setting, so the day
+ * The rate itself is not on the contact. It sits in one setting, so the day
  * the country changes it, it is changed once and not on every card. What does
- * get written onto each purchase order is the rate that applied when the order
- * was raised -- see the presave hook in tec_production.module. An order printed
+ * get written onto each order is the rate that applied when the order was
+ * raised -- see the presave hook in tec_production.module. An order printed
  * in March must still say in December what it said in March, whatever happened
- * to the rate or to the supplier's registration in between.
- *
- * Deriving all this from the tax number was tempting, since a Thai business
- * registered for VAT has one and an unregistered one does not, and the field is
- * already on the card. It was dropped because a foreign supplier may well have
- * their own country's number sitting in it, which would invent a 7% that nobody
- * is charging, and because a registered supplier whose number was never typed
- * in would quietly lose the VAT. For money, a fact somebody stated beats a fact
- * inferred.
+ * to the rate or to the contact in between.
  */
 final class Vat {
 
@@ -114,6 +100,38 @@ final class Vat {
   }
 
   /**
+   * Country on a contact's address, or empty.
+   *
+   * Sales VAT is destination: Thailand is 7%, anywhere else is 0%. The
+   * supplier list on the same card is a different question and is not read.
+   */
+  public static function customerCountry(?EntityInterface $contact = NULL): string {
+    if (!$contact || !$contact->hasField('field_tec_address') || $contact->get('field_tec_address')->isEmpty()) {
+      return '';
+    }
+    return strtoupper(trim((string) $contact->get('field_tec_address')->country_code));
+  }
+
+  /**
+   * The rate to charge on a sale to this contact, as a percentage.
+   *
+   * ANV is VAT-registered. Every sale whose destination is Thailand is 7%,
+   * whether or not the customer is registered. Export is 0%. No country yet
+   * is also 0% on the arithmetic; the form refuses to confirm until there is
+   * one, so a sale is not silently treated as an export.
+   */
+  public static function forCustomer(?EntityInterface $contact = NULL): float {
+    return self::customerCountry($contact) === 'TH' ? self::standardRate() : 0.0;
+  }
+
+  /**
+   * The rate as it is written next to VAT, without trailing zeros.
+   */
+  public static function formatRate(float $rate): string {
+    return rtrim(rtrim(number_format($rate, 2, '.', ''), '0'), '.');
+  }
+
+  /**
    * The rate written on a purchase order, as a percentage.
    *
    * Read from the order and not worked out again from the supplier, because the
@@ -140,7 +158,7 @@ final class Vat {
   }
 
   /**
-   * The money lines at the foot of a purchase order.
+   * The money lines at the foot of an order.
    *
    * Returns net, rate, vat and gross, or NULL if the order is not one this
    * applies to. It lives here and not in the screens because the order page,
@@ -148,13 +166,14 @@ final class Vat {
    * answers free to drift apart is the bug worth not having.
    *
    * A rate of NULL is not the same as a rate of zero. Zero is an answer: this
-   * supplier is abroad or unregistered, and the document says so. NULL means
-   * the order was raised before any of this existed, and those are left with
-   * the plain total they have always shown -- printing a VAT line on a paper
-   * already sent to a supplier would be worse than printing none.
+   * sale is an export, or this supplier is abroad. NULL means the order was
+   * raised before any of this existed, and those are left with the plain total
+   * they have always shown -- printing a VAT line on a paper already sent
+   * would be worse than printing none.
    */
   public static function breakdown(EntityInterface $order): ?array {
-    if ($order->getEntityTypeId() !== 'tec_order' || $order->bundle() !== 'tec_purchase_order') {
+    if ($order->getEntityTypeId() !== 'tec_order'
+      || !in_array($order->bundle(), ['tec_purchase_order', 'tec_sales_order'], TRUE)) {
       return NULL;
     }
 

@@ -9,8 +9,8 @@ dependencies:
     - field.storage.tec_order.field_tec_order_status
     - field.storage.tec_order.field_tec_po_status
     - field.storage.tec_order.field_tec_priority
-    - flag.flag.tec_order_draft_sales
     - flag.flag.tec_order_draft_po
+    - flag.flag.tec_order_draft_sales
     - user.role.administrator
     - user.role.tec_executive
     - user.role.tec_manager
@@ -120,8 +120,8 @@ display:
           label: 'Order #'
           exclude: false
           alter:
-            alter_text: false
-            text: ''
+            alter_text: true
+            text: '<a href="/o/order/{{ id }}">{{ title }}</a>'
             make_link: false
             path: ''
             absolute: false
@@ -161,7 +161,7 @@ display:
           click_sort_column: value
           type: string
           settings:
-            link_to_entity: true
+            link_to_entity: false
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -633,7 +633,7 @@ display:
           exclude: true
           alter:
             alter_text: true
-            text: " <a class=\"tec-control\" href=\"/o/draft/{{ id }}\" title=\"Edit order\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>"
+            text: " <a class=\"tec-control\" href=\"/o/order/{{ id }}\" title=\"Edit order\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>"
             make_link: false
             path: ''
             absolute: false
@@ -1109,7 +1109,7 @@ display:
           exclude: true
           alter:
             alter_text: true
-            text: " <a class=\"tec-control\" href=\"/o/draft/{{ id }}?destination=/node/3\" title=\"Edit order\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>\r\n\r\n <a class=\"tec-control\" href=\"/o/pf/{{ id }}/print\" title=\"Print/PDF Pro forma\" target=\"_blank\">\r\n    <img src=\"/sites/default/files/000-print-16.png\">\r\n  </a>"
+            text: " <a class=\"tec-control\" href=\"/o/order/{{ id }}\" title=\"Edit order\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>"
             make_link: false
             path: ''
             absolute: false
@@ -1200,7 +1200,7 @@ display:
           equalto: Open
           then: '{{ nothing }}'
           then_translate: true
-          or: ''
+          or: " <a class=\"tec-control\" href=\"/o/pf/{{ id }}/print\" title=\"Print Proforma\" target=\"_blank\">\r\n    <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print Proforma\">\r\n  </a>"
           or_translate: true
           strip_tags: false
         title:
@@ -1217,7 +1217,7 @@ display:
           exclude: false
           alter:
             alter_text: true
-            text: '{{ title }} {{ views_conditional_field }}'
+            text: '<a href="/o/order/{{ id }}">{{ title }}</a> {{ views_conditional_field }}'
             make_link: false
             path: ''
             absolute: false
@@ -1257,7 +1257,7 @@ display:
           click_sort_column: value
           type: string
           settings:
-            link_to_entity: true
+            link_to_entity: false
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -1989,7 +1989,7 @@ display:
           exclude: true
           alter:
             alter_text: true
-            text: " <a class=\"tec-control\" href=\"/o/draft/{{ id }}?destination=/tec_crm/{{ raw_arguments.id }}\" title=\"Edit order\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>\r\n\r\n <a class=\"tec-control\" href=\"/o/pf/{{ id }}/print\" title=\"Print/PDF Pro forma\" target=\"_blank\">\r\n    <img src=\"/sites/default/files/000-print-16.png\">\r\n  </a>"
+            text: " <a class=\"tec-control\" href=\"/o/order/{{ id }}\" title=\"Edit order\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>"
             make_link: false
             path: ''
             absolute: false
@@ -2080,7 +2080,7 @@ display:
           equalto: Open
           then: '{{ nothing }}'
           then_translate: true
-          or: ''
+          or: " <a class=\"tec-control\" href=\"/o/pf/{{ id }}/print\" title=\"Print Proforma\" target=\"_blank\">\r\n    <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print Proforma\">\r\n  </a>"
           or_translate: true
           strip_tags: false
         title:
@@ -2097,7 +2097,7 @@ display:
           exclude: false
           alter:
             alter_text: true
-            text: "{{ title }} {{ views_conditional_field }}\r\n"
+            text: "<a href=\"/o/order/{{ id }}\">{{ title }}</a> {{ views_conditional_field }}\r\n"
             make_link: false
             path: ''
             absolute: false
@@ -2137,7 +2137,7 @@ display:
           click_sort_column: value
           type: string
           settings:
-            link_to_entity: true
+            link_to_entity: false
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -2774,7 +2774,7 @@ display:
           admin_label: ''
           plugin_id: text_custom
           empty: false
-          content: "<div class=\"text-align-right\"><div class=\"btn-default specific-flag\">{{ link_flag }}</div></div>\r\n"
+          content: "<div class=\"text-align-right\"><div class=\"btn-default specific-flag\"><a href=\"/customer/{{ raw_arguments.id }}/order/new\">Place an order</a></div></div>\r\n"
           tokenize: true
       display_extenders: {  }
       block_description: 'TEC CRM: Contact orders list block'
@@ -2926,6 +2926,56 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        tec_invoice:
+          id: tec_invoice
+          table: tec_order_field_data
+          field: tec_invoice
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: tec_purchase_invoice
+          label: ''
+          exclude: true
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: true
+          empty_zero: false
+          hide_alter_empty: true
+          show_label: false
         nothing:
           id: nothing
           table: views
@@ -2938,7 +2988,7 @@ display:
           exclude: true
           alter:
             alter_text: true
-            text: " <a class=\"tec-control\" href=\"/po/draft/{{ id }}?destination=/tec_order/{{ id }}\" title=\"Edit order\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>\r\n\r\n<a class=\"tec-control\" href=\"/po/{{ id }}/print\" target=\"blank\" title=\"Print/PDF\">\r\n    <img src=\"/sites/default/files/000-print-16.png\">\r\n  </a>"
+            text: "<a class=\"tec-control\" href=\"/po/draft/{{ id }}?destination=/tec_order/{{ id }}\" title=\"Edit order\"><img src=\"/sites/default/files/000-edit-16.png\"></a> <a class=\"tec-control\" href=\"/po/{{ id }}/print\" target=\"blank\" title=\"Print/PDF\"><img src=\"/sites/default/files/000-print-16.png\"></a> {{ tec_invoice }}"
             make_link: false
             path: ''
             absolute: false
@@ -3029,7 +3079,7 @@ display:
           equalto: Open
           then: '{{ nothing }}'
           then_translate: true
-          or: ''
+          or: "<a class=\"tec-control\" href=\"/po/{{ id }}/print\" target=\"blank\" title=\"Print/PDF\"><img src=\"/sites/default/files/000-print-16.png\"></a> {{ tec_invoice }}"
           or_translate: true
           strip_tags: false
         title:

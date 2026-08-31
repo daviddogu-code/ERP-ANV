@@ -9,15 +9,17 @@ use Drupal\Core\Entity\EntityInterface;
  * Whether a sales order is still the customer's to change.
  *
  * Open (draft) is a shopping list. Confirming it does not mean the factory
- * has the payment: that is Accounting Verified, a human step. Confirming
- * only moves the order to Pending payment and takes the pen away from the
- * customer. The proforma email is a later step.
+ * has the payment: that is Pending payment until staff mark the deposit
+ * and the order moves to Processing. Confirming only takes the pen away
+ * from the customer. The proforma email is a later step.
  */
 final class PortalOrder {
 
   public const OPEN = 'draft';
 
   public const PENDING_DEPOSIT = 'pending_deposit';
+
+  public const CANCELLED = 'cancelled';
 
   /**
    * Unix time when the factory first marked the deposit as received.
@@ -27,8 +29,8 @@ final class PortalOrder {
   /**
    * What the customer sees, not the ten factory statuses.
    *
-   * From the moment Accounting Verified until Ready to ship, one word:
-   * Confirmed. Production stages stay inside the factory.
+   * From Processing until Completed, one word: Confirmed. Plant names
+   * stay inside the factory. Ready for collection is EXW pickup.
    */
   public const PORTAL_LABELS = [
     self::OPEN => 'Open',
@@ -39,9 +41,9 @@ final class PortalOrder {
     'production_started' => 'Confirmed',
     'quality_control_inspection' => 'Confirmed',
     'completed' => 'Confirmed',
-    'ready_for_delivery' => 'Ready to ship',
+    'ready_for_delivery' => 'Ready for collection',
     'shipped_delivered' => 'Shipped',
-    'cancelled' => 'Cancelled',
+    self::CANCELLED => 'Cancelled',
   ];
 
   /**
@@ -69,10 +71,37 @@ final class PortalOrder {
   }
 
   /**
-   * Payment seen: Accounting Verified and every production step after it.
+   * Payment seen: Processing and every production step after it.
    */
   public static function isPaid(string $status): bool {
-    return !self::isUnpaid($status) && $status !== 'cancelled';
+    return !self::isUnpaid($status) && $status !== self::CANCELLED;
+  }
+
+  /**
+   * Confirm sealed the shopping list. Open and Cancelled have no proforma.
+   */
+  public static function hasProforma(EntityInterface $order): bool {
+    $status = self::statusOf($order);
+    return $status !== self::OPEN && $status !== self::CANCELLED;
+  }
+
+  /**
+   * Browser path of the existing print page.
+   */
+  public static function proformaPath(EntityInterface $order): string {
+    return '/o/pf/' . (int) $order->id() . '/print';
+  }
+
+  /**
+   * Printer icon next to an order number. Empty while Open or Cancelled.
+   */
+  public static function printControlMarkup(EntityInterface $order): string {
+    if (!self::hasProforma($order)) {
+      return '';
+    }
+    $href = Html::escape(self::proformaPath($order));
+    return ' <a class="tec-control" href="' . $href . '" title="Print Proforma" target="_blank">'
+      . '<img src="/sites/default/files/000-print-16.png" alt="Print Proforma"></a>';
   }
 
   /**
@@ -139,9 +168,9 @@ final class PortalOrder {
     return match (self::statusOf($order)) {
       self::OPEN => 'open',
       self::PENDING_DEPOSIT => 'pending-payment',
-      'ready_for_delivery' => 'ready-to-ship',
+      'ready_for_delivery' => 'ready-for-collection',
       'shipped_delivered' => 'shipped',
-      'cancelled' => 'cancelled',
+      self::CANCELLED => 'cancelled',
       default => 'confirmed',
     };
   }

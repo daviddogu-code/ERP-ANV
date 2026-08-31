@@ -17,9 +17,9 @@ use Drupal\views\Plugin\views\area\AreaPluginBase;
  * It is an area and not a field because it says something about the order, not
  * about a line, and it should print once at the bottom whatever the rows did.
  *
- * The sales displays share the attachment this replaced, so the guard on the
- * bundle is not decoration: a proforma must not grow a VAT line until sales has
- * been thought through, which is a different question with a different answer.
+ * Sales draws its own three lines inside the line table (OrderFoot), so the
+ * piece count can sit under Qty. This handler stays on purchases, where there
+ * is no piece column to line up with.
  */
 #[ViewsArea("tec_purchase_vat_totals")]
 class VatTotals extends AreaPluginBase {
@@ -48,7 +48,7 @@ class VatTotals extends AreaPluginBase {
       ? [[$this->t('Total'), $sums['net'], TRUE]]
       : [
         [$this->t('Subtotal'), $sums['net'], FALSE],
-        [$this->t('VAT @rate%', ['@rate' => rtrim(rtrim(number_format($sums['rate'], 2, '.', ''), '0'), '.')]), $sums['vat'], FALSE],
+        [$this->t('VAT @rate%', ['@rate' => Vat::formatRate($sums['rate'])]), $sums['vat'], FALSE],
         [$this->t('Total'), $sums['gross'], TRUE],
       ];
 

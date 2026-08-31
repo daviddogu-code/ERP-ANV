@@ -14,6 +14,7 @@ dependencies:
     - field.field.tec_order.tec_sales_order.field_tec_priority
     - field.field.tec_order.tec_sales_order.field_tec_produced
     - field.field.tec_order.tec_sales_order.field_tec_queue_position
+    - field.field.tec_order.tec_sales_order.field_tec_vat_rate
   module:
     - bootstrap_layout_builder
     - layout_builder
@@ -510,7 +511,7 @@ third_party_settings:
                 settings: {  }
                 third_party_settings:
                   field_formatter_class:
-                    class: 'inline-block [tec_order:field_tec_order_status]'
+                    class: inline-block
             weight: 2
             additional:
               bootstrap_styles:
@@ -1160,4 +1161,5 @@ hidden:
   field_tec_customer: true
   field_tec_produced: true
   field_tec_queue_position: true
+  field_tec_vat_rate: true
   langcode: true

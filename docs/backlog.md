@@ -4,7 +4,7 @@
 > Escrito en español porque el lector principal es el dueño del proyecto.
 > Las otras notas de `docs/` están en inglés y son documentación técnica; esta no.
 >
-> Última actualización: 2026-08-29.
+> Última actualización: 2026-08-31.
 
 ## Cómo usar este archivo
 
@@ -1332,45 +1332,93 @@ Sin prisa y sin orden fijo entre ellas.
   Manager y Executive, **no el supervisor de planta**, porque crear un pedido de compra
   compromete dinero; y la imagen del icono está en `sites/default/private`, que está fuera de
   git igual que los otros doce, así que hay que subirla al servidor a mano o el icono sale roto.
-- **Ventas: alinear las tres pantallas y ponerles el IVA.** Apuntado el 17 de agosto de 2026, después
-  de repasar cómo quedó ventas mientras se ordenaba compras. Son dos trabajos separables.
-
-  El primero es barato y calca uno ya hecho. Las tres pantallas de venta cuentan lo mismo de tres
-  maneras, que es la enfermedad que compras tenía la mañana del 16 de agosto:
-
-  ```
-  borrador   Item | Quantity | Picture | Product name | Product material | Color | Size | Price | Item total
-  ficha      (sin rótulo) | Product name | Product material | Color | Size | Qty. | Sales price | Item total
-  proforma   Item | Picture | Qty. | Product name | Color | Size | Price | Amount
-  ```
-
-  La cantidad es `Quantity` en una y `Qty.` en las otras dos, y va en la posición segunda, sexta y
-  tercera; el precio, `Price`, `Sales price` y `Price`; el importe, `Item total`, `Item total` y
-  `Amount`. La ficha no lleva ni contador ni foto, y la proforma no lleva el material. Sirven de
-  plantilla `las-dos-pantallas-de-compra-se-parecen.php` y `el-impreso-se-lee-como-el-borrador.php`.
-
-  El segundo es el IVA, y está entero. Las dos pantallas de compra llevan el pie `Subtotal / VAT /
-  Total` con el manejador `tec_purchase_vat_totals`; las tres de venta siguen con el `Grand Total` del
-  `attachment_1` compartido. Cuando se decidió el alcance el 16 de agosto se eligió «compras» a
-  propósito, pero el dueño ya dijo cómo tiene que ser en ventas: **el porcentaje sale del país del
-  cliente y se estampa al crear el pedido**, editable después, igual que en compras. `Vat::breakdown()`
-  y el manejador de Views no distinguen de qué lado vienen, así que el trabajo es el campo en el pedido
-  de venta, el gancho que lo estampa desde la ficha del cliente, y colgar el pie en las tres pantallas.
-
-  Tres cosas que **no** hay que llevar, porque ya funcionan igual en los dos lados: la numeración
-  (`OrderNumber` conoce las ventas y las compras, con el mismo formato y el mismo contador que no
-  retrocede), el precio congelado (ventas nunca tuvo el fallo: su ECA siempre multiplicó por el precio
-  de la línea) y el filtro de líneas sin cantidad, que la ficha y la proforma ya tienen y el borrador no
-  —y así debe ser, porque el borrador es donde se teclean las cantidades—. Un detalle feo de paso: la
-  ficha de ventas lo hace con **dos** filtros sobre el mismo campo, `!= 0` y `not empty`, donde compras
-  usa uno solo `> 0`.
-
-  Recibir no tiene equivalente y no lo tendrá por esta vía: el espejo de recibir mercancía es enviarla,
-  y aquí el pedido de venta sale de producción, que ya tiene sus pantallas de cola y de parte de trabajo.
+- ~~**Ventas: alinear las tres pantallas y ponerles el IVA.**~~ **Hecho el 30 de agosto de 2026;
+  en el servidor el 31.** `/my` y fábrica usan la misma rejilla (columnas de `/my`, una lista,
+  un pie). TH = 7 %, resto = 0 %, estampado en el pedido. Relato en Hecho esos días. El **papel
+  PHP de la proforma** está en local y en el servidor (31). Falta la **proforma automática por
+  correo** al confirmar.
 - **Avance automático del estado del pedido** cuando "Remaining" llega a cero. Decidido
   dejarlo desconectado de momento; se puede conectar más adelante sin rehacer nada.
-- **Packing lists.**
-- **Facturas**, con IVA y sin IVA.
+- **CBM estimado al armar el pedido**
+
+  Antes de Confirm, el cliente (y fábrica) tiene que ver **aproximadamente** cuánto ocupa el
+  pedido: si cabe en un 20' o un 40', y más o menos cuántas cajas para el flete EXW. Si se pasa
+  del contenedor, el resto se queda en fábrica hasta el siguiente envío; no le gusta a nadie
+  (cashflow). Clientes que no llenan contenedor también lo necesitan para cotizar el envío.
+  **No es el packing list:** eso va después, con cajas y kilos reales.
+
+  **Dónde vive el dato:** en la **talla** (`tec_size_variation`), no en el producto ni en el
+  color. El 10 oz no llena la caja igual que el 16 oz; un saco `150×40` no es un `47×60×65`.
+
+  Campo que se rellena a mano: **piezas por caja** (ej. guante 10 oz = 20). El CBM por pieza
+  **no se teclea**: es `0,1833 ÷ piezas por caja`. Caja de fábrica fija: **47×60×65 =
+  0,1833 m³**. Ejemplo: 20 pares → 0,009165 m³ por par. Si mañana caben 18, se cambia el 18;
+  no un 0,0092 puesto a mano.
+
+  **Sacos y lo que no va en esa caja:** no se dividen entre 0,1833. Llevan el CBM del propio
+  bulto (1 saco = 1 bulto) y en el pie van **aparte**.
+
+  **Pantalla:** la misma rejilla de Place an order — `/customer/{id}/order/new` y `/my` (y el
+  pedido Open). Columna nueva **Approx. CBM**: por fila, `qty × CBM de cada talla` (suma de
+  las tallas de esa línea). No un CBM dentro de cada celda de talla. Odoo haría
+  `volumen × qty` del producto y mentiría; aquí se mezcla relleno de caja.
+
+  **Pie** (orientativo, rotulado *estimated*):
+
+  - total CBM de lo que va en caja `47×60×65`
+  - ese total ÷ 0,1833 = **cajas aproximadas** (suma primero, luego divide; no redondear por
+    línea; el redondeo hacia arriba ya es la última caja)
+  - margen: **+1 caja**, no +2 (en un pedido chico +2 distorsiona el flete)
+  - CBM de sacos / bultos sueltos
+  - **CBM cajas + CBM sin caja** = lo que se mira para el contenedor
+
+  Hasta que una talla no tenga piezas/caja, esa línea no aporta CBM. Sin maestro, la columna
+  sería teatro.
+
+  **No entra** en el packing list ni en el envío: ahí no va esta estimación ni el +1.
+
+- **Packing list**
+
+  Documento que se envía al cliente **cuando acaba la producción**: cajas y productos **reales**
+  que han salido, no la estimación del punto anterior. Hoy es un Google Sheet a mano (ejemplo
+  mirado: *Packing list Order Custom Fighter 25-001*, hoja Final: 148 cajas, 1.902 piezas,
+  2.528 kg neto / 2.810 bruto, 27,035 m³, EXW, origen Tailandia). La hoja Remaining es lo que
+  **no cupo en este contenedor** y se queda en fábrica hasta el siguiente envío; no es un
+  apéndice del mismo packing.
+
+  **No se copia ese Excel.** Es un tablero de empaque disfrazado de documento (celdas
+  combinadas, una fila por caja aunque sean iguales, *Code* = color, comentarios *Missing 1
+  pair* / *Waiting to fill*, número de packing vacío, Sold to clonado en Ship to). De Odoo/SAP
+  se copian **tres ideas**, no el almacén: el packing es un **envío** (no el pedido); packing
+  list **sin precios** y factura **con precios** son dos papeles; las cajas son hijas del
+  envío. No pistolas, handling units ni SSCC.
+
+  **De lo de ahora sí vale:** cajas mezcladas (caja 2: Black XL + Light Blue L; caja 140: 10 oz
+  + 8 oz) — el resumen por SKU solo **miente** si se pierde una caja; 1 saco = 1 caja; cartón
+  `47×60×65` → 0,1833 m³ y bruto ≈ neto + ~2 kg; pares vs units; membrete EXW / origen /
+  sold-to / ship-to; totales del envío. **No vale** como pantalla: 18 filas idénticas de caja
+  llena, el PDF como checklist de planta, teclear el nombre 148 veces.
+
+  **Qué construir, cuando toque:**
+
+  1. Entidad **envío** colgando del pedido de venta. Lo que no cabe sigue en el pedido y sale
+     en el envío 2 (vuestro Remaining). La cola ya reserva el hueco: Completed = packing list
+     + factura; Ready for collection = el forwarder puede recoger (EXW).
+  2. **Papel** al estilo de la proforma, sin precios. Resumen por producto / color / talla **de
+     este envío** + totales (cajas, piezas, NW, GW, CBM). Sold to y Ship to de verdad (pueden
+     no ser el mismo).
+  3. **Cajas** hijas del envío. Peso, medida y CBM son de la **caja**, no de cada línea. Las
+     cajas llenas iguales no necesitan una fila cada una en el papel comercial; las
+     **mezcladas** sí se detallan (contenido por caja). Un segundo print caja a caja, o solo
+     las mix, si el forwarder lo pide.
+  4. *Missing 1 pair* no va en el PDF del cliente: es planta / production log / lo que no
+     salió en este envío.
+
+  El CBM y las cajas de **este** documento son los reales del empaque, no el Approx. CBM del
+  Place an order.
+
+- **Facturas**, con IVA y sin IVA. Hermano del packing list (mismo momento Completed, mismos
+  datos, **con** precios). No hace falta Odoo para eso.
 - **Web pública de `anvfightgear.com`**, de presentación de la fábrica OEM. **La estructura, el
   argumentario y el análisis de la competencia ya están escritos en
   [`docs/web-anvfightgear.md`](web-anvfightgear.md)**, listos para pasárselos a otra ventana de
@@ -1380,8 +1428,9 @@ Sin prisa y sin orden fijo entre ellas.
   que arreglar.
 - ~~**Portal de clientes**~~ **Hecho el 29 de agosto de 2026** (código en producción,
   **cero cuentas Customer**). Alta: [`docs/sop-give-a-customer-a-portal-login.md`](sop-give-a-customer-a-portal-login.md).
-  Falta la **proforma automática por correo** y el **SOP de cierre de venta**. Requisitos
-  originales en [`docs/customer-portal.md`](customer-portal.md).
+  El 30, en local, fábrica Place/Confirm igualó a `/my` (`/customer/{id}/order/new` → `/o/order/{id}`).
+  Eso y el IVA **ya están en el servidor** (31 de agosto). Falta la **proforma automática por correo**
+  y el **SOP de cierre de venta**. Requisitos originales en [`docs/customer-portal.md`](customer-portal.md).
 - **Agentes.** Atención al cliente en los grupos de WhatsApp y en el correo. Pedidos
   automáticos a proveedores locales por los grupos de LINE.
 
@@ -2069,6 +2118,216 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-08-31 — Packing list: se miró el Excel y no se copia
+
+El dueño pasó *Packing list Order Custom Fighter 25-001* (Google Sheet / xlsx). Hoja Final:
+148 cajas, 1.902 piezas, mix de colores y tallas en la misma caja, sacos 1=1 caja, Remaining
+= lo que no cupo en el contenedor. No se va a clonar esa hoja. Las tareas quedan en
+Funcionalidad nueva: **CBM estimado al armar el pedido** y **Packing list**.
+
+### 2026-08-31 — Nombre de las fotos de color variation: a otra ventana
+
+Patrón acordado: `Marca_Producto_Color_01.jpg` (si el nombre ya lleva la marca, no
+repetirla). Fotos en `field_tec_images` de la color variation, no en la talla. El dueño lo
+encargó a otra pestaña de agente; aquí no se implementó.
+
+### 2026-08-31 — Línea vertical en el centro de la proforma
+
+Misma raya que Date/Company (`1px #c8c8c8`). Mitad y mitad. El bloque del
+cliente va al borde izquierdo del A4. El hueco a cada lado de la raya es el
+mismo que el margen lateral (`8mm`). En local y en el servidor. Sin esquema nuevo.
+
+### 2026-08-31 — Orden de filas en la proforma
+
+Cliente: Company, VAT ID, Country, Address. Membrete: Company, Tax ID, Country,
+Address, Email, Phone. El país de ANV ahora sale. Sin esquema nuevo.
+
+### 2026-08-31 — Sin logo en la proforma impresa
+
+El papel no lleva el logo. PROFORMA y cliente a la izquierda, Acta Non Verba a
+la derecha. El logo de Company settings se queda para la barra, no para el
+print. Sin esquema nuevo.
+
+### 2026-08-31 — Nombre de factura abre, Download guarda
+
+En File invoice el nombre del scan abre `/system/files` en otra pestaña. Download
+sigue guardando el archivo. Sin esquema nuevo.
+
+### 2026-08-31 — Download de la factura descarga el archivo
+
+El enlace abría el scan en una pestaña (`target="_blank"` + JPEG inline). El
+botón se llama Download: tiene que ir a Descargas. Ruta
+`/tec_order/{id}/invoice/file` con `Content-Disposition: attachment`. Sin
+esquema nuevo.
+
+### 2026-08-31 — Cabeceras de tabla al estilo ERP
+
+Más chicas que las filas (0.75 rem / 7 pt), semibold, gris, mayúsculas por CSS
+(`text-transform`), no `PRODUCT` en el PHP. En pantalla: Product / Material (antes
+Product name / Product material). En el print: sin título Image; la columna ya es
+la foto. Sin esquema nuevo.
+
+### 2026-08-31 — El icono de print ya no se queda girando
+
+Oscar escondía el `<img>` y ponía un spinner. El print abre otra pestaña
+(`target="_blank"`), la lista no recarga y el icono no volvía. El script
+`tec_link_spinner` ahora mira el `<a>` del clic. Esquema portal **8013**.
+
+### 2026-08-31 — Ajustes del papel de la proforma
+
+Sin letrero PRO FORMA; la etiqueta a la derecha es **PROFORMA**. Sin BILL TO:
+el cliente va debajo de la fecha. Cabeceras cortas. Filas (productos, sin
+foto, Subtotal/VAT/Total) a la misma altura. La URL al pie es Chrome.
+
+### 2026-08-31 (noche) — El papel de la proforma cabe en A4
+
+Márgenes `@page`, tabla de 8 columnas apretada, PRO FORMA sin recortar.
+Las miniaturas ya no van `loading="lazy"`. El diálogo de imprimir espera a
+las fotos; el `print()` inmediato de Oscar (`tec_print_browser`) y su CSS
+de 21 cm quedan solo en `/po/{id}/print`. Esquema portal **8012**.
+
+### 2026-08-31 (noche) — El print de la proforma es PHP
+
+Misma URL `/o/pf/{id}/print` para no tocar iconos. `page_4` de Oscar se apaga
+(la View no se borra). Papel: membrete de Company settings, PRO FORMA, número,
+fecha de alta del pedido, Bill to, la misma tabla de 8 columnas que `/o/order`
+(Image … Item total + pie IVA), banco solo si hay datos. Open/Cancelled: 403.
+Fábrica o el cliente dueño. Compras `/po/{id}/print` no se toca. Sin correo.
+Esquema portal **8011**. Script: `scripts/poner-la-proforma-en-servidor.sh`.
+
+### 2026-08-31 (noche) — El nombre en `/o` abre `/o/order/{id}`
+
+Como en `/my`. `/o` (block_1) y la pestaña Orders del cliente (block_2). La ficha
+`/tec_order/{id}` sigue en la cola y escribiendo la URL. Compras (block_3) no se
+tocan. Esquema portal **8010**. Script: `scripts/poner-el-nombre-del-pedido-en-servidor.sh`.
+
+### 2026-08-31 (noche) — Line items de la ficha es la tabla de `/o/order`
+
+La pestaña Line items de `/tec_order/{id}` ya no pinta la View de Oscar
+(`tec_order_sales_order_line_items-block_1`). Pinta la misma tabla PHP de
+`/o/order` (Image, Colour, pie IVA, miniatura). Bloque `tec_portal_sales_order_lines`.
+La View no se borra (`page_4` era el print; **8011** la apaga). Material calculation,
+Material Summary y Production Documents no se tocan. Revertir: el bid del Quick Tab
+a `views_block:tec_order_sales_order_line_items-block_1`. Esquema portal **8009**.
+Script: `scripts/poner-la-tabla-de-lineas-en-servidor.sh`.
+
+### 2026-08-31 (noche) — «Order status» ya no coge el color de la pastilla
+
+En la ficha, Field Formatter Class ponía las palabras del estado como clases del
+envoltorio entero. El CSS pintaba `div.Pending.payment` y la etiqueta iba roja
+con el valor. Token quitado; el CSS de Oscar queda solo bajo `.views-field`.
+Esquema **10007**. Ya en local y en el servidor.
+
+### 2026-08-31 (noche, más tarde) — Las Views de `/o` ya no son Oscar
+
+El PHP de Place/Confirm ya estaba. El listado Orders (`node/3`, `/o`, bloque
+`tec_orders_orders-block_1`) seguía con los lápices a `/o/draft` y la impresora en Open.
+Esquema portal **8003 → 8008** (`8005` apaga `/o/draft`, `8007` quita `?destination=` de
+ventas, `8008` Open = lápiz a `/o/order`, después = Print Proforma). Un `/o/draft/{id}`
+redirige a `/o/order/{id}`. Compras `/po/draft` no se toca. Script:
+`scripts/poner-vistas-de-pedido-en-servidor.sh`.
+
+### 2026-08-31 — Place de fábrica, IVA de venta, membrete y logo PNG en producción
+
+Copiados `tec_portal`, `tec_production` y `tec_crm_ux` a `/var/www/erp`. Esquema **10004 → 10006**
+(`10005` campo IVA en ventas, `10006` Company settings). **No se reejecutó 10004.** No se pisó
+`tec_production.settings`: el 7 % y el nid del icono de cola se quedaron. PNG público
+`sites/default/files/anv-logo.png` (HTTP 200). Gin y DXPR apuntan ahí; el login ya enseña el
+icono. País obligatorio en clientes (orgs) viajó con `tec_crm_ux`.
+
+Scripts: `scripts/poner-iva-y-pedidos-en-servidor.sh` / `.php`. No se importó `config/sync`
+entero. No se volcó la base local. Lo que sigue fuera: correo al confirmar, Cancel en `/my`.
+
+### 2026-08-31 — El logo de la barra es un PNG público; Appearance de DXPR no se toca
+
+El logo de **Company settings** es para el papel. Los círculos de la barra, HOME y la pestaña
+son otra cosa: Gin y DXPR. Subir un PNG en Appearance lo copia a **privado** (`default_scheme:
+private`) y el navegador enseña el icono roto. Guardar
+`/admin/appearance/settings/dxpr_theme` reescribe el tema entero (es un diseñador, no un
+formulario de logo).
+
+Copia pública `sites/default/files/anv-logo.png` (sin espacios). Gin y DXPR apuntan ahí.
+Favicon: el mismo PNG. Ese fichero **no va en git**; si se importa la config en el servidor
+sin copiarlo a mano, HOME se rompe otra vez. **Ya está en** `https://erp.anvfightgear.com`
+(el mismo 31).
+
+### 2026-08-30 (noche, más tarde) — Identidad de la empresa en Company settings
+
+`/admin/config/tec/company` tenía el 7 % y los iconos del home. Le faltaba quiénes somos:
+razón social, dirección, tax ID, teléfono, email, web, logo, banco. Defaults del membrete que
+estaba pegado en el HTML de compras (Acta Non Verba, Nongmaikaen, Pattaya). Tax ID, banco y
+logo vacíos hasta que se rellenan. El logo de esa pantalla es **para imprimir**, no para la
+barra. Esquema **10006**. Clase `Company`. Prueba: `se-tocan-los-ajustes.php`.
+
+**Ya está en el servidor** (31 de agosto). El print de proforma lo lee desde **8011**.
+
+### 2026-08-30 (noche) — IVA de venta: Tailandia 7 %, fuera 0 %, país obligatorio
+
+ANV está dada de alta. El destino manda, no cómo tribute el cliente como proveedor. TH = tipo
+de `tec_production.settings` (7 %). Cualquier otro país = 0 %. `field_tec_vat_treatment` no se
+toca: la misma ficha puede ser cliente y proveedor.
+
+Líneas en neto. Pie Subtotal / VAT / Total en Place, Open, cerrado, ficha (`block_1`) y
+proforma (`page_4`). En `/my` el Total de la lista es el **bruto**. El % se estampa al crear
+el pedido (y en Open si el país llega después). Un pedido ya estampado no se reescribe si el
+cliente cambia de país. Pedidos viejos sin %: un solo Total, como antes.
+
+Place y Confirm exigen país en la organización. El selector es obligatorio **solo en
+clientes**, no toda la dirección (si no, Address preselecciona EE. UU.). Cambiar de país
+vacía la provincia que el país nuevo no tiene; si no, el ajax de Address dejaba Chon Buri en
+Singapur y el guardado fallaba. Esquema **10005**. Pruebas: `el-iva-de-venta.php`,
+`el-pais-del-cliente.php`.
+
+**Ya está en el servidor** (31 de agosto). El papel PHP del print es **8011**. El correo al
+confirmar, después.
+
+### 2026-08-30 (tarde–noche) — Place y Confirm: fábrica igual que `/my`
+
+`/my/order/new` es el modelo: Image | Product name | Material | Colour | Size | Qty | Price |
+Item total; marcas seguidas, un solo total; solo el botón **Place order**. Fábrica no usa
+`/o/draft/…` para ventas. Place: `/customer/{id}/order/new`. Open/Confirm: `/o/order/{id}`.
+Misma entidad, misma rejilla, el cliente va en la URL no en el login.
+
+Confirm guarda aunque no hayas pulsado Save. El icono Print proforma **solo después de
+Confirm**, igual en `/my` y en fábrica. Tooltip: **Print Proforma**. Place an order en pestaña
+nueva ya no rebota a la ficha. El `?destination=` de Edit se limpió. Pruebas:
+`el-pedido-de-fabrica.php`, `el-pedido-del-portal.php`.
+
+**Ya está en el servidor** (31 de agosto). Place: `/customer/{id}/order/new`. Open/Confirm:
+`/o/order/{id}`.
+
+### 2026-08-30 (tarde) — Los estados de venta son el flujo de la fábrica, no el de Oscar
+
+Oscar no conocía el flujo. Accounting Verified no era un estado: era el clic de «ha llegado el
+pago». Quality Control tampoco. Cadena:
+
+Open → Pending payment → Processing → Ready for production → On production → Completed →
+Ready for collection → Shipped. Cancelled se queda. Un pedido con número **no se borra**
+(Cancel en `/my` aún no existe).
+
+Las claves internas no cambian (`pending_deposit`, `ready_for_delivery`, …); cambian las
+etiquetas. Pedidos viejos: Accounting Verified → Processing, QC → On production. Un solo mapa
+`SalesStatus`: cola, ficha, clic «Update to …» (solo adelante). Open no se sella desde la
+cola; se sella con **Confirm**. Completed y Ready for collection **siguen en `/o/queue`**
+hasta Shipped (EXW) y **no** comen capacidad.
+
+El cliente en `/my` ve Open / Pending payment / **Confirmed** (de Processing a Completed) /
+Ready for collection / Shipped. Pending payment en rojo. El ECA de ese flag se apagó. El flag
+del cliente dice **Place an order**. Esquema **10004**.
+
+**Ya está en** `https://erp.anvfightgear.com` (esa tarde). Lo que vino después (rejilla,
+fábrica Place, IVA, membrete, logo PNG) viajó el 31.
+
+### 2026-08-30 (mañana) — Supplier orders: icono, factura, una línea, nombre de PDF
+
+En producción no había atajo en el home a `/supplier-orders`. Icono en la portada, icono de
+factura en el listado, filas en **una** línea, marco blanco más ancho para que quepan los
+iconos. Los PDFs de factura se renombran
+`INV_PO_DDMMYYYY_PROVEEDOR_26-013.pdf`. Vista previa al pasar el ratón: **no**, el Brother
+escanea en PDF y no es el mismo truco que las fotos de producto.
+
+**Ya está en el servidor.**
+
 ### 2026-08-29 — Portal de clientes en producción; aún no hay cliente real
 
 Módulo `tec_portal` en `https://erp.anvfightgear.com`. `/my` pide login. El rol
@@ -2078,8 +2337,14 @@ ChrisPruebaLTD / PRUEBA 26-013 se quedan en `tec.test`).
 
 Recorrido: login → `/my` → Place an order → cantidades → Confirm → estado interno
 `pending_deposit` (el cliente ve **Pending payment**). Misma entidad `tec_order` que
-fábrica. Fila gris en la cola hasta **Accounting Verified**. Date en `/my` es ese
-clic, no la fecha de creación.
+fábrica. Confirm **guarda** aunque no hayas pulsado Save quantities. Mientras está Open, la
+rejilla es el catálogo entero (`/my/order/new` y `/my/order/{id}` se ven igual): se pueden
+rellenar tallas que estaban a 0. Fotos 40×40 con hover. Pie: piezas bajo Qty, importe bajo
+Item total. Texto al confirmar: *This order can no longer be changed. The order will be
+processed after payment is received.* Estados del cliente más grandes y con color; Pending
+payment en rojo. Date en `/my` es cuando fábrica marca el pago
+(`field_tec_accounting_verified_on`), no la fecha de creación. La fila de la cola sigue gris
+hasta Processing (el 30 se retiró Accounting Verified; no esperar ese nombre).
 
 Identidad: usuario → **Contact person** → **Works at** → organización → marcas.
 Nunca mezclar Customer con roles de fábrica. Las URLs `/tec_order/…` y `/customer/…`
@@ -2091,7 +2356,8 @@ ya está en el CRM):
 —*Give a customer a portal login*. El SOP de **cerrar la venta** (MOQs, materiales,
 colores) sigue pendiente.
 
-Pendiente de portal: correo de proforma al confirmar.
+Pendiente de portal: correo de proforma al confirmar. Place de fábrica e IVA: en el servidor
+el 31 de agosto.
 
 ### 2026-08-28 (noche) — Correo de función: grupos, no alias ni asientos nuevos
 

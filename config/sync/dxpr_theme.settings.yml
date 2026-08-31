@@ -181,7 +181,7 @@ features:
   favicon: 1
   node_user_picture: 1
 logo:
-  path: 'public://acta-octa-black-white.jpg'
+  path: 'public://anv-logo.png'
   url: ''
   use_default: 0
 page_title_image: ''
@@ -206,8 +206,8 @@ modal_jquery_ui_bridge: 0
 cdn_provider: ''
 favicon:
   use_default: 0
-  path: 'public://acta-octa-favicon_0.ico'
-  mimetype: image/vnd.microsoft.icon
+  path: 'public://anv-logo.png'
+  mimetype: image/png
 background_image_path: ''
 second_header_sticky: 0
 mark_menu_with_children: 0

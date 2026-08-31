@@ -1,6 +1,6 @@
 uuid: 427b0eff-f154-4c6c-a37b-02fc77022ab1
 langcode: en
-status: true
+status: false
 dependencies:
   config:
     - eck.eck_type.tec_line_item.tec_sales_order_line_item
@@ -260,7 +260,7 @@ actions:
     plugin: action_goto_action
     label: 'Redirect to order'
     configuration:
-      url: '/o/draft/[order:id]?destination=/tec_order/[order:id]'
+      url: '/o/order/[order:id]'
       replace_tokens: true
     successors:
       -

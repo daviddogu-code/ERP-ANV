@@ -5,8 +5,12 @@
  * Usability fixes for the CRM contact forms.
  */
 
+use CommerceGuys\Addressing\AddressFormat\FieldOverrides;
+use Drupal\address\FieldHelper;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -171,6 +175,7 @@ function tec_crm_ux_entity_presave(EntityInterface $entity): void {
   }
 
   tec_crm_ux_drop_repeated_brands($entity);
+  tec_crm_ux_scrub_entity_address($entity);
 
   if ($entity->bundle() !== 'tec_contact_person' || !$entity->hasField('title')) {
     return;
@@ -514,6 +519,18 @@ function tec_crm_ux_field_widget_complete_form_alter(&$field_widget_complete_for
  */
 function tec_crm_ux_address_after_build(array $element, FormStateInterface $form_state): array {
   tec_crm_ux_address_neutralize_group_keys($element);
+  tec_crm_ux_address_clear_stale_fields($element, $form_state);
+
+  $entity = NULL;
+  $form_object = $form_state->getFormObject();
+  if ($form_object instanceof EntityFormInterface) {
+    $entity = $form_object->getEntity();
+  }
+  if ($entity instanceof FieldableEntityInterface
+    && $entity->bundle() === 'tec_contact_organization') {
+    tec_crm_ux_mark_country_for_customers($element, tec_crm_ux_form_needs_customer_country($entity));
+  }
+
   return $element;
 }
 
@@ -531,6 +548,289 @@ function tec_crm_ux_address_neutralize_group_keys(array &$element): void {
     }
     tec_crm_ux_address_neutralize_group_keys($element[$key]);
   }
+}
+
+/**
+ * Properties an address may keep for the current country.
+ *
+ * Address format validation rejects leftover fields: Thailand has a province
+ * select, Singapore does not. Changing country used to leave the old province
+ * in the submitted value, and save failed with a format error that looked like
+ * the country itself had broken.
+ */
+function tec_crm_ux_address_keep_properties(string $country, $parsed_overrides = NULL): array {
+  $keep = ['country_code', 'langcode'];
+  if ($country === '') {
+    return $keep;
+  }
+
+  $format = \Drupal::service('address.address_format_repository')->get($country);
+  $hidden = [];
+  if ($parsed_overrides instanceof FieldOverrides) {
+    $hidden = $parsed_overrides->getHiddenFields();
+  }
+  elseif (is_array($parsed_overrides) && $parsed_overrides) {
+    $normalized = [];
+    foreach ($parsed_overrides as $field => $data) {
+      $normalized[$field] = is_array($data) ? ($data['override'] ?? '') : $data;
+    }
+    $hidden = (new FieldOverrides($normalized))->getHiddenFields();
+  }
+
+  foreach (array_diff($format->getUsedFields(), $hidden) as $field) {
+    $property = FieldHelper::getPropertyName($field);
+    if ($property) {
+      $keep[] = $property;
+    }
+  }
+
+  return array_values(array_unique($keep));
+}
+
+/**
+ * Drop address properties the current country does not use.
+ */
+function tec_crm_ux_scrub_address_value(array $value, $parsed_overrides = NULL): array {
+  $country = strtoupper(trim((string) ($value['country_code'] ?? '')));
+  $keep = array_flip(tec_crm_ux_address_keep_properties($country, $parsed_overrides));
+  foreach (array_keys($value) as $key) {
+    if ($key === 'country_code' || $key === 'langcode') {
+      continue;
+    }
+    if (!isset($keep[$key])) {
+      $value[$key] = '';
+    }
+  }
+  return $value;
+}
+
+/**
+ * Field overrides as AddressItem::getFieldOverrides() returns them.
+ */
+function tec_crm_ux_address_overrides_for_entity(?FieldableEntityInterface $entity): array {
+  if (!$entity || !$entity->hasField('field_tec_address')) {
+    return [];
+  }
+  $settings = $entity->getFieldDefinition('field_tec_address')->getSetting('field_overrides') ?? [];
+  if (!is_array($settings) || !$settings) {
+    return [];
+  }
+  $normalized = [];
+  foreach ($settings as $field => $data) {
+    $normalized[$field] = is_array($data) ? ($data['override'] ?? '') : $data;
+  }
+  return array_filter($normalized, static fn($override) => $override !== '');
+}
+
+/**
+ * Clear leftover province / city / postcode when they no longer belong.
+ *
+ * Stock Address::clearValues() only blanks a dependent field if that field
+ * still exists on the rebuilt form. Singapore has no province, so a Thailand
+ * province survived the switch and then failed format validation.
+ */
+function tec_crm_ux_address_clear_stale_fields(array &$element, FormStateInterface $form_state): void {
+  $parents = $element['#parents'] ?? [];
+  if (!$parents) {
+    return;
+  }
+
+  $input = &$form_state->getUserInput();
+  $location_keys = [
+    'dependent_locality',
+    'locality',
+    'administrative_area',
+    'postal_code',
+    'sorting_code',
+  ];
+
+  $triggering = $form_state->getTriggeringElement();
+  $trigger_name = is_array($triggering) ? (string) end($triggering['#parents']) : '';
+  if ($trigger_name === 'country_code') {
+    foreach ($location_keys as $key) {
+      NestedArray::setValue($input, array_merge($parents, [$key]), '');
+      if (isset($element[$key]) && is_array($element[$key])) {
+        $element[$key]['#value'] = '';
+      }
+      if (isset($element['#value']) && is_array($element['#value'])) {
+        $element['#value'][$key] = '';
+      }
+    }
+  }
+
+  $overrides = $element['#parsed_field_overrides'] ?? ($element['#field_overrides'] ?? []);
+  $current = is_array($element['#value'] ?? NULL) ? $element['#value'] : [];
+  $clean = tec_crm_ux_scrub_address_value($current, $overrides);
+  $element['#value'] = $clean;
+  foreach ($clean as $key => $val) {
+    if ($val === '' || $val === NULL) {
+      NestedArray::setValue($input, array_merge($parents, [$key]), '');
+    }
+  }
+}
+
+/**
+ * Country is required for customers, without preselecting a default country.
+ *
+ * Address::valueCallback() invents a country when the address element itself
+ * is #required. Only the country select is marked required, and only when we
+ * already know this card is a customer. Ticking Customer later uses #states.
+ */
+function tec_crm_ux_mark_country_for_customers(array &$element, bool $required_now): void {
+  if (isset($element['country_code']['country_code']) && is_array($element['country_code']['country_code'])) {
+    $select = &$element['country_code']['country_code'];
+  }
+  elseif (isset($element['country_code']) && is_array($element['country_code'])) {
+    $select = &$element['country_code'];
+  }
+  else {
+    return;
+  }
+
+  $select['#states']['required'] = [
+    ':input[name="field_tec_contact_type[' . TEC_CRM_UX_TYPE_CUSTOMER . ']"]' => [
+      'checked' => TRUE,
+    ],
+  ];
+  if ($required_now) {
+    $select['#required'] = TRUE;
+  }
+}
+
+/**
+ * Whether this organization form should treat country as required now.
+ */
+function tec_crm_ux_form_needs_customer_country(?FieldableEntityInterface $entity): bool {
+  if ($entity && tec_crm_ux_entity_is_customer($entity)) {
+    return TRUE;
+  }
+  if (tec_crm_ux_tipo_tid() === TEC_CRM_UX_TYPE_CUSTOMER) {
+    return TRUE;
+  }
+  if ($entity) {
+    foreach (tec_crm_ux_requested_contact_type_tids($entity) as $tid) {
+      if ($tid === TEC_CRM_UX_TYPE_CUSTOMER) {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Country code from an address field, or empty.
+ */
+function tec_crm_ux_country_code(FieldableEntityInterface $entity): string {
+  if (!$entity->hasField('field_tec_address') || $entity->get('field_tec_address')->isEmpty()) {
+    return '';
+  }
+  return strtoupper(trim((string) $entity->get('field_tec_address')->country_code));
+}
+
+/**
+ * Wipe unused address properties on a CRM entity before it is stored.
+ */
+function tec_crm_ux_scrub_entity_address(FieldableEntityInterface $entity): void {
+  if (!$entity->hasField('field_tec_address') || $entity->get('field_tec_address')->isEmpty()) {
+    return;
+  }
+  $overrides = tec_crm_ux_address_overrides_for_entity($entity);
+  $items = [];
+  $changed = FALSE;
+  foreach ($entity->get('field_tec_address') as $item) {
+    $original = $item->toArray();
+    $clean = tec_crm_ux_scrub_address_value($original, $overrides);
+    $items[] = $clean;
+    if ($clean !== $original) {
+      $changed = TRUE;
+    }
+  }
+  if ($changed) {
+    $entity->set('field_tec_address', $items);
+  }
+}
+
+/**
+ * Contact type term ids as submitted on the CRM form.
+ */
+function tec_crm_ux_submitted_contact_type_tids(FormStateInterface $form_state): array {
+  $values = $form_state->getValue('field_tec_contact_type') ?? [];
+  $selected = [];
+  foreach ((array) $values as $delta => $item) {
+    if (is_array($item) && !empty($item['target_id'])) {
+      $selected[] = (int) $item['target_id'];
+    }
+    elseif (is_scalar($item) && (int) $item > 0 && !in_array($delta, ['add_more'], TRUE)) {
+      if ((int) $item === (int) $delta || (int) $item > 0) {
+        $selected[] = (int) ($item ?: $delta);
+      }
+    }
+  }
+  if (isset($values[1396]) || isset($values['1396']) || isset($values[1395]) || isset($values['1395'])) {
+    $selected = [];
+    foreach ($values as $key => $val) {
+      if (is_numeric($key) && (string) $val === (string) $key) {
+        $selected[] = (int) $key;
+      }
+    }
+  }
+  return array_values(array_unique($selected));
+}
+
+/**
+ * Address rows as submitted, whether or not the widget has nested them.
+ */
+function tec_crm_ux_form_address_items(FormStateInterface $form_state): array {
+  $raw = $form_state->getValue('field_tec_address');
+  if (!is_array($raw)) {
+    return [];
+  }
+  $items = [];
+  foreach ($raw as $delta => $item) {
+    if ($delta === 'add_more' || !is_array($item)) {
+      continue;
+    }
+    $items[$delta] = (isset($item['address']) && is_array($item['address']))
+      ? $item['address']
+      : $item;
+  }
+  return $items;
+}
+
+/**
+ * First submitted country code, or empty.
+ */
+function tec_crm_ux_form_address_country(FormStateInterface $form_state): string {
+  foreach (tec_crm_ux_form_address_items($form_state) as $item) {
+    $code = strtoupper(trim((string) ($item['country_code'] ?? '')));
+    if ($code !== '') {
+      return $code;
+    }
+  }
+  return '';
+}
+
+/**
+ * Scrub leftover address properties in form state before entity validation.
+ */
+function tec_crm_ux_scrub_address_in_form_state(FormStateInterface $form_state, ?FieldableEntityInterface $entity): void {
+  $raw = $form_state->getValue('field_tec_address');
+  if (!is_array($raw)) {
+    return;
+  }
+  $overrides = tec_crm_ux_address_overrides_for_entity($entity);
+  foreach ($raw as $delta => $item) {
+    if ($delta === 'add_more' || !is_array($item)) {
+      continue;
+    }
+    if (isset($item['address']) && is_array($item['address'])) {
+      $raw[$delta]['address'] = tec_crm_ux_scrub_address_value($item['address'], $overrides);
+    }
+    else {
+      $raw[$delta] = tec_crm_ux_scrub_address_value($item, $overrides);
+    }
+  }
+  $form_state->setValue('field_tec_address', $raw);
 }
 
 /**
@@ -557,41 +857,51 @@ function tec_crm_ux_contact_form_after_build(array $form, FormStateInterface $fo
 }
 
 /**
- * Validation: never lose the URL-selected contact type on save.
+ * Validation: keep the URL-selected contact type, require a country on customers.
+ *
+ * Runs before EntityForm::validateForm so leftover address properties are gone
+ * before Address format constraints see them, and so a missing country is a
+ * form error instead of a constraint dump.
  */
 function tec_crm_ux_contact_form_validate(array &$form, FormStateInterface $form_state): void {
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object instanceof EntityFormInterface ? $form_object->getEntity() : NULL;
+
+  $selected = tec_crm_ux_submitted_contact_type_tids($form_state);
   $tid = tec_crm_ux_tipo_tid();
-  if (!$tid) {
-    return;
-  }
-  $values = $form_state->getValue('field_tec_contact_type') ?? [];
-  $selected = [];
-  foreach ((array) $values as $delta => $item) {
-    if (is_array($item) && !empty($item['target_id'])) {
-      $selected[] = (int) $item['target_id'];
-    }
-    elseif (is_scalar($item) && (int) $item > 0 && !in_array($delta, ['add_more'], TRUE)) {
-      // Checkboxes widget may submit as tid => tid|0.
-      if ((int) $item === (int) $delta || (int) $item > 0) {
-        $selected[] = (int) ($item ?: $delta);
-      }
-    }
-  }
-  // Options checkboxes often look like [1396 => '1396', 1395 => 0].
-  if (isset($values[1396]) || isset($values['1396']) || isset($values[1395]) || isset($values['1395'])) {
-    $selected = [];
-    foreach ($values as $key => $val) {
-      if (is_numeric($key) && (string) $val === (string) $key) {
-        $selected[] = (int) $key;
-      }
-    }
-  }
-  if (!in_array($tid, $selected, TRUE)) {
+  if ($tid && !in_array($tid, $selected, TRUE)) {
     $selected[] = $tid;
     $form_state->setValue('field_tec_contact_type', array_map(
       static fn($id) => ['target_id' => $id],
       array_values(array_unique($selected))
     ));
+  }
+
+  if (!$entity instanceof FieldableEntityInterface || $entity->bundle() !== 'tec_contact_organization') {
+    return;
+  }
+
+  tec_crm_ux_scrub_address_in_form_state($form_state, $entity);
+
+  $es_cliente = in_array(TEC_CRM_UX_TYPE_CUSTOMER, $selected, TRUE)
+    || ($selected === [] && tec_crm_ux_entity_is_customer($entity));
+  if (!$es_cliente) {
+    return;
+  }
+
+  if (tec_crm_ux_form_address_country($form_state) !== '') {
+    return;
+  }
+
+  $mensaje = t('A customer needs a country.');
+  if (isset($form['field_tec_address']['widget'][0]['address']['country_code']['country_code'])) {
+    $form_state->setError($form['field_tec_address']['widget'][0]['address']['country_code']['country_code'], $mensaje);
+  }
+  elseif (isset($form['field_tec_address'])) {
+    $form_state->setError($form['field_tec_address'], $mensaje);
+  }
+  else {
+    $form_state->setErrorByName('field_tec_address', $mensaje);
   }
 }
 
@@ -613,7 +923,8 @@ function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $fo
   $form['#attributes']['class'][] = 'tec-crm-contact-form';
   $form['#attached']['library'][] = 'tec_crm_ux/prefill';
   $form['#after_build'][] = 'tec_crm_ux_contact_form_after_build';
-  $form['#validate'][] = 'tec_crm_ux_contact_form_validate';
+  $form['#validate'] = $form['#validate'] ?? [];
+  array_unshift($form['#validate'], 'tec_crm_ux_contact_form_validate');
   $form['#cache']['contexts'][] = 'url.query_args:tipo';
   $form['#cache']['contexts'][] = 'url.query_args:prefill';
   $form['#cache']['contexts'][] = 'url.query_args:works_at';
@@ -655,6 +966,21 @@ function tec_crm_ux_form_alter(array &$form, FormStateInterface $form_state, $fo
 
   tec_crm_ux_apply_supplier_visibility($form);
   tec_crm_ux_apply_customer_visibility($form);
+}
+
+/**
+ * Whether a CRM contact has Contact type = Customer.
+ */
+function tec_crm_ux_entity_is_customer(FieldableEntityInterface $entity): bool {
+  if (!$entity->hasField('field_tec_contact_type') || $entity->get('field_tec_contact_type')->isEmpty()) {
+    return FALSE;
+  }
+  foreach ($entity->get('field_tec_contact_type') as $item) {
+    if ((int) $item->target_id === TEC_CRM_UX_TYPE_CUSTOMER) {
+      return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 /**
@@ -702,7 +1028,10 @@ function tec_crm_ux_tec_crm_view(array &$build, EntityInterface $entity, EntityV
   if ($entity->bundle() !== 'tec_contact_organization') {
     return;
   }
-  if (in_array($view_mode, ['compact', 'sales_order_button', 'p_o_button', 'print'], TRUE)) {
+  // Details tab only (view mode full_details). The card itself is view mode
+  // "full", which uses the default display; listing contacts there duplicated
+  // the table above the Orders / Products / Details tabs.
+  if ($view_mode !== 'full_details') {
     return;
   }
 

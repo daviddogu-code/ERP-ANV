@@ -240,39 +240,6 @@ try {
   $texto = $leido((string) $respuesta->getContent());
   $mirar('pero no se queda sin total', str_contains($texto, 'Total ' . $dinero($neto)), $dinero($neto));
   $mirar('y no le aparece ni subtotal ni IVA', !str_contains($texto, 'Subtotal') && !str_contains($texto, 'VAT '));
-
-  echo "\nY ventas sigue como estaba\n";
-  echo str_repeat('-', 78) . "\n";
-
-  $ventas = $pedido_storage->getQuery()->accessCheck(FALSE)
-    ->condition('type', 'tec_sales_order')
-    ->range(0, 1)
-    ->execute();
-  if (!$ventas) {
-    printf("  %-6s no hay ningun pedido de venta que mirar\n", 'aviso');
-  }
-  else {
-    $venta = (int) reset($ventas);
-    foreach ([
-      'la ficha de venta' => '/tec_order/' . $venta,
-      'la proforma' => '/o/pf/' . $venta . '/print',
-    ] as $donde => $ruta) {
-      $respuesta = $pedir($ruta);
-      if ($respuesta->getStatusCode() !== 200) {
-        $mirar($donde . ' abre', FALSE, 'estado ' . $respuesta->getStatusCode());
-        continue;
-      }
-      $texto = $leido((string) $respuesta->getContent());
-      $mirar($donde . ' no se ha inventado un IVA', !str_contains($texto, 'VAT 7%') && !str_contains($texto, 'VAT 0%'));
-      $mirar($donde . ' conserva su total', str_contains($texto, 'Total'));
-    }
-
-    // Y el borrador de ventas, que corre el mismo javascript, no debe recibir
-    // porcentaje ninguno: sin el, el script deja la pantalla como estaba.
-    $respuesta = $pedir('/o/draft/' . $venta);
-    $mirar('el borrador de venta no recibe porcentaje',
-      !str_contains((string) $respuesta->getContent(), 'tecPurchaseVat'));
-  }
 }
 finally {
   foreach ($basura as $ficha) {
@@ -287,5 +254,5 @@ finally {
 
 echo "\n";
 echo $problemas === 0
-  ? "El pie del pedido de compra dice lo que se paga, y ventas no se ha enterado.\n\n"
+  ? "El pie del pedido de compra dice lo que se paga.\n\n"
   : "$problemas cosa(s) mal.\n\n";

@@ -34,7 +34,7 @@
 
       const isOpen = row.dataset.open === '1';
       const isPostMfg = row.dataset.postMfg === '1';
-      // Completed / Ready for Delivery: visible on queue, no mfg capacity.
+      // Completed / Ready for collection: visible on queue, no mfg capacity.
       const counts = !isPostMfg && (!isOpen || includeOpen);
       const cell = row.querySelector('.tec-queue__deadline');
       if (!cell) {

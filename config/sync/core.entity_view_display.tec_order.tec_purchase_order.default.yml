@@ -766,6 +766,18 @@ third_party_settings:
                     class: null
                   scroll_effects:
                     class: null
+          7f3a9c21-4b8e-4d16-9a70-2e5c8f1b0d44:
+            uuid: 7f3a9c21-4b8e-4d16-9a70-2e5c8f1b0d44
+            region: blb_region_col_1
+            configuration:
+              id: 'extra_field_block:tec_order:tec_purchase_order:tec_invoice'
+              label: Invoice
+              label_display: visible
+              provider: layout_builder
+              context_mapping:
+                entity: layout_builder.entity
+            weight: 5
+            additional: {  }
         third_party_settings: {  }
       -
         layout_id: 'bootstrap_layout_builder:blb_col_1'
@@ -1105,3 +1117,5 @@ hidden:
   field_tec_supplier_invoice: true
   field_tec_vat_rate: true
   langcode: true
+  tec_invoice: true
+  tec_progress: true

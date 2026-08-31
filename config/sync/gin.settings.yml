@@ -1,8 +1,8 @@
 _core:
   default_config_hash: UvSCt3S_NldJPFzvhSNOy9vWoPPFhmsmTC12vtVss9s
 favicon:
-  mimetype: image/vnd.microsoft.icon
-  path: 'public://acta-octa-favicon.ico'
+  mimetype: image/png
+  path: 'public://anv-logo.png'
   use_default: false
 features:
   comment_user_picture: true
@@ -10,7 +10,7 @@ features:
   favicon: true
   node_user_picture: true
 logo:
-  path: 'public://acta-logo-white-black.jpg'
+  path: 'public://anv-logo.png'
   use_default: false
 third_party_settings:
   shortcut:

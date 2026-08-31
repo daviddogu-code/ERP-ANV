@@ -2,35 +2,28 @@
 
 namespace Drupal\tec_production;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Template\Attribute;
 use Drupal\views\ViewExecutable;
 
 /**
- * The last line of a sales order's table: how many pieces, and how much money.
+ * The last lines of a sales order's table: pieces, then subtotal, VAT, total.
  *
  * A figure has to sit under the column it is about. Until 19 August 2026 this
  * foot was `attachment_1`, a second little view glued underneath the table, and
- * from there it could only ever float against the right edge: two tables never
- * agree on their column widths, because the browser sizes each one on its own
- * contents. No amount of CSS fixes that. The only place a number can line up
- * with a column is inside the same table, so that is where this puts it -- one
- * more row, with the count under Qty and the money under Item total.
+ * from there it could only ever float against the right edge. The only place a
+ * number can line up with a column is inside the same table, so that is where
+ * this puts it -- the piece count under Qty, the money under Item total.
+ *
+ * When the sale has a VAT rate, those money figures are three rows (Subtotal,
+ * VAT, Total) instead of one. The arithmetic is Vat::breakdown(), the same
+ * answer the portal and the test ask, so they cannot drift apart.
  *
  * It is drawn on the server, and it has to be: this same table is the Pro Forma
- * that gets printed and handed to a customer. The draft screens do the same job
- * in the browser, and they are right to -- there the figures move as quantities
- * are typed, before anything is saved -- but a piece of paper cannot depend on
- * a script having run.
+ * that gets printed and handed to a customer.
  *
  * The column is found **by name and never by counting**, which is the same rule
- * the draft's script follows: Views names every cell after the field that fills
- * it. Both feet ask the same question in the same words, so the day somebody
- * adds a column, both move.
- *
- * Nothing here needs cache tags of its own. The sums are taken from the rows
- * the view has already loaded, so whatever invalidates the table invalidates
- * the foot with it. The purchase foot next door does carry tags, because it
- * loads the order to read a VAT rate that is on no row in front of it.
+ * the draft's script follows.
  */
 final class OrderFoot {
 
@@ -77,39 +70,80 @@ final class OrderFoot {
     }
 
     [$pieces, $money] = self::sums($view);
+    $order = self::orderOf($view);
+    $sums = $order ? Vat::breakdown($order) : NULL;
+    if ($order) {
+      $view->element['#cache']['tags'] = Cache::mergeTags(
+        $view->element['#cache']['tags'] ?? [],
+        $order->getCacheTags()
+      );
+    }
 
+    $lines = ($sums && $sums['rate'] !== NULL)
+      ? [
+        [self::t('Subtotal'), $sums['net'], $pieces, FALSE],
+        [self::t('VAT @rate%', ['@rate' => Vat::formatRate($sums['rate'])]), $sums['vat'], NULL, FALSE],
+        [self::t('Total'), $sums['gross'], NULL, TRUE],
+      ]
+      : [
+        [self::label(), $money, $pieces, TRUE],
+      ];
+
+    foreach ($lines as [$label, $amount, $count, $strong]) {
+      $variables['rows'][] = self::footRow($variables, $columns, (string) $label, (float) $amount, $count, $strong);
+    }
+  }
+
+  /**
+   * One row of the foot, with the count under Qty and the money at the end.
+   */
+  private static function footRow(array $variables, array $columns, string $label, float $amount, ?float $pieces, bool $strong): array {
     $last = count($columns) - 1;
     $at = array_search(self::PIECES, $columns, TRUE);
-
-    // The run of columns the label used to span is cut in two by the column
-    // being counted, so the label takes what is left between that and the
-    // money. With nothing left -- a quantity column so far right that the
-    // label would have nowhere to go -- the row goes back to the two cells it
-    // would have been, because a label with no room is worse than a count that
-    // is not shown.
     $room = $at === FALSE ? 0 : $last - $at - 1;
+
+    $classes = ['tec-foot-row'];
+    if ($strong) {
+      $classes[] = 'grand-total-row';
+    }
 
     $cells = [];
     if ($at !== FALSE && $room > 0) {
       if ($at > 0) {
         $cells[] = self::cell([], $at, NULL);
       }
-      $cells[] = self::cell([self::alignmentOf($variables, $columns[$at])], 1,
-        self::figure(number_format($pieces), 'grand-total-pieces'));
-      $cells[] = self::cell(['views-align-right'], $room, self::figure(self::label(), ''));
+      $count_markup = $pieces === NULL ? NULL : self::figure(number_format($pieces), 'grand-total-pieces');
+      $cells[] = self::cell([self::alignmentOf($variables, $columns[$at])], 1, $count_markup);
+      $cells[] = self::cell(['views-align-right'], $room, self::figure($label, ''));
     }
     else {
-      $cells[] = self::cell(['views-align-right'], max(1, $last), self::figure(self::label(), ''));
+      $cells[] = self::cell(['views-align-right'], max(1, $last), self::figure($label, ''));
     }
     $cells[] = self::cell(['views-align-right'], 1,
-      self::figure(self::money($money), 'grand-total-value'));
+      self::figure(self::money($amount), $strong ? 'grand-total-value' : 'tec-foot-vat'));
 
-    // The same two class names the draft's script uses for its own foot, so
-    // that anything ever written to style one styles both.
-    $variables['rows'][] = [
-      'attributes' => new Attribute(['class' => ['tec-foot-row', 'grand-total-row']]),
+    return [
+      'attributes' => new Attribute(['class' => $classes]),
       'columns' => $cells,
     ];
+  }
+
+  /**
+   * The order this table belongs to, from the view argument.
+   */
+  private static function orderOf(ViewExecutable $view) {
+    $id = (int) ($view->args[0] ?? 0);
+    if ($id < 1) {
+      return NULL;
+    }
+    return \Drupal::entityTypeManager()->getStorage('tec_order')->load($id);
+  }
+
+  /**
+   * Translate without dragging a form translator into a table preprocess.
+   */
+  private static function t(string $string, array $args = []) {
+    return \Drupal::translation()->translate($string, $args);
   }
 
   /**

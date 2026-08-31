@@ -18,6 +18,6 @@ tec_production.admin_tec:
 
 tec_production.company_settings:
   title: 'Company settings'
-  description: 'The VAT rate, and which screen each home page icon opens.'
+  description: 'Who we are, the VAT rate, and which screen each home page icon opens.'
   route_name: tec_production.company_settings
   parent: tec_production.admin_tec

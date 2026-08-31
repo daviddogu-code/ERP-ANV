@@ -154,8 +154,9 @@ const REFERENCIA_VARIOS = [
   // El 74 ya estaba de mas respecto a la cuenta del 19 (el guardián fallaba en
   // el despliegue por uno). El 75 es el icono de PO CONTROL, 20 de agosto de 2026:
   // /supplier-orders/queue existia y el menu la nombraba, pero en /start no habia
-  // baldosa.
-  'ficheros' => 75,
+  // baldosa. El 76 es el de Supplier Orders, 30 de agosto: la lista historica
+  // existia y el menu la nombraba, pero en /start no habia baldosa.
+  'ficheros' => 76,
   // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
   // Super BOM, porque su funcion la hace ya el tablero de stock. Y volvieron a ser
   // doce el 15, al rehacer la portada de marcas, que llevaba borrada desde antes de
@@ -164,7 +165,9 @@ const REFERENCIA_VARIOS = [
   // mismo dia, al anadir el icono de la lista de compra: /purchase existia pero
   // no habia manera de llegar sin escribir la direccion a mano.
   // Son catorce desde el 20 de agosto de 2026, al anadir el icono de PO CONTROL.
-  'nodos' => 14,
+  // Quince desde el 30, al anadir el de Supplier Orders: /supplier-orders existia
+  // pero no habia manera de llegar desde /start sin el menu.
+  'nodos' => 15,
   // Fueron seis unas horas: se pusieron cuatro para que los iconos de la cola, el
   // registro, el informe y el stock llevaran a su pantalla. Vuelven a ser dos
   // porque el arreglo bueno llego el mismo dia: el enlace sale ahora del campo
@@ -990,6 +993,9 @@ comprobar($resultados, 'la ficha del pedido abierto ofrece el boton de recibir',
 comprobar($resultados, 'y el pedido cerrado no lo ofrece',
   !str_contains($condicional['or'] ?? '', '/receive') && str_contains($condicional['or'] ?? '', '/print'),
   'cerrado solo imprime');
+comprobar($resultados, 'y las dos filas ofrecen la factura si esta archivada',
+  str_contains($condicional['then'] ?? '', '{{ tec_invoice }}')
+  && str_contains($condicional['or'] ?? '', '{{ tec_invoice }}'));
 
 // La lista de pedidos a proveedores tiene que preguntar por el estado de compra.
 // Llevaba desde el dia que se hizo preguntando por field_tec_order_status, que es
@@ -1009,6 +1015,9 @@ comprobar($resultados, 'y sus botones tambien',
   ($lista['views_conditional_field']['if'] ?? '') === 'field_tec_po_status_1'
   && str_contains($lista['nothing']['alter']['text'] ?? '', '/po/draft/'),
   (string) ($lista['views_conditional_field']['if'] ?? 'no hay condicional'));
+comprobar($resultados, 'y el enlace de la factura va al lado de imprimir',
+  str_contains($lista['nothing']['alter']['text'] ?? '', '{{ tec_invoice }}')
+  && str_contains($lista['nothing_1']['alter']['text'] ?? '', '{{ tec_invoice }}'));
 
 // La columna de la entrega, que es la que distingue "no ha llegado nada" de "ha
 // llegado la mitad". No hay campo detras: sale de un manejador propio que llama a
@@ -1335,11 +1344,8 @@ comprobar($resultados, 'las tres respuestas siguen siendo tres',
 comprobar($resultados, 'el pedido de compra guarda el porcentaje que le toco',
   (bool) \Drupal\field\Entity\FieldConfig::loadByName('tec_order', 'tec_purchase_order', \Drupal\tec_production\Vat::RATE_FIELD));
 
-// En ventas no, porque esto es sobre comprar. El IVA que se cobra al cliente es
-// otra conversacion y no se resuelve copiando esta.
-comprobar($resultados, 'y en ventas no, que es otra conversacion',
-  !\Drupal\field\Entity\FieldConfig::loadByName('tec_order', 'tec_sales_order', \Drupal\tec_production\Vat::RATE_FIELD),
-  'solo en compras');
+// En ventas tambien, mas abajo en esta misma seccion: destino Tailandia es el
+// tipo, exportacion es cero. Aqui solo se pregunta por la compra.
 
 // La razon de copiar el porcentaje al pedido es que no se mueva nunca mas. Si
 // algun pedido se ha quedado sin el, es que se creo antes de que el campo
@@ -1397,7 +1403,14 @@ comprobar($resultados, 'y alguien que no es administrador lo tiene',
 $esquema = \Drupal::service('config.typed');
 comprobar($resultados, 'los ajustes del modulo tienen esquema',
   $esquema->hasConfigSchema('tec_production.settings'),
-  $esquema->hasConfigSchema('tec_production.settings') ? 'las doce claves' : 'SIN ESQUEMA');
+  $esquema->hasConfigSchema('tec_production.settings') ? 'identidad, iva, banco, iconos' : 'SIN ESQUEMA');
+
+$clavesAjustes = array_keys($esquema->getDefinition('tec_production.settings')['mapping'] ?? []);
+comprobar($resultados, 'y la razon social esta entre ellos',
+  in_array('legal_name', $clavesAjustes, TRUE)
+  && in_array('address', $clavesAjustes, TRUE)
+  && in_array('bank_swift', $clavesAjustes, TRUE),
+  in_array('legal_name', $clavesAjustes, TRUE) ? 'legal_name, address, bank_swift' : 'FALTA la identidad');
 
 // Y la puerta desde la ficha, que es donde surge la pregunta.
 $estilosEnlace = file_get_contents(DRUPAL_ROOT . '/modules/custom/admin_form_styles/admin_form_styles.module');
@@ -1437,6 +1450,11 @@ titulo('8. El pais de un contacto se elige de una vez');
 // cincuenta y siete paises en la lista eso era inservible: cualquier roce del
 // teclado enviaba el formulario a medio elegir y el pais parecia deseleccionarse
 // solo. Si alguien vuelve a apagarlo, que se sepa aqui y no en una ficha nueva.
+//
+// El pais de un cliente es obligatorio (el IVA de venta se decide por destino).
+// No se marca obligatoria la direccion entera: Address entonces rellena un pais
+// por defecto. La prueba completa, con el cambio de pais y las direcciones, esta
+// en scripts/el-pais-del-cliente.php.
 foreach (['tec_contact_organization', 'tec_contact_person'] as $bundlePais) {
   $fichaPais = \Drupal::service('entity.form_builder')->getForm(
     $etm->getStorage('tec_crm')->create(['type' => $bundlePais])
@@ -1457,6 +1475,42 @@ foreach (['tec_contact_organization', 'tec_contact_person'] as $bundlePais) {
     !isset($fichaPais['tec_crm_ux_address_rebuild']),
     'la prueba entera esta en scripts/se-elige-el-pais.php');
 }
+
+$fichaClientePais = $etm->getStorage('tec_crm')->create([
+  'type' => 'tec_contact_organization',
+  'field_tec_contact_type' => [['target_id' => TEC_CRM_UX_TYPE_CUSTOMER]],
+]);
+$formClientePais = \Drupal::service('entity.form_builder')->getForm($fichaClientePais);
+$cajaClientePais = $formClientePais['field_tec_address']['widget'][0]['address'] ?? [];
+$selClientePais = $cajaClientePais['country_code']['country_code'] ?? $cajaClientePais['country_code'] ?? [];
+comprobar($resultados, 'el pais de un cliente es obligatorio',
+  !empty($selClientePais['#required']) && empty($cajaClientePais['#required']),
+  empty($selClientePais['#required'])
+    ? 'el pais se puede dejar vacio'
+    : (empty($cajaClientePais['#required']) ? 'solo el pais' : 'la direccion entera es required: Address rellena un pais'));
+
+$fichaProvPais = $etm->getStorage('tec_crm')->create([
+  'type' => 'tec_contact_organization',
+  'field_tec_contact_type' => [['target_id' => TEC_CRM_UX_TYPE_SUPPLIER]],
+]);
+$formProvPais = \Drupal::service('entity.form_builder')->getForm($fichaProvPais);
+$selProvPais = $formProvPais['field_tec_address']['widget'][0]['address']['country_code']['country_code']
+  ?? $formProvPais['field_tec_address']['widget'][0]['address']['country_code']
+  ?? [];
+comprobar($resultados, 'un proveedor puede dejarse sin pais',
+  empty($selProvPais['#required']),
+  'el selector del proveedor tambien es required');
+
+$restoPais = function_exists('tec_crm_ux_scrub_address_value')
+  ? tec_crm_ux_scrub_address_value([
+    'country_code' => 'SG',
+    'administrative_area' => '10',
+    'address_line1' => '1 Test St',
+  ])
+  : ['administrative_area' => '10'];
+comprobar($resultados, 'cambiar de pais no deja la provincia anterior',
+  ($restoPais['administrative_area'] ?? 'x') === '',
+  'la prueba entera esta en scripts/el-pais-del-cliente.php');
 
 // -----------------------------------------------------------------------------
 // 9. El pedido de compra ensena lo que de verdad se paga.
@@ -1507,6 +1561,23 @@ $javascriptPie = (string) \Drupal::config('asset_injector.js.draft_for_ace_compa
 comprobar($resultados, 'y el javascript solo pone el pie si lo recibe',
   str_contains($javascriptPie, 'function vatRate()') && str_contains($javascriptPie, "return [['Grand Total', subtotal, true]];"),
   'sin porcentaje, ventas se queda como estaba');
+
+comprobar($resultados, 'las ventas tambien llevan el porcentaje en el pedido',
+  (bool) \Drupal\field\Entity\FieldConfig::loadByName('tec_order', 'tec_sales_order', \Drupal\tec_production\Vat::RATE_FIELD),
+  'field_tec_vat_rate en tec_sales_order; la prueba esta en scripts/el-iva-de-venta.php');
+
+$clienteThIva = $etm->getStorage('tec_crm')->create([
+  'type' => 'tec_contact_organization',
+  'field_tec_address' => [['country_code' => 'TH']],
+]);
+$clienteItIva = $etm->getStorage('tec_crm')->create([
+  'type' => 'tec_contact_organization',
+  'field_tec_address' => [['country_code' => 'IT']],
+]);
+comprobar($resultados, 'destino Tailandia es el tipo, exportacion es cero',
+  \Drupal\tec_production\Vat::forCustomer($clienteThIva) === \Drupal\tec_production\Vat::standardRate()
+  && \Drupal\tec_production\Vat::forCustomer($clienteItIva) === 0.0,
+  'Vat::forCustomer');
 
 // Y que las tres pantallas sigan llamando igual a lo mismo. La misma columna se
 // llamaba "Unit of Purchase (UoP)" en el borrador, "Unit" en la ficha y "Unit"
@@ -1763,6 +1834,17 @@ foreach ($portadas as $portadaCola) {
 }
 comprobar($resultados, 'y hay un icono en /start con ese nombre y esa pantalla', $iconoCola);
 
+$iconoLista = FALSE;
+foreach ($portadas as $portadaLista) {
+  if ($portadaLista->hasField('field_tec_target') && !$portadaLista->get('field_tec_target')->isEmpty()
+    && $portadaLista->get('field_tec_target')->first()->getUrl()->toString() === '/supplier-orders'
+    && $portadaLista->label() === 'Supplier Orders') {
+    $iconoLista = TRUE;
+    break;
+  }
+}
+comprobar($resultados, 'y hay un icono en /start para el archivo de pedidos de compra', $iconoLista);
+
 foreach (['tec_manager', 'tec_executive'] as $rolCompras) {
   $rolCargado = \Drupal\user\Entity\Role::load($rolCompras);
   comprobar($resultados, "$rolCompras puede entrar a control de compras",
@@ -1834,6 +1916,8 @@ comprobar($resultados, 'la ficha del pedido tambien',
   isset($bloquesFicha['extra_field_block:tec_order:tec_purchase_order:tec_progress'])
   && !isset($bloquesFicha['field_block:tec_order:tec_purchase_order:field_tec_po_status']),
   isset($bloquesFicha['field_block:tec_order:tec_purchase_order:field_tec_po_status']) ? 'SIGUE CON EL CAMPO CRUDO' : 'extra_field_block');
+comprobar($resultados, 'y la factura, que es lo que se busca despues de archivarla',
+  isset($bloquesFicha['extra_field_block:tec_order:tec_purchase_order:tec_invoice']));
 
 // Un bloque de campo anadido solo declara un contexto, la entidad. Si se le
 // asigna ademas el 'view_mode' que si lleva un bloque de campo normal -que es lo
@@ -1844,11 +1928,17 @@ comprobar($resultados, 'la ficha del pedido tambien',
 $contextosFicha = $bloquesFicha['extra_field_block:tec_order:tec_purchase_order:tec_progress']['context_mapping'] ?? [];
 comprobar($resultados, 'y sin contextos de sobra, que tiran la pagina',
   array_keys($contextosFicha) === ['entity'], implode(', ', array_keys($contextosFicha)));
+$contextosFactura = $bloquesFicha['extra_field_block:tec_order:tec_purchase_order:tec_invoice']['context_mapping'] ?? [];
+comprobar($resultados, 'y el bloque de la factura tampoco',
+  array_keys($contextosFactura) === ['entity'], implode(', ', array_keys($contextosFactura)));
 
 $impresoEstado = \Drupal::config('core.entity_view_display.tec_order.tec_purchase_order.pdf')->get('content') ?: [];
 comprobar($resultados, 'y el impreso, que ademas ya no se puede escribir dentro',
   isset($impresoEstado['tec_progress']) && !isset($impresoEstado['field_tec_po_status']),
   isset($impresoEstado['field_tec_po_status']) ? 'SIGUE CON EL CAMPO CRUDO, Y EDITABLE' : 'tec_progress');
+comprobar($resultados, 'y el pdf no lleva la factura, que es papel interno',
+  !isset($impresoEstado['tec_invoice'])
+  && !isset($impresoEstado['field_tec_supplier_invoice']));
 
 // Open no es un valor guardado, es la ausencia de los otros tres. El campo nacio
 // con "On process" de defecto y hubo que quitarlo: un pedido recien hecho que ya

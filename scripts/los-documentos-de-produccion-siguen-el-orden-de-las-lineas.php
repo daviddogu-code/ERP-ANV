@@ -19,9 +19,8 @@
  *
  *   1. Que el documento saca los productos en el orden en que se anadieron.
  *   2. Que **no** los saca en orden alfabetico, que es de donde venimos.
- *   3. Que la pestana Line items dice el mismo orden. Las dos mitades del arreglo
- *      -- el bloque y la vista -- usan la misma clave, el numero de la linea, y
- *      esta es la comprobacion de que siguen usandola las dos.
+ *   3. Que la pestana Line items (tabla PHP) y la vista de la proforma dicen
+ *      el mismo orden. Las dos usan la misma clave, el numero de la linea.
  *   4. Que un producto que vuelve a aparecer mas abajo en el pedido **se queda
  *      donde salio la primera vez** en vez de bajarse al final. Se pide ZORRO
  *      otra vez en la ultima linea a proposito.
@@ -177,11 +176,24 @@ try {
     implode(', ', array_map(fn($k, $v) => $k . '=' . $v, array_keys($totales), $totales)));
 
   // -------------------------------------------------------------------------
-  // Y la pantalla, que tiene que decir lo mismo.
+  // La pestana Line items (tabla PHP) y la vista de la proforma (sigue viva).
   // -------------------------------------------------------------------------
   print "\n";
-  print "La pestana Line items del mismo pedido\n";
+  print "La pestana Line items y la vista de la proforma\n";
   print str_repeat('-', 70) . "\n";
+
+  $htmlLineas = (string) \Drupal::service('renderer')->renderRoot(
+    \Drupal\tec_portal\OrderLineGrid::create()->build($almacenPedido->loadUnchanged($pedido->id()))
+  );
+  $posZorro = strpos($htmlLineas, 'PRUEBA ZORRO');
+  $posMedio = strpos($htmlLineas, 'PRUEBA MEDIO');
+  $posAbeto = strpos($htmlLineas, 'PRUEBA ABETO');
+  $mirar('la tabla PHP de Line items esta en la ficha',
+    str_contains($htmlLineas, 'tec-portal__table') && str_contains($htmlLineas, '>Image<'));
+  $mirar('y saca los productos en el orden en que se anadieron',
+    $posZorro !== FALSE && $posMedio !== FALSE && $posAbeto !== FALSE
+    && $posZorro < $posMedio && $posMedio < $posAbeto,
+    sprintf('ZORRO@%s MEDIO@%s ABETO@%s', $posZorro === FALSE ? 'no' : $posZorro, $posMedio === FALSE ? 'no' : $posMedio, $posAbeto === FALSE ? 'no' : $posAbeto));
 
   $vista = Views::getView('tec_order_sales_order_line_items');
   $vista->setDisplay('block_1');
@@ -195,21 +207,19 @@ try {
   $sql = (string) $vista->query->query();
   $vista->destroy();
 
-  printf("  lineas en pantalla: %s\n", implode(', ', $enPantalla));
-  $mirar('la pantalla saca las lineas en el orden en que se anadieron',
+  printf("  lineas en la vista de la proforma: %s\n", implode(', ', $enPantalla));
+  $mirar('la vista de la proforma saca las lineas en el orden en que se anadieron',
     $enPantalla === array_map(fn($l) => (int) $l->id(), $lineas),
     implode(', ', $enPantalla));
   $mirar('y ya no mira la tabla de pesos de arrastrar productos',
     !str_contains($sql, 'draggableviews_structure'),
     'la consulta sigue enganchando draggableviews_structure');
 
-  // El bloque y la vista tienen que estar de acuerdo: el primer producto del
-  // documento es el de la primera linea de la pantalla.
   $primeraLinea = $almacenLinea->load($enPantalla[0] ?? 0);
   $primerProducto = $primeraLinea ? $primeraLinea->get('field_tec_product')->entity : NULL;
-  $mirar('el primer producto del documento es el de la primera linea de la pantalla',
+  $mirar('el primer producto del documento es el de la primera linea de esa vista',
     $primerProducto && (string) $primerProducto->label() === ($dice[0] ?? ''),
-    'pantalla: ' . ($primerProducto ? $primerProducto->label() : 'nada') . ', documento: ' . ($dice[0] ?? 'nada'));
+    'vista: ' . ($primerProducto ? $primerProducto->label() : 'nada') . ', documento: ' . ($dice[0] ?? 'nada'));
 }
 finally {
   // -------------------------------------------------------------------------

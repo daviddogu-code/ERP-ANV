@@ -1,0 +1,163 @@
+/* Sales order status pill, on the card, the lists and the queue.
+
+   Colours match the factory map (Open → Shipped). Views still wrap the
+   cell in a div whose class is the words of the label; those selectors
+   keep the old lists painted until they use the pill markup.
+
+   They must stay under .views-field. On the order card, Field Formatter
+   Class used to put the same words on the whole field wrapper, so the
+   label "Order status" inherited the pill colour. The card now uses
+   .tec-so-status only. */
+
+.tec-so-status,
+.views-field div.Open,
+.views-field div.Pending.payment,
+.views-field div.Processing,
+.views-field div.Ready.for.production,
+.views-field div.On.production,
+.views-field div.Completed,
+.views-field div.Ready.for.collection,
+.views-field div.Shipped,
+.views-field div.Cancelled,
+.views-field div.Accounting.Verified {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/* Open: still a draft. Hollow, like a PO that nobody has touched. */
+.tec-so-status--draft,
+.views-field div.Open {
+  background: #fff;
+  color: #555;
+  border-color: #c9c9c9;
+  border-style: dashed;
+}
+
+.tec-so-status--pending_deposit,
+.views-field div.Pending.payment {
+  background: #f4cccc;
+  color: #990000;
+  border-color: #ea9999;
+  border-style: solid;
+}
+
+/* Old name, in case a list still prints it. */
+.views-field div.Accounting.Verified,
+.tec-so-status--accounting_verified {
+  background: #fce5cd;
+  color: #b45f06;
+  border-color: #f9cb9c;
+}
+
+.tec-so-status--in_progress_processing,
+.views-field div.Processing {
+  background: #fce5cd;
+  color: #b45f06;
+  border-color: #f9cb9c;
+  border-style: solid;
+}
+
+.tec-so-status--ready_for_production,
+.views-field div.Ready.for.production {
+  background: #fff2cc;
+  color: #7f6000;
+  border-color: #ffe599;
+  border-style: solid;
+}
+
+.tec-so-status--production_started,
+.views-field div.On.production {
+  background: #d9ead3;
+  color: #38761d;
+  border-color: #b6d7a8;
+  border-style: solid;
+}
+
+.tec-so-status--quality_control_inspection {
+  background: #d9ead3;
+  color: #38761d;
+  border-color: #b6d7a8;
+}
+
+.tec-so-status--completed,
+.views-field div.Completed {
+  background: #eef2ff;
+  color: #3730a3;
+  border-color: #c7d2fe;
+  border-style: solid;
+}
+
+.tec-so-status--ready_for_delivery,
+.views-field div.Ready.for.collection,
+.views-field div.Ready.For.Delivery {
+  background: #ecfeff;
+  color: #0e7490;
+  border-color: #a5f3fc;
+  border-style: solid;
+}
+
+.tec-so-status--shipped_delivered,
+.views-field div.Shipped {
+  background: #38761d;
+  color: #fff;
+  border-color: #38761d;
+  border-style: solid;
+}
+
+.tec-so-status--cancelled,
+.views-field div.Cancelled {
+  background: #e8e8e8;
+  color: #8a8a8a;
+  border-color: #dcdcdc;
+  text-decoration: line-through;
+  border-style: solid;
+}
+
+/* The card control that replaced "Update to Accounting verified". */
+.tec-so-advance {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding-left: 26px;
+  background: url("/sites/default/files/000-next-21.png") no-repeat left center;
+  font-weight: 600;
+  color: #0b5394;
+  text-decoration: underline;
+}
+
+.tec-so-advance:hover {
+  color: #073763;
+}
+
+/* Queue: the pill sits in a tight column. */
+#tec-production-queue .tec-queue__status.tec-so-status {
+  max-width: 9.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+#tec-production-queue tr[data-status="in_progress_processing"] td {
+  background: #fce5cd;
+}
+
+#tec-production-queue tr[data-status="ready_for_production"] td {
+  background: #fff2cc;
+}
+
+#tec-production-queue tr[data-status="production_started"] td {
+  background: #d9ead3;
+}
+
+#tec-production-queue tr[data-status="completed"] td {
+  background: #eef2ff;
+}
+
+#tec-production-queue tr[data-status="ready_for_delivery"] td {
+  background: #ecfeff;
+}

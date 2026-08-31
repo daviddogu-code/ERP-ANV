@@ -1,6 +1,6 @@
 uuid: 2af56535-0ade-4b98-99d4-f93d16eaafe1
 langcode: en
-status: true
+status: false
 dependencies:
   config:
     - eca.eca.process_sclj26d
@@ -398,7 +398,7 @@ modeldata: |
             <camunda:property name="pluginid" value="action_goto_action"/>
           </camunda:properties>
           <camunda:field name="url">
-            <camunda:string>/o/draft/[order:id]?destination=/tec_order/[order:id]</camunda:string>
+            <camunda:string>/o/order/[order:id]</camunda:string>
           </camunda:field>
           <camunda:field name="replace_tokens">
             <camunda:string>yes</camunda:string>

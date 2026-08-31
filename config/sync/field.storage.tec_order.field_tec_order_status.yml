@@ -16,31 +16,25 @@ settings:
       label: Open
     -
       value: pending_deposit
-      label: 'Pending deposit'
-    -
-      value: accounting_verified
-      label: 'Accounting Verified'
+      label: 'Pending payment'
     -
       value: in_progress_processing
-      label: 'In Processing'
+      label: Processing
     -
       value: ready_for_production
-      label: 'Ready for Production'
+      label: 'Ready for production'
     -
       value: production_started
-      label: 'Production Started'
-    -
-      value: quality_control_inspection
-      label: 'Quality Control/Inspection'
+      label: 'On production'
     -
       value: completed
       label: Completed
     -
       value: ready_for_delivery
-      label: 'Ready for Delivery'
+      label: 'Ready for collection'
     -
       value: shipped_delivered
-      label: Shipped/Delivered
+      label: Shipped
     -
       value: cancelled
       label: Cancelled

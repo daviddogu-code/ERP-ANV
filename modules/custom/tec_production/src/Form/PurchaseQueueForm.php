@@ -2,7 +2,6 @@
 
 namespace Drupal\tec_production\Form;
 
-use Drupal\Component\Serialization\Json;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
@@ -229,15 +228,11 @@ class PurchaseQueueForm extends FormBase {
       $element['invoice'] = [
         '#type' => 'link',
         '#title' => $row['invoice'] ? $this->t('Filed') : $this->t('Upload'),
-        '#url' => Url::fromRoute('tec_production.po_invoice', ['tec_order' => $oid]),
-        '#attributes' => [
-          'class' => array_filter([
-            'use-ajax',
-            'tec-pq__invoice',
-            $row['invoice'] ? 'tec-pq__invoice--filed' : '',
-          ]),
-          'data-dialog-type' => 'modal',
-          'data-dialog-options' => Json::encode(['width' => 520]),
+        '#url' => Purchasing::invoiceDialogUrl($oid),
+        '#attributes' => Purchasing::invoiceDialogAttributes(array_filter([
+          'tec-pq__invoice',
+          $row['invoice'] ? 'tec-pq__invoice--filed' : '',
+        ])) + [
           'title' => $row['invoice']
             ? $this->t('Invoice already filed: @name', ['@name' => $row['invoice']])
             : $this->t('File the invoice and take @order off this screen', ['@order' => $row['label']]),

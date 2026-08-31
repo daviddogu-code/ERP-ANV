@@ -10,6 +10,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\tec_portal\CustomerCompany;
 use Drupal\tec_portal\PortalOrder;
+use Drupal\tec_production\Vat;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -104,15 +105,29 @@ class MyController extends ControllerBase {
     $tags = $build['#cache']['tags'] ?? [];
     foreach ($orders as $order) {
       $tags = Cache::mergeTags($tags, $order->getCacheTags());
-      [$pieces, $money] = $this->totals($order);
+      [$pieces, $net] = $this->totals($order);
+      $sums = Vat::breakdown($order);
+      $money = ($sums && $sums['gross'] !== NULL) ? $sums['gross'] : $net;
       $paid = PortalOrder::paidOn($order);
+      $number = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['tec-portal__order-cell']],
+        'link' => [
+          '#type' => 'link',
+          '#title' => $order->label() ?: ('#' . $order->id()),
+          '#url' => Url::fromRoute('tec_portal.order', ['tec_order' => $order->id()]),
+        ],
+      ];
+      $print = PortalOrder::printControlMarkup($order);
+      if ($print !== '') {
+        $number['print'] = [
+          '#markup' => $print,
+          '#allowed_tags' => ['a', 'img'],
+        ];
+      }
       $rows[] = [
         'number' => [
-          'data' => [
-            '#type' => 'link',
-            '#title' => $order->label() ?: ('#' . $order->id()),
-            '#url' => Url::fromRoute('tec_portal.order', ['tec_order' => $order->id()]),
-          ],
+          'data' => $number,
         ],
         'status' => [
           'data' => [

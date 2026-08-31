@@ -1,0 +1,287 @@
+@page {
+  size: A4 portrait;
+  margin: 8mm 8mm 10mm;
+}
+
+.tec-proforma-print .gin-secondary-toolbar,
+.tec-proforma-print .toolbar-menu-administration,
+.tec-proforma-print #toolbar-administration,
+.tec-proforma-print .toolbar,
+.tec-proforma-print #navbar,
+.tec-proforma-print .region-header,
+.tec-proforma-print .region-sidebar-first,
+.tec-proforma-print .region-sidebar-second,
+.tec-proforma-print .region-footer,
+.tec-proforma-print .gin-breadcrumb,
+.tec-proforma-print .breadcrumb,
+.tec-proforma-print .tabs,
+.tec-proforma-print .region-tabs,
+.tec-proforma-print .status-messages,
+.tec-proforma-print .messages-list,
+.tec-proforma-print .block-page-title-block,
+.tec-proforma-print .page-header,
+.tec-proforma-print .page-title {
+  display: none !important;
+}
+
+.tec-proforma-print,
+body.tec-proforma-print,
+.tec-proforma-print .dialog-off-canvas-main-canvas {
+  background: #fff;
+  padding-top: 0 !important;
+}
+
+.tec-proforma-print .main-container.container,
+.tec-proforma-print .container {
+  width: 210mm;
+  max-width: 210mm;
+  box-shadow: none;
+  padding-left: 8mm;
+  padding-right: 8mm;
+}
+
+.tec-proforma {
+  color: #111;
+  font-size: 9pt;
+  line-height: 1.35;
+}
+
+.tec-proforma__head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  column-gap: 0;
+  margin: 0 0 4mm;
+  padding-bottom: 3mm;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.tec-proforma__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  max-width: none;
+  padding: 0 8mm 0 0;
+  border-right: 1px solid #c8c8c8;
+  box-sizing: border-box;
+}
+
+.tec-proforma__seller {
+  min-width: 0;
+  max-width: none;
+  padding: 0 0 0 8mm;
+  box-sizing: border-box;
+  text-align: right;
+}
+
+.tec-proforma__legal {
+  font-size: 11pt;
+  font-weight: 700;
+}
+
+.tec-proforma__meta-table,
+.tec-proforma__buyer-table,
+.tec-proforma__seller-table,
+.tec-proforma__bank-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tec-proforma__meta-table,
+.tec-proforma__buyer-table,
+.tec-proforma__seller-table {
+  table-layout: fixed;
+}
+
+.tec-proforma__meta-table th,
+.tec-proforma__buyer-table th,
+.tec-proforma__seller-table th,
+.tec-proforma__bank-table th {
+  text-align: left;
+  font-weight: 700;
+  padding: 0.4mm 2mm 0.4mm 0;
+  width: 22mm;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.tec-proforma__meta-table th,
+.tec-proforma__buyer-table th,
+.tec-proforma__seller-table th {
+  width: 28mm;
+}
+
+.tec-proforma__meta-table td,
+.tec-proforma__buyer-table td,
+.tec-proforma__seller-table td,
+.tec-proforma__bank-table td {
+  padding: 0.4mm 0;
+  vertical-align: top;
+}
+
+.tec-proforma__meta-table td,
+.tec-proforma__buyer-table td,
+.tec-proforma__seller-table td {
+  text-align: right;
+}
+
+.tec-proforma__bank-table td {
+  text-align: left;
+}
+
+.tec-proforma__buyer {
+  margin: 3mm 0 0;
+  padding-top: 2.5mm;
+  border-top: 1px solid #c8c8c8;
+}
+
+.tec-proforma__bank h2 {
+  margin: 0 0 1.2mm;
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #444;
+}
+.tec-proforma .tec-portal,
+.tec-proforma .tec-portal--place,
+.tec-proforma .tec-portal__group,
+.tec-proforma .tec-portal__table {
+  max-width: none;
+  width: 100%;
+}
+
+.tec-proforma .tec-portal__group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.tec-portal--proforma .tec-portal__table {
+  table-layout: fixed;
+  width: 100%;
+  font-size: 8pt;
+}
+
+.tec-portal--proforma .tec-portal__table thead th,
+.tec-portal--proforma .tec-portal__table tbody td,
+.tec-portal--proforma .tec-portal__table tfoot td {
+  padding: 1.2mm 1.8mm;
+  vertical-align: middle;
+}
+
+.tec-portal--proforma .tec-portal__table thead th {
+  font-size: 7pt;
+  line-height: 1.15;
+  font-weight: 600;
+  color: #5c6570;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.tec-portal--proforma .tec-portal__col-image {
+  width: 14mm;
+}
+
+.tec-portal--proforma .tec-portal__col-name {
+  width: auto;
+}
+
+.tec-portal--proforma .tec-portal__col-material {
+  width: 14%;
+}
+
+.tec-portal--proforma .tec-portal__col-colour {
+  width: 11%;
+}
+
+.tec-portal--proforma .tec-portal__col-size {
+  width: 8%;
+}
+
+.tec-portal--proforma .tec-portal__col-qty {
+  width: 12mm;
+}
+
+.tec-portal--proforma .tec-portal__col-price {
+  width: 22mm;
+}
+
+.tec-portal--proforma .tec-portal__col-total {
+  width: 26mm;
+}
+
+.tec-portal--proforma .tec-portal__col-qty,
+.tec-portal--proforma .tec-portal__col-price,
+.tec-portal--proforma .tec-portal__col-total {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.tec-portal--proforma .tec-portal__img {
+  width: 8mm;
+  height: 8mm;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.tec-portal--proforma .tec-portal__thumb,
+.tec-portal--proforma .tec-portal__thumb--empty {
+  display: block;
+  width: 8mm;
+  height: 8mm;
+  min-height: 8mm;
+}
+
+.tec-portal--proforma .tec-portal__thumb--empty::before {
+  content: '';
+  display: block;
+  width: 8mm;
+  height: 8mm;
+}
+
+.tec-portal--proforma .tec-portal__table tbody tr,
+.tec-portal--proforma .tec-portal__table tfoot tr {
+  height: 11mm;
+}
+
+.tec-portal--proforma .tec-portal__table tbody td,
+.tec-portal--proforma .tec-portal__table tfoot td {
+  height: 11mm;
+}
+
+.tec-portal--proforma .tec-portal__thumb-pop {
+  display: none !important;
+}
+
+.tec-proforma__bank {
+  margin: 4mm 0 0;
+  padding-top: 3mm;
+  border-top: 1px solid #c8c8c8;
+}
+
+@media print {
+  .tec-proforma-print .main-container.container,
+  .tec-proforma-print .container,
+  .tec-proforma-print .main-container {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .tec-proforma-print .dialog-off-canvas-main-canvas,
+  .tec-proforma-print #main,
+  .tec-proforma-print .region-content {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .tec-proforma {
+    font-size: 9pt;
+  }
+}

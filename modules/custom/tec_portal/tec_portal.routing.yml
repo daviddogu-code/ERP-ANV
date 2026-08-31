@@ -34,3 +34,48 @@ tec_portal.order:
     parameters:
       tec_order:
         type: 'entity:tec_order'
+
+tec_portal.factory_place:
+  path: '/customer/{tec_crm}/order/new'
+  defaults:
+    _form: '\Drupal\tec_portal\Form\FactoryPlaceOrderForm'
+    _title: 'New order'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Form\FactoryPlaceOrderForm::access'
+    tec_crm: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+    parameters:
+      tec_crm:
+        type: 'entity:tec_crm'
+
+tec_portal.factory_order:
+  path: '/o/order/{tec_order}'
+  defaults:
+    _form: '\Drupal\tec_portal\Form\FactoryOrderForm'
+    _title_callback: '\Drupal\tec_portal\Controller\MyController::orderTitle'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Form\FactoryOrderForm::access'
+    tec_order: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+    parameters:
+      tec_order:
+        type: 'entity:tec_order'
+
+tec_portal.proforma:
+  path: '/o/pf/{tec_order}/print'
+  defaults:
+    _controller: '\Drupal\tec_portal\Controller\ProformaController::view'
+    _title_callback: '\Drupal\tec_portal\Controller\ProformaController::title'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Controller\ProformaController::access'
+    tec_order: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+    parameters:
+      tec_order:
+        type: 'entity:tec_order'

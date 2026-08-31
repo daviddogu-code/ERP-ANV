@@ -322,37 +322,3 @@ a.tec-pq__supplier:hover {
   color: #38761d;
 }
 
-/* The upload dialog. */
-.tec-invoice__head {
-  margin-bottom: 0.75rem;
-}
-
-.tec-invoice__order {
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.tec-invoice__supplier {
-  color: #666;
-  font-size: 0.85rem;
-}
-
-.tec-invoice__existing,
-.tec-invoice__warning {
-  margin: 0 0 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.82rem;
-}
-
-.tec-invoice__existing {
-  background: #f3f6fb;
-  border: 1px solid #dbe4f0;
-  color: #444;
-}
-
-.tec-invoice__warning {
-  background: #fdf6e7;
-  border: 1px solid #ecd9a6;
-  color: #6b4e00;
-}

@@ -9,17 +9,26 @@
  * mine". Factory roles never enter these hooks.
  */
 
+use Drupal\block\Entity\Block;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
 use Drupal\tec_portal\CustomerCompany;
+use Drupal\tec_portal\Form\FactoryPlaceOrderForm;
 use Drupal\tec_portal\PortalOrder;
+use Drupal\tec_portal\Proforma;
 use Drupal\user\UserInterface;
+use Drupal\views\ViewExecutable;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * The company helper.
@@ -166,7 +175,7 @@ function tec_portal_entity_field_access($operation, FieldDefinitionInterface $fi
  * Implements hook_entity_presave().
  *
  * A portal order is this company's, always. While it is Open the customer
- * may change quantities and Confirm (Pending deposit). After that the pen
+ * may change quantities and Confirm (Pending payment). After that the pen
  * comes away. Product, colour, size and price never move.
  */
 function tec_portal_entity_presave(EntityInterface $entity): void {
@@ -535,4 +544,240 @@ function tec_portal_file_download($uri) {
     'Content-Length' => (string) $file->getSize(),
     'Cache-Control' => 'private',
   ];
+}
+
+/**
+ * The Place an order URL for a company card.
+ */
+function _tec_portal_place_order_url(EntityInterface $company): Url {
+  return Url::fromRoute('tec_portal.factory_place', ['tec_crm' => $company->id()]);
+}
+
+/**
+ * Place an order as a real link. Not a Flag action (those reload the card).
+ */
+function _tec_portal_place_order_link(EntityInterface $company): array {
+  return [
+    '#type' => 'link',
+    '#title' => t('Place an order'),
+    '#url' => _tec_portal_place_order_url($company),
+    '#attributes' => [
+      'class' => ['btn-default', 'specific-flag'],
+    ],
+    '#access' => FactoryPlaceOrderForm::access(\Drupal::currentUser(), $company),
+  ];
+}
+
+/**
+ * Header markup for the Orders tab on a company card.
+ */
+function _tec_portal_place_order_header(int $company_id): string {
+  $url = Url::fromRoute('tec_portal.factory_place', ['tec_crm' => $company_id])->toString();
+  return '<div class="text-align-right"><div class="btn-default specific-flag"><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">' . t('Place an order') . '</a></div></div>';
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ *
+ * Place an order on a company card is a link to the grid, not the old flag
+ * that created a numbered order of zeros. Layout Builder copies this extra
+ * field into its placeholder after this hook.
+ */
+function tec_portal_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if ($entity->getEntityTypeId() !== 'tec_crm' || $entity->bundle() !== 'tec_contact_organization') {
+    return;
+  }
+  if (!isset($build['flag_tec_order_draft_sales'])) {
+    return;
+  }
+  $build['flag_tec_order_draft_sales'] = _tec_portal_place_order_link($entity);
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for flag.html.twig.
+ *
+ * Layout Builder extra fields keep Flag's lazy builder. That link's href is
+ * the flag action with destination=this card, so "open in new tab" comes
+ * straight back here. Point it at the grid instead.
+ */
+function tec_portal_preprocess_flag(array &$variables): void {
+  $flag = $variables['flag'] ?? NULL;
+  $entity = $variables['flaggable'] ?? NULL;
+  if (!$flag || $flag->id() !== 'tec_order_draft_sales') {
+    return;
+  }
+  if (!$entity instanceof EntityInterface || $entity->getEntityTypeId() !== 'tec_crm' || $entity->bundle() !== 'tec_contact_organization') {
+    return;
+  }
+  if (!FactoryPlaceOrderForm::access(\Drupal::currentUser(), $entity)->isAllowed()) {
+    $variables['title'] = NULL;
+    return;
+  }
+  $href = _tec_portal_place_order_url($entity)->toString();
+  if ($variables['attributes'] instanceof Attribute) {
+    $variables['attributes']->setAttribute('href', $href);
+    $variables['attributes']->removeAttribute('data-dialog-type');
+    $variables['attributes']->removeAttribute('data-dialog-options');
+  }
+  else {
+    $variables['attributes']['href'] = $href;
+    unset($variables['attributes']['data-dialog-type'], $variables['attributes']['data-dialog-options']);
+  }
+}
+
+/**
+ * Implements hook_views_pre_render().
+ *
+ * The customer Orders tab header still tokenizes the flag. Swap it for the
+ * same Place an order link so a numbered order is not created on click.
+ */
+function tec_portal_views_pre_render(ViewExecutable $view) {
+  _tec_portal_guard_proforma_print($view);
+  if ($view->id() !== 'tec_orders_orders' || $view->current_display !== 'block_2') {
+    return;
+  }
+  $id = (int) ($view->args[0] ?? 0);
+  if ($id < 1) {
+    $param = \Drupal::routeMatch()->getParameter('tec_crm');
+    if ($param instanceof EntityInterface) {
+      $id = (int) $param->id();
+    }
+    elseif (is_numeric($param)) {
+      $id = (int) $param;
+    }
+  }
+  if ($id < 1) {
+    return;
+  }
+  $markup = _tec_portal_place_order_header($id);
+  if (isset($view->header['area_text_custom'])) {
+    $view->header['area_text_custom']->options['content'] = $markup;
+  }
+  $header = $view->display_handler ? $view->display_handler->getOption('header') : [];
+  if (isset($header['area_text_custom'])) {
+    $header['area_text_custom']['content'] = $markup;
+    $view->display_handler->setOption('header', $header);
+  }
+}
+
+/**
+ * Implements hook_views_pre_view().
+ *
+ * /o/pf/{id}/print is a factory view. Portal customers may open it only
+ * for a sales order of their company. Guessing another id is 403.
+ */
+function tec_portal_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
+  _tec_portal_guard_proforma_print($view, $display_id, $args);
+}
+
+/**
+ * Deny a portal customer printing another company's proforma.
+ */
+function _tec_portal_guard_proforma_print(ViewExecutable $view, $display_id = NULL, array $args = []): void {
+  $display = $display_id ?: ($view->current_display ?? '');
+  if ($view->id() !== 'tec_order_sales_order_line_items' || $display !== 'page_4') {
+    return;
+  }
+  $account = \Drupal::currentUser();
+  $companies = _tec_portal_company();
+  if (!$companies->isPortalCustomer($account)) {
+    return;
+  }
+  $id = (int) ($args[0] ?? $view->args[0] ?? 0);
+  $order = $id ? \Drupal::entityTypeManager()->getStorage('tec_order')->load($id) : NULL;
+  if (!$order || $order->getEntityTypeId() !== 'tec_order' || $order->bundle() !== 'tec_sales_order') {
+    throw new NotFoundHttpException();
+  }
+  if (!$companies->ownsOneOf($account, $companies->orderCompanyIds($order))) {
+    throw new AccessDeniedHttpException();
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for views_view_field.
+ *
+ * Sales lists must not offer Print Proforma while Open. Cancelled neither.
+ * The View rewrite is supposed to hide it; this is the belt if that rewrite
+ * still has the Oscar pair of icons on Open.
+ */
+function tec_portal_preprocess_views_view_field(array &$variables) {
+  $view = $variables['view'] ?? NULL;
+  $field = $variables['field'] ?? NULL;
+  if (!$view instanceof ViewExecutable || !$field || ($field->field ?? '') !== 'title') {
+    return;
+  }
+  if (!in_array($view->id(), ['tec_orders_orders', 'tec_supplier_orders'], TRUE)) {
+    return;
+  }
+  if (($view->current_display ?? '') === 'block_3') {
+    return;
+  }
+  $entity = $variables['row']->_entity ?? NULL;
+  if (!$entity instanceof EntityInterface || $entity->getEntityTypeId() !== 'tec_order' || $entity->bundle() !== 'tec_sales_order') {
+    return;
+  }
+  if (PortalOrder::hasProforma($entity)) {
+    return;
+  }
+  $html = (string) $variables['output'];
+  $stripped = preg_replace('#\s*<a class="tec-control"[^>]*href="/o/pf/[^"]*"[^>]*>.*?</a>#s', '', $html);
+  if (is_string($stripped) && $stripped !== $html) {
+    $variables['output'] = Markup::create($stripped);
+  }
+}
+
+/**
+ * Implements hook_block_access().
+ *
+ * Customer tabs (Orders / Products / Details) belong on the card, not on
+ * the new-order grid hanging off it.
+ */
+function tec_portal_block_access(Block $block, $operation, AccountInterface $account) {
+  if ($operation !== 'view' || $block->id() !== 'dxpr_theme_quicktabsteccrmcontacttabs') {
+    return AccessResult::neutral();
+  }
+  $route = \Drupal::routeMatch()->getRouteName();
+  return AccessResult::forbiddenIf(in_array($route, ['tec_portal.factory_place', 'tec_portal.factory_order'], TRUE))
+    ->addCacheContexts(['route']);
+}
+
+/**
+ * Implements hook_theme().
+ */
+function tec_portal_theme($existing, $type, $theme, $path) {
+  return [
+    'tec_portal_proforma' => [
+      'variables' => [
+        'order_number' => '',
+        'date' => '',
+        'logo_url' => '',
+        'seller_name' => '',
+        'seller_lines' => [],
+        'seller_country' => '',
+        'seller_phone' => '',
+        'seller_email' => '',
+        'seller_tax_id' => '',
+        'buyer_name' => '',
+        'buyer_lines' => [],
+        'buyer_country' => '',
+        'buyer_tax_id' => '',
+        'buyer_phone' => '',
+        'bank' => [],
+        'lines' => [],
+      ],
+      'template' => 'tec-portal-proforma',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for html.
+ */
+function tec_portal_preprocess_html(array &$variables) {
+  if (\Drupal::routeMatch()->getRouteName() !== 'tec_portal.proforma') {
+    return;
+  }
+  $variables['attributes']['class'][] = 'tec-proforma-print';
+  $order = \Drupal::routeMatch()->getParameter('tec_order');
+  $variables['head_title'] = ['title' => Proforma::fileTitle($order)];
 }

@@ -112,11 +112,9 @@ print str_repeat('=', 70) . "\n\n";
 $barrer();
 
 try {
-  $defs = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('tec_order');
-  $allowed = $defs['field_tec_order_status']->getSetting('allowed_values') ?? [];
-  $mirar('existe el estado pending_deposit', isset($allowed['pending_deposit']));
-  $mirar('la cola salta de pending_deposit a accounting_verified', (ProductionQueueForm::STATUS_NEXT['pending_deposit'] ?? '') === 'accounting_verified');
-  $mirar('la cola sigue saltando de Open a accounting_verified', (ProductionQueueForm::STATUS_NEXT['draft'] ?? '') === 'accounting_verified');
+  $mirar('existe Pending payment', isset(\Drupal\tec_production\SalesStatus::LABELS['pending_deposit']));
+  $mirar('la cola pasa de pending_deposit a Processing', (ProductionQueueForm::STATUS_NEXT['pending_deposit'] ?? '') === 'in_progress_processing');
+  $mirar('la cola no salta Open a Processing', !isset(ProductionQueueForm::STATUS_NEXT['draft']));
 
   $tipoCliente = $gestor->getStorage('taxonomy_term')->loadByProperties([
     'vid' => 'tec_crm_contact_type',
@@ -145,6 +143,7 @@ try {
     'field_tec_customer_code' => 'ZZCA',
     'field_tec_contact_type' => $tipoCliente->id(),
     'field_tec_brands' => [$marcaA->id()],
+    'field_tec_address' => [['country_code' => 'TH']],
   ]));
   $orgB = $guardar($crm->create([
     'type' => 'tec_contact_organization',
@@ -152,6 +151,7 @@ try {
     'field_tec_customer_code' => 'ZZCB',
     'field_tec_contact_type' => $tipoCliente->id(),
     'field_tec_brands' => [$marcaB->id()],
+    'field_tec_address' => [['country_code' => 'IT']],
   ]));
 
   $personaA = $guardar($crm->create([
@@ -227,10 +227,8 @@ try {
       $formulario = PlaceOrderForm::create(\Drupal::getContainer());
       $estado = new FormState();
       $construido = $formulario->buildForm([], $estado);
-      $estado->setValue('b' . $marcaA->id(), [
-        'lines' => [
-          $tallaA->id() => ['qty' => $qty],
-        ],
+      $estado->setValue('lines', [
+        $tallaA->id() => ['qty' => $qty],
       ]);
       $formulario->submitForm($construido, $estado);
     }
@@ -276,7 +274,7 @@ try {
     $estado = new FormState();
     $construido = $formulario->buildForm([], $estado, $pedido);
     $estado->setValue('lines', [
-      (int) $linea->id() => ['qty' => 7],
+      (int) $tallaA->id() => ['qty' => 7],
     ]);
     $formulario->submitSave($construido, $estado);
   }
@@ -313,7 +311,7 @@ try {
     $estado = new FormState();
     $construido = $formulario->buildForm([], $estado, $pedidoCero);
     $estado->setValue('lines', [
-      (int) $lineaCero->id() => ['qty' => 0],
+      (int) $tallaA->id() => ['qty' => 0],
     ]);
     $formulario->submitConfirm($construido, $estado);
   }
@@ -331,7 +329,7 @@ try {
     $estado = new FormState();
     $construido = $formulario->buildForm([], $estado, $pedido);
     $estado->setValue('lines', [
-      (int) $linea->id() => ['qty' => 7],
+      (int) $tallaA->id() => ['qty' => 7],
     ]);
     $formulario->submitConfirm($construido, $estado);
   }
@@ -340,18 +338,18 @@ try {
   }
   $pedido = $pedidos->load($pedido->id());
   $mirar('paso a pending_deposit', $pedido && PortalOrder::statusOf($pedido) === PortalOrder::PENDING_DEPOSIT, $pedido ? PortalOrder::statusOf($pedido) : '');
-  $mirar('la etiqueta del portal es Pending deposit', $pedido && PortalOrder::portalLabel($pedido) === 'Pending deposit');
-  $mirar('no es Accounting Verified', $pedido && PortalOrder::statusOf($pedido) !== 'accounting_verified');
+  $mirar('la etiqueta del portal es Pending payment', $pedido && PortalOrder::portalLabel($pedido) === 'Pending payment');
+  $mirar('no es Processing', $pedido && PortalOrder::statusOf($pedido) !== 'in_progress_processing');
 
   $sellado = $pedir('/my/order/' . $pedido->id(), $userA);
   $mirar('A sigue viendo el pedido', $sellado['code'] === 200, (string) $sellado['code']);
-  $mirar('ve Pending deposit', str_contains($sellado['body'], 'Pending deposit'));
+  $mirar('ve Pending payment', str_contains($sellado['body'], 'Pending payment'));
   $mirar('ya no ve Confirm order', !str_contains($sellado['body'], 'Confirm order'));
   $mirar('dice que ya no se cambia', str_contains($sellado['body'], 'can no longer be changed'));
   $mirar('no le enseña Accounting Verified', !str_contains($sellado['body'], 'Accounting Verified'));
 
   $listado = $pedir('/my', $userA);
-  $mirar('el listado dice Pending deposit', str_contains($listado['body'], 'Pending deposit'));
+  $mirar('el listado dice Pending payment', str_contains($listado['body'], 'Pending payment'));
 
   $cambiador->switchTo($userA);
   try {

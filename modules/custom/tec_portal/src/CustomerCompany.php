@@ -126,7 +126,16 @@ final class CustomerCompany {
    */
   public function brandIds(AccountInterface $account): array {
     $company = $this->company($account);
-    if (!$company || !$company->hasField(self::BRANDS_FIELD)) {
+    return $company ? $this->brandIdsOf($company) : [];
+  }
+
+  /**
+   * Brand term ids on a company card, in the order stored there.
+   *
+   * @return int[]
+   */
+  public function brandIdsOf(EntityInterface $company): array {
+    if ($company->bundle() !== 'tec_contact_organization' || !$company->hasField(self::BRANDS_FIELD)) {
       return [];
     }
     $ids = [];

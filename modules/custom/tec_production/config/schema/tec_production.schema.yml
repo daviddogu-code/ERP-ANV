@@ -43,9 +43,48 @@ tec_production.settings:
     po_control_tile_nid:
       type: integer
       label: 'Node of the icon that opens PO CONTROL'
+    supplier_orders_tile_nid:
+      type: integer
+      label: 'Node of the icon that opens Supplier Orders'
 
     # The rate, once, for the whole company. Which suppliers charge it is a
     # separate question answered on each contact card -- see src/Vat.php.
     vat_rate:
       type: float
       label: 'Standard VAT rate, as a percentage'
+
+    # Legal identity, printed on proformas and purchase orders. Edited on
+    # /admin/config/tec/company. See src/Company.php.
+    legal_name:
+      type: string
+      label: 'Legal name'
+    tax_id:
+      type: string
+      label: 'Tax ID'
+    phone:
+      type: string
+      label: 'Phone'
+    email:
+      type: string
+      label: 'Email'
+    website:
+      type: string
+      label: 'Website'
+    logo:
+      type: integer
+      label: 'Logo file id'
+    address:
+      type: address
+      label: 'Address'
+    bank_name:
+      type: string
+      label: 'Bank name'
+    bank_holder:
+      type: string
+      label: 'Bank account holder'
+    bank_account:
+      type: string
+      label: 'Bank account number'
+    bank_swift:
+      type: string
+      label: 'SWIFT / BIC'

@@ -44,6 +44,16 @@ function tec_portal_install(): void {
 
   tec_portal_update_8002();
   tec_portal_update_8003();
+  tec_portal_update_8004();
+  tec_portal_update_8005();
+  tec_portal_update_8006();
+  tec_portal_update_8007();
+  tec_portal_update_8008();
+  tec_portal_update_8009();
+  tec_portal_update_8010();
+  tec_portal_update_8011();
+  tec_portal_update_8012();
+  tec_portal_update_8013();
 }
 
 /**
@@ -169,3 +179,504 @@ function tec_portal_update_8003(): void {
     $view->save();
   }
 }
+
+/**
+ * Factory Place an order opens the grid. Stop ECA creating a numbered SO.
+ */
+function tec_portal_update_8004(): void {
+  if (\Drupal::entityTypeManager()->hasDefinition('eca')) {
+    $eca = \Drupal::entityTypeManager()->getStorage('eca')->load('process_sclj26d');
+    if ($eca && $eca->status()) {
+      $eca->setStatus(FALSE)->save();
+    }
+  }
+}
+
+/**
+ * Sales Open is /o/order. Stop the Views draft page and its pencils.
+ *
+ * Purchase /po/draft is left alone. Live config often diverges from YAML
+ * on this machine, so this walks the entities Drupal is actually serving.
+ */
+function tec_portal_update_8005(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('view');
+  foreach (['tec_order_sales_order_line_items', 'tec_orders_orders', 'tec_supplier_orders'] as $id) {
+    $view = $storage->load($id);
+    if (!$view) {
+      continue;
+    }
+    $displays = $view->get('display');
+    $dirty = FALSE;
+    if ($id === 'tec_order_sales_order_line_items') {
+      foreach ($displays as &$display) {
+        $path = (string) ($display['display_options']['path'] ?? '');
+        if ($path !== 'o/draft/%' && $path !== 'o/draft/%/') {
+          continue;
+        }
+        if (($display['display_options']['enabled'] ?? TRUE) !== FALSE) {
+          $display['display_options']['enabled'] = FALSE;
+          $dirty = TRUE;
+        }
+      }
+      unset($display);
+    }
+    if (_tec_portal_replace_sales_draft_links($displays)) {
+      $dirty = TRUE;
+    }
+    if ($dirty) {
+      $view->set('display', $displays);
+      $view->save();
+    }
+  }
+
+  foreach ([
+    'asset_injector.css.tec_order_draft_screens',
+    'asset_injector.js.draft_for_ace_company_view',
+  ] as $name) {
+    $editable = \Drupal::configFactory()->getEditable($name);
+    if ($editable->isNew()) {
+      continue;
+    }
+    $pages = (string) $editable->get('conditions.request_path.pages');
+    if (!str_contains($pages, '/o/draft')) {
+      continue;
+    }
+    $lines = preg_split("/\r\n|\n/", $pages) ?: [];
+    $kept = [];
+    foreach ($lines as $line) {
+      if (trim($line) !== '/o/draft/*') {
+        $kept[] = $line;
+      }
+    }
+    $editable->set('conditions.request_path.pages', implode("\r\n", $kept))->save();
+  }
+
+  \Drupal::service('router.builder')->rebuild();
+}
+
+/**
+ * Rewrites /o/draft/ to /o/order/ in view rewrite text. Leaves /po/draft/.
+ */
+function _tec_portal_replace_sales_draft_links(array &$value): bool {
+  $changed = FALSE;
+  foreach ($value as &$item) {
+    if (is_string($item) && str_contains($item, '/o/draft/')) {
+      $item = str_replace('/o/draft/', '/o/order/', $item);
+      $changed = TRUE;
+    }
+    elseif (is_array($item) && _tec_portal_replace_sales_draft_links($item)) {
+      $changed = TRUE;
+    }
+  }
+  return $changed;
+}
+
+/**
+ * Place an order on the customer Orders tab is a URL, not the sales flag.
+ */
+function tec_portal_update_8006(): void {
+  $view = \Drupal::entityTypeManager()->getStorage('view')->load('tec_orders_orders');
+  if (!$view) {
+    return;
+  }
+  $displays = $view->get('display');
+  $content = (string) ($displays['block_2']['display_options']['header']['area_text_custom']['content'] ?? '');
+  if (str_contains($content, '/order/new') && !str_contains($content, 'link_flag') && !str_contains($content, '/flag/')) {
+    return;
+  }
+  $displays['block_2']['display_options']['header']['area_text_custom']['content'] = '<div class="text-align-right"><div class="btn-default specific-flag"><a href="/customer/{{ raw_arguments.id }}/order/new">Place an order</a></div></div>' . "\r\n";
+  $view->set('display', $displays);
+  $view->save();
+}
+
+/**
+ * Sales /o/order links do not carry destination. Purchase /po/draft still does.
+ */
+function tec_portal_update_8007(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('view');
+  foreach (['tec_order_sales_order_line_items', 'tec_orders_orders', 'tec_supplier_orders'] as $id) {
+    $view = $storage->load($id);
+    if (!$view) {
+      continue;
+    }
+    $displays = $view->get('display');
+    if (_tec_portal_strip_sales_order_destination($displays)) {
+      $view->set('display', $displays);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * Removes ?destination= from /o/order/ URLs. Leaves /po/draft/.
+ */
+function _tec_portal_strip_sales_order_destination(array &$value): bool {
+  $changed = FALSE;
+  foreach ($value as &$item) {
+    if (is_string($item) && str_contains($item, '/o/order/') && str_contains($item, 'destination=')) {
+      $new = preg_replace('#(/o/order/[^\?"\']+)\?destination=[^"\'<]*#', '$1', $item);
+      if (is_string($new) && $new !== $item) {
+        $item = $new;
+        $changed = TRUE;
+      }
+    }
+    elseif (is_array($item) && _tec_portal_strip_sales_order_destination($item)) {
+      $changed = TRUE;
+    }
+  }
+  return $changed;
+}
+
+/**
+ * Proforma after Confirm: icons, print page filter, Customer may print theirs.
+ */
+function tec_portal_update_8008(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('view');
+  foreach (['tec_orders_orders', 'tec_supplier_orders'] as $id) {
+    $view = $storage->load($id);
+    if (!$view) {
+      continue;
+    }
+    $displays = $view->get('display');
+    if (_tec_portal_split_sales_proforma_icons($displays)) {
+      $view->set('display', $displays);
+      $view->save();
+    }
+  }
+
+  $view = $storage->load('tec_order_sales_order_line_items');
+  if (!$view) {
+    return;
+  }
+  $displays = $view->get('display');
+  if (!isset($displays['page_4']['display_options'])) {
+    return;
+  }
+  $changed = FALSE;
+
+  $then = (string) ($displays['attachment_5']['display_options']['fields']['views_conditional_field']['then'] ?? '');
+  if (str_contains($then, '/o/pf/')) {
+    $displays['attachment_5']['display_options']['fields']['views_conditional_field']['then'] = "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/o/order/{{ id }}\">\r\n            <img src=\"/sites/default/files/000-edit-16.png\" alt=\"Edit order\"> Edit order\r\n        </a>\r\n    </strong>\r\n</div>\r\n";
+    $changed = TRUE;
+  }
+
+  $page4 = &$displays['page_4']['display_options'];
+  $filter = &$page4['filters']['field_tec_order_status_value'];
+  $wanted = ['draft' => 'draft', 'cancelled' => 'cancelled'];
+  if (($filter['operator'] ?? '') !== 'not' || ($filter['value'] ?? []) !== $wanted) {
+    $filter['operator'] = 'not';
+    $filter['value'] = $wanted;
+    $changed = TRUE;
+  }
+
+  $roles = [
+    'tec_supervisor' => 'tec_supervisor',
+    'tec_manager' => 'tec_manager',
+    'tec_executive' => 'tec_executive',
+    'administrator' => 'administrator',
+    'tec_customer' => 'tec_customer',
+  ];
+  if (($page4['defaults']['access'] ?? TRUE) !== FALSE) {
+    $page4['defaults']['access'] = FALSE;
+    $changed = TRUE;
+  }
+  if (($page4['access']['type'] ?? '') !== 'role' || ($page4['access']['options']['role'] ?? []) !== $roles) {
+    $page4['access'] = [
+      'type' => 'role',
+      'options' => ['role' => $roles],
+    ];
+    $changed = TRUE;
+  }
+
+  if ($changed) {
+    $view->set('display', $displays);
+    $view->save();
+  }
+}
+
+/**
+ * Open = pencil. Confirmed = Print Proforma. Does not touch /po/.
+ */
+function _tec_portal_split_sales_proforma_icons(array &$displays): bool {
+  $edit = " <a class=\"tec-control\" href=\"/o/order/{{ id }}\" title=\"Edit order\">\r\n    <img src=\"/sites/default/files/000-edit-16.png\">\r\n  </a>";
+  $print = " <a class=\"tec-control\" href=\"/o/pf/{{ id }}/print\" title=\"Print Proforma\" target=\"_blank\">\r\n    <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print Proforma\">\r\n  </a>";
+  $changed = FALSE;
+  foreach ($displays as $id => &$display) {
+    if ($id === 'block_3') {
+      continue;
+    }
+    $fields = &$display['display_options']['fields'];
+    if (!isset($fields['nothing']['alter']['text'], $fields['views_conditional_field'])) {
+      continue;
+    }
+    $text = (string) $fields['nothing']['alter']['text'];
+    $then = (string) ($fields['views_conditional_field']['then'] ?? '');
+    $or = (string) ($fields['views_conditional_field']['or'] ?? '');
+    $blob = $text . $then . $or;
+    $sales = str_contains($blob, '/o/pf/')
+      || (
+        (($fields['views_conditional_field']['equalto'] ?? '') === 'Open')
+        && (str_contains($text, '/o/order/') || str_contains($then, '/o/order/'))
+      );
+    if (!$sales || str_contains($blob, '/po/')) {
+      continue;
+    }
+    if ($text !== $edit) {
+      $fields['nothing']['alter']['text'] = $edit;
+      $changed = TRUE;
+    }
+    if ($then !== '{{ nothing }}') {
+      $fields['views_conditional_field']['then'] = '{{ nothing }}';
+      $changed = TRUE;
+    }
+    if ($or !== $print) {
+      $fields['views_conditional_field']['or'] = $print;
+      $changed = TRUE;
+    }
+  }
+  return $changed;
+}
+
+/**
+ * Sales-order card Line items tab uses the portal table, not Oscar's view.
+ *
+ * The view stays (page_4 is the old print; 8011 turns it off). Revert: set
+ * the bid back to views_block:tec_order_sales_order_line_items-block_1.
+ */
+function tec_portal_update_8009(): void {
+  _tec_portal_point_sales_card_lines_at_portal_grid();
+}
+
+/**
+ * Points only the Line items Quick Tab at the PHP grid.
+ */
+function _tec_portal_point_sales_card_lines_at_portal_grid(): void {
+  $config = \Drupal::configFactory()->getEditable('quicktabs.quicktabs_instance.tec_order_sales_order_tabs');
+  $tabs = $config->get('configuration_data');
+  if (!is_array($tabs)) {
+    return;
+  }
+  $changed = FALSE;
+  foreach ($tabs as &$tab) {
+    $bid = (string) ($tab['content']['block_content']['options']['bid'] ?? '');
+    $title = (string) ($tab['title'] ?? '');
+    $is_lines = $title === 'Line items'
+      || $bid === 'views_block:tec_order_sales_order_line_items-block_1';
+    if (!$is_lines || $bid === 'tec_portal_sales_order_lines') {
+      continue;
+    }
+    $tab['content']['block_content']['options']['bid'] = 'tec_portal_sales_order_lines';
+    $changed = TRUE;
+  }
+  unset($tab);
+  if ($changed) {
+    $config->set('configuration_data', $tabs)->save();
+  }
+}
+
+/**
+ * Sales lists: the order name opens /o/order/{id}, like /my. Not the card.
+ *
+ * /o (block_1) and the customer Orders tab (block_2). Purchase block_3, the
+ * queue and /tec_order/{id} stay. Revert: link_to_entity on the title again.
+ */
+function tec_portal_update_8010(): void {
+  $view = \Drupal::entityTypeManager()->getStorage('view')->load('tec_orders_orders');
+  if (!$view) {
+    return;
+  }
+  $displays = $view->get('display');
+  if (_tec_portal_point_sales_order_title_at_factory_form($displays)) {
+    $view->set('display', $displays);
+    $view->save();
+  }
+}
+
+/**
+ * Sales order-name cells link to /o/order/{id}. Leaves /po/ lists alone.
+ */
+function _tec_portal_point_sales_order_title_at_factory_form(array &$displays): bool {
+  $changed = FALSE;
+  $link = '<a href="/o/order/{{ id }}">{{ title }}</a>';
+  foreach ($displays as $id => &$display) {
+    if ($id === 'block_3' || !isset($display['display_options']['fields']['title'])) {
+      continue;
+    }
+    $fields = &$display['display_options']['fields'];
+    $blob = (string) ($fields['nothing']['alter']['text'] ?? '')
+      . (string) ($fields['views_conditional_field']['then'] ?? '')
+      . (string) ($fields['views_conditional_field']['or'] ?? '');
+    if (str_contains($blob, '/po/') || (!str_contains($blob, '/o/order/') && !str_contains($blob, '/o/pf/'))) {
+      continue;
+    }
+    $title = &$fields['title'];
+    if (!empty($title['settings']['link_to_entity'])) {
+      $title['settings']['link_to_entity'] = FALSE;
+      $changed = TRUE;
+    }
+    $text = (string) ($title['alter']['text'] ?? '');
+    if (str_contains($text, 'href="/o/order/{{ id }}"')) {
+      continue;
+    }
+    $title['alter']['alter_text'] = TRUE;
+    $title['alter']['make_link'] = FALSE;
+    if ($text !== '' && str_contains($text, '{{ title }}')) {
+      $title['alter']['text'] = preg_replace('/\{\{ title \}\}/', $link, $text, 1);
+    }
+    else {
+      $title['alter']['text'] = $link;
+    }
+    $changed = TRUE;
+  }
+  unset($display);
+  return $changed;
+}
+
+/**
+ * Proforma print is PHP. Oscar's /o/pf/{id}/print page is turned off.
+ *
+ * The view stays (revert: enable page_4). Icons keep the same URL.
+ */
+function tec_portal_update_8011(): void {
+  $view = \Drupal::entityTypeManager()->getStorage('view')->load('tec_order_sales_order_line_items');
+  if (!$view) {
+    return;
+  }
+  $displays = $view->get('display');
+  if (!isset($displays['page_4']['display_options'])) {
+    return;
+  }
+  if (($displays['page_4']['display_options']['enabled'] ?? TRUE) === FALSE) {
+    \Drupal::service('router.builder')->rebuild();
+    return;
+  }
+  $displays['page_4']['display_options']['enabled'] = FALSE;
+  $view->set('display', $displays);
+  $view->save();
+  \Drupal::service('router.builder')->rebuild();
+}
+
+/**
+ * Proforma print waits for photos and uses its own A4 CSS, not Oscar's injector.
+ *
+ * Revert: put the proforma print path back on tec_print and tec_print_browser.
+ */
+function tec_portal_update_8012(): void {
+  _tec_portal_drop_proforma_from_print_injectors();
+}
+
+/**
+ * Oscar's print CSS/JS stay on /po/{id}/print only.
+ */
+function _tec_portal_drop_proforma_from_print_injectors(): void {
+  $map = [
+    'asset_injector_js' => 'tec_print_browser',
+    'asset_injector_css' => 'tec_print',
+  ];
+  foreach ($map as $entity_type => $id) {
+    $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($id);
+    if (!$entity) {
+      continue;
+    }
+    $conditions = $entity->getConditions();
+    $path = $conditions['request_path'] ?? [];
+    $pages = (string) ($path['pages'] ?? '');
+    $kept = [];
+    foreach (preg_split("/\r\n|\n|\r/", $pages) as $line) {
+      $line = trim($line);
+      if ($line === '' || str_contains($line, '/o/pf/')) {
+        continue;
+      }
+      $kept[] = $line;
+    }
+    $joined = implode("\r\n", $kept);
+    if ($joined === $pages) {
+      continue;
+    }
+    $path['id'] = 'request_path';
+    $path['pages'] = $joined;
+    $entity->setConditionsConfig('request_path', $path)->save();
+  }
+}
+
+/**
+ * Print icons open a new tab; Oscar's spinner must not hide them forever.
+ *
+ * The click lands on the img inside <a class="tec-control" target="_blank">.
+ * The old script only skipped when the click target itself was the <a>.
+ */
+function tec_portal_update_8013(): void {
+  $entity = \Drupal::entityTypeManager()->getStorage('asset_injector_js')->load('tec_link_spinner');
+  if (!$entity) {
+    return;
+  }
+  $code = _tec_portal_link_spinner_code();
+  if ($entity->getCode() === $code) {
+    return;
+  }
+  $entity->set('code', $code)->save();
+}
+
+/**
+ * Oscar's link spinner, skipping any click whose <a> opens another tab.
+ */
+function _tec_portal_link_spinner_code(): string {
+  return <<<'JS'
+document.addEventListener('DOMContentLoaded', function() {
+    function handleClick(event) {
+        var element = event.target;
+
+        if (element.matches('.tec-control a, .tec-control img, .btn-default a, .btn-default img, .flag, .flag a, .form-actions .button, .specific-flag') ||
+            element.closest('.tec-control a, .tec-control img, .btn-default a, .btn-default img, .flag, .flag a, .form-actions .button, .specific-flag')) {
+
+            element = element.closest('.tec-control a, .tec-control img, .btn-default a, .btn-default img, .flag, .flag a, .form-actions .button, .specific-flag') || element;
+
+            var link = element.closest('a') || (element.tagName && element.tagName.toLowerCase() === 'a' ? element : null);
+            if (link && (link.target === '_blank' || link.target === 'blank')) {
+                return;
+            }
+
+            if (element.tagName.toLowerCase() === 'a') {
+                try {
+                    var url = new URL(element.href);
+                    var pathSegments = url.pathname.split('/').filter(Boolean);
+                    if ((pathSegments.length > 1 && pathSegments[1] === 'x') || (pathSegments.length > 2 && pathSegments[2] === 'x')) {
+                        return;
+                    }
+                } catch (e) {
+                    return;
+                }
+            }
+
+            if (element.nextSibling && element.nextSibling.classList && element.nextSibling.classList.contains('spinner')) {
+                return;
+            }
+
+            var spinner = document.createElement('div');
+            spinner.classList.add('spinner');
+
+            element.style.display = 'none';
+            element.parentNode.insertBefore(spinner, element.nextSibling);
+        }
+    }
+
+    function handlePopState(event) {
+        var spinners = document.querySelectorAll('.spinner');
+        spinners.forEach(function(spinner) {
+            spinner.parentNode.removeChild(spinner);
+
+            var button = spinner.previousSibling;
+            if (button) {
+                button.style.display = '';
+            }
+        });
+    }
+
+    document.body.addEventListener('click', handleClick);
+    window.addEventListener('popstate', handlePopState);
+    history.replaceState({ page: 1 }, '');
+    window.addEventListener('hashchange', handlePopState);
+});
+JS;
+}
+

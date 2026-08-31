@@ -1635,7 +1635,7 @@ display:
           if: field_tec_order_status
           condition: eq
           equalto: Open
-          then: "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/o/draft/{{ id }}?destination=/tec_order/{{ id }}\">\r\n            <img src=\"/sites/default/files/000-edit-16.png\" alt=\"Edit order\"> Edit order\r\n        </a>\r\n    </strong>\r\n</div>\r\n<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/o/pf/{{ id }}/print\" target=\"_blank\">\r\n            <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print/PDF Pro-forma\"> Print/PDF Pro-forma\r\n        </a>\r\n    </strong>\r\n</div>\r\n"
+          then: "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/o/order/{{ id }}\">\r\n            <img src=\"/sites/default/files/000-edit-16.png\" alt=\"Edit order\"> Edit order\r\n        </a>\r\n    </strong>\r\n</div>\r\n"
           then_translate: true
           or: "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/o/{{ id }}/print\" target=\"_blank\">\r\n            <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print/PDF Invoice\"> Print/PDF Invoice\r\n        </a>\r\n    </strong>\r\n</div>"
           or_translate: true
@@ -1855,6 +1855,56 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        tec_invoice:
+          id: tec_invoice
+          table: tec_order_field_data
+          field: tec_invoice
+          relationship: field_tec_order
+          group_type: group
+          admin_label: ''
+          plugin_id: tec_purchase_invoice
+          label: ''
+          exclude: true
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: false
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: true
+          empty_zero: false
+          hide_alter_empty: true
+          show_label: true
         views_conditional_field:
           id: views_conditional_field
           table: views_conditional
@@ -1907,9 +1957,9 @@ display:
           if: field_tec_po_status
           condition: eq
           equalto: Open
-          then: "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/draft/{{ id }}?destination=/tec_order/{{ id }}\">\r\n            <img src=\"/sites/default/files/000-edit-16.png\" alt=\"Edit order\"> Edit order\r\n        </a>\r\n    </strong>\r\n</div>\r\n\r\n<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/tec_order/{{ id }}/receive\">\r\n            <img src=\"/sites/default/files/000-ok-16.png\" alt=\"Receive\"> Receive\r\n        </a>\r\n    </strong>\r\n</div>\r\n\r\n<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/{{ id }}/print\" target=\"_blank\">\r\n            <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print/PDF\"> Print/PDF\r\n        </a>\r\n    </strong>\r\n</div>"
+          then: "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/draft/{{ id }}?destination=/tec_order/{{ id }}\">\r\n            <img src=\"/sites/default/files/000-edit-16.png\" alt=\"Edit order\"> Edit order\r\n        </a>\r\n    </strong>\r\n</div>\r\n\r\n<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/tec_order/{{ id }}/receive\">\r\n            <img src=\"/sites/default/files/000-ok-16.png\" alt=\"Receive\"> Receive\r\n        </a>\r\n    </strong>\r\n</div>\r\n\r\n<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/{{ id }}/print\" target=\"_blank\">\r\n            <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print/PDF\"> Print/PDF\r\n        </a>\r\n    </strong>\r\n</div>\r\n\r\n{{ tec_invoice }}"
           then_translate: true
-          or: "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/{{ id }}/print\" target=\"_blank\">\r\n            <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print/PDF\"> Print/PDF\r\n        </a>\r\n    </strong>\r\n</div>"
+          or: "<div class=\"btn-default\">\r\n    <strong>\r\n        <a href=\"/po/{{ id }}/print\" target=\"_blank\">\r\n            <img src=\"/sites/default/files/000-print-16.png\" alt=\"Print/PDF\"> Print/PDF\r\n        </a>\r\n    </strong>\r\n</div>\r\n\r\n{{ tec_invoice }}"
           or_translate: true
           strip_tags: false
       pager:
@@ -8375,6 +8425,7 @@ display:
     display_plugin: page
     position: 1
     display_options:
+      enabled: false
       fields:
         counter:
           id: counter
@@ -11442,6 +11493,7 @@ display:
     display_plugin: page
     position: 1
     display_options:
+      enabled: false
       title: 'Pro Forma'
       fields:
         id:
@@ -12763,9 +12815,10 @@ display:
           group_type: group
           admin_label: ''
           plugin_id: list_field
-          operator: or
+          operator: not
           value:
             draft: draft
+            cancelled: cancelled
           group: 1
           exposed: false
           expose:
@@ -12935,6 +12988,7 @@ display:
         filters: false
         filter_groups: false
         header: false
+        access: false
       relationships:
         reverse__tec_order__field_tec_line_items:
           id: reverse__tec_order__field_tec_line_items
@@ -13001,6 +13055,15 @@ display:
           flags:
             tec_eca_line_item_lock: tec_eca_line_item_lock
           noscrolltop: 0
+      access:
+        type: role
+        options:
+          role:
+            tec_supervisor: tec_supervisor
+            tec_manager: tec_manager
+            tec_executive: tec_executive
+            administrator: administrator
+            tec_customer: tec_customer
       path: o/pf/%/print
     cache_metadata:
       max-age: -1

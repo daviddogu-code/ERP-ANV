@@ -324,8 +324,8 @@ try {
     substr_count($codigo, "\n") + 1,
     str_replace(["\r\n", "\n"], ', ', trim($donde)));
 
-  $mirar('el guion del borrador sigue enganchado a las dos pantallas',
-    str_contains($donde, '/o/draft/*') && str_contains($donde, '/po/draft/*'),
+  $mirar('el guion del borrador sigue enganchado a compras',
+    str_contains($donde, '/po/draft/*') && !str_contains($donde, '/o/draft/*'),
     $donde);
   $mirar('y cuenta piezas', str_contains($codigo, 'grand-total-pieces'),
     'no hay ninguna celda de piezas en el guion');

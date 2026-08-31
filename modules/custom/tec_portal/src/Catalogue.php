@@ -26,18 +26,23 @@ final class Catalogue {
   ) {}
 
   /**
-   * The order grid for this account, grouped by brand.
+   * The order grid for this portal login, grouped by brand.
    *
    * @return array<int, array{id: int, name: string, rows: array<int, array>}>
    */
   public function grid(AccountInterface $account): array {
     $company = $this->companies->company($account);
-    if (!$company) {
-      return [];
-    }
+    return $company ? $this->gridForCompany($company) : [];
+  }
 
+  /**
+   * The order grid for a company card. Factory and portal share this list.
+   *
+   * @return array<int, array{id: int, name: string, rows: array<int, array>}>
+   */
+  public function gridForCompany(EntityInterface $company): array {
     $brands = [];
-    foreach ($this->companies->brandIds($account) as $tid) {
+    foreach ($this->companies->brandIdsOf($company) as $tid) {
       $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($tid);
       if (!$term || $term->bundle() !== 'tec_brands') {
         continue;
@@ -52,7 +57,6 @@ final class Catalogue {
         'rows' => $rows,
       ];
     }
-
     return $brands;
   }
 
@@ -75,7 +79,21 @@ final class Catalogue {
    * One size row, or NULL if that size is not on this account's grid.
    */
   public function rowForSize(AccountInterface $account, int $size_id): ?array {
-    foreach ($this->grid($account) as $brand) {
+    return $this->rowForSizeIn($this->grid($account), $size_id);
+  }
+
+  /**
+   * One size row on a company's grid, or NULL.
+   */
+  public function rowForSizeOnCompany(EntityInterface $company, int $size_id): ?array {
+    return $this->rowForSizeIn($this->gridForCompany($company), $size_id);
+  }
+
+  /**
+   * @param array<int, array{rows: array<int, array>}> $grid
+   */
+  protected function rowForSizeIn(array $grid, int $size_id): ?array {
+    foreach ($grid as $brand) {
       foreach ($brand['rows'] as $row) {
         if ($row['size_id'] === $size_id) {
           return $row;

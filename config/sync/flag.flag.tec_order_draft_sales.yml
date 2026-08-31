@@ -9,7 +9,7 @@ label: 'TEC Order: Draft Sales order'
 bundles: {  }
 entity_type: tec_crm
 global: true
-flag_short: '+ Order'
+flag_short: 'Place an order'
 flag_long: 'This will create an open order that you can edit until a payment is made against it.'
 flag_message: ''
 unflag_short: 'Unset + Order'

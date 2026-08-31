@@ -16,6 +16,6 @@ conditions:
   request_path:
     id: request_path
     negate: false
-    pages: "/o/pf/*/print\r\n/po/*print"
+    pages: "/po/*print"
 contexts: {  }
 conditions_require_all: true

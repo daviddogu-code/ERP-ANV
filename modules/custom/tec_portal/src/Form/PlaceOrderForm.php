@@ -3,6 +3,7 @@
 namespace Drupal\tec_portal\Form;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -12,15 +13,15 @@ use Drupal\tec_portal\Catalogue;
 use Drupal\tec_portal\CustomerCompany;
 use Drupal\tec_portal\PortalLineTable;
 use Drupal\tec_production\OrderNumber;
+use Drupal\tec_production\Vat;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Place an order (/my/order/new): quantities against this company's catalogue.
  *
  * Same shape as /purchase: a PHP grid, one submit, and the order exists when
- * the button is pressed. The factory + Order flag is left alone. Lines with
- * quantity 0 are not written. The company on the order is taken from the
- * session, never from the form.
+ * the button is pressed. Lines with quantity 0 are not written. The company
+ * on the order is taken from the session, never from the form.
  */
 class PlaceOrderForm extends FormBase {
 
@@ -54,8 +55,28 @@ class PlaceOrderForm extends FormBase {
   }
 
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $account = $this->currentUser();
-    $grid = $this->catalogue->grid($account);
+    $company = $this->companies->company($this->currentUser());
+    if (!$company) {
+      $form['nothing'] = [
+        '#markup' => '<div class="tec-portal__nothing">'
+        . $this->t('This login is not linked to a company.')
+        . '</div>',
+      ];
+      return $form;
+    }
+    return $this->buildGridForm($form, $form_state, $company, [
+      '#type' => 'link',
+      '#title' => $this->t('Back to my orders'),
+      '#url' => Url::fromRoute('tec_portal.home'),
+      '#attributes' => ['class' => ['tec-portal__back']],
+    ], $this->t('Type a quantity next to each size you want. Sizes left at 0 are not ordered. The order is placed when you press the button.'));
+  }
+
+  /**
+   * Catalogue table, Place order, company stamped on form state.
+   */
+  protected function buildGridForm(array $form, FormStateInterface $form_state, EntityInterface $company, array $back, $help): array {
+    $grid = $this->catalogue->gridForCompany($company);
     $allowed = [];
     foreach ($grid as $brand) {
       foreach ($brand['rows'] as $row) {
@@ -63,23 +84,19 @@ class PlaceOrderForm extends FormBase {
       }
     }
     $form_state->set('allowed_sizes', $allowed);
+    $form_state->set('company_id', (int) $company->id());
 
     $form['#tree'] = TRUE;
     $form['#attributes']['class'][] = 'tec-portal';
     $form['#attributes']['class'][] = 'tec-portal--place';
     $form['#attached']['library'][] = 'tec_portal/portal';
 
-    $form['back'] = [
-      '#type' => 'link',
-      '#title' => $this->t('Back to my orders'),
-      '#url' => Url::fromRoute('tec_portal.home'),
-      '#attributes' => ['class' => ['tec-portal__back']],
-    ];
+    $rate = $this->vatRateFromContact($company);
+    $this->attachVatSettings($form, $rate);
 
+    $form['back'] = $back;
     $form['help'] = [
-      '#markup' => '<div class="tec-portal__help">'
-        . $this->t('Type a quantity next to each size you want. Sizes left at 0 are not ordered. The order is placed when you press the button.')
-        . '</div>',
+      '#markup' => '<div class="tec-portal__help">' . $help . '</div>',
     ];
 
     if (!$grid) {
@@ -91,14 +108,7 @@ class PlaceOrderForm extends FormBase {
       return $form;
     }
 
-    foreach ($grid as $brand) {
-      $form['b' . $brand['id']] = $this->catalogueBrandGroup($brand);
-    }
-
-    if (count($grid) > 1) {
-      $form['grand'] = $this->grandTotalTable();
-    }
-
+    $form['lines'] = $this->catalogueLineTable($grid, [], $rate);
     $form['actions'] = [
       '#type' => 'actions',
       'submit' => [
@@ -112,21 +122,17 @@ class PlaceOrderForm extends FormBase {
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $company = $this->companyForSubmit($form_state);
+    if (!$company) {
+      $this->messenger()->addError($this->t('This order has no company.'));
+      return;
+    }
+
     $allowed = array_map('intval', $form_state->get('allowed_sizes') ?: []);
     $wanted = [];
-    $values = $form_state->getValues();
+    $posted = $form_state->getValue('lines') ?: [];
     foreach ($allowed as $sid) {
-      $qty = 0;
-      foreach ($values as $key => $group) {
-        if (!is_string($key) || !str_starts_with($key, 'b') || !is_array($group)) {
-          continue;
-        }
-        $got = $group['lines'][$sid]['qty'] ?? $group['lines'][(string) $sid]['qty'] ?? NULL;
-        if ($got !== NULL) {
-          $qty = (int) $got;
-          break;
-        }
-      }
+      $qty = (int) ($posted[$sid]['qty'] ?? $posted[(string) $sid]['qty'] ?? 0);
       if ($qty > 0) {
         $wanted[$sid] = $qty;
       }
@@ -137,31 +143,52 @@ class PlaceOrderForm extends FormBase {
       return;
     }
 
-    $order = $this->createSalesOrder($wanted);
+    if (Vat::customerCountry($company) === '') {
+      $this->messenger()->addError($this->t('This customer needs a country before an order can be placed.'));
+      return;
+    }
+
+    $order = $this->createSalesOrder($wanted, $company);
     $this->messenger()->addStatus($this->t('Order @number placed with @count lines.', [
       '@number' => $order->label(),
       '@count' => count($wanted),
     ]));
+    $this->afterPlace($form_state, $order, $company);
+  }
+
+  /**
+   * Company for this submit. Portal: the login. Factory overrides this.
+   */
+  protected function companyForSubmit(FormStateInterface $form_state): ?EntityInterface {
+    $id = (int) $form_state->get('company_id');
+    $mine = $this->companies->id($this->currentUser());
+    if (!$id || $mine !== $id) {
+      return NULL;
+    }
+    $company = $this->entityTypeManager->getStorage('tec_crm')->load($id);
+    return $company && $company->bundle() === 'tec_contact_organization' ? $company : NULL;
+  }
+
+  /**
+   * After a successful place. Portal stays on /my/order/{id}.
+   */
+  protected function afterPlace(FormStateInterface $form_state, $order, EntityInterface $company): void {
     $form_state->setRedirect('tec_portal.order', ['tec_order' => $order->id()]);
   }
 
   /**
-   * Writes the sales order and its lines for the logged-in company.
+   * Writes the sales order and its lines for one company.
    *
    * @param array<int, int> $wanted
    *   Quantity keyed by size variation id.
    */
-  protected function createSalesOrder(array $wanted) {
+  protected function createSalesOrder(array $wanted, EntityInterface $company) {
     $account = $this->currentUser();
-    $company_id = $this->companies->id($account);
-    if ($company_id === NULL) {
-      throw new \RuntimeException('Portal order without a company.');
-    }
-
+    $company_id = (int) $company->id();
     $line_storage = $this->entityTypeManager->getStorage('tec_line_item');
     $lines = [];
     foreach ($wanted as $size_id => $quantity) {
-      $row = $this->catalogue->rowForSize($account, $size_id);
+      $row = $this->catalogue->rowForSizeOnCompany($company, $size_id);
       if (!$row) {
         continue;
       }

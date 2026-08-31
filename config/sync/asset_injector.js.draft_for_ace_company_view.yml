@@ -192,6 +192,6 @@ conditions:
   request_path:
     id: request_path
     negate: false
-    pages: "/odev/draft/*\r\n/po/draft/*\r\n/o/draft/*"
+    pages: "/odev/draft/*\r\n/po/draft/*"
 contexts: {  }
 conditions_require_all: true

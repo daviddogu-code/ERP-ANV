@@ -2,7 +2,6 @@
 
 namespace Drupal\tec_portal\Form;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
@@ -10,9 +9,10 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\tec_portal\Catalogue;
 use Drupal\tec_portal\CustomerCompany;
+use Drupal\tec_portal\OrderLineGrid;
 use Drupal\tec_portal\PortalLineTable;
 use Drupal\tec_portal\PortalOrder;
-use Drupal\tec_production\LineItemDisplay;
+use Drupal\tec_production\Vat;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -21,8 +21,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  *
  * While Open the grid is the catalogue, like /my/order/new, so sizes left
  * at 0 can still be filled in. Confirming drops those zeros, sends the
- * order to the factory, and takes the pen away. Accounting Verified stays
- * a factory click.
+ * order to the factory, and takes the pen away. Processing stays
+ * a factory click after the deposit is seen.
  */
 class OrderForm extends FormBase {
 
@@ -61,46 +61,47 @@ class OrderForm extends FormBase {
     $form_state->set('order_id', (int) $tec_order->id());
     $open = PortalOrder::isOpen($tec_order);
     $lines = $this->linesOf($tec_order);
-    $account = $this->currentUser();
 
     $form['#tree'] = TRUE;
     $form['#attributes']['class'][] = 'tec-portal';
     $form['#attributes']['class'][] = 'tec-portal--place';
     $form['#attached']['library'][] = 'tec_portal/portal';
 
-    $form['back'] = [
-      '#type' => 'link',
-      '#title' => $this->t('Back to my orders'),
-      '#url' => Url::fromRoute('tec_portal.home'),
-      '#attributes' => ['class' => ['tec-portal__back']],
-    ];
+    $form['back'] = $this->backLink($tec_order);
 
     $form['meta'] = [
-      '#markup' => '<div class="tec-portal__meta">'
-        . PortalOrder::statusMarkup($tec_order)
-        . '</div>',
-      '#allowed_tags' => ['div', 'span'],
+      '#type' => 'container',
+      '#attributes' => ['class' => ['tec-portal__meta']],
+      'status' => [
+        '#markup' => PortalOrder::statusMarkup($tec_order),
+        '#allowed_tags' => ['span'],
+      ],
     ];
+    if (PortalOrder::hasProforma($tec_order)) {
+      $form['meta']['proforma'] = [
+        '#type' => 'link',
+        '#title' => $this->t('Print Proforma'),
+        '#url' => Url::fromUri('internal:' . PortalOrder::proformaPath($tec_order)),
+        '#attributes' => [
+          'class' => ['button', 'tec-portal__proforma'],
+          'target' => '_blank',
+          'title' => $this->t('Print Proforma'),
+        ],
+      ];
+    }
 
     if ($open) {
       $form['help'] = [
-        '#markup' => '<div class="tec-portal__help">'
-        . $this->t('You can add or change quantities until you confirm. Confirming sends the order to the factory and drops sizes left at 0. It cannot be undone from here.')
-        . '</div>',
+        '#markup' => '<div class="tec-portal__help">' . $this->openHelp() . '</div>',
       ];
-      $grid = $this->catalogue->grid($account);
+      $company = $this->companyOf($tec_order);
+      $grid = $company ? $this->catalogue->gridForCompany($company) : [];
       $qty_by_size = $this->qtyBySize($lines);
       $allowed = [];
-      $all_qty = 0.0;
-      $all_money = 0.0;
       foreach ($grid as $brand) {
         foreach ($brand['rows'] as $row) {
           $allowed[] = $row['size_id'];
-          $q = (int) ($qty_by_size[$row['size_id']] ?? 0);
-          $all_qty += $q;
-          $all_money += $q * (float) $row['price'];
         }
-        $form['b' . $brand['id']] = $this->catalogueBrandGroup($brand, $qty_by_size);
       }
       $form_state->set('allowed_sizes', $allowed);
       if (!$grid) {
@@ -111,8 +112,10 @@ class OrderForm extends FormBase {
           '#attributes' => ['class' => ['tec-portal__table']],
         ];
       }
-      elseif (count($grid) > 1) {
-        $form['grand'] = $this->grandTotalTable($all_qty, $all_money);
+      else {
+        $rate = $this->vatRateFromOrder($tec_order) ?? $this->vatRateFromContact($company);
+        $this->attachVatSettings($form, $rate);
+        $form['lines'] = $this->catalogueLineTable($grid, $qty_by_size, $rate);
       }
       if ($grid) {
         $form['actions'] = ['#type' => 'actions'];
@@ -142,159 +145,11 @@ class OrderForm extends FormBase {
       '#allowed_tags' => ['div', 'strong'],
     ];
 
-    $groups = $this->brandGroups($lines);
-    if (!$groups) {
-      $form['empty'] = [
-        '#type' => 'table',
-        '#header' => $this->lineTableHeader(),
-        '#empty' => $this->t('This order has no lines.'),
-        '#attributes' => ['class' => ['tec-portal__table']],
-      ];
-    }
-    else {
-      $all_qty = 0.0;
-      $all_money = 0.0;
-      foreach ($groups as $group) {
-        $all_qty += $group['qty'];
-        $all_money += $group['amount'];
-        $form['b' . $group['id']] = $this->orderedBrandGroup($group);
-      }
-      if (count($groups) > 1) {
-        $form['grand'] = $this->grandTotalTable($all_qty, $all_money);
-      }
-    }
+    $rate = $this->vatRateFromOrder($tec_order);
+    $this->attachVatSettings($form, $rate);
+    $form['lines'] = OrderLineGrid::create($this->entityTypeManager)->table($tec_order);
 
     return $form;
-  }
-
-  /**
-   * One brand's saved lines (confirmed orders: no zeros).
-   */
-  protected function orderedBrandGroup(array $group): array {
-    $element = [
-      '#type' => 'fieldset',
-      '#title' => $group['name'],
-      '#attributes' => ['class' => ['tec-portal__group']],
-    ];
-    $element['lines'] = [
-      '#type' => 'table',
-      '#header' => $this->lineTableHeader(),
-      '#attributes' => ['class' => ['tec-portal__table']],
-      '#footer' => [$this->totalsFooter(FALSE, $group['qty'], $group['amount'])],
-    ];
-
-    foreach ($group['lines'] as $line) {
-      $lid = (int) $line->id();
-      $qty = $this->qtyOf($line);
-      $price = $this->priceOf($line);
-      $total = $this->totalOf($line, $qty, $price);
-      $product = $this->productOf($line);
-      $size = $this->sizeOf($line);
-      $colour = $this->colourOf($line);
-      $element['lines'][$lid] = [
-        '#attributes' => [
-          'data-price' => number_format($price, 2, '.', ''),
-          'data-qty' => (string) (int) $qty,
-        ],
-        'image' => $this->imageCell($colour),
-        'product' => ['#plain_text' => $this->productName($product) ?: (string) $line->label()],
-        'material' => ['#plain_text' => LineItemDisplay::materialLabel($product)],
-        'colour' => ['#plain_text' => LineItemDisplay::colorLabel($colour)],
-        'size' => ['#plain_text' => LineItemDisplay::sizeLabel($size)],
-        'qty' => [
-          '#plain_text' => number_format($qty, 0),
-          '#wrapper_attributes' => ['class' => ['tec-portal__num', 'tec-portal__col-qty']],
-        ],
-        'price' => [
-          '#markup' => Html::escape($this->money($price)),
-          '#wrapper_attributes' => ['class' => ['tec-portal__num', 'tec-portal__col-price']],
-        ],
-        'item_total' => [
-          '#markup' => '<span class="tec-portal__item-total">' . Html::escape($this->money($total)) . '</span>',
-          '#wrapper_attributes' => ['class' => ['tec-portal__num', 'tec-portal__col-total']],
-          '#allowed_tags' => ['span'],
-        ],
-      ];
-    }
-
-    return $element;
-  }
-
-  /**
-   * Saved lines with quantity, grouped by brand.
-   *
-   * @return array<int, array{id: int, name: string, lines: array, qty: float, amount: float}>
-   */
-  protected function brandGroups(array $lines): array {
-    $buckets = [];
-    foreach ($this->companies->brandIds($this->currentUser()) as $tid) {
-      $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($tid);
-      $buckets[$tid] = [
-        'id' => $tid,
-        'name' => $term ? (string) $term->label() : (string) $this->t('Brand'),
-        'lines' => [],
-        'qty' => 0.0,
-        'amount' => 0.0,
-      ];
-    }
-    $extra = [];
-    $other = [
-      'id' => 0,
-      'name' => (string) $this->t('Other'),
-      'lines' => [],
-      'qty' => 0.0,
-      'amount' => 0.0,
-    ];
-
-    foreach ($lines as $line) {
-      $qty = $this->qtyOf($line);
-      if ($qty < 1) {
-        continue;
-      }
-      $price = $this->priceOf($line);
-      $amount = $this->totalOf($line, $qty, $price);
-      $product = $this->productOf($line);
-      $bid = $product ? $this->companies->productBrandId($product) : 0;
-      if ($bid && isset($buckets[$bid])) {
-        $buckets[$bid]['lines'][] = $line;
-        $buckets[$bid]['qty'] += $qty;
-        $buckets[$bid]['amount'] += $amount;
-      }
-      elseif ($bid) {
-        if (!isset($extra[$bid])) {
-          $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($bid);
-          $extra[$bid] = [
-            'id' => $bid,
-            'name' => $term ? (string) $term->label() : (string) $this->t('Brand'),
-            'lines' => [],
-            'qty' => 0.0,
-            'amount' => 0.0,
-          ];
-        }
-        $extra[$bid]['lines'][] = $line;
-        $extra[$bid]['qty'] += $qty;
-        $extra[$bid]['amount'] += $amount;
-      }
-      else {
-        $other['lines'][] = $line;
-        $other['qty'] += $qty;
-        $other['amount'] += $amount;
-      }
-    }
-
-    $groups = [];
-    foreach ($buckets as $group) {
-      if ($group['lines']) {
-        $groups[] = $group;
-      }
-    }
-    foreach ($extra as $group) {
-      $groups[] = $group;
-    }
-    if ($other['lines']) {
-      $groups[] = $other;
-    }
-    return $groups;
   }
 
   /**
@@ -306,7 +161,7 @@ class OrderForm extends FormBase {
       return;
     }
     $this->messenger()->addStatus($this->t('Quantities saved.'));
-    $form_state->setRedirect('tec_portal.order', ['tec_order' => $order->id()]);
+    $this->redirectToOrder($form_state, $order);
   }
 
   /**
@@ -325,12 +180,17 @@ class OrderForm extends FormBase {
       $this->messenger()->addWarning($this->t('Nothing to confirm: every quantity is 0.'));
       return;
     }
+    $company = $this->companyOf($order);
+    if (!$company || Vat::customerCountry($company) === '') {
+      $this->messenger()->addError($this->t('This customer needs a country before the order can be confirmed.'));
+      return;
+    }
     $order->set('field_tec_order_status', PortalOrder::PENDING_DEPOSIT);
     $order->save();
     $this->messenger()->addStatus($this->t('Order @number confirmed. It can no longer be changed from here.', [
       '@number' => $order->label(),
     ]));
-    $form_state->setRedirect('tec_portal.order', ['tec_order' => $order->id()]);
+    $this->redirectToOrder($form_state, $order);
   }
 
   /**
@@ -350,7 +210,7 @@ class OrderForm extends FormBase {
       return NULL;
     }
     $account = $this->currentUser();
-    if (!$this->companies->isPortalCustomer($account) || !$order->access('view', $account) || !PortalOrder::isOpen($order)) {
+    if (!$this->mayEditOpen($account, $order)) {
       $this->messenger()->addWarning($this->t('This order can no longer be changed.'));
       return NULL;
     }
@@ -378,7 +238,8 @@ class OrderForm extends FormBase {
         }
       }
       elseif ($qty > 0) {
-        $row = $this->catalogue->rowForSize($account, $sid);
+        $company = $this->companyOf($order);
+        $row = $company ? $this->catalogue->rowForSizeOnCompany($company, $sid) : NULL;
         if (!$row) {
           continue;
         }
@@ -416,14 +277,9 @@ class OrderForm extends FormBase {
    */
   protected function postedQtyBySize(FormStateInterface $form_state): array {
     $posted = [];
-    foreach ($form_state->getValues() as $key => $group) {
-      if (!is_string($key) || !str_starts_with($key, 'b') || !is_array($group)) {
-        continue;
-      }
-      foreach ($group['lines'] ?? [] as $sid => $row) {
-        if (is_array($row) && array_key_exists('qty', $row)) {
-          $posted[(int) $sid] = (int) $row['qty'];
-        }
+    foreach ($form_state->getValue('lines') ?: [] as $sid => $row) {
+      if (is_array($row) && array_key_exists('qty', $row)) {
+        $posted[(int) $sid] = (int) $row['qty'];
       }
     }
     return $posted;
@@ -543,6 +399,63 @@ class OrderForm extends FormBase {
     }
     $got = $this->entityTypeManager->getStorage('tec_product')->load($id);
     return $got ?: NULL;
+  }
+
+  /**
+   * Back to the list this person came from.
+   */
+  protected function backLink($order): array {
+    return [
+      '#type' => 'link',
+      '#title' => $this->t('Back to my orders'),
+      '#url' => Url::fromRoute('tec_portal.home'),
+      '#attributes' => ['class' => ['tec-portal__back']],
+    ];
+  }
+
+  /**
+   * Shown while the order is still Open.
+   */
+  protected function openHelp() {
+    return $this->t('You can add or change quantities until you confirm. Confirming sends the order to the factory and drops sizes left at 0. It cannot be undone from here.');
+  }
+
+  /**
+   * Route of this screen after Save or Confirm.
+   */
+  protected function orderViewRoute(): string {
+    return 'tec_portal.order';
+  }
+
+  /**
+   * Stays on this order. Destination in the URL must not yank the factory away.
+   */
+  protected function redirectToOrder(FormStateInterface $form_state, $order): void {
+    $form_state->setIgnoreDestination();
+    $form_state->setRedirect($this->orderViewRoute(), ['tec_order' => $order->id()]);
+  }
+
+  /**
+   * Portal customer or factory staff, Open, and allowed to see the order.
+   */
+  protected function mayEditOpen($account, $order): bool {
+    if (!PortalOrder::isOpen($order) || !$order->access('view', $account)) {
+      return FALSE;
+    }
+    return $this->companies->isPortalCustomer($account) || $this->companies->isFactory($account);
+  }
+
+  /**
+   * Company card stamped on the order, or NULL.
+   */
+  protected function companyOf($order): ?EntityInterface {
+    $ids = $this->companies->orderCompanyIds($order);
+    $id = (int) ($ids[0] ?? 0);
+    if ($id < 1) {
+      return NULL;
+    }
+    $company = $this->entityTypeManager->getStorage('tec_crm')->load($id);
+    return $company && $company->bundle() === 'tec_contact_organization' ? $company : NULL;
   }
 
   protected function productName($product): string {

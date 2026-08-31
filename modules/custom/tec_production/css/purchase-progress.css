@@ -69,3 +69,7 @@
   border-color: #dcdcdc;
   text-decoration: line-through;
 }
+
+.tec-po-invoice {
+  word-break: break-all;
+}

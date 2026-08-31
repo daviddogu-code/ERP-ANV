@@ -6,4 +6,6 @@ core_version_requirement: ^10 || ^11
 dependencies:
   - eck:eck
   - drupal:datetime
+  - drupal:file
   - drupal:user
+  - address:address

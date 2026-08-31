@@ -1,3 +1,17 @@
+tec_production.sales_advance:
+  path: '/tec_order/{tec_order}/advance'
+  defaults:
+    _controller: '\Drupal\tec_production\Controller\SalesStatusController::advance'
+  methods: [GET]
+  requirements:
+    _custom_access: '\Drupal\tec_production\Controller\SalesStatusController::access'
+    _csrf_token: 'TRUE'
+    tec_order: \d+
+  options:
+    parameters:
+      tec_order:
+        type: 'entity:tec_order'
+
 tec_production.queue:
   path: '/o/queue'
   defaults:
@@ -111,6 +125,18 @@ tec_production.po_invoice:
   requirements:
     # Same trick as the receive form: the custom check is what keeps sales
     # orders out, and Drupal then hides any link pointing here.
+    _custom_access: '\Drupal\tec_production\Form\InvoiceUploadForm::access'
+    tec_order: \d+
+  options:
+    parameters:
+      tec_order:
+        type: 'entity:tec_order'
+
+tec_production.po_invoice_file:
+  path: '/tec_order/{tec_order}/invoice/file'
+  defaults:
+    _controller: '\Drupal\tec_production\Controller\InvoiceDownloadController::download'
+  requirements:
     _custom_access: '\Drupal\tec_production\Form\InvoiceUploadForm::access'
     tec_order: \d+
   options:

@@ -7,3 +7,4 @@ dependencies:
   - drupal:system
   - eck:eck
   - views:views
+  - address:address

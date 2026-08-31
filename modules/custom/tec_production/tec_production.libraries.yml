@@ -7,6 +7,12 @@ production_queue:
   dependencies:
     - core/drupal
     - core/once
+    - tec_production/sales_status
+
+sales_status:
+  css:
+    theme:
+      css/sales-status.css: {}
 
 production_log:
   css:
@@ -79,6 +85,28 @@ purchase_progress:
     theme:
       css/purchase-progress.css: {}
 
+supplier_orders:
+  css:
+    theme:
+      css/supplier-orders.css: {}
+  js:
+    js/supplier-orders.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/drupal.dialog.ajax
+    - tec_production/invoice
+
+invoice:
+  css:
+    theme:
+      css/invoice.css: {}
+  js:
+    js/invoice.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
 purchase_queue:
   css:
     theme:
@@ -89,7 +117,9 @@ purchase_queue:
     - core/drupal
     - core/once
     - core/drupal.message
+    - core/drupal.dialog.ajax
     - tec_production/purchase_progress
+    - tec_production/invoice
 
 purchase_totals:
   css:

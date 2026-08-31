@@ -7,3 +7,12 @@ portal:
   dependencies:
     - core/drupal
     - core/once
+
+proforma:
+  css:
+    theme:
+      css/portal.css: { weight: 200 }
+      css/proforma.css: { weight: 300 }
+  js:
+    js/proforma.js: {}
+
