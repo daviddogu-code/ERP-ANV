@@ -28,7 +28,6 @@ module:
   csv_serialization: 0
   datetime: 0
   dblog: 0
-  draggableviews: 0
   dxpr_theme_helper: 0
   dynamic_page_cache: 0
   eca: 0

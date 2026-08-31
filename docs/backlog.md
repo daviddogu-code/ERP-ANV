@@ -305,12 +305,6 @@ como dual run, no como visita de inspección. Lo que había preparado para cuand
   pasa el `> 0`. Si el formulario añade una tercera en PHP van tres. Lo ordenado es que la pregunta
   «¿esta línea cuenta?» viva junto a `Purchasing::outstanding()` y que las tres pantallas la
   consulten.
-- **Desinstalar `draggableviews`, que desde el 19 de agosto no lo usa nadie.** Era el módulo que
-  guardaba el orden de productos por cliente; esa noche se retiró su pantalla, se borraron todas las
-  filas de pesos y ninguna vista lo menciona ya —lo comprueba el guardián, sección 25—. Sigue
-  instalado y sin hacer nada. Son dos minutos: `drush pm:uninstall draggableviews` y bajar la cifra de
-  módulos de la comprobación de 146 a 145. Se deja para después de desplegar, por no meter un cambio
-  de lista de módulos en medio del salto pendiente del servidor.
 - **Limpiar los mensajes de registro de los procesos de duplicar.** Un solo clic de duplicar un color
   escribe veintiséis líneas en el registro, y la mitad salen con el hueco sin rellenar:
   `%token__entity`, `List: %token__bomOriginal`, `The size name is: [size:name]`. Están escritos con
@@ -2117,6 +2111,11 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-31 — Desinstalado `draggableviews`
+
+Desde el 19 de agosto no ordenaba nada: la pantalla de arrastrar y las filas de
+pesos ya no existían. Fuera en local y en el servidor. Sin esquema nuevo.
 
 ### 2026-08-31 — Packing list: se miró el Excel y no se copia
 

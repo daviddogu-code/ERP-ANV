@@ -624,9 +624,8 @@ try {
     \Drupal::service('router.route_provider')
       ->getRoutesByPattern('/tec_crm/{arg_0}/reorder')->count() === 0);
 
-  $mirar('la tabla de pesos de draggableviews esta vacia',
-    (int) \Drupal::database()->select('draggableviews_structure', 'd')
-      ->countQuery()->execute()->fetchField() === 0);
+  $mirar('la tabla de pesos de draggableviews ya no existe',
+    !\Drupal::database()->schema()->tableExists('draggableviews_structure'));
 
   $citan = [];
   foreach (\Drupal::configFactory()->listAll('views.view.') as $nombre) {

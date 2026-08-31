@@ -62,7 +62,6 @@
         "drupal/core-recommended": "^11",
         "drupal/core-vendor-hardening": "^11",
         "drupal/csv_serialization": "^4.0",
-        "drupal/draggableviews": "2.1.4",
         "drupal/ds": "^3.15",
         "drupal/dxpr_theme": "^8.1",
         "drupal/dxpr_theme_helper": "^3.1",

@@ -40,7 +40,6 @@ dependencies:
     - user.role.tec_supervisor
   module:
     - coffee
-    - draggableviews
     - eck
     - eck_bundle_permissions
     - editablefields
@@ -66,7 +65,6 @@ permissions:
   - 'access coffee'
   - 'access content'
   - 'access tec start page'
-  - 'access draggableviews'
   - 'access feed overview'
   - 'access files overview'
   - 'access media overview'

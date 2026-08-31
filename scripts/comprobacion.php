@@ -209,6 +209,10 @@ const REFERENCIA_VARIOS = [
   // Es el modulo del nucleo que avisa de las alertas de seguridad, o sea justo lo
   // que le faltaba a este sitio cuando acumulo ochenta y dos sin que nadie se
   // enterara. Si algun dia se decide apagarlo, esta cifra baja a 145.
+  //
+  // El 31 de agosto se desinstalo `draggableviews` (desde el 19 no ordenaba
+  // nada). El recuento se queda en 146: core.extension tenia 147 con ese modulo
+  // y el sitio, medido, ya coincidia con 146.
   'modulos' => 146,
   // De los trece trabajos de cron, ocho encendidos. Los cinco apagados estan
   // apagados a proposito: node_cron y los dos de feeds no hacen falta, y los dos
