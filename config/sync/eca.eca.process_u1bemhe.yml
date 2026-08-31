@@ -21,12 +21,11 @@ dependencies:
     - eca_base
     - eca_content
     - eca_flag
-    - eca_log
     - flag
 id: process_u1bemhe
 modeller: bpmn_io
 label: 'TEC Product: Duplicate size'
-version: '1.4'
+version: '1.5'
 weight: -7
 events:
   Event_1bcvx5n:
@@ -74,13 +73,13 @@ gateways:
     type: 0
     successors:
       -
-        id: Activity_0fnmxuu
+        id: Activity_1lfcxn0
         condition: ''
   Gateway_1sorky7:
     type: 0
     successors:
       -
-        id: Activity_1tp62ei
+        id: Activity_0pvz4zl
         condition: Flow_1rb67pn
       -
         id: Gateway_0ran0u8
@@ -107,24 +106,6 @@ gateways:
         id: Activity_1vsylek
         condition: ''
 actions:
-  Activity_0fnmxuu:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: |-
-        Running TEC Product: Duplicate color  ECA Model.<br>
-        Entity: [entity]<br>
-        The flag was [flag]<br>
-        The flagging entity was [flagging]<br>
-        The entity was [entity]<br>
-        The flag machine readable name is [flag:name]<br>
-        The flag human readable title is [flag:title]<br>
-    successors:
-      -
-        id: Activity_1lfcxn0
-        condition: ''
   Activity_1k7nwyd:
     plugin: eca_new_entity
     label: 'Create new Size'
@@ -147,19 +128,6 @@ actions:
     successors:
       -
         id: Activity_13eobv3
-        condition: ''
-  Activity_0y50vpc:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: |-
-        Created color: [size]
-        Product: [product]
-    successors:
-      -
-        id: Gateway_1tuyscg
         condition: ''
   Activity_0tayyvs:
     plugin: eca_get_field_value
@@ -221,7 +189,7 @@ actions:
       object: itemCreated
     successors:
       -
-        id: Activity_1dw3oeu
+        id: Activity_0fvavf8
         condition: ''
   Activity_0fvavf8:
     plugin: eca_set_field_value
@@ -237,19 +205,6 @@ actions:
     successors:
       -
         id: Activity_1c3neso
-        condition: ''
-  Activity_1tp62ei:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: |-
-        The BoM list is not yet empty, proceeding with duplication of [itemDropped].<br>
-        List: [bomOriginal]
-    successors:
-      -
-        id: Activity_0pvz4zl
         condition: ''
   Activity_1vx4tw0:
     plugin: eca_set_field_value
@@ -312,10 +267,7 @@ actions:
     configuration:
       replace_tokens: false
       message: 'Size magically duplicated.'
-    successors:
-      -
-        id: Activity_1vru5sr
-        condition: ''
+    successors: {  }
   Activity_1lcizem:
     plugin: eca_set_field_value
     label: 'Leave the Barcode empty'
@@ -331,14 +283,6 @@ actions:
       -
         id: Activity_06jugyf
         condition: ''
-  Activity_1vru5sr:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: 'Duplicated size [entity].'
-    successors: {  }
   Activity_13eobv3:
     plugin: 'eca_preconfigured_action:flag_delete_flagging'
     label: Unflag
@@ -346,7 +290,7 @@ actions:
       object: flagging
     successors:
       -
-        id: Activity_0y50vpc
+        id: Gateway_1tuyscg
         condition: ''
   Activity_0h79ljs:
     plugin: eca_set_field_value
@@ -445,17 +389,6 @@ actions:
     successors:
       -
         id: Activity_1k7nwyd
-        condition: ''
-  Activity_1dw3oeu:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: 'Quanitty value is: [field_tec_quantity_input]'
-    successors:
-      -
-        id: Activity_0fvavf8
         condition: ''
   Activity_1309rms:
     plugin: 'flag_action:tec_eca_inventory_lock_flag'

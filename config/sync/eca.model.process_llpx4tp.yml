@@ -13,7 +13,7 @@ filename: ''
 modeldata: |
   <?xml version="1.0" encoding="UTF-8"?>
   <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:qa="http://some-company/schema/bpmn/qa" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
-    <bpmn2:process id="Process_llpx4TP" name="TEC Product: Duplicate product" isExecutable="true" camunda:versionTag="1.5">
+    <bpmn2:process id="Process_llpx4TP" name="TEC Product: Duplicate product" isExecutable="true" camunda:versionTag="1.6">
       <bpmn2:startEvent id="Event_1bcvx5n" name="Flag" camunda:modelerTemplate="org.drupal.event.flag:flag">
         <bpmn2:extensionElements>
           <camunda:properties>
@@ -22,30 +22,6 @@ modeldata: |
         </bpmn2:extensionElements>
         <bpmn2:outgoing>Flow_16y2bs9</bpmn2:outgoing>
       </bpmn2:startEvent>
-      <bpmn2:task id="Activity_0fnmxuu" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
-        <bpmn2:extensionElements>
-          <camunda:properties>
-            <camunda:property name="pluginid" value="eca_write_log_message"/>
-          </camunda:properties>
-          <camunda:field name="channel">
-            <camunda:string/>
-          </camunda:field>
-          <camunda:field name="severity">
-            <camunda:string>7</camunda:string>
-          </camunda:field>
-          <camunda:field name="message">
-            <camunda:string>Running TEC Product: Duplicate product ECA Model.&lt;br&gt;
-  Entity: [entity]&lt;br&gt;
-  The flag was [flag]&lt;br&gt;
-  The flagging entity was [flagging]&lt;br&gt;
-  The entity was [entity]&lt;br&gt;
-  The flag machine readable name is [flag:name]&lt;br&gt;
-  The flag human readable title is [flag:title]&lt;br&gt;</camunda:string>
-          </camunda:field>
-        </bpmn2:extensionElements>
-        <bpmn2:incoming>Flow_0uwm9vj</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_09nczuw</bpmn2:outgoing>
-      </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_16y2bs9" name="Duplicate Flag" camunda:modelerTemplate="org.drupal.condition.eca_scalar" sourceRef="Event_1bcvx5n" targetRef="Gateway_0qyn5h9">
         <bpmn2:extensionElements>
           <camunda:properties>
@@ -99,7 +75,7 @@ modeldata: |
             <camunda:string>[session_user:uid]</camunda:string>
           </camunda:field>
         </bpmn2:extensionElements>
-        <bpmn2:incoming>Flow_09nczuw</bpmn2:incoming>
+        <bpmn2:incoming>Flow_0uwm9vj</bpmn2:incoming>
         <bpmn2:outgoing>Flow_1ujbf5u</bpmn2:outgoing>
       </bpmn2:task>
       <bpmn2:task id="Activity_0dmu4qa" name="Save the TEC product" camunda:modelerTemplate="org.drupal.action.eca_save_entity">
@@ -114,25 +90,6 @@ modeldata: |
         <bpmn2:incoming>Flow_1ujbf5u</bpmn2:incoming>
         <bpmn2:outgoing>Flow_1iwdclc</bpmn2:outgoing>
       </bpmn2:task>
-      <bpmn2:task id="Activity_0y50vpc" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
-        <bpmn2:extensionElements>
-          <camunda:properties>
-            <camunda:property name="pluginid" value="eca_write_log_message"/>
-          </camunda:properties>
-          <camunda:field name="channel">
-            <camunda:string/>
-          </camunda:field>
-          <camunda:field name="severity">
-            <camunda:string>7</camunda:string>
-          </camunda:field>
-          <camunda:field name="message">
-            <camunda:string>Created TEC product: [productCreated]</camunda:string>
-          </camunda:field>
-        </bpmn2:extensionElements>
-        <bpmn2:incoming>Flow_0yy99h9</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_0vjb0ea</bpmn2:outgoing>
-      </bpmn2:task>
-      <bpmn2:sequenceFlow id="Flow_0vjb0ea" sourceRef="Activity_0y50vpc" targetRef="Gateway_1tuyscg"/>
       <bpmn2:task id="Activity_0tayyvs" name="Get field value and build list" camunda:modelerTemplate="org.drupal.action.eca_get_field_value">
         <bpmn2:extensionElements>
           <camunda:properties>
@@ -172,8 +129,8 @@ modeldata: |
         </bpmn2:extensionElements>
         <bpmn2:incoming>Flow_1nida9f</bpmn2:incoming>
         <bpmn2:incoming>Flow_00yzo6y</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_02p8pui</bpmn2:outgoing>
         <bpmn2:outgoing>Flow_1rb67pn</bpmn2:outgoing>
+        <bpmn2:outgoing>Flow_02p8pui</bpmn2:outgoing>
       </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_1nida9f" sourceRef="Activity_0tayyvs" targetRef="Activity_1ebyp2p"/>
       <bpmn2:task id="Activity_0pvz4zl" name="Create BoM item" camunda:modelerTemplate="org.drupal.action.eca_new_entity">
@@ -200,7 +157,7 @@ modeldata: |
             <camunda:string>[session_user:uid]</camunda:string>
           </camunda:field>
         </bpmn2:extensionElements>
-        <bpmn2:incoming>Flow_0t3ne14</bpmn2:incoming>
+        <bpmn2:incoming>Flow_1nnjp6g</bpmn2:incoming>
         <bpmn2:outgoing>Flow_1lsdz3z</bpmn2:outgoing>
       </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_1lsdz3z" sourceRef="Activity_0pvz4zl" targetRef="Activity_0cdjq3o"/>
@@ -278,31 +235,11 @@ modeldata: |
         <bpmn2:outgoing>Flow_0ah2psu</bpmn2:outgoing>
       </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_0ah2psu" sourceRef="Activity_0fvavf8" targetRef="Activity_1xv3rs0"/>
-      <bpmn2:task id="Activity_1tp62ei" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
-        <bpmn2:extensionElements>
-          <camunda:properties>
-            <camunda:property name="pluginid" value="eca_write_log_message"/>
-          </camunda:properties>
-          <camunda:field name="channel">
-            <camunda:string/>
-          </camunda:field>
-          <camunda:field name="severity">
-            <camunda:string>7</camunda:string>
-          </camunda:field>
-          <camunda:field name="message">
-            <camunda:string>The BoM list is not yet empty, proceeding with duplication of [itemDropped].&lt;br&gt;
-  List: [bomOriginal]</camunda:string>
-          </camunda:field>
-        </bpmn2:extensionElements>
-        <bpmn2:incoming>Flow_1nnjp6g</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_0t3ne14</bpmn2:outgoing>
-      </bpmn2:task>
-      <bpmn2:sequenceFlow id="Flow_0t3ne14" sourceRef="Activity_1tp62ei" targetRef="Activity_0pvz4zl"/>
       <bpmn2:exclusiveGateway id="Gateway_1sorky7">
         <bpmn2:incoming>Flow_1rb67pn</bpmn2:incoming>
         <bpmn2:outgoing>Flow_1nnjp6g</bpmn2:outgoing>
       </bpmn2:exclusiveGateway>
-      <bpmn2:sequenceFlow id="Flow_1nnjp6g" sourceRef="Gateway_1sorky7" targetRef="Activity_1tp62ei"/>
+      <bpmn2:sequenceFlow id="Flow_1nnjp6g" sourceRef="Gateway_1sorky7" targetRef="Activity_0pvz4zl"/>
       <bpmn2:task id="Activity_1vx4tw0" name="Set the Inventory material" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
         <bpmn2:extensionElements>
           <camunda:properties>
@@ -435,7 +372,6 @@ modeldata: |
           </camunda:field>
         </bpmn2:extensionElements>
         <bpmn2:incoming>Flow_03yk6pu</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_07s2sco</bpmn2:outgoing>
       </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_03yk6pu" sourceRef="Activity_1vsylek" targetRef="Activity_0fha3xh"/>
       <bpmn2:task id="Activity_1lcizem" name="Set the Images" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
@@ -528,30 +464,11 @@ modeldata: |
         <bpmn2:incoming>Flow_0ndg5na</bpmn2:incoming>
         <bpmn2:outgoing>Flow_1rx8it3</bpmn2:outgoing>
       </bpmn2:task>
-      <bpmn2:sequenceFlow id="Flow_09nczuw" sourceRef="Activity_0fnmxuu" targetRef="Activity_1k7nwyd"/>
       <bpmn2:sequenceFlow id="Flow_1ujbf5u" sourceRef="Activity_1k7nwyd" targetRef="Activity_0dmu4qa"/>
-      <bpmn2:task id="Activity_1vru5sr" name="Log" camunda:modelerTemplate="org.drupal.action.eca_write_log_message">
-        <bpmn2:extensionElements>
-          <camunda:properties>
-            <camunda:property name="pluginid" value="eca_write_log_message"/>
-          </camunda:properties>
-          <camunda:field name="channel">
-            <camunda:string/>
-          </camunda:field>
-          <camunda:field name="severity">
-            <camunda:string>7</camunda:string>
-          </camunda:field>
-          <camunda:field name="message">
-            <camunda:string>Finished running: "TEC Product: Duplicate product" ECA Model.&lt;br&gt; Duplicated [entity].</camunda:string>
-          </camunda:field>
-        </bpmn2:extensionElements>
-        <bpmn2:incoming>Flow_07s2sco</bpmn2:incoming>
-      </bpmn2:task>
-      <bpmn2:sequenceFlow id="Flow_07s2sco" sourceRef="Activity_0fha3xh" targetRef="Activity_1vru5sr"/>
       <bpmn2:sequenceFlow id="Flow_1iwdclc" sourceRef="Activity_0dmu4qa" targetRef="Activity_13eobv3"/>
       <bpmn2:sequenceFlow id="Flow_1x0zdri" sourceRef="Activity_0ewqhpp" targetRef="Activity_0fvavf8"/>
       <bpmn2:exclusiveGateway id="Gateway_1tuyscg">
-        <bpmn2:incoming>Flow_0vjb0ea</bpmn2:incoming>
+        <bpmn2:incoming>Flow_0yy99h9</bpmn2:incoming>
         <bpmn2:outgoing>Flow_0ndg5na</bpmn2:outgoing>
       </bpmn2:exclusiveGateway>
       <bpmn2:exclusiveGateway id="Gateway_0kfoa7p">
@@ -618,7 +535,7 @@ modeldata: |
         <bpmn2:incoming>Flow_1iwdclc</bpmn2:incoming>
         <bpmn2:outgoing>Flow_0yy99h9</bpmn2:outgoing>
       </bpmn2:task>
-      <bpmn2:sequenceFlow id="Flow_0yy99h9" sourceRef="Activity_13eobv3" targetRef="Activity_0y50vpc"/>
+      <bpmn2:sequenceFlow id="Flow_0yy99h9" sourceRef="Activity_13eobv3" targetRef="Gateway_1tuyscg"/>
       <bpmn2:task id="Activity_0h79ljs" name="Set Quantity input" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
         <bpmn2:extensionElements>
           <camunda:properties>
@@ -650,7 +567,7 @@ modeldata: |
         <bpmn2:outgoing>Flow_05544qy</bpmn2:outgoing>
       </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_05544qy" sourceRef="Activity_0h79ljs" targetRef="Activity_0ewqhpp"/>
-      <bpmn2:sequenceFlow id="Flow_0uwm9vj" sourceRef="Gateway_0qyn5h9" targetRef="Activity_0fnmxuu"/>
+      <bpmn2:sequenceFlow id="Flow_0uwm9vj" sourceRef="Gateway_0qyn5h9" targetRef="Activity_1k7nwyd"/>
       <bpmn2:sequenceFlow id="Flow_1l43975" sourceRef="Activity_01xfn87" targetRef="Activity_0xxh98h"/>
       <bpmn2:task id="Activity_15lotr4" name="Set the Brand" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
         <bpmn2:extensionElements>
@@ -683,8 +600,6 @@ modeldata: |
         <bpmn2:outgoing>Flow_1xu98in</bpmn2:outgoing>
       </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_02yagsu" sourceRef="Activity_0xxh98h" targetRef="Activity_15lotr4"/>
-      
-      
       <bpmn2:sequenceFlow id="Flow_0ndg5na" sourceRef="Gateway_1tuyscg" targetRef="Activity_1kz9gkb"/>
       <bpmn2:task id="Activity_1bvex2d" name="Set the Material type" camunda:modelerTemplate="org.drupal.action.eca_set_field_value">
         <bpmn2:extensionElements>
@@ -998,8 +913,8 @@ modeldata: |
         </bpmn2:extensionElements>
         <bpmn2:incoming>Flow_1ji09yp</bpmn2:incoming>
         <bpmn2:incoming>Flow_1eu14ov</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_0iv4wt0</bpmn2:outgoing>
         <bpmn2:outgoing>Flow_1ofy24k</bpmn2:outgoing>
+        <bpmn2:outgoing>Flow_0iv4wt0</bpmn2:outgoing>
       </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_1ji09yp" sourceRef="Activity_1is1gws" targetRef="Activity_0dwf0kp"/>
       <bpmn2:exclusiveGateway id="Gateway_1vzuxy1">
@@ -1272,10 +1187,6 @@ modeldata: |
             <dc:Bounds x="-291" y="315" width="22" height="14"/>
           </bpmndi:BPMNLabel>
         </bpmndi:BPMNShape>
-        <bpmndi:BPMNShape id="Activity_0fnmxuu_di" bpmnElement="Activity_0fnmxuu">
-          <dc:Bounds x="30" y="250" width="100" height="80"/>
-          <bpmndi:BPMNLabel/>
-        </bpmndi:BPMNShape>
         <bpmndi:BPMNShape id="Gateway_0qyn5h9_di" bpmnElement="Gateway_0qyn5h9" isMarkerVisible="true">
           <dc:Bounds x="-155" y="265" width="50" height="50"/>
         </bpmndi:BPMNShape>
@@ -1285,10 +1196,6 @@ modeldata: |
         </bpmndi:BPMNShape>
         <bpmndi:BPMNShape id="Activity_0dmu4qa_di" bpmnElement="Activity_0dmu4qa">
           <dc:Bounds x="330" y="250" width="100" height="80"/>
-          <bpmndi:BPMNLabel/>
-        </bpmndi:BPMNShape>
-        <bpmndi:BPMNShape id="Activity_0y50vpc_di" bpmnElement="Activity_0y50vpc">
-          <dc:Bounds x="620" y="250" width="100" height="80"/>
           <bpmndi:BPMNLabel/>
         </bpmndi:BPMNShape>
         <bpmndi:BPMNShape id="Activity_0tayyvs_di" bpmnElement="Activity_0tayyvs">
@@ -1305,10 +1212,6 @@ modeldata: |
         </bpmndi:BPMNShape>
         <bpmndi:BPMNShape id="Activity_0cdjq3o_di" bpmnElement="Activity_0cdjq3o">
           <dc:Bounds x="3080" y="3300" width="100" height="80"/>
-          <bpmndi:BPMNLabel/>
-        </bpmndi:BPMNShape>
-        <bpmndi:BPMNShape id="Activity_1tp62ei_di" bpmnElement="Activity_1tp62ei">
-          <dc:Bounds x="2910" y="3190" width="100" height="80"/>
           <bpmndi:BPMNLabel/>
         </bpmndi:BPMNShape>
         <bpmndi:BPMNShape id="Gateway_1sorky7_di" bpmnElement="Gateway_1sorky7" isMarkerVisible="true">
@@ -1342,10 +1245,6 @@ modeldata: |
           <dc:Bounds x="730" y="410" width="100" height="80"/>
           <bpmndi:BPMNLabel/>
         </bpmndi:BPMNShape>
-        <bpmndi:BPMNShape id="Activity_1vru5sr_di" bpmnElement="Activity_1vru5sr">
-          <dc:Bounds x="1870" y="860" width="100" height="80"/>
-          <bpmndi:BPMNLabel/>
-        </bpmndi:BPMNShape>
         <bpmndi:BPMNShape id="Gateway_1tuyscg_di" bpmnElement="Gateway_1tuyscg" isMarkerVisible="true">
           <dc:Bounds x="755" y="265" width="50" height="50"/>
         </bpmndi:BPMNShape>
@@ -1364,7 +1263,6 @@ modeldata: |
           <dc:Bounds x="730" y="910" width="100" height="80"/>
           <bpmndi:BPMNLabel/>
         </bpmndi:BPMNShape>
-        
         <bpmndi:BPMNShape id="Activity_1bvex2d_di" bpmnElement="Activity_1bvex2d">
           <dc:Bounds x="730" y="520" width="100" height="80"/>
           <bpmndi:BPMNLabel/>
@@ -1474,10 +1372,6 @@ modeldata: |
             <dc:Bounds x="-244" y="272" width="69" height="14"/>
           </bpmndi:BPMNLabel>
         </bpmndi:BPMNEdge>
-        <bpmndi:BPMNEdge id="Flow_0vjb0ea_di" bpmnElement="Flow_0vjb0ea">
-          <di:waypoint x="720" y="290"/>
-          <di:waypoint x="755" y="290"/>
-        </bpmndi:BPMNEdge>
         <bpmndi:BPMNEdge id="Flow_1nida9f_di" bpmnElement="Flow_1nida9f">
           <di:waypoint x="2700" y="3130"/>
           <di:waypoint x="2750" y="3130"/>
@@ -1494,10 +1388,6 @@ modeldata: |
           <di:waypoint x="3080" y="3910"/>
           <di:waypoint x="3010" y="3910"/>
         </bpmndi:BPMNEdge>
-        <bpmndi:BPMNEdge id="Flow_0t3ne14_di" bpmnElement="Flow_0t3ne14">
-          <di:waypoint x="3010" y="3230"/>
-          <di:waypoint x="3080" y="3230"/>
-        </bpmndi:BPMNEdge>
         <bpmndi:BPMNEdge id="Flow_1nnjp6g_di" bpmnElement="Flow_1nnjp6g">
           <di:waypoint x="2960" y="3155"/>
           <di:waypoint x="2960" y="3190"/>
@@ -1513,17 +1403,9 @@ modeldata: |
           <di:waypoint x="1650" y="900"/>
           <di:waypoint x="1710" y="900"/>
         </bpmndi:BPMNEdge>
-        <bpmndi:BPMNEdge id="Flow_09nczuw_di" bpmnElement="Flow_09nczuw">
-          <di:waypoint x="130" y="290"/>
-          <di:waypoint x="180" y="290"/>
-        </bpmndi:BPMNEdge>
         <bpmndi:BPMNEdge id="Flow_1ujbf5u_di" bpmnElement="Flow_1ujbf5u">
           <di:waypoint x="280" y="290"/>
           <di:waypoint x="330" y="290"/>
-        </bpmndi:BPMNEdge>
-        <bpmndi:BPMNEdge id="Flow_07s2sco_di" bpmnElement="Flow_07s2sco">
-          <di:waypoint x="1810" y="900"/>
-          <di:waypoint x="1870" y="900"/>
         </bpmndi:BPMNEdge>
         <bpmndi:BPMNEdge id="Flow_1iwdclc_di" bpmnElement="Flow_1iwdclc">
           <di:waypoint x="430" y="290"/>
@@ -1557,7 +1439,6 @@ modeldata: |
           <di:waypoint x="780" y="860"/>
           <di:waypoint x="780" y="910"/>
         </bpmndi:BPMNEdge>
-        
         <bpmndi:BPMNEdge id="Flow_0ndg5na_di" bpmnElement="Flow_0ndg5na">
           <di:waypoint x="780" y="315"/>
           <di:waypoint x="780" y="410"/>

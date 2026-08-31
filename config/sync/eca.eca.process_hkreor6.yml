@@ -8,11 +8,10 @@ dependencies:
     - field.storage.tec_product.field_tec_colors
   module:
     - eca_content
-    - eca_log
 id: process_hkreor6
 modeller: bpmn_io
 label: 'TEC Color variation: Set data values'
-version: '1.0'
+version: '1.1'
 weight: -12
 events:
   Event_0ikodly:
@@ -22,7 +21,7 @@ events:
       type: 'tec_product tec_color_variation'
     successors:
       -
-        id: Activity_1uk2k7f
+        id: Gateway_1weltu1
         condition: ''
   Event_1bw522j:
     plugin: 'content_entity:update'
@@ -31,7 +30,7 @@ events:
       type: 'tec_product tec_color_variation'
     successors:
       -
-        id: Activity_1uk2k7f
+        id: Gateway_1weltu1
         condition: Flow_0bv9e81
 conditions:
   Flow_0vlyxyy:
@@ -71,38 +70,13 @@ gateways:
       -
         id: Gateway_1r1jk0l
         condition: Flow_0vlyxyy
-      -
-        id: Activity_19if21f
-        condition: Flow_18alftg
   Gateway_1r1jk0l:
     type: 0
     successors:
       -
         id: Activity_0j5eg3d
         condition: Flow_0plw1gv
-      -
-        id: Activity_19if21f
-        condition: Flow_08z6eg0
 actions:
-  Activity_1uk2k7f:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: 'Running: "TEC Color variation: Set data values on Insert" ECA Model.'
-    successors:
-      -
-        id: Gateway_1weltu1
-        condition: ''
-  Activity_19if21f:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: 'Finished running: "TEC Color variation: Set data values on Insert" ECA Model.'
-    successors: {  }
   Activity_0i0yukt:
     plugin: eca_set_field_value
     label: 'Set Title & save'
@@ -114,10 +88,7 @@ actions:
       trim: false
       save_entity: true
       object: ''
-    successors:
-      -
-        id: Activity_19if21f
-        condition: ''
+    successors: {  }
   Activity_0j5eg3d:
     plugin: eca_token_load_entity
     label: 'Load 1st color'

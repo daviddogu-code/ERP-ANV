@@ -17,12 +17,11 @@ dependencies:
   module:
     - eca_base
     - eca_content
-    - eca_log
     - flag
 id: process_dxgyftk
 modeller: bpmn_io
 label: 'TEC Product: Set references on sub-entities.'
-version: '1.2'
+version: '1.3'
 weight: 3
 events:
   Event_187304w:
@@ -93,7 +92,7 @@ gateways:
     type: 0
     successors:
       -
-        id: Activity_1r8r1c5
+        id: Gateway_0pos1qz
         condition: ''
   Gateway_1ylkkhs:
     type: 0
@@ -150,17 +149,6 @@ gateways:
         id: Activity_1u97ldr
         condition: Flow_1rbpo55
 actions:
-  Activity_1r8r1c5:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: 'Running: TEC Products: Set field data on sub-entities ECA Model.<br>'
-    successors:
-      -
-        id: Gateway_0pos1qz
-        condition: ''
   Activity_05gdkq7:
     plugin: eca_get_field_value
     label: 'Get field value and build list'
@@ -239,14 +227,6 @@ actions:
       -
         id: Activity_1e0nq3a
         condition: ''
-  Activity_1dsrd5s:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: 'Finished "TEC Products: Set field data on sub-entities" ECA Model.'
-    successors: {  }
   Activity_1l5g923:
     plugin: 'flag_action:tec_eca_product_lock_flag'
     label: 'Lock Product'
@@ -261,10 +241,7 @@ actions:
     label: 'Unlock Product'
     configuration:
       object: ''
-    successors:
-      -
-        id: Activity_1dsrd5s
-        condition: ''
+    successors: {  }
   Activity_1l04y22:
     plugin: eca_set_field_value
     label: 'Reference the Product'

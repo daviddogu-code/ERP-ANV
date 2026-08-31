@@ -15,11 +15,10 @@ dependencies:
     - field.storage.tec_product.field_tec_size_variations
   module:
     - eca_content
-    - eca_log
 id: process_qlf96jn
 modeller: bpmn_io
 label: 'TEC Product: Insert Size entity'
-version: '1.0'
+version: '1.1'
 weight: -4
 events:
   Event_09jscyq:
@@ -29,7 +28,7 @@ events:
       type: 'tec_product tec_size_variation'
     successors:
       -
-        id: Activity_0v0c0ue
+        id: Gateway_1ui3py5
         condition: ''
 conditions:
   Flow_1vwki6c:
@@ -51,9 +50,6 @@ gateways:
       -
         id: Activity_00xsj33
         condition: Flow_1vwki6c
-      -
-        id: Activity_0at1jp5
-        condition: ''
   Gateway_1ui3py5:
     type: 0
     successors:
@@ -98,25 +94,6 @@ actions:
       -
         id: Activity_1nwrn1r
         condition: ''
-  Activity_0v0c0ue:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: 'Running "TEC Product: Insert Size entity" ECA Model'
-    successors:
-      -
-        id: Gateway_1ui3py5
-        condition: ''
-  Activity_0at1jp5:
-    plugin: eca_write_log_message
-    label: Log
-    configuration:
-      channel: ''
-      severity: '7'
-      message: 'Finished running "TEC Product: Insert Size entity" ECA Model'
-    successors: {  }
   Activity_00xsj33:
     plugin: eca_token_load_entity_ref
     label: 'Load the Color'
