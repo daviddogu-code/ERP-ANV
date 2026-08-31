@@ -305,34 +305,6 @@ como dual run, no como visita de inspección. Lo que había preparado para cuand
   pasa el `> 0`. Si el formulario añade una tercera en PHP van tres. Lo ordenado es que la pregunta
   «¿esta línea cuenta?» viva junto a `Purchasing::outstanding()` y que las tres pantallas la
   consulten.
-- **Limpiar los mensajes de registro de los procesos de duplicar.** Un solo clic de duplicar un color
-  escribe veintiséis líneas en el registro, y la mitad salen con el hueco sin rellenar:
-  `%token__entity`, `List: %token__bomOriginal`, `The size name is: [size:name]`. Están escritos con
-  una sintaxis de plantilla que ese sitio no entiende, así que imprimen el nombre del hueco en lugar
-  de su contenido. Hay incluso uno que dice «Finished running: TEC Color variation: Set data values
-  on Insert» mientras informa del nombre de una talla, que es un copiar y pegar de otro proceso. No
-  rompe nada y por eso lleva ahí desde siempre; el problema es el día que haya que buscar un fallo de
-  verdad ahí dentro. Descubierto el 18 de agosto al mirar el registro de un duplicado que sí
-  funcionó.
-
-- **Limpiar los setenta ficheros que git da por modificados sin estarlo.** Descubierto el 18 de agosto
-  al ir a confirmar el trabajo de la noche: `git status` lista unos setenta ficheros como cambiados
-  —`.gitignore`, los cuatro parches, dos guiones `.ps1` y sesenta y tantos `.php`— pero `git diff`
-  de cualquiera de ellos sale **vacío**. No hay ningún cambio real dentro, así que ninguno se metió en
-  los commits de esa noche; el problema es que ensucian la lista y hay que separar el ruido a mano
-  cada vez que se mira qué queda por confirmar.
-
-  Es cosa de finales de línea, pero **no está diagnosticado del todo y conviene no darlo por sabido**.
-  Git avisa de que *"in the working copy of '.gitignore', LF will be replaced by CRLF the next time
-  Git touches it"*, o sea que `core.autocrlf` está en `true` en esta máquina. Eso explica los ficheros
-  sin extensión reconocida, como `.gitignore` y los `.ps1`, que no tienen regla en `.gitattributes`.
-  Lo que no explica es por qué salen también los `.php` y los `.yml`, que ahí sí están declarados
-  `text eol=lf`.
-
-  La vía es `git add --renormalize .` y mirar qué queda preparado: si no aparece nada, era solo
-  índice y basta con confirmarlo; si aparece contenido de verdad, entonces hay algo que revisar antes
-  de guardar nada. Media hora contando la lectura, y mejor hacerlo cuando no haya trabajo a medias
-  encima, porque toca setenta ficheros de golpe y se come cualquier diff que haya pendiente.
 
 - **Terminar el modelo de marcas y clientes. El corte está hecho: el 19 de agosto el producto soltó al
   cliente y el campo se borró.** Están contadas abajo, en Hecho, las cinco cosas de ese día: el catálogo de
@@ -2111,6 +2083,25 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 ---
 
 ## Hecho
+
+### 2026-08-31 — Git en Windows ya no finge 180 cambios vacíos
+
+Laragon trae `core.autocrlf=true` en el git global. Drupal pide LF. El
+repositorio ya guardaba LF; en disco muchos scripts se reescribían con CRLF
+y `git status` los pintaba sucios con diff vacío. En este repo queda
+`core.autocrlf=false` y `core.eol=lf` (el git global de Laragon no se toca).
+`.gitignore` y `*.ps1` pasan a `eol=lf` en `.gitattributes` (el andamio de
+Composer lo vuelve a pegar). Cursor, en este proyecto, guarda `\n`. Drupal
+11.4.5 arranca. Los parches siguen en LF. **No usar** `git add --renormalize .`
+si vuelve a pasar: restaurar los que no tengan diff de verdad.
+
+### 2026-08-31 — Duplicar ya no ensucia el registro
+
+Oscar dejó Logs de depuración en los procesos de duplicar. Un clic escribía una
+veintena de líneas, muchas con el hueco sin rellenar (`%token__entity`). Fuera
+de los tres duplicados y de los procesos que se disparan al guardar las fichas
+nuevas. El aviso al usuario (*Color magically duplicated.*) se queda. En local
+y en el servidor. Sin esquema nuevo.
 
 ### 2026-08-31 — Desinstalado `draggableviews`
 

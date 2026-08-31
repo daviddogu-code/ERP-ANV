@@ -65,13 +65,17 @@ core/.phpstan-baseline.php text eol=lf whitespace=blank-at-eol,-blank-at-eof,-sp
 *.woff2   -text diff
 
 
-# Patch files must keep Unix line endings on every platform.
-# Drupal's own list does not cover *.patch, so on Windows with core.autocrlf=true
-# they get checked out with CRLF while their target files stay LF. Composer then
-# applies patches with `git apply`, which refuses the mismatch outright, and falls
-# back to the `patch` binary, which may not be installed. The result is a patch
-# that silently never applies. See docs/backlog.md, 2026-08-13.
+# Patch files and Windows-only text must keep Unix line endings.
+# Drupal's own list does not cover *.patch, .gitignore or *.ps1. On Windows,
+# Laragon's Git ships with core.autocrlf=true globally; this repo overrides
+# that locally (core.autocrlf=false). Attributes still have to name every
+# extension or a core update that rewrites .gitattributes would check them
+# out as CRLF again. Composer appends this file on every install.
 #
-# This block is appended by Composer's scaffolding on every install, because a
-# plain core update overwrites .gitattributes and would otherwise erase it.
-*.patch   text eol=lf
+# *.patch: git apply refuses CRLF against LF targets; Composer then looks
+# for a `patch` binary that Windows often does not have. See docs/backlog.md,
+# 2026-08-13 and 2026-08-31.
+*.patch     text eol=lf
+.gitignore  text eol=lf
+*.ps1       text eol=lf
+
