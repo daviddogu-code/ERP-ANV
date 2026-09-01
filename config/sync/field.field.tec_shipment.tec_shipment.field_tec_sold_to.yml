@@ -1,0 +1,29 @@
+uuid: 13817df3-f53a-4b70-acac-28155db426a1
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - eck.eck_type.tec_shipment.tec_shipment
+    - field.storage.tec_shipment.field_tec_sold_to
+id: tec_shipment.tec_shipment.field_tec_sold_to
+field_name: field_tec_sold_to
+entity_type: tec_shipment
+bundle: tec_shipment
+label: 'Sold to'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_crm'
+  handler_settings:
+    target_bundles:
+      tec_contact_organization: tec_contact_organization
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: tec_contact_organization
+field_type: entity_reference

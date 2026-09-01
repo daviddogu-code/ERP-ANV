@@ -1,0 +1,25 @@
+uuid: 47595e9d-c52d-4dd2-80cf-7023a137a9bc
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_shipment.field_tec_incoterms
+field_name: field_tec_incoterms
+entity_type: tec_shipment
+type: string
+settings:
+  max_length: 32
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

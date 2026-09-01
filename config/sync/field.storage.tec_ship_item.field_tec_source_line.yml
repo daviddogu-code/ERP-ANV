@@ -1,0 +1,23 @@
+uuid: fc7a6f06-5afb-4714-968b-2551f3b1c226
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_ship_item.field_tec_source_line
+field_name: field_tec_source_line
+entity_type: tec_ship_item
+type: entity_reference
+settings:
+  target_type: tec_line_item
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

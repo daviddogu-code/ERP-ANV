@@ -371,6 +371,30 @@ function fichasDeEjemplo(): array {
     $rutas[] = '/tec_order/' . reset($pedidos) . '/receive';
   }
 
+  // Envio: crear desde un cliente, y las tres pantallas de un envio si hay uno.
+  $clientes = $gestor->getStorage('tec_crm')->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', 'tec_contact_organization')
+    ->sort('id', 'DESC')
+    ->range(0, 1)
+    ->execute();
+  if ($clientes) {
+    $rutas[] = '/customer/' . reset($clientes) . '/ship/new';
+  }
+  if ($gestor->hasDefinition('tec_shipment')) {
+    $envios = $gestor->getStorage('tec_shipment')->getQuery()
+      ->accessCheck(FALSE)
+      ->sort('id', 'DESC')
+      ->range(0, 1)
+      ->execute();
+    if ($envios) {
+      $sid = reset($envios);
+      $rutas[] = '/o/ship/' . $sid;
+      $rutas[] = '/o/ship/' . $sid . '/pl/print';
+      $rutas[] = '/o/ship/' . $sid . '/inv/print';
+    }
+  }
+
   // Los materiales y las unidades son terminos de taxonomia, no entidades del
   // ERP, asi que se quedaban fuera. Y el material es el dato que mas se edita.
   $terminos = $gestor->getStorage('taxonomy_term');
@@ -425,9 +449,11 @@ foreach ($rutas as $ruta) {
 
   $t0 = microtime(TRUE);
   $nota = '';
+  $cuerpo = '';
   try {
     $respuesta = $kernel->handle($peticion, HttpKernelInterface::SUB_REQUEST, FALSE);
     $codigo = $respuesta->getStatusCode();
+    $cuerpo = (string) $respuesta->getContent();
   }
   catch (\Throwable $e) {
     $codigo = 'EXCEPCION';
@@ -437,8 +463,14 @@ foreach ($rutas as $ruta) {
   $ms = round((microtime(TRUE) - $t0) * 1000);
 
   // El 403 en una ruta que exige permisos no es un fallo de la subida; el 404
-  // y el 500 si lo son.
+  // y el 500 si lo son. Un 200 con el bloque gris de Layout Builder tampoco
+  // es una pagina que cargue: el 31 de agosto /p y las marcas devolvian 200
+  // con "This block is broken" porque se habia borrado la vista de productos.
   $bien = is_int($codigo) && $codigo < 400;
+  if ($bien && str_contains($cuerpo, 'This block is broken or missing')) {
+    $bien = FALSE;
+    $nota = $nota ?: 'bloque roto o modulo ausente';
+  }
   if (!$bien && $codigo === 403) {
     $nota = $nota ?: 'sin permiso, no es un fallo de la subida';
   }

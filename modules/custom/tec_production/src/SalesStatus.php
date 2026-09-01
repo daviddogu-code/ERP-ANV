@@ -32,6 +32,8 @@ final class SalesStatus {
 
   public const SHIPPED = 'shipped_delivered';
 
+  public const CLOSED = 'closed';
+
   public const CANCELLED = 'cancelled';
 
   /**
@@ -46,6 +48,7 @@ final class SalesStatus {
     self::COMPLETED => 'Completed',
     self::READY_FOR_COLLECTION => 'Ready for collection',
     self::SHIPPED => 'Shipped',
+    self::CLOSED => 'Closed',
     self::CANCELLED => 'Cancelled',
   ];
 
@@ -61,11 +64,12 @@ final class SalesStatus {
     self::COMPLETED,
     self::READY_FOR_COLLECTION,
     self::SHIPPED,
+    self::CLOSED,
     self::CANCELLED,
   ];
 
   /**
-   * Still on /o/queue (not Shipped, not Cancelled).
+   * Still on /o/queue (not Closed, not Cancelled).
    */
   public const ACTIVE = [
     self::OPEN,
@@ -75,6 +79,7 @@ final class SalesStatus {
     self::ON_PRODUCTION,
     self::COMPLETED,
     self::READY_FOR_COLLECTION,
+    self::SHIPPED,
   ];
 
   /**
@@ -83,6 +88,7 @@ final class SalesStatus {
   public const POST_MFG = [
     self::COMPLETED,
     self::READY_FOR_COLLECTION,
+    self::SHIPPED,
   ];
 
   /**
@@ -95,6 +101,7 @@ final class SalesStatus {
     self::ON_PRODUCTION => self::COMPLETED,
     self::COMPLETED => self::READY_FOR_COLLECTION,
     self::READY_FOR_COLLECTION => self::SHIPPED,
+    self::SHIPPED => self::CLOSED,
   ];
 
   /**
@@ -139,6 +146,73 @@ final class SalesStatus {
       ],
       '#attached' => ['library' => ['tec_production/sales_status']],
     ];
+  }
+
+  /**
+   * Read-only factory sequence. Not clickable.
+   */
+  public static function legend(): array {
+    $legend = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['tec-status-legend'],
+      ],
+      'chain' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['tec-status-legend__chain'],
+        ],
+      ],
+      'aside' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['tec-status-legend__aside'],
+        ],
+        'pill' => self::pill(self::CANCELLED),
+      ],
+    ];
+    $i = 0;
+    foreach (self::ALLOWED as $status) {
+      if ($status === self::CANCELLED) {
+        continue;
+      }
+      if ($i > 0) {
+        $legend['chain']['arrow_' . $i] = [
+          '#markup' => '<span class="tec-status-legend__arrow" aria-hidden="true">→</span>',
+        ];
+      }
+      $pill = self::pill($status);
+      $pill['#attributes']['class'][] = 'tec-status-legend__pill';
+      $legend['chain'][$status] = $pill;
+      $i++;
+    }
+    return $legend;
+  }
+
+  /**
+   * Read-only pills in the given order. $arrows joins them like the queue chain.
+   *
+   * @param string[] $statuses
+   */
+  public static function pills(array $statuses, bool $arrows = FALSE): array {
+    $row = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['tec-status-legend__chain'],
+      ],
+    ];
+    $i = 0;
+    foreach ($statuses as $status) {
+      if ($arrows && $i > 0) {
+        $row['arrow_' . $i] = [
+          '#markup' => '<span class="tec-status-legend__arrow" aria-hidden="true">→</span>',
+        ];
+      }
+      $pill = self::pill($status);
+      $row[$status] = $pill;
+      $i++;
+    }
+    return $row;
   }
 
   /**

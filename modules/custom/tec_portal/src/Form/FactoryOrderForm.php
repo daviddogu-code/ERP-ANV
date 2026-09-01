@@ -4,7 +4,10 @@ namespace Drupal\tec_portal\Form;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\tec_portal\Shipment;
 
 /**
  * One sales order on /o/order/{id}: same Open grid as /my, for the factory.
@@ -16,6 +19,27 @@ class FactoryOrderForm extends OrderForm {
 
   public function getFormId() {
     return 'tec_portal_factory_order_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, $tec_order = NULL) {
+    $form = parent::buildForm($form, $form_state, $tec_order);
+    $id = (int) ($form_state->get('order_id') ?: 0);
+    $order = $id ? $this->entityTypeManager->getStorage('tec_order')->load($id) : NULL;
+    $company = $order ? $this->companyOf($order) : NULL;
+    if ($company && Shipment::typesExist() && isset($form['meta'])) {
+      $form['meta']['shipment'] = [
+        '#type' => 'link',
+        '#title' => $this->t('New shipment'),
+        '#url' => Url::fromRoute('tec_portal.shipment_new', ['tec_crm' => $company->id()]),
+        '#attributes' => [
+          'class' => ['button', 'tec-portal__proforma'],
+        ],
+      ];
+    }
+    return $form;
   }
 
   /**

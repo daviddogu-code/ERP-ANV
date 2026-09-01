@@ -1,0 +1,29 @@
+uuid: 17ffd93f-6ea2-4ae6-878e-4b959a757c36
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_ship_item.tec_ship_item
+    - eck.eck_type.tec_shipment.tec_shipment
+    - field.storage.tec_ship_item.field_tec_shipment
+id: tec_ship_item.tec_ship_item.field_tec_shipment
+field_name: field_tec_shipment
+entity_type: tec_ship_item
+bundle: tec_ship_item
+label: Shipment
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_shipment'
+  handler_settings:
+    target_bundles:
+      tec_shipment: tec_shipment
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: tec_shipment
+field_type: entity_reference

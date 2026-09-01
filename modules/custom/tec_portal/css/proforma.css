@@ -264,6 +264,18 @@ body.tec-proforma-print,
   border-top: 1px solid #c8c8c8;
 }
 
+.tec-proforma__parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 4mm;
+  margin-top: 3mm;
+}
+
+.tec-proforma__party + .tec-proforma__party {
+  padding-left: 4mm;
+  border-left: 1px solid #c8c8c8;
+}
+
 @media print {
   .tec-proforma-print .main-container.container,
   .tec-proforma-print .container,

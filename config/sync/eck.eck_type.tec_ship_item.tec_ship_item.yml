@@ -1,0 +1,9 @@
+uuid: 0a1335eb-9cae-4763-8be1-bb0ebc4334f8
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_ship_item
+name: 'Ship item'
+type: tec_ship_item
+description: 'Quantity of one sales line on this shipment.'

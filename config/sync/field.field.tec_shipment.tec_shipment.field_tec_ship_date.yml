@@ -1,0 +1,24 @@
+uuid: 5a9e2a44-5761-476b-84f0-cd524ce412e6
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_shipment.tec_shipment
+    - field.storage.tec_shipment.field_tec_ship_date
+  module:
+    - datetime
+id: tec_shipment.tec_shipment.field_tec_ship_date
+field_name: field_tec_ship_date
+entity_type: tec_shipment
+bundle: tec_shipment
+label: Date
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    default_date_type: now
+    default_date: now
+default_value_callback: ''
+settings: {  }
+field_type: datetime

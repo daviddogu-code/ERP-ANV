@@ -8,6 +8,11 @@ portal:
     - core/drupal
     - core/once
 
+shipment_form:
+  css:
+    theme:
+      css/portal.css: { weight: 200 }
+
 proforma:
   css:
     theme:

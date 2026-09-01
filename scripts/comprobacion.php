@@ -44,6 +44,10 @@ const REFERENCIA_TIPOS = [
   'tec_order' => ['tec_draft_order', 'tec_purchase_order', 'tec_sales_order'],
   'tec_crm' => ['tec_contact_organization', 'tec_contact_person'],
   'tec_production_entry' => ['tec_production_entry'],
+  // Envio, 31 ago 2026: tipos ECK nuevos. Cero campos en tec_order ni en las
+  // lineas de venta. Remaining es pedido menos lo ya enviado en tec_ship_item.
+  'tec_shipment' => ['tec_shipment'],
+  'tec_ship_item' => ['tec_ship_item'],
 ];
 
 // Las seis entidades de contenido quedaron a cero el 14 de agosto de 2026, y
@@ -2468,6 +2472,17 @@ informar('materiales en algun BoM sin coste de consumo', $materialesSinCoste,
 
 // -----------------------------------------------------------------------------
 titulo('20. La ficha de una marca lista sus tallas, con precio y coste');
+
+// El 31 de agosto de 2026 desinstalar `draggableviews` se llevo esta vista
+// entera: en la config activa todavia lo nombraba, y Drupal borra lo que
+// depende del modulo. /p y el catalogo de la marca quedaron en blanco. El
+// YAML de disco no lo nombraba, asi que mirar config/sync no avisaba. Hay que
+// preguntar a la config activa, y preguntar si la vista EXISTE, no solo si
+// una pantalla suya tiene las columnas buenas: sin vista, esas preguntas
+// devolvian vacio y parecian un descuido de la receta.
+comprobar($resultados, 'la vista de productos sigue en la configuracion activa',
+  \Drupal::entityTypeManager()->getStorage('view')->load('tec_products') !== NULL,
+  'views.view.tec_products');
 
 // Esta pantalla es una fila por talla, y eso es lo que la hace util: el precio de
 // venta y el coste viven en la talla, no en el producto. Si alguien la devuelve a

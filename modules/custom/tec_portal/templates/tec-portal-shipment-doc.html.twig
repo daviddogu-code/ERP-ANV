@@ -1,0 +1,137 @@
+{#
+/**
+ * Packing list or invoice of one shipment. Letterhead like the proforma.
+ */
+#}
+<article class="tec-proforma">
+  <header class="tec-proforma__head">
+    <div class="tec-proforma__meta">
+      <table class="tec-proforma__meta-table">
+        <tr>
+          <th>{{ doc_label }}</th>
+          <td>{{ doc_number }}</td>
+        </tr>
+        <tr>
+          <th>{{ 'Date'|t }}</th>
+          <td>{{ date }}</td>
+        </tr>
+        {% if incoterms %}
+          <tr>
+            <th>{{ 'Incoterms'|t }}</th>
+            <td>{{ incoterms }}</td>
+          </tr>
+        {% endif %}
+      </table>
+      <div class="tec-proforma__parties">
+        <div class="tec-proforma__party">
+          <table class="tec-proforma__buyer-table">
+            <tr>
+              <th>{{ 'Sold to'|t }}</th>
+              <td>{{ sold_to_name }}</td>
+            </tr>
+            {% if sold_to_tax_id %}
+              <tr>
+                <th>{{ 'VAT ID'|t }}</th>
+                <td>{{ sold_to_tax_id }}</td>
+              </tr>
+            {% endif %}
+            {% if sold_to_country %}
+              <tr>
+                <th>{{ 'Country'|t }}</th>
+                <td>{{ sold_to_country }}</td>
+              </tr>
+            {% endif %}
+            {% if sold_to_lines %}
+              <tr>
+                <th>{{ 'Address'|t }}</th>
+                <td>{% for line in sold_to_lines %}{{ line }}{% if not loop.last %}<br />{% endif %}{% endfor %}</td>
+              </tr>
+            {% endif %}
+          </table>
+        </div>
+        <div class="tec-proforma__party">
+          <table class="tec-proforma__buyer-table">
+            <tr>
+              <th>{{ 'Ship to'|t }}</th>
+              <td>{{ ship_to_name }}</td>
+            </tr>
+            {% if ship_to_country %}
+              <tr>
+                <th>{{ 'Country'|t }}</th>
+                <td>{{ ship_to_country }}</td>
+              </tr>
+            {% endif %}
+            {% if ship_to_lines %}
+              <tr>
+                <th>{{ 'Address'|t }}</th>
+                <td>{% for line in ship_to_lines %}{{ line }}{% if not loop.last %}<br />{% endif %}{% endfor %}</td>
+              </tr>
+            {% endif %}
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="tec-proforma__seller">
+      <table class="tec-proforma__seller-table">
+        <tr>
+          <th>{{ 'Company'|t }}</th>
+          <td class="tec-proforma__legal">{{ seller_name }}</td>
+        </tr>
+        {% if seller_tax_id %}
+          <tr>
+            <th>{{ 'Tax ID'|t }}</th>
+            <td>{{ seller_tax_id }}</td>
+          </tr>
+        {% endif %}
+        {% if seller_country %}
+          <tr>
+            <th>{{ 'Country'|t }}</th>
+            <td>{{ seller_country }}</td>
+          </tr>
+        {% endif %}
+        {% if seller_lines %}
+          <tr>
+            <th>{{ 'Address'|t }}</th>
+            <td>{% for line in seller_lines %}{{ line }}{% if not loop.last %}<br />{% endif %}{% endfor %}</td>
+          </tr>
+        {% endif %}
+        {% if seller_email %}
+          <tr>
+            <th>{{ 'Email'|t }}</th>
+            <td>{{ seller_email }}</td>
+          </tr>
+        {% endif %}
+        {% if seller_phone %}
+          <tr>
+            <th>{{ 'Phone'|t }}</th>
+            <td>{{ seller_phone }}</td>
+          </tr>
+        {% endif %}
+      </table>
+    </div>
+  </header>
+
+  <div class="tec-portal tec-portal--place tec-portal--proforma">
+    {{ lines }}
+  </div>
+
+  {% if bank %}
+    <section class="tec-proforma__bank">
+      <h2>{{ 'Bank details'|t }}</h2>
+      <table class="tec-proforma__bank-table">
+        {% if bank.name %}
+          <tr><th>{{ 'Bank'|t }}</th><td>{{ bank.name }}</td></tr>
+        {% endif %}
+        {% if bank.holder %}
+          <tr><th>{{ 'Account holder'|t }}</th><td>{{ bank.holder }}</td></tr>
+        {% endif %}
+        {% if bank.account %}
+          <tr><th>{{ 'Account number'|t }}</th><td>{{ bank.account }}</td></tr>
+        {% endif %}
+        {% if bank.swift %}
+          <tr><th>{{ 'SWIFT / BIC'|t }}</th><td>{{ bank.swift }}</td></tr>
+        {% endif %}
+      </table>
+    </section>
+  {% endif %}
+</article>

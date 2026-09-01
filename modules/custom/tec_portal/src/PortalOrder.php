@@ -43,6 +43,7 @@ final class PortalOrder {
     'completed' => 'Confirmed',
     'ready_for_delivery' => 'Ready for collection',
     'shipped_delivered' => 'Shipped',
+    'closed' => 'Closed',
     self::CANCELLED => 'Cancelled',
   ];
 
@@ -170,6 +171,7 @@ final class PortalOrder {
       self::PENDING_DEPOSIT => 'pending-payment',
       'ready_for_delivery' => 'ready-for-collection',
       'shipped_delivered' => 'shipped',
+      'closed' => 'closed',
       self::CANCELLED => 'cancelled',
       default => 'confirmed',
     };

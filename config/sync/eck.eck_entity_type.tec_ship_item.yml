@@ -1,0 +1,11 @@
+uuid: 01f2485c-90e8-48b2-86e0-55d4a78cb735
+langcode: en
+status: false
+dependencies: {  }
+id: tec_ship_item
+label: 'Ship item'
+uid: false
+created: true
+changed: true
+title: true
+standalone_url: false

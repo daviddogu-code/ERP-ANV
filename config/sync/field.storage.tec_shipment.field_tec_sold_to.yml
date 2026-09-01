@@ -1,0 +1,23 @@
+uuid: a053c820-8354-42e1-b6a6-d56958bf40fd
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - field_permissions
+third_party_settings:
+  field_permissions:
+    permission_type: public
+id: tec_shipment.field_tec_sold_to
+field_name: field_tec_sold_to
+entity_type: tec_shipment
+type: entity_reference
+settings:
+  target_type: tec_crm
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

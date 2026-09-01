@@ -46,6 +46,35 @@
   margin-bottom: 1rem;
 }
 
+/* Read-only status sequence between settings and the sheet. */
+.tec-queue__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0 0 1rem;
+  pointer-events: none;
+}
+
+.tec-queue__legend-chain,
+.tec-queue__legend-aside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.4rem;
+}
+
+.tec-queue__legend-aside {
+  padding-left: 0.85rem;
+  border-left: 1px solid #d1d5db;
+}
+
+.tec-queue__legend-arrow {
+  color: #6b7280;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
 /* Horizontal scroll container. Its native scrollbar is hidden; scrolling is
    driven by the fixed bar at the bottom of the window (Google Sheets style).
    Vertical scrolling stays on the browser scrollbar only. */
@@ -380,14 +409,19 @@
   background: #ecfdf5;
 }
 
-/* Completed — mfg done, admin period (invoice + packing). EXW: stays until Shipped. */
+/* Completed — mfg done, admin period. EXW: stays until Closed. */
 #tec-production-queue tr.tec-queue__row--completed td {
   background: #eef2ff;
 }
 
-/* Ready for Delivery — admin done, waiting to ship. */
+/* Ready for collection — waiting for an EXW pickup. */
 #tec-production-queue tr.tec-queue__row--ready td {
   background: #ecfeff;
+}
+
+/* Shipped — goods already left on a shipment; leftover stays on the queue. */
+#tec-production-queue tr.tec-queue__row--shipped td {
+  background: #e8f5e9;
 }
 
 #tec-production-queue tr.drag td {

@@ -1,0 +1,29 @@
+uuid: 4c312a27-11da-4351-8448-20bb6e2303be
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_line_item.tec_sales_order_line_item
+    - eck.eck_type.tec_ship_item.tec_ship_item
+    - field.storage.tec_ship_item.field_tec_source_line
+id: tec_ship_item.tec_ship_item.field_tec_source_line
+field_name: field_tec_source_line
+entity_type: tec_ship_item
+bundle: tec_ship_item
+label: 'Sales line'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_line_item'
+  handler_settings:
+    target_bundles:
+      tec_sales_order_line_item: tec_sales_order_line_item
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: tec_sales_order_line_item
+field_type: entity_reference

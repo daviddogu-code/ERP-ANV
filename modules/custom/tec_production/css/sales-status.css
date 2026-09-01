@@ -1,6 +1,6 @@
 /* Sales order status pill, on the card, the lists and the queue.
 
-   Colours match the factory map (Open → Shipped). Views still wrap the
+   Colours match the factory map (Open → Closed). Views still wrap the
    cell in a div whose class is the words of the label; those selectors
    keep the old lists painted until they use the pill markup.
 
@@ -18,6 +18,7 @@
 .views-field div.Completed,
 .views-field div.Ready.for.collection,
 .views-field div.Shipped,
+.views-field div.Closed,
 .views-field div.Cancelled,
 .views-field div.Accounting.Verified {
   display: inline-block;
@@ -110,6 +111,14 @@
   border-style: solid;
 }
 
+.tec-so-status--closed,
+.views-field div.Closed {
+  background: #1e293b;
+  color: #fff;
+  border-color: #1e293b;
+  border-style: solid;
+}
+
 .tec-so-status--cancelled,
 .views-field div.Cancelled {
   background: #e8e8e8;
@@ -160,4 +169,36 @@
 
 #tec-production-queue tr[data-status="ready_for_delivery"] td {
   background: #ecfeff;
+}
+
+#tec-production-queue tr[data-status="shipped_delivered"] td {
+  background: #e8f5e9;
+}
+
+/* Read-only sequence on /o/queue and /o/ship. */
+.tec-status-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  pointer-events: none;
+}
+
+.tec-status-legend__chain,
+.tec-status-legend__aside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.4rem;
+}
+
+.tec-status-legend__aside {
+  padding-left: 0.85rem;
+  border-left: 1px solid #d1d5db;
+}
+
+.tec-status-legend__arrow {
+  color: #6b7280;
+  font-size: 0.85rem;
+  line-height: 1;
 }

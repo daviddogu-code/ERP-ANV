@@ -1,0 +1,29 @@
+uuid: 26079c6c-a8e5-462b-9152-02b69ccf81e6
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_order.tec_sales_order
+    - eck.eck_type.tec_ship_item.tec_ship_item
+    - field.storage.tec_ship_item.field_tec_order
+id: tec_ship_item.tec_ship_item.field_tec_order
+field_name: field_tec_order
+entity_type: tec_ship_item
+bundle: tec_ship_item
+label: 'Sales order'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_order'
+  handler_settings:
+    target_bundles:
+      tec_sales_order: tec_sales_order
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: tec_sales_order
+field_type: entity_reference

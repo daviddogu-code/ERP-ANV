@@ -21,7 +21,7 @@ class ProductionQueueForm extends FormBase {
   /**
    * Sales order statuses that appear on the queue.
    *
-   * EXW: Completed and Ready for collection stay until Shipped.
+   * EXW: Completed, Ready for collection and Shipped stay until Closed.
    */
   const ACTIVE_STATUSES = SalesStatus::ACTIVE;
 
@@ -29,16 +29,17 @@ class ProductionQueueForm extends FormBase {
    * Post-manufacturing statuses still on the queue (admin / waiting pickup).
    *
    * They do not consume manufacturing capacity or the deadline chain.
-   * Completed = packing list + invoice. Ready for collection = EXW pickup.
+   * Completed = manufactured. Ready for collection = EXW pickup.
+   * Shipped = goods already left on at least one shipment; leftover stays.
    */
   const POST_MFG_STATUSES = SalesStatus::POST_MFG;
 
   /**
    * Forward-only status transitions from the queue and the order card.
    *
-   * Open is sealed with Confirm, not from here. The last step (Ready for
-   * collection → Shipped) removes the order from the queue. Corrections
-   * that go backwards stay on the order edit form.
+   * Open is sealed with Confirm, not from here. The last step (Shipped →
+   * Closed) removes the order from the queue. Corrections that go backwards
+   * stay on the order edit form.
    */
   const STATUS_NEXT = SalesStatus::NEXT;
 
@@ -218,6 +219,8 @@ class ProductionQueueForm extends FormBase {
       '#limit_validation_errors' => [['capacity_staff'], ['capacity_overtime'], ['capacity_factor'], ['include_open']],
     ];
 
+    $form['legend'] = $this->statusLegend();
+
     // Queue table, laid out like the Google Sheet:
     // NO | ORDER | status | categories | TOTAL | Deadline | Produced | Remaining.
     $header = [
@@ -307,6 +310,9 @@ class ProductionQueueForm extends FormBase {
       }
       elseif ($row['status'] === SalesStatus::READY_FOR_COLLECTION) {
         $classes[] = 'tec-queue__row--ready';
+      }
+      elseif ($row['status'] === SalesStatus::SHIPPED) {
+        $classes[] = 'tec-queue__row--shipped';
       }
 
       $element = [
@@ -451,7 +457,7 @@ class ProductionQueueForm extends FormBase {
     $applied = SalesStatus::applyNext($order);
     $next_label = SalesStatus::label($applied ?? $allowed_next);
 
-    if ($allowed_next === SalesStatus::SHIPPED) {
+    if ($allowed_next === SalesStatus::CLOSED) {
       $this->messenger()->addStatus($this->t(
         '@order marked @status and left the queue.',
         [
@@ -596,6 +602,15 @@ class ProductionQueueForm extends FormBase {
     unset($row);
 
     return $rows;
+  }
+
+  /**
+   * Read-only factory status sequence. Not clickable; the row pills advance.
+   */
+  protected function statusLegend(): array {
+    $legend = SalesStatus::legend();
+    $legend['#attributes']['class'][] = 'tec-queue__legend';
+    return $legend;
   }
 
   /**

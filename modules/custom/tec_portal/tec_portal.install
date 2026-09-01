@@ -5,8 +5,10 @@
  * Installs the portal join field on the user form.
  */
 
+use Drupal\eck\Entity\EckEntityType;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\user\Entity\Role;
 
 /**
  * Implements hook_install().
@@ -54,6 +56,7 @@ function tec_portal_install(): void {
   tec_portal_update_8011();
   tec_portal_update_8012();
   tec_portal_update_8013();
+  tec_portal_update_8014();
 }
 
 /**
@@ -678,5 +681,236 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('hashchange', handlePopState);
 });
 JS;
+}
+
+/**
+ * Shipment entity and ship-item lines. Remaining is ordered minus shipped.
+ *
+ * Two new ECK types, same pattern as tec_order / tec_line_item. No fields
+ * on existing sales orders or sales lines. Factory roles get the same
+ * create/edit/view/delete any as they have on orders.
+ */
+function tec_portal_update_8014(): void {
+  _tec_portal_ensure_eck_type('tec_shipment', 'Shipment', TRUE);
+  _tec_portal_ensure_eck_type('tec_ship_item', 'Ship item', FALSE);
+  _tec_portal_ensure_eck_bundle('tec_shipment', 'tec_shipment', 'Shipment', 'One EXW container or pickup.');
+  _tec_portal_ensure_eck_bundle('tec_ship_item', 'tec_ship_item', 'Ship item', 'Quantity of one sales line on this shipment.');
+
+  _tec_portal_ensure_field_storage('tec_shipment', 'field_tec_customer', 'entity_reference', ['target_type' => 'tec_crm']);
+  _tec_portal_ensure_field_storage('tec_shipment', 'field_tec_ship_date', 'datetime', ['datetime_type' => 'date']);
+  _tec_portal_ensure_field_storage('tec_shipment', 'field_tec_incoterms', 'string', [
+    'max_length' => 32,
+    'case_sensitive' => FALSE,
+    'is_ascii' => FALSE,
+  ]);
+  _tec_portal_ensure_field_storage('tec_shipment', 'field_tec_sold_to', 'entity_reference', ['target_type' => 'tec_crm']);
+  _tec_portal_ensure_field_storage('tec_shipment', 'field_tec_ship_to', 'entity_reference', ['target_type' => 'tec_crm']);
+
+  $org = [
+    'handler' => 'default:tec_crm',
+    'handler_settings' => [
+      'target_bundles' => ['tec_contact_organization' => 'tec_contact_organization'],
+      'sort' => ['field' => '_none', 'direction' => 'ASC'],
+      'auto_create' => FALSE,
+      'auto_create_bundle' => 'tec_contact_organization',
+    ],
+  ];
+  _tec_portal_ensure_field('tec_shipment', 'tec_shipment', 'field_tec_customer', 'Customer', [
+    'required' => TRUE,
+    'settings' => $org,
+  ]);
+  _tec_portal_ensure_field('tec_shipment', 'tec_shipment', 'field_tec_ship_date', 'Date', [
+    'required' => TRUE,
+    'default_value' => [
+      ['default_date_type' => 'now', 'default_date' => 'now'],
+    ],
+  ]);
+  _tec_portal_ensure_field('tec_shipment', 'tec_shipment', 'field_tec_incoterms', 'Incoterms', [
+    'default_value' => [['value' => 'EXW']],
+  ]);
+  _tec_portal_ensure_field('tec_shipment', 'tec_shipment', 'field_tec_sold_to', 'Sold to', [
+    'required' => TRUE,
+    'settings' => $org,
+  ]);
+  _tec_portal_ensure_field('tec_shipment', 'tec_shipment', 'field_tec_ship_to', 'Ship to', [
+    'required' => TRUE,
+    'settings' => $org,
+  ]);
+
+  _tec_portal_ensure_field_storage('tec_ship_item', 'field_tec_shipment', 'entity_reference', ['target_type' => 'tec_shipment']);
+  _tec_portal_ensure_field_storage('tec_ship_item', 'field_tec_order', 'entity_reference', ['target_type' => 'tec_order']);
+  _tec_portal_ensure_field_storage('tec_ship_item', 'field_tec_source_line', 'entity_reference', ['target_type' => 'tec_line_item']);
+  _tec_portal_ensure_field_storage('tec_ship_item', 'field_tec_quantity', 'integer', [
+    'unsigned' => FALSE,
+    'size' => 'normal',
+  ]);
+
+  _tec_portal_ensure_field('tec_ship_item', 'tec_ship_item', 'field_tec_shipment', 'Shipment', [
+    'required' => TRUE,
+    'settings' => [
+      'handler' => 'default:tec_shipment',
+      'handler_settings' => [
+        'target_bundles' => ['tec_shipment' => 'tec_shipment'],
+        'sort' => ['field' => '_none', 'direction' => 'ASC'],
+        'auto_create' => FALSE,
+        'auto_create_bundle' => 'tec_shipment',
+      ],
+    ],
+  ]);
+  _tec_portal_ensure_field('tec_ship_item', 'tec_ship_item', 'field_tec_order', 'Sales order', [
+    'required' => TRUE,
+    'settings' => [
+      'handler' => 'default:tec_order',
+      'handler_settings' => [
+        'target_bundles' => ['tec_sales_order' => 'tec_sales_order'],
+        'sort' => ['field' => '_none', 'direction' => 'ASC'],
+        'auto_create' => FALSE,
+        'auto_create_bundle' => 'tec_sales_order',
+      ],
+    ],
+  ]);
+  _tec_portal_ensure_field('tec_ship_item', 'tec_ship_item', 'field_tec_source_line', 'Sales line', [
+    'required' => TRUE,
+    'settings' => [
+      'handler' => 'default:tec_line_item',
+      'handler_settings' => [
+        'target_bundles' => ['tec_sales_order_line_item' => 'tec_sales_order_line_item'],
+        'sort' => ['field' => '_none', 'direction' => 'ASC'],
+        'auto_create' => FALSE,
+        'auto_create_bundle' => 'tec_sales_order_line_item',
+      ],
+    ],
+  ]);
+  _tec_portal_ensure_field('tec_ship_item', 'tec_ship_item', 'field_tec_quantity', 'Quantity this shipment', [
+    'required' => TRUE,
+    'settings' => ['min' => 0, 'max' => NULL, 'prefix' => '', 'suffix' => ''],
+  ]);
+
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+  _tec_portal_grant_shipment_permissions();
+}
+
+/**
+ * Create an ECK entity type if it is not there yet.
+ */
+function _tec_portal_ensure_eck_type(string $id, string $label, bool $uid): void {
+  if (EckEntityType::load($id)) {
+    return;
+  }
+  EckEntityType::create([
+    'id' => $id,
+    'label' => $label,
+    'uid' => $uid,
+    'created' => TRUE,
+    'changed' => TRUE,
+    'title' => TRUE,
+    'standalone_url' => FALSE,
+  ])->save();
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+}
+
+/**
+ * Create the one bundle of an ECK type.
+ */
+function _tec_portal_ensure_eck_bundle(string $entity_type_id, string $bundle, string $name, string $description): void {
+  $manager = \Drupal::entityTypeManager();
+  $manager->clearCachedDefinitions();
+  $storage_id = $entity_type_id . '_type';
+  if (!$manager->hasDefinition($storage_id)) {
+    throw new \RuntimeException("ECK bundle storage $storage_id is missing.");
+  }
+  $storage = $manager->getStorage($storage_id);
+  if ($storage->load($bundle)) {
+    return;
+  }
+  $storage->create([
+    'type' => $bundle,
+    'name' => $name,
+    'description' => $description,
+  ])->save();
+  $manager->clearCachedDefinitions();
+}
+
+/**
+ * Field storage, public, matching the other TEC fields.
+ */
+function _tec_portal_ensure_field_storage(string $entity_type, string $name, string $type, array $settings = []): void {
+  if (FieldStorageConfig::loadByName($entity_type, $name)) {
+    return;
+  }
+  FieldStorageConfig::create([
+    'field_name' => $name,
+    'entity_type' => $entity_type,
+    'type' => $type,
+    'cardinality' => 1,
+    'translatable' => TRUE,
+    'settings' => $settings,
+    'third_party_settings' => [
+      'field_permissions' => ['permission_type' => 'public'],
+    ],
+  ])->save();
+}
+
+/**
+ * Field instance on one bundle.
+ */
+function _tec_portal_ensure_field(string $entity_type, string $bundle, string $name, string $label, array $extra = []): void {
+  if (FieldConfig::loadByName($entity_type, $bundle, $name)) {
+    return;
+  }
+  FieldConfig::create($extra + [
+    'field_name' => $name,
+    'entity_type' => $entity_type,
+    'bundle' => $bundle,
+    'label' => $label,
+    'required' => FALSE,
+    'translatable' => FALSE,
+  ])->save();
+}
+
+/**
+ * Factory roles: create, edit any, delete any, view any, plus bundle and own.
+ */
+function _tec_portal_grant_shipment_permissions(): void {
+  $perms = [
+    'create tec_shipment entities',
+    'create tec_shipment entities of bundle tec_shipment',
+    'edit any tec_shipment entities',
+    'edit any tec_shipment entities of bundle tec_shipment',
+    'delete any tec_shipment entities',
+    'delete any tec_shipment entities of bundle tec_shipment',
+    'view any tec_shipment entities',
+    'view any tec_shipment entities of bundle tec_shipment',
+    'edit own tec_shipment entities',
+    'edit own tec_shipment entities of bundle tec_shipment',
+    'delete own tec_shipment entities',
+    'delete own tec_shipment entities of bundle tec_shipment',
+    'view own tec_shipment entities',
+    'view own tec_shipment entities of bundle tec_shipment',
+    'create tec_ship_item entities',
+    'create tec_ship_item entities of bundle tec_ship_item',
+    'edit any tec_ship_item entities',
+    'edit any tec_ship_item entities of bundle tec_ship_item',
+    'delete any tec_ship_item entities',
+    'delete any tec_ship_item entities of bundle tec_ship_item',
+    'view any tec_ship_item entities',
+    'view any tec_ship_item entities of bundle tec_ship_item',
+  ];
+  foreach (['tec_executive', 'tec_manager', 'tec_supervisor'] as $rid) {
+    $role = Role::load($rid);
+    if (!$role) {
+      continue;
+    }
+    $dirty = FALSE;
+    foreach ($perms as $perm) {
+      if (!$role->hasPermission($perm)) {
+        $role->grantPermission($perm);
+        $dirty = TRUE;
+      }
+    }
+    if ($dirty) {
+      $role->save();
+    }
+  }
 }
 

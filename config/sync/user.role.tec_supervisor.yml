@@ -15,6 +15,8 @@ dependencies:
     - eck.eck_type.tec_product.tec_color_variation
     - eck.eck_type.tec_product.tec_product
     - eck.eck_type.tec_product.tec_size_variation
+    - eck.eck_type.tec_ship_item.tec_ship_item
+    - eck.eck_type.tec_shipment.tec_shipment
     - entity_browser.browser.tec_products
     - feeds.feed_type.tec_inventory_csv_importer
     - filter.format.full_html
@@ -94,6 +96,10 @@ permissions:
   - 'create tec_product entities of bundle tec_color_variation'
   - 'create tec_product entities of bundle tec_product'
   - 'create tec_product entities of bundle tec_size_variation'
+  - 'create tec_ship_item entities'
+  - 'create tec_ship_item entities of bundle tec_ship_item'
+  - 'create tec_shipment entities'
+  - 'create tec_shipment entities of bundle tec_shipment'
   - 'create terms in tags'
   - 'create terms in tec_brands'
   - 'create terms in tec_colors'
@@ -103,6 +109,10 @@ permissions:
   - 'create terms in tec_sizes'
   - 'create terms in tec_units'
   - 'create video media'
+  - 'delete any tec_ship_item entities'
+  - 'delete any tec_ship_item entities of bundle tec_ship_item'
+  - 'delete any tec_shipment entities'
+  - 'delete any tec_shipment entities of bundle tec_shipment'
   - 'delete media'
   - 'delete own audio media'
   - 'delete own document media'
@@ -118,6 +128,8 @@ permissions:
   - 'delete own tec_product entities of bundle tec_color_variation'
   - 'delete own tec_product entities of bundle tec_product'
   - 'delete own tec_product entities of bundle tec_size_variation'
+  - 'delete own tec_shipment entities'
+  - 'delete own tec_shipment entities of bundle tec_shipment'
   - 'delete own video media'
   - 'delete terms in tec_brands'
   - 'edit any tec_crm entities'
@@ -125,6 +137,10 @@ permissions:
   - 'edit any tec_line_item entities'
   - 'edit any tec_order entities'
   - 'edit any tec_product entities'
+  - 'edit any tec_ship_item entities'
+  - 'edit any tec_ship_item entities of bundle tec_ship_item'
+  - 'edit any tec_shipment entities'
+  - 'edit any tec_shipment entities of bundle tec_shipment'
   - 'edit own audio media'
   - 'edit own document media'
   - 'edit own image media'
@@ -134,6 +150,8 @@ permissions:
   - 'edit own tec_order entities'
   - 'edit own tec_order entities of bundle tec_draft_order'
   - 'edit own tec_product entities'
+  - 'edit own tec_shipment entities'
+  - 'edit own tec_shipment entities of bundle tec_shipment'
   - 'edit own video media'
   - 'edit terms in tags'
   - 'edit terms in tec_brands'
@@ -185,6 +203,10 @@ permissions:
   - 'view any tec_product entities of bundle tec_color_variation'
   - 'view any tec_product entities of bundle tec_product'
   - 'view any tec_product entities of bundle tec_size_variation'
+  - 'view any tec_ship_item entities'
+  - 'view any tec_ship_item entities of bundle tec_ship_item'
+  - 'view any tec_shipment entities'
+  - 'view any tec_shipment entities of bundle tec_shipment'
   - 'view own tec_crm entities'
   - 'view own tec_crm entities of bundle tec_contact_organization'
   - 'view own tec_crm entities of bundle tec_contact_person'
@@ -201,6 +223,8 @@ permissions:
   - 'view own tec_product entities of bundle tec_color_variation'
   - 'view own tec_product entities of bundle tec_product'
   - 'view own tec_product entities of bundle tec_size_variation'
+  - 'view own tec_shipment entities'
+  - 'view own tec_shipment entities of bundle tec_shipment'
   - 'view own unpublished content'
   - 'view own unpublished media'
   - 'view tec production report'

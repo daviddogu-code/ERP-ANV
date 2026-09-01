@@ -1,0 +1,21 @@
+uuid: 9d191b8d-ae48-497f-8859-98c1e4926999
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_shipment.tec_shipment
+    - field.storage.tec_shipment.field_tec_incoterms
+id: tec_shipment.tec_shipment.field_tec_incoterms
+field_name: field_tec_incoterms
+entity_type: tec_shipment
+bundle: tec_shipment
+label: Incoterms
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: EXW
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,0 +1,29 @@
+uuid: b282687b-a507-41f6-9426-f481d58246c1
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_crm.tec_contact_organization
+    - eck.eck_type.tec_shipment.tec_shipment
+    - field.storage.tec_shipment.field_tec_ship_to
+id: tec_shipment.tec_shipment.field_tec_ship_to
+field_name: field_tec_ship_to
+entity_type: tec_shipment
+bundle: tec_shipment
+label: 'Ship to'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:tec_crm'
+  handler_settings:
+    target_bundles:
+      tec_contact_organization: tec_contact_organization
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: tec_contact_organization
+field_type: entity_reference

@@ -1,0 +1,23 @@
+uuid: 9f11da76-a72a-4d48-b36e-b2a8b3d788cf
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.tec_ship_item.tec_ship_item
+    - field.storage.tec_ship_item.field_tec_quantity
+id: tec_ship_item.tec_ship_item.field_tec_quantity
+field_name: field_tec_quantity
+entity_type: tec_ship_item
+bundle: tec_ship_item
+label: 'Quantity this shipment'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

@@ -79,3 +79,63 @@ tec_portal.proforma:
     parameters:
       tec_order:
         type: 'entity:tec_order'
+
+tec_portal.shipment_new:
+  path: '/customer/{tec_crm}/ship/new'
+  defaults:
+    _form: '\Drupal\tec_portal\Form\NewShipmentForm'
+    _title: 'New shipment'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Form\NewShipmentForm::access'
+    tec_crm: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+    parameters:
+      tec_crm:
+        type: 'entity:tec_crm'
+
+tec_portal.shipment:
+  path: '/o/ship/{tec_shipment}'
+  defaults:
+    _form: '\Drupal\tec_portal\Form\ShipmentForm'
+    _title_callback: '\Drupal\tec_portal\Form\ShipmentForm::title'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Form\ShipmentForm::access'
+    tec_shipment: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+    parameters:
+      tec_shipment:
+        type: 'entity:tec_shipment'
+
+tec_portal.shipment_packing:
+  path: '/o/ship/{tec_shipment}/pl/print'
+  defaults:
+    _controller: '\Drupal\tec_portal\Controller\ShipmentPrintController::packing'
+    _title_callback: '\Drupal\tec_portal\Controller\ShipmentPrintController::packingTitle'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Controller\ShipmentPrintController::access'
+    tec_shipment: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+    parameters:
+      tec_shipment:
+        type: 'entity:tec_shipment'
+
+tec_portal.shipment_invoice:
+  path: '/o/ship/{tec_shipment}/inv/print'
+  defaults:
+    _controller: '\Drupal\tec_portal\Controller\ShipmentPrintController::invoice'
+    _title_callback: '\Drupal\tec_portal\Controller\ShipmentPrintController::invoiceTitle'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Controller\ShipmentPrintController::access'
+    tec_shipment: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+    parameters:
+      tec_shipment:
+        type: 'entity:tec_shipment'

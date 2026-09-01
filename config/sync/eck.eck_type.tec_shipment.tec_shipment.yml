@@ -1,0 +1,9 @@
+uuid: b678ef93-788c-44dd-96be-cbf011890aff
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.tec_shipment
+name: Shipment
+type: tec_shipment
+description: 'One EXW container or pickup.'

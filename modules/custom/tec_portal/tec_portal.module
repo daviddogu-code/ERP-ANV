@@ -23,8 +23,10 @@ use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
 use Drupal\tec_portal\CustomerCompany;
 use Drupal\tec_portal\Form\FactoryPlaceOrderForm;
+use Drupal\tec_portal\Form\NewShipmentForm;
 use Drupal\tec_portal\PortalOrder;
 use Drupal\tec_portal\Proforma;
+use Drupal\tec_portal\Shipment;
 use Drupal\user\UserInterface;
 use Drupal\views\ViewExecutable;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -129,7 +131,7 @@ function tec_portal_entity_access(EntityInterface $entity, $operation, AccountIn
       : $cache->andIf(AccessResult::forbidden('Your company does not buy this brand.'));
   }
 
-  if (in_array($type, ['tec_inventory', 'media', 'node'], TRUE)) {
+  if (in_array($type, ['tec_inventory', 'media', 'node', 'tec_shipment', 'tec_ship_item'], TRUE)) {
     return $cache->andIf(AccessResult::forbidden('Portal customers cannot see factory records.'));
   }
 
@@ -145,7 +147,7 @@ function tec_portal_entity_create_access(AccountInterface $account, array $conte
     return AccessResult::neutral();
   }
   $type = $context['entity_type_id'] ?? '';
-  if (in_array($type, ['tec_order', 'tec_line_item', 'tec_product', 'tec_crm', 'tec_inventory', 'taxonomy_term', 'node', 'media'], TRUE)) {
+  if (in_array($type, ['tec_order', 'tec_line_item', 'tec_product', 'tec_crm', 'tec_inventory', 'taxonomy_term', 'node', 'media', 'tec_shipment', 'tec_ship_item'], TRUE)) {
     return $companies->cache($account)
       ->andIf(AccessResult::forbidden('Portal customers cannot create factory records. New orders go through /my/order/new.'));
   }
@@ -555,16 +557,46 @@ function _tec_portal_place_order_url(EntityInterface $company): Url {
 
 /**
  * Place an order as a real link. Not a Flag action (those reload the card).
+ *
+ * New shipment sits next to it so the factory can reach /customer/{id}/ship/new
+ * from the card. No new icon on the home board.
  */
 function _tec_portal_place_order_link(EntityInterface $company): array {
   return [
+    '#type' => 'container',
+    '#attributes' => ['class' => ['tec-factory-company-actions']],
+    'order' => [
+      '#type' => 'link',
+      '#title' => t('Place an order'),
+      '#url' => _tec_portal_place_order_url($company),
+      '#attributes' => [
+        'class' => ['btn-default', 'specific-flag'],
+      ],
+      '#access' => FactoryPlaceOrderForm::access(\Drupal::currentUser(), $company),
+    ],
+    'ship' => _tec_portal_new_shipment_link($company),
+  ];
+}
+
+/**
+ * New shipment from a company card. Factory only.
+ */
+function _tec_portal_new_shipment_url(EntityInterface $company): Url {
+  return Url::fromRoute('tec_portal.shipment_new', ['tec_crm' => $company->id()]);
+}
+
+/**
+ * New shipment link. Hidden until the shipment entity exists.
+ */
+function _tec_portal_new_shipment_link(EntityInterface $company): array {
+  return [
     '#type' => 'link',
-    '#title' => t('Place an order'),
-    '#url' => _tec_portal_place_order_url($company),
+    '#title' => t('New shipment'),
+    '#url' => _tec_portal_new_shipment_url($company),
     '#attributes' => [
       'class' => ['btn-default', 'specific-flag'],
     ],
-    '#access' => FactoryPlaceOrderForm::access(\Drupal::currentUser(), $company),
+    '#access' => Shipment::typesExist() && NewShipmentForm::access(\Drupal::currentUser(), $company)->isAllowed(),
   ];
 }
 
@@ -572,8 +604,14 @@ function _tec_portal_place_order_link(EntityInterface $company): array {
  * Header markup for the Orders tab on a company card.
  */
 function _tec_portal_place_order_header(int $company_id): string {
-  $url = Url::fromRoute('tec_portal.factory_place', ['tec_crm' => $company_id])->toString();
-  return '<div class="text-align-right"><div class="btn-default specific-flag"><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">' . t('Place an order') . '</a></div></div>';
+  $order = Url::fromRoute('tec_portal.factory_place', ['tec_crm' => $company_id])->toString();
+  $html = '<div class="text-align-right tec-factory-company-actions">'
+    . '<div class="btn-default specific-flag"><a href="' . htmlspecialchars($order, ENT_QUOTES) . '">' . t('Place an order') . '</a></div>';
+  if (Shipment::typesExist()) {
+    $ship = Url::fromRoute('tec_portal.shipment_new', ['tec_crm' => $company_id])->toString();
+    $html .= '<div class="btn-default specific-flag"><a href="' . htmlspecialchars($ship, ENT_QUOTES) . '">' . t('New shipment') . '</a></div>';
+  }
+  return $html . '</div>';
 }
 
 /**
@@ -730,14 +768,20 @@ function tec_portal_preprocess_views_view_field(array &$variables) {
  * Implements hook_block_access().
  *
  * Customer tabs (Orders / Products / Details) belong on the card, not on
- * the new-order grid hanging off it.
+ * /customer/{id}/order/new or /customer/{id}/ship/new. Those URLs match
+ * the block's /customer/* visibility, so they would paint the ficha under
+ * the form.
  */
 function tec_portal_block_access(Block $block, $operation, AccountInterface $account) {
   if ($operation !== 'view' || $block->id() !== 'dxpr_theme_quicktabsteccrmcontacttabs') {
     return AccessResult::neutral();
   }
   $route = \Drupal::routeMatch()->getRouteName();
-  return AccessResult::forbiddenIf(in_array($route, ['tec_portal.factory_place', 'tec_portal.factory_order'], TRUE))
+  return AccessResult::forbiddenIf(in_array($route, [
+    'tec_portal.factory_place',
+    'tec_portal.factory_order',
+    'tec_portal.shipment_new',
+  ], TRUE))
     ->addCacheContexts(['route']);
 }
 
@@ -767,6 +811,30 @@ function tec_portal_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'tec-portal-proforma',
     ],
+    'tec_portal_shipment_doc' => [
+      'variables' => [
+        'doc_label' => '',
+        'doc_number' => '',
+        'date' => '',
+        'incoterms' => '',
+        'seller_name' => '',
+        'seller_lines' => [],
+        'seller_country' => '',
+        'seller_phone' => '',
+        'seller_email' => '',
+        'seller_tax_id' => '',
+        'sold_to_name' => '',
+        'sold_to_lines' => [],
+        'sold_to_country' => '',
+        'sold_to_tax_id' => '',
+        'ship_to_name' => '',
+        'ship_to_lines' => [],
+        'ship_to_country' => '',
+        'bank' => [],
+        'lines' => [],
+      ],
+      'template' => 'tec-portal-shipment-doc',
+    ],
   ];
 }
 
@@ -774,10 +842,17 @@ function tec_portal_theme($existing, $type, $theme, $path) {
  * Implements hook_preprocess_HOOK() for html.
  */
 function tec_portal_preprocess_html(array &$variables) {
-  if (\Drupal::routeMatch()->getRouteName() !== 'tec_portal.proforma') {
+  $route = \Drupal::routeMatch()->getRouteName();
+  if ($route === 'tec_portal.proforma') {
+    $variables['attributes']['class'][] = 'tec-proforma-print';
+    $order = \Drupal::routeMatch()->getParameter('tec_order');
+    $variables['head_title'] = ['title' => Proforma::fileTitle($order)];
     return;
   }
-  $variables['attributes']['class'][] = 'tec-proforma-print';
-  $order = \Drupal::routeMatch()->getParameter('tec_order');
-  $variables['head_title'] = ['title' => Proforma::fileTitle($order)];
+  if ($route === 'tec_portal.shipment_packing' || $route === 'tec_portal.shipment_invoice') {
+    $variables['attributes']['class'][] = 'tec-proforma-print';
+    $shipment = \Drupal::routeMatch()->getParameter('tec_shipment');
+    $kind = $route === 'tec_portal.shipment_invoice' ? 'invoice' : 'packing';
+    $variables['head_title'] = ['title' => Shipment::fileTitle($shipment, $kind)];
+  }
 }

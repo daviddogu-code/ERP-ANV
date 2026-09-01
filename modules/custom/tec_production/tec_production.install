@@ -184,3 +184,15 @@ function tec_production_update_10006(): void {
 function tec_production_update_10007(): void {
   tec_production_ensure_status_label_plain();
 }
+
+/**
+ * Closed after Shipped. Shipped stays on the queue; Closed leaves it.
+ */
+function tec_production_update_10008(): void {
+  $field = \Drupal\field\Entity\FieldStorageConfig::loadByName('tec_order', 'field_tec_order_status');
+  if ($field) {
+    $field->setSetting('allowed_values', \Drupal\tec_production\SalesStatus::allowedValues());
+    $field->save();
+    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+  }
+}

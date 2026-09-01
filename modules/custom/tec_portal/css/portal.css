@@ -15,6 +15,28 @@
   font-weight: 600;
 }
 
+.tec-ship__status-key {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  pointer-events: none;
+}
+
+.tec-ship__status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.tec-ship__status-label {
+  flex: 0 0 15.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #444;
+}
+
 .tec-portal__help {
   margin: 0 0 0.75rem;
   padding: 0.5rem 0.75rem;
@@ -109,6 +131,14 @@
   margin: 0;
 }
 
+.tec-factory-company-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
 .tec-portal .tec-portal__status,
 .tec-portal__table .tec-portal__status {
   display: inline-block;
@@ -151,6 +181,12 @@
   background: #38761d;
   color: #fff;
   border-color: #38761d;
+}
+
+.tec-portal__status--closed {
+  background: #1e293b;
+  color: #fff;
+  border-color: #1e293b;
 }
 
 .tec-portal__status--cancelled {
