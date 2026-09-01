@@ -325,9 +325,13 @@ class ShipmentForm extends FormBase {
       ]);
       $created->save();
     }
+    $shipment = $this->entityTypeManager->getStorage(Shipment::TYPE)->load($id);
+    if (Shipment::isShipment($shipment)) {
+      Shipment::refreshTitle($shipment);
+    }
     $this->messenger()->addStatus($this->t('Quantities saved. Packing list and invoice use the same lines.'));
     $form_state->setIgnoreDestination();
-    $form_state->setRedirect('tec_portal.shipment', ['tec_shipment' => $shipment->id()]);
+    $form_state->setRedirect('tec_portal.shipment', ['tec_shipment' => $id]);
   }
 
 }

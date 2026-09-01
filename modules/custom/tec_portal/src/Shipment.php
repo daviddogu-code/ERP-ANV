@@ -3,6 +3,7 @@
 namespace Drupal\tec_portal;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\tec_production\OrderNumber;
 use Drupal\tec_production\SalesStatus;
 use Drupal\tec_production\Vat;
 
@@ -45,6 +46,21 @@ final class Shipment {
   public const INCOTERM = 'EXW';
 
   /**
+   * Highest SHIP yy-NNN handed out, per calendar year. Never exported.
+   */
+  public const NUMBER_LEDGER = 'tec_portal.shipment_number';
+
+  /**
+   * Factory number at the start of the title: "SHIP 26-001".
+   */
+  private const NUMBER_SHAPE = '/^(SHIP \d{2}-\d{3,})(?:\s|$)/';
+
+  /**
+   * ECK title column. Number + code stay; order list is what gets cut.
+   */
+  private const TITLE_MAX = 255;
+
+  /**
    * Whether this is a shipment entity.
    */
   public static function isShipment($entity): bool {
@@ -73,13 +89,131 @@ final class Shipment {
   }
 
   /**
-   * SHIP-12 after the first save. Empty titles stay empty.
+   * SHIP 26-001 CODE (26-001, 26-002) after the first save.
+   *
+   * The factory number is issued once (2027 starts at SHIP 27-001). The
+   * short code and the order tails refresh when quantities are saved.
+   * Leftover titles like SHIP-1 are left alone.
    */
   public static function stampTitle(EntityInterface $shipment): void {
     if (!self::isShipment($shipment) || !$shipment->id()) {
       return;
     }
-    $wanted = 'SHIP-' . (int) $shipment->id();
+    $number = self::factoryNumber($shipment->label());
+    if ($number === NULL) {
+      $number = self::nextNumber();
+    }
+    self::writeTitle($shipment, $number);
+  }
+
+  /**
+   * Rebuild CODE and (orders) without spending a new factory number.
+   *
+   * No-op on SHIP-1 leftovers that never received SHIP yy-NNN.
+   */
+  public static function refreshTitle(EntityInterface $shipment): void {
+    if (!self::isShipment($shipment) || !$shipment->id()) {
+      return;
+    }
+    $number = self::factoryNumber($shipment->label());
+    if ($number === NULL) {
+      return;
+    }
+    self::writeTitle($shipment, $number);
+  }
+
+  /**
+   * The "SHIP 26-001" prefix, or NULL if this title was never numbered.
+   */
+  public static function factoryNumber(?string $title): ?string {
+    if (preg_match(self::NUMBER_SHAPE, trim((string) $title), $match)) {
+      return $match[1];
+    }
+    return NULL;
+  }
+
+  /**
+   * Whether this title already carries a factory shipment number.
+   */
+  public static function isNumber(?string $title): bool {
+    return self::factoryNumber($title) !== NULL;
+  }
+
+  /**
+   * Next free "SHIP yy-NNN" for this calendar year.
+   */
+  public static function nextNumber(): string {
+    $prefix = self::numberPrefix();
+    $ledger = \Drupal::keyValue(self::NUMBER_LEDGER);
+    $key = $prefix;
+
+    $issued = (int) $ledger->get($key, 0);
+    $number = max($issued, self::highestNumberInUse($prefix)) + 1;
+
+    while (TRUE) {
+      $name = $prefix . str_pad((string) $number, 3, '0', STR_PAD_LEFT);
+      if (!self::numberIsTaken($name)) {
+        $ledger->set($key, max((int) $ledger->get($key, 0), $number));
+        return $name;
+      }
+      $number++;
+    }
+  }
+
+  /**
+   * "SHIP 26-" — the counter comes after. Year from the clock, like orders.
+   */
+  public static function numberPrefix(): string {
+    return 'SHIP ' . date('y') . '-';
+  }
+
+  /**
+   * Highest counter already on a shipment with this prefix, or 0.
+   */
+  private static function highestNumberInUse(string $prefix): int {
+    $storage = \Drupal::entityTypeManager()->getStorage(self::TYPE);
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('type', self::BUNDLE)
+      ->condition('title', $prefix, 'STARTS_WITH')
+      ->execute();
+    if (!$ids) {
+      return 0;
+    }
+    $max = 0;
+    foreach ($storage->loadMultiple($ids) as $shipment) {
+      $number = self::factoryNumber($shipment->label());
+      if ($number === NULL || !str_starts_with($number, $prefix)) {
+        continue;
+      }
+      $max = max($max, (int) substr($number, strlen($prefix)));
+    }
+    return $max;
+  }
+
+  /**
+   * Whether SHIP 26-001 is already the factory number of a shipment.
+   *
+   * Titles are "SHIP 26-001" plus optional " RISE (…)", so an exact title
+   * match would miss them. STARTS_WITH the number alone would also catch
+   * SHIP 26-0010. Match exact, or the number followed by a space.
+   */
+  private static function numberIsTaken(string $name): bool {
+    $storage = \Drupal::entityTypeManager()->getStorage(self::TYPE);
+    $query = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('type', self::BUNDLE);
+    $group = $query->orConditionGroup()
+      ->condition('title', $name)
+      ->condition('title', $name . ' ', 'STARTS_WITH');
+    return (int) $query->condition($group)->count()->execute() > 0;
+  }
+
+  /**
+   * Write SHIP 26-001 CODE (order tails). Same factory number as $number.
+   */
+  private static function writeTitle(EntityInterface $shipment, string $number): void {
+    $wanted = self::composeTitle($number, $shipment);
     if ((string) $shipment->label() === $wanted) {
       return;
     }
@@ -88,13 +222,86 @@ final class Shipment {
   }
 
   /**
+   * SHIP 26-001 RISE (26-001, 26-002). Empty code or empty ship omit those bits.
+   */
+  private static function composeTitle(string $number, EntityInterface $shipment): string {
+    $code = OrderNumber::shortCode(self::customer($shipment));
+    $head = $code === '' ? $number : $number . ' ' . $code;
+    $tails = self::orderTailsOnShipment($shipment);
+    if (!$tails) {
+      return $head;
+    }
+    $kept = [];
+    $hidden = 0;
+    foreach ($tails as $index => $tail) {
+      $trial = $kept;
+      $trial[] = $tail;
+      $candidate = $head . ' (' . implode(', ', $trial) . ')';
+      if (mb_strlen($candidate) <= self::TITLE_MAX) {
+        $kept = $trial;
+        continue;
+      }
+      $hidden = count($tails) - $index;
+      break;
+    }
+    if (!$kept) {
+      return $head;
+    }
+    if ($hidden > 0) {
+      $with_more = $head . ' (' . implode(', ', $kept) . ' +' . $hidden . ')';
+      if (mb_strlen($with_more) <= self::TITLE_MAX) {
+        return $with_more;
+      }
+    }
+    return $head . ' (' . implode(', ', $kept) . ')';
+  }
+
+  /**
+   * YY-NNN of each sales order with qty on this ship. Once each, sorted.
+   *
+   * @return string[]
+   */
+  private static function orderTailsOnShipment(EntityInterface $shipment): array {
+    $order_ids = [];
+    foreach (self::itemEntities($shipment) as $item) {
+      if (self::itemQty($item) < 1) {
+        continue;
+      }
+      $oid = self::itemOrderId($item);
+      if ($oid > 0) {
+        $order_ids[$oid] = $oid;
+      }
+    }
+    if (!$order_ids) {
+      return [];
+    }
+    $tails = [];
+    $orders = \Drupal::entityTypeManager()->getStorage('tec_order')->loadMultiple($order_ids);
+    foreach ($orders as $order) {
+      $label = trim((string) $order->label());
+      if (preg_match('/(\d{2}-\d{3,})\s*$/', $label, $match)) {
+        $tails[$match[1]] = $match[1];
+      }
+    }
+    $keys = array_keys($tails);
+    natsort($keys);
+    $out = [];
+    foreach ($keys as $key) {
+      $out[] = $tails[$key];
+    }
+    return $out;
+  }
+
+  /**
    * Browser tab and Save-as-PDF filename, same idea as Proforma::fileTitle.
    *
-   * $kind is packing or invoice.
+   * $kind is packing or invoice. Filename uses the factory number only, so
+   * INVOICE_SHIP_26-001 stays short when the on-screen title lists orders.
    */
   public static function fileTitle($shipment, string $kind): string {
     $prefix = $kind === 'invoice' ? 'INVOICE' : 'PACKING';
-    $number = $shipment ? trim((string) $shipment->label()) : '';
+    $label = $shipment ? trim((string) $shipment->label()) : '';
+    $number = self::factoryNumber($label) ?: $label;
     if ($number === '') {
       return $prefix;
     }
