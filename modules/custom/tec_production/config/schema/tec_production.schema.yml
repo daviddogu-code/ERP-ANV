@@ -46,6 +46,9 @@ tec_production.settings:
     supplier_orders_tile_nid:
       type: integer
       label: 'Node of the icon that opens Supplier Orders'
+    shipments_tile_nid:
+      type: integer
+      label: 'Node of the icon that opens Shipments'
 
     # The rate, once, for the whole company. Which suppliers charge it is a
     # separate question answered on each contact card -- see src/Vat.php.

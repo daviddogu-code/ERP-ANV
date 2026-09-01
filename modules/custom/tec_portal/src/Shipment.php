@@ -70,8 +70,12 @@ final class Shipment {
   }
 
   /**
-   * Browser paths for the four factory screens.
+   * Browser paths for the factory shipment screens.
    */
+  public static function listPath(): string {
+    return '/o/ship';
+  }
+
   public static function newPath(int $company_id): string {
     return '/customer/' . $company_id . '/ship/new';
   }
@@ -86,6 +90,50 @@ final class Shipment {
 
   public static function invoicePath($shipment): string {
     return self::viewPath($shipment) . '/inv/print';
+  }
+
+  /**
+   * Shipments, newest date first, then highest id. Empty company = the factory.
+   *
+   * @return EntityInterface[]
+   */
+  public static function listOf(?int $company_id = NULL, int $limit = 0, int $offset = 0): array {
+    if (!self::typesExist()) {
+      return [];
+    }
+    $query = self::listQuery($company_id)
+      ->sort(self::DATE_FIELD, 'DESC')
+      ->sort('id', 'DESC');
+    if ($limit > 0) {
+      $query->range($offset, $limit);
+    }
+    $ids = $query->execute();
+    if (!$ids) {
+      return [];
+    }
+    return array_values(\Drupal::entityTypeManager()->getStorage(self::TYPE)->loadMultiple($ids));
+  }
+
+  /**
+   * How many shipments, optionally of one customer.
+   */
+  public static function countOf(?int $company_id = NULL): int {
+    if (!self::typesExist()) {
+      return 0;
+    }
+    return (int) self::listQuery($company_id)->count()->execute();
+  }
+
+  /**
+   * List cache tags so a new SHIP rebuilds the tab and /o/ship.
+   *
+   * @return string[]
+   */
+  public static function listCacheTags(): array {
+    if (!self::typesExist()) {
+      return [];
+    }
+    return \Drupal::entityTypeManager()->getDefinition(self::TYPE)->getListCacheTags();
   }
 
   /**
@@ -657,6 +705,19 @@ final class Shipment {
   public static function typesExist(): bool {
     $manager = \Drupal::entityTypeManager();
     return $manager->hasDefinition(self::TYPE) && $manager->hasDefinition(self::ITEM_TYPE);
+  }
+
+  /**
+   * Base query for the factory list and the customer tab.
+   */
+  private static function listQuery(?int $company_id = NULL) {
+    $query = \Drupal::entityTypeManager()->getStorage(self::TYPE)->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('type', self::BUNDLE);
+    if ($company_id) {
+      $query->condition(self::CUSTOMER_FIELD, $company_id);
+    }
+    return $query;
   }
 
   /**

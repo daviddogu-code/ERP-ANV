@@ -57,6 +57,7 @@ function tec_portal_install(): void {
   tec_portal_update_8012();
   tec_portal_update_8013();
   tec_portal_update_8014();
+  tec_portal_update_8015();
 }
 
 /**
@@ -788,6 +789,84 @@ function tec_portal_update_8014(): void {
 
   \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
   _tec_portal_grant_shipment_permissions();
+}
+
+/**
+ * Shipments tab on the customer card, without a full config import.
+ *
+ * QuickTabs lives in config. Production does not cim the whole tree, so
+ * this writes the tab into the active instance. Same block the YAML lists.
+ */
+function tec_portal_update_8015(): void {
+  _tec_portal_ensure_shipments_tab();
+}
+
+/**
+ * Insert Shipments after Orders on tec_crm_contact_tabs if it is missing.
+ */
+function _tec_portal_ensure_shipments_tab(): void {
+  $config = \Drupal::configFactory()->getEditable('quicktabs.quicktabs_instance.tec_crm_contact_tabs');
+  if ($config->isNew()) {
+    return;
+  }
+  $tabs = $config->get('configuration_data') ?: [];
+  foreach ($tabs as $tab) {
+    if (($tab['title'] ?? '') === 'Shipments') {
+      return;
+    }
+  }
+  $ship = [
+    'title' => 'Shipments',
+    'weight' => 1,
+    'type' => 'block_content',
+    'content' => [
+      'node_content' => [
+        'options' => [
+          'nid' => '',
+          'view_mode' => 'full',
+          'hide_title' => TRUE,
+        ],
+      ],
+      'view_content' => [
+        'options' => [
+          'vid' => 'block_content',
+          'display' => 'default',
+          'args' => '',
+        ],
+      ],
+      'block_content' => [
+        'options' => [
+          'bid' => 'tec_portal_customer_shipments',
+          'block_title' => '',
+          'display_title' => FALSE,
+        ],
+      ],
+      'qtabs_content' => [
+        'options' => [
+          'machine_name' => 'tec_crm_landing_page_tabs',
+        ],
+      ],
+    ],
+  ];
+  $out = [];
+  $inserted = FALSE;
+  foreach ($tabs as $tab) {
+    if (($tab['title'] ?? '') === 'Products' && !$inserted) {
+      $out[] = $ship;
+      $inserted = TRUE;
+    }
+    if (($tab['title'] ?? '') === 'Products') {
+      $tab['weight'] = 2;
+    }
+    if (($tab['title'] ?? '') === 'Details') {
+      $tab['weight'] = 3;
+    }
+    $out[] = $tab;
+  }
+  if (!$inserted) {
+    $out[] = $ship;
+  }
+  $config->set('configuration_data', $out)->save();
 }
 
 /**

@@ -32,6 +32,7 @@ if (!$rutas) {
       // Lo que usa la fabrica todos los dias.
       '/start',
       '/o/queue',
+      '/o/ship',
       '/stock',
       '/purchase',
       '/production/log',

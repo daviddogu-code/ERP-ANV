@@ -397,3 +397,11 @@ a.button.tec-portal__place {
 .tec-portal__confirm {
   margin-left: 0.5rem;
 }
+
+.tec-ship-list {
+  max-width: 90rem;
+}
+
+.tec-ship-list .tec-portal__table {
+  max-width: none;
+}

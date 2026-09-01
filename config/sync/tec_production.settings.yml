@@ -12,6 +12,7 @@ stock_tile_nid: 14
 purchase_tile_nid: 15
 po_control_tile_nid: 16
 supplier_orders_tile_nid: 17
+shipments_tile_nid: 18
 vat_rate: 7.0
 legal_name: 'Acta Non Verba Co., LTD.'
 tax_id: ''

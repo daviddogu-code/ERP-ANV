@@ -159,8 +159,10 @@ const REFERENCIA_VARIOS = [
   // el despliegue por uno). El 75 es el icono de PO CONTROL, 20 de agosto de 2026:
   // /supplier-orders/queue existia y el menu la nombraba, pero en /start no habia
   // baldosa. El 76 es el de Supplier Orders, 30 de agosto: la lista historica
-  // existia y el menu la nombraba, pero en /start no habia baldosa.
-  'ficheros' => 76,
+  // existia y el menu la nombraba, pero en /start no habia baldosa. El 77 es
+  // el de Shipments, 1 de septiembre: /o/ship existia y la ficha del cliente
+  // la nombraba, pero en /start no habia baldosa.
+  'ficheros' => 77,
   // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
   // Super BOM, porque su funcion la hace ya el tablero de stock. Y volvieron a ser
   // doce el 15, al rehacer la portada de marcas, que llevaba borrada desde antes de
@@ -170,8 +172,10 @@ const REFERENCIA_VARIOS = [
   // no habia manera de llegar sin escribir la direccion a mano.
   // Son catorce desde el 20 de agosto de 2026, al anadir el icono de PO CONTROL.
   // Quince desde el 30, al anadir el de Supplier Orders: /supplier-orders existia
-  // pero no habia manera de llegar desde /start sin el menu.
-  'nodos' => 15,
+  // pero no habia manera de llegar desde /start sin el menu. Dieciseis desde el
+  // 1 de septiembre, al anadir el de Shipments: /o/ship existia pero no habia
+  // manera de llegar desde /start.
+  'nodos' => 16,
   // Fueron seis unas horas: se pusieron cuatro para que los iconos de la cola, el
   // registro, el informe y el stock llevaran a su pantalla. Vuelven a ser dos
   // porque el arreglo bueno llego el mismo dia: el enlace sale ahora del campo
@@ -1852,6 +1856,17 @@ foreach ($portadas as $portadaLista) {
   }
 }
 comprobar($resultados, 'y hay un icono en /start para el archivo de pedidos de compra', $iconoLista);
+
+$iconoEnvios = FALSE;
+foreach ($portadas as $portadaEnvios) {
+  if ($portadaEnvios->hasField('field_tec_target') && !$portadaEnvios->get('field_tec_target')->isEmpty()
+    && $portadaEnvios->get('field_tec_target')->first()->getUrl()->toString() === '/o/ship'
+    && $portadaEnvios->label() === 'Shipments') {
+    $iconoEnvios = TRUE;
+    break;
+  }
+}
+comprobar($resultados, 'y hay un icono en /start para los envios', $iconoEnvios);
 
 foreach (['tec_manager', 'tec_executive'] as $rolCompras) {
   $rolCargado = \Drupal\user\Entity\Role::load($rolCompras);

@@ -767,7 +767,7 @@ function tec_portal_preprocess_views_view_field(array &$variables) {
 /**
  * Implements hook_block_access().
  *
- * Customer tabs (Orders / Products / Details) belong on the card, not on
+ * Customer tabs (Orders / Shipments / Products / Details) belong on the card, not on
  * /customer/{id}/order/new or /customer/{id}/ship/new. Those URLs match
  * the block's /customer/* visibility, so they would paint the ficha under
  * the form.

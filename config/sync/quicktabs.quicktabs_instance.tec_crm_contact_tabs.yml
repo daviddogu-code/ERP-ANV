@@ -39,8 +39,31 @@ configuration_data:
         options:
           machine_name: tec_crm_landing_page_tabs
   -
+    title: Shipments
+    weight: 1
+    type: block_content
+    content:
+      node_content:
+        options:
+          nid: ''
+          view_mode: full
+          hide_title: true
+      view_content:
+        options:
+          vid: block_content
+          display: default
+          args: ''
+      block_content:
+        options:
+          bid: tec_portal_customer_shipments
+          block_title: ''
+          display_title: false
+      qtabs_content:
+        options:
+          machine_name: tec_crm_landing_page_tabs
+  -
     title: Products
-    weight: 0
+    weight: 2
     type: block_content
     content:
       node_content:
@@ -63,7 +86,7 @@ configuration_data:
           machine_name: tec_crm_landing_page_tabs
   -
     title: Details
-    weight: 0
+    weight: 3
     type: block_content
     content:
       node_content:
