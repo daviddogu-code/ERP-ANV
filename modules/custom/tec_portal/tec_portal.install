@@ -58,6 +58,7 @@ function tec_portal_install(): void {
   tec_portal_update_8013();
   tec_portal_update_8014();
   tec_portal_update_8015();
+  tec_portal_update_8016();
 }
 
 /**
@@ -799,6 +800,192 @@ function tec_portal_update_8014(): void {
  */
 function tec_portal_update_8015(): void {
   _tec_portal_ensure_shipments_tab();
+}
+
+/**
+ * Tax invoice entity: deposits and this-dispatch 036x, one running number.
+ *
+ * Recorded deposits have no number until Issue invoice. Goods invoices are
+ * created only on Issue. Print reads the frozen snapshot. Revert: delete
+ * the tec_invoice type after any test rows are gone.
+ */
+function tec_portal_update_8016(): void {
+  _tec_portal_ensure_eck_type('tec_invoice', 'Invoice', TRUE);
+  _tec_portal_ensure_eck_bundle('tec_invoice', 'tec_invoice', 'Invoice', 'Issued tax invoice / receipt, or a recorded deposit waiting to be issued.');
+
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_kind', 'list_string', [
+    'allowed_values' => [
+      'deposit' => 'Deposit',
+      'goods' => 'This dispatch',
+    ],
+    'allowed_values_function' => '',
+  ]);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_status', 'list_string', [
+    'allowed_values' => [
+      'recorded' => 'Recorded',
+      'issued' => 'Issued',
+    ],
+    'allowed_values_function' => '',
+  ]);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_tax_no', 'integer', [
+    'unsigned' => TRUE,
+    'size' => 'normal',
+  ]);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_customer', 'entity_reference', ['target_type' => 'tec_crm']);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_order', 'entity_reference', ['target_type' => 'tec_order']);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_shipment', 'entity_reference', ['target_type' => 'tec_shipment']);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_date', 'datetime', ['datetime_type' => 'date']);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_note', 'string', [
+    'max_length' => 255,
+    'case_sensitive' => FALSE,
+    'is_ascii' => FALSE,
+  ]);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_description', 'string', [
+    'max_length' => 128,
+    'case_sensitive' => FALSE,
+    'is_ascii' => FALSE,
+  ]);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_line_label', 'string', [
+    'max_length' => 128,
+    'case_sensitive' => FALSE,
+    'is_ascii' => FALSE,
+  ]);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_order_ref', 'string', [
+    'max_length' => 255,
+    'case_sensitive' => FALSE,
+    'is_ascii' => FALSE,
+  ]);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_qty', 'integer', [
+    'unsigned' => TRUE,
+    'size' => 'normal',
+  ]);
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_vat_rate', 'decimal', [
+    'precision' => 5,
+    'scale' => 2,
+  ]);
+  foreach (['field_tec_net', 'field_tec_vat', 'field_tec_gross', 'field_tec_goods_gross', 'field_tec_deposit_applied', 'field_tec_applied_gross'] as $money) {
+    _tec_portal_ensure_field_storage('tec_invoice', $money, 'decimal', [
+      'precision' => 12,
+      'scale' => 2,
+    ]);
+  }
+  _tec_portal_ensure_field_storage('tec_invoice', 'field_tec_snapshot', 'string_long', [
+    'case_sensitive' => FALSE,
+  ]);
+
+  $org = [
+    'handler' => 'default:tec_crm',
+    'handler_settings' => [
+      'target_bundles' => ['tec_contact_organization' => 'tec_contact_organization'],
+      'sort' => ['field' => '_none', 'direction' => 'ASC'],
+      'auto_create' => FALSE,
+      'auto_create_bundle' => 'tec_contact_organization',
+    ],
+  ];
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_kind', 'Kind', ['required' => TRUE]);
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_status', 'Status', ['required' => TRUE]);
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_tax_no', 'Tax invoice number', [
+    'description' => 'The 036x integer. Empty until Issue invoice.',
+  ]);
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_customer', 'Customer', [
+    'required' => TRUE,
+    'settings' => $org,
+  ]);
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_order', 'Sales order', [
+    'settings' => [
+      'handler' => 'default:tec_order',
+      'handler_settings' => [
+        'target_bundles' => ['tec_sales_order' => 'tec_sales_order'],
+        'sort' => ['field' => '_none', 'direction' => 'ASC'],
+        'auto_create' => FALSE,
+        'auto_create_bundle' => 'tec_sales_order',
+      ],
+    ],
+  ]);
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_shipment', 'Shipment', [
+    'settings' => [
+      'handler' => 'default:tec_shipment',
+      'handler_settings' => [
+        'target_bundles' => ['tec_shipment' => 'tec_shipment'],
+        'sort' => ['field' => '_none', 'direction' => 'ASC'],
+        'auto_create' => FALSE,
+        'auto_create_bundle' => 'tec_shipment',
+      ],
+    ],
+  ]);
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_date', 'Date', ['required' => TRUE]);
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_note', 'Note');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_description', 'Description');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_line_label', 'Line');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_order_ref', 'Order no.');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_qty', 'Qty', [
+    'settings' => ['min' => 1, 'max' => NULL, 'prefix' => '', 'suffix' => ''],
+  ]);
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_vat_rate', 'VAT rate');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_net', 'Net');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_vat', 'VAT');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_gross', 'Gross');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_goods_gross', 'Goods gross before deposits');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_deposit_applied', 'Deposits applied');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_applied_gross', 'Gross already credited to a dispatch invoice');
+  _tec_portal_ensure_field('tec_invoice', 'tec_invoice', 'field_tec_snapshot', 'Issued snapshot');
+
+  if (\Drupal\tec_portal\Shipment::typesExist()) {
+    _tec_portal_ensure_field_storage('tec_shipment', 'field_tec_tax_invoice', 'entity_reference', ['target_type' => 'tec_invoice']);
+    _tec_portal_ensure_field('tec_shipment', 'tec_shipment', 'field_tec_tax_invoice', 'Tax invoice', [
+      'settings' => [
+        'handler' => 'default:tec_invoice',
+        'handler_settings' => [
+          'target_bundles' => ['tec_invoice' => 'tec_invoice'],
+          'sort' => ['field' => '_none', 'direction' => 'ASC'],
+          'auto_create' => FALSE,
+          'auto_create_bundle' => 'tec_invoice',
+        ],
+      ],
+    ]);
+  }
+
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+  _tec_portal_grant_invoice_permissions();
+  \Drupal::service('router.builder')->rebuild();
+}
+
+/**
+ * Factory roles: create, edit any, delete any, view any on tax invoices.
+ */
+function _tec_portal_grant_invoice_permissions(): void {
+  $perms = [
+    'create tec_invoice entities',
+    'create tec_invoice entities of bundle tec_invoice',
+    'edit any tec_invoice entities',
+    'edit any tec_invoice entities of bundle tec_invoice',
+    'delete any tec_invoice entities',
+    'delete any tec_invoice entities of bundle tec_invoice',
+    'view any tec_invoice entities',
+    'view any tec_invoice entities of bundle tec_invoice',
+    'edit own tec_invoice entities',
+    'edit own tec_invoice entities of bundle tec_invoice',
+    'delete own tec_invoice entities',
+    'delete own tec_invoice entities of bundle tec_invoice',
+    'view own tec_invoice entities',
+    'view own tec_invoice entities of bundle tec_invoice',
+  ];
+  foreach (['tec_executive', 'tec_manager', 'tec_supervisor'] as $rid) {
+    $role = Role::load($rid);
+    if (!$role) {
+      continue;
+    }
+    $dirty = FALSE;
+    foreach ($perms as $perm) {
+      if (!$role->hasPermission($perm)) {
+        $role->grantPermission($perm);
+        $dirty = TRUE;
+      }
+    }
+    if ($dirty) {
+      $role->save();
+    }
+  }
 }
 
 /**

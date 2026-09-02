@@ -9,8 +9,9 @@ use Drupal\Core\Url;
 /**
  * The shipment table on the customer card and on /o/ship.
  *
- * Same rows, two filters: one company, or the whole factory. Packing and
- * invoice are the live prints of that shipment, not a second document.
+ * Same rows, two filters: one company, or the whole factory. Packing is
+ * the live packing list. Invoice is the issued tax invoice in /o/inv,
+ * or a dash until Issue invoice has been used.
  */
 final class ShipmentList {
 
@@ -61,7 +62,7 @@ final class ShipmentList {
       '#attributes' => ['class' => ['tec-portal', 'tec-ship-list']],
       '#attached' => ['library' => ['tec_portal/shipment_form']],
       '#cache' => [
-        'tags' => Shipment::listCacheTags(),
+        'tags' => array_merge(Shipment::listCacheTags(), TaxInvoice::listCacheTags()),
         'contexts' => ['url', 'user.roles'],
       ],
     ];
@@ -149,11 +150,22 @@ final class ShipmentList {
   }
 
   private function printLink(EntityInterface $shipment, string $kind): array {
-    $path = $kind === 'invoice' ? Shipment::invoicePath($shipment) : Shipment::packingPath($shipment);
+    if ($kind === 'invoice') {
+      $issued = TaxInvoice::typesExist() ? TaxInvoice::ofShipment($shipment) : NULL;
+      if (!$issued) {
+        return ['#plain_text' => '—'];
+      }
+      return [
+        '#type' => 'link',
+        '#title' => TaxInvoice::formatNumber(TaxInvoice::number($issued)),
+        '#url' => Url::fromUri('internal:' . TaxInvoice::printPath($issued)),
+        '#attributes' => ['target' => '_blank'],
+      ];
+    }
     return [
       '#type' => 'link',
-      '#title' => $kind === 'invoice' ? $this->t('Invoice') : $this->t('Packing'),
-      '#url' => Url::fromUri('internal:' . $path),
+      '#title' => $this->t('Packing'),
+      '#url' => Url::fromUri('internal:' . Shipment::packingPath($shipment)),
       '#attributes' => ['target' => '_blank'],
     ];
   }

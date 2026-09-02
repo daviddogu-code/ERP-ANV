@@ -161,8 +161,11 @@ const REFERENCIA_VARIOS = [
   // baldosa. El 76 es el de Supplier Orders, 30 de agosto: la lista historica
   // existia y el menu la nombraba, pero en /start no habia baldosa. El 77 es
   // el de Shipments, 1 de septiembre: /o/ship existia y la ficha del cliente
-  // la nombraba, pero en /start no habia baldosa.
-  'ficheros' => 77,
+  // la nombraba, pero en /start no habia baldosa. El 78 es el logo de la
+  // empresa (anv-logo.png) en public://company. El 79 es el de Invoices,
+  // 2 de septiembre: /o/inv existia y el pedido la nombraba, pero en /start
+  // no habia baldosa.
+  'ficheros' => 79,
   // Eran doce hasta el 14 de agosto de 2026. Se retiro la pagina /bom, que era
   // Super BOM, porque su funcion la hace ya el tablero de stock. Y volvieron a ser
   // doce el 15, al rehacer la portada de marcas, que llevaba borrada desde antes de
@@ -174,8 +177,9 @@ const REFERENCIA_VARIOS = [
   // Quince desde el 30, al anadir el de Supplier Orders: /supplier-orders existia
   // pero no habia manera de llegar desde /start sin el menu. Dieciseis desde el
   // 1 de septiembre, al anadir el de Shipments: /o/ship existia pero no habia
-  // manera de llegar desde /start.
-  'nodos' => 16,
+  // manera de llegar desde /start. Diecisiete desde el 2, al anadir el de
+  // Invoices: /o/inv existia pero no habia manera de llegar desde /start.
+  'nodos' => 17,
   // Fueron seis unas horas: se pusieron cuatro para que los iconos de la cola, el
   // registro, el informe y el stock llevaran a su pantalla. Vuelven a ser dos
   // porque el arreglo bueno llego el mismo dia: el enlace sale ahora del campo
@@ -1867,6 +1871,17 @@ foreach ($portadas as $portadaEnvios) {
   }
 }
 comprobar($resultados, 'y hay un icono en /start para los envios', $iconoEnvios);
+
+$iconoFacturas = FALSE;
+foreach ($portadas as $portadaFacturas) {
+  if ($portadaFacturas->hasField('field_tec_target') && !$portadaFacturas->get('field_tec_target')->isEmpty()
+    && $portadaFacturas->get('field_tec_target')->first()->getUrl()->toString() === '/o/inv'
+    && $portadaFacturas->label() === 'Invoices') {
+    $iconoFacturas = TRUE;
+    break;
+  }
+}
+comprobar($resultados, 'y hay un icono en /start para las facturas', $iconoFacturas);
 
 foreach (['tec_manager', 'tec_executive'] as $rolCompras) {
   $rolCargado = \Drupal\user\Entity\Role::load($rolCompras);

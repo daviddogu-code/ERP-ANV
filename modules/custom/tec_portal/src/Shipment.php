@@ -89,6 +89,12 @@ final class Shipment {
   }
 
   public static function invoicePath($shipment): string {
+    if (TaxInvoice::typesExist()) {
+      $issued = TaxInvoice::ofShipment($shipment);
+      if ($issued) {
+        return TaxInvoice::printPath($issued);
+      }
+    }
     return self::viewPath($shipment) . '/inv/print';
   }
 

@@ -178,6 +178,34 @@ final class ShipmentGrid {
     return $rows;
   }
 
+  /**
+   * Export tax invoice: same columns and totals as the proforma.
+   *
+   * No Less deposits: the deposit is not a tax receipt, and this paper is
+   * the only invoice, for the full load.
+   */
+  public function taxInvoiceTable($shipment, $invoice): array {
+    $rows = Shipment::merchandise($shipment);
+    $table = [
+      '#type' => 'table',
+      '#header' => $this->printLineTableHeader(),
+      '#empty' => $this->t('This shipment has no quantities yet.'),
+      '#attributes' => ['class' => ['tec-portal__table']],
+      '#prefix' => '<div class="tec-portal__group">',
+      '#suffix' => '</div>',
+    ];
+    if (!$rows) {
+      return $table;
+    }
+    $sum_qty = 0;
+    foreach ($rows as $row) {
+      $sum_qty += $row['qty'];
+      $table[] = $this->goodsRow($row, TRUE);
+    }
+    $table['#footer'] = $this->invoiceFooter($sum_qty, Shipment::goodsTotals($shipment));
+    return $table;
+  }
+
   protected function productOf($line): ?EntityInterface {
     return $this->loadProductRef($line, 'field_tec_product');
   }

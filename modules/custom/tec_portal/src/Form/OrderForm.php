@@ -72,10 +72,13 @@ class OrderForm extends FormBase {
     $form['meta'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['tec-portal__meta']],
-      'status' => [
-        '#markup' => PortalOrder::statusMarkup($tec_order),
-        '#allowed_tags' => ['span'],
+      'number' => [
+        '#type' => 'html_tag',
+        '#tag' => 'strong',
+        '#value' => (string) $tec_order->label(),
+        '#attributes' => ['class' => ['tec-portal__order-no']],
       ],
+      'status' => $this->statusElement($tec_order),
     ];
     if (PortalOrder::hasProforma($tec_order)) {
       $form['meta']['proforma'] = [
@@ -399,6 +402,16 @@ class OrderForm extends FormBase {
     }
     $got = $this->entityTypeManager->getStorage('tec_product')->load($id);
     return $got ?: NULL;
+  }
+
+  /**
+   * Status pill: customer words on /my, factory words on /o/order.
+   */
+  protected function statusElement($order): array {
+    return [
+      '#markup' => PortalOrder::statusMarkup($order),
+      '#allowed_tags' => ['span'],
+    ];
   }
 
   /**

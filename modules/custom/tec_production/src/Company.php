@@ -73,6 +73,17 @@ final class Company {
     return self::text('tax_id', FALSE);
   }
 
+  /**
+   * Highest 036x already handed out on the sheet (or on this ERP).
+   *
+   * Next Issue invoice is this plus one. 0 means the ERP starts at 0001.
+   * Not exported between sites: each book has its own last number.
+   */
+  public static function invoiceLastNumber(): int {
+    $value = \Drupal::config(self::CONFIG)->get('invoice_last_number');
+    return max(0, (int) ($value ?? 0));
+  }
+
   public static function phone(): string {
     return self::text('phone');
   }

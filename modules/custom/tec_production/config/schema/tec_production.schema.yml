@@ -49,12 +49,18 @@ tec_production.settings:
     shipments_tile_nid:
       type: integer
       label: 'Node of the icon that opens Shipments'
+    invoices_tile_nid:
+      type: integer
+      label: 'Node of the icon that opens Invoices'
 
     # The rate, once, for the whole company. Which suppliers charge it is a
     # separate question answered on each contact card -- see src/Vat.php.
     vat_rate:
       type: float
       label: 'Standard VAT rate, as a percentage'
+    invoice_last_number:
+      type: integer
+      label: 'Last tax invoice number issued (sheet or ERP)'
 
     # Legal identity, printed on proformas and purchase orders. Edited on
     # /admin/config/tec/company. See src/Company.php.

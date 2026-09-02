@@ -18,6 +18,9 @@
 .tec-proforma-print .region-tabs,
 .tec-proforma-print .status-messages,
 .tec-proforma-print .messages-list,
+.tec-proforma-print .wrap-messages,
+.tec-proforma-print [data-drupal-messages],
+.tec-proforma-print .alert,
 .tec-proforma-print .block-page-title-block,
 .tec-proforma-print .page-header,
 .tec-proforma-print .page-title {
@@ -258,7 +261,25 @@ body.tec-proforma-print,
   display: none !important;
 }
 
-.tec-proforma__bank {
+.tec-portal--tax-invoice .tec-portal__table {
+  table-layout: fixed;
+}
+
+.tec-tax__col-desc {
+  width: auto;
+}
+
+.tec-tax__col-qty {
+  width: 18mm;
+}
+
+.tec-tax__col-price {
+  width: 28mm;
+}
+
+.tec-tax__col-amt {
+  width: 36mm;
+}
   margin: 4mm 0 0;
   padding-top: 3mm;
   border-top: 1px solid #c8c8c8;

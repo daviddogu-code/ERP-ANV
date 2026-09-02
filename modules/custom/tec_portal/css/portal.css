@@ -103,6 +103,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+.tec-inv-list .tec-portal__table th.tec-inv-amount,
+.tec-inv-list .tec-portal__table td.tec-inv-amount {
+  white-space: nowrap;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .tec-portal__back {
   display: inline-block;
   margin: 0 0 0.75rem;
@@ -114,6 +121,11 @@
   align-items: center;
   gap: 0.75rem;
   margin: 0 0 0.75rem;
+}
+
+.tec-portal__order-no {
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .tec-portal__order-cell {
@@ -235,6 +247,34 @@ a.button.tec-portal__place {
   width: 100%;
   max-width: 72rem;
   box-sizing: border-box;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.tec-portal--place .tec-portal__table,
+.tec-portal--place .gin-table-scroll-wrapper,
+.tec-portal--place .gin-layer-wrapper {
+  margin-bottom: 0;
+}
+
+.tec-portal--place .gin-layer-wrapper {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tec-portal--place .form-actions,
+.tec-portal--place .form-actions.form-wrapper {
+  margin: 0;
+  padding: 0;
+  align-self: flex-start;
+}
+
+.tec-portal--place .form-actions .button,
+.tec-portal--place .form-actions .form-submit {
+  margin-block: 0;
 }
 
 .tec-portal--place .tec-portal__group > .fieldset-wrapper,
@@ -248,6 +288,15 @@ a.button.tec-portal__place {
   table-layout: fixed;
   width: 100%;
   max-width: none;
+}
+
+.tec-portal--place .tec-inv-list .tec-portal__table {
+  table-layout: auto;
+}
+
+.tec-inv-list .tec-portal__table th.tec-inv-amount,
+.tec-inv-list .tec-portal__table td.tec-inv-amount {
+  width: 1%;
 }
 
 .tec-portal--place .tec-portal__col-image {

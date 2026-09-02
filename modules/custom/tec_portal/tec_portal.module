@@ -27,6 +27,7 @@ use Drupal\tec_portal\Form\NewShipmentForm;
 use Drupal\tec_portal\PortalOrder;
 use Drupal\tec_portal\Proforma;
 use Drupal\tec_portal\Shipment;
+use Drupal\tec_portal\TaxInvoice;
 use Drupal\user\UserInterface;
 use Drupal\views\ViewExecutable;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -131,7 +132,7 @@ function tec_portal_entity_access(EntityInterface $entity, $operation, AccountIn
       : $cache->andIf(AccessResult::forbidden('Your company does not buy this brand.'));
   }
 
-  if (in_array($type, ['tec_inventory', 'media', 'node', 'tec_shipment', 'tec_ship_item'], TRUE)) {
+  if (in_array($type, ['tec_inventory', 'media', 'node', 'tec_shipment', 'tec_ship_item', 'tec_invoice'], TRUE)) {
     return $cache->andIf(AccessResult::forbidden('Portal customers cannot see factory records.'));
   }
 
@@ -147,7 +148,7 @@ function tec_portal_entity_create_access(AccountInterface $account, array $conte
     return AccessResult::neutral();
   }
   $type = $context['entity_type_id'] ?? '';
-  if (in_array($type, ['tec_order', 'tec_line_item', 'tec_product', 'tec_crm', 'tec_inventory', 'taxonomy_term', 'node', 'media', 'tec_shipment', 'tec_ship_item'], TRUE)) {
+  if (in_array($type, ['tec_order', 'tec_line_item', 'tec_product', 'tec_crm', 'tec_inventory', 'taxonomy_term', 'node', 'media', 'tec_shipment', 'tec_ship_item', 'tec_invoice'], TRUE)) {
     return $companies->cache($account)
       ->andIf(AccessResult::forbidden('Portal customers cannot create factory records. New orders go through /my/order/new.'));
   }
@@ -397,6 +398,18 @@ function tec_portal_entity_query_tec_inventory_alter(QueryInterface $query): voi
 }
 
 /**
+ * Implements hook_entity_query_tec_invoice_alter().
+ */
+function tec_portal_entity_query_tec_invoice_alter(QueryInterface $query): void {
+  $companies = _tec_portal_company();
+  $account = \Drupal::currentUser();
+  if (!$companies->isPortalCustomer($account) || !CustomerCompany::queryChecksAccess($query)) {
+    return;
+  }
+  $query->condition('id', 0);
+}
+
+/**
  * Implements hook_entity_query_tec_line_item_alter().
  */
 function tec_portal_entity_query_tec_line_item_alter(QueryInterface $query): void {
@@ -567,7 +580,7 @@ function _tec_portal_place_order_link(EntityInterface $company): array {
     '#attributes' => ['class' => ['tec-factory-company-actions']],
     'order' => [
       '#type' => 'link',
-      '#title' => t('Place an order'),
+      '#title' => t('New order'),
       '#url' => _tec_portal_place_order_url($company),
       '#attributes' => [
         'class' => ['btn-default', 'specific-flag'],
@@ -606,7 +619,7 @@ function _tec_portal_new_shipment_link(EntityInterface $company): array {
 function _tec_portal_place_order_header(int $company_id): string {
   $order = Url::fromRoute('tec_portal.factory_place', ['tec_crm' => $company_id])->toString();
   $html = '<div class="text-align-right tec-factory-company-actions">'
-    . '<div class="btn-default specific-flag"><a href="' . htmlspecialchars($order, ENT_QUOTES) . '">' . t('Place an order') . '</a></div>';
+    . '<div class="btn-default specific-flag"><a href="' . htmlspecialchars($order, ENT_QUOTES) . '">' . t('New order') . '</a></div>';
   if (Shipment::typesExist()) {
     $ship = Url::fromRoute('tec_portal.shipment_new', ['tec_crm' => $company_id])->toString();
     $html .= '<div class="btn-default specific-flag"><a href="' . htmlspecialchars($ship, ENT_QUOTES) . '">' . t('New shipment') . '</a></div>';
@@ -835,6 +848,26 @@ function tec_portal_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'tec-portal-shipment-doc',
     ],
+    'tec_portal_tax_invoice' => [
+      'variables' => [
+        'number' => '',
+        'date' => '',
+        'seller_name' => '',
+        'seller_lines' => [],
+        'seller_country' => '',
+        'seller_phone' => '',
+        'seller_email' => '',
+        'seller_tax_id' => '',
+        'buyer_name' => '',
+        'buyer_lines' => [],
+        'buyer_country' => '',
+        'buyer_tax_id' => '',
+        'buyer_phone' => '',
+        'bank' => [],
+        'lines' => [],
+      ],
+      'template' => 'tec-portal-tax-invoice',
+    ],
   ];
 }
 
@@ -844,15 +877,25 @@ function tec_portal_theme($existing, $type, $theme, $path) {
 function tec_portal_preprocess_html(array &$variables) {
   $route = \Drupal::routeMatch()->getRouteName();
   if ($route === 'tec_portal.proforma') {
+    \Drupal::messenger()->deleteAll();
     $variables['attributes']['class'][] = 'tec-proforma-print';
     $order = \Drupal::routeMatch()->getParameter('tec_order');
     $variables['head_title'] = ['title' => Proforma::fileTitle($order)];
     return;
   }
   if ($route === 'tec_portal.shipment_packing' || $route === 'tec_portal.shipment_invoice') {
+    \Drupal::messenger()->deleteAll();
     $variables['attributes']['class'][] = 'tec-proforma-print';
     $shipment = \Drupal::routeMatch()->getParameter('tec_shipment');
     $kind = $route === 'tec_portal.shipment_invoice' ? 'invoice' : 'packing';
     $variables['head_title'] = ['title' => Shipment::fileTitle($shipment, $kind)];
+    return;
+  }
+  if ($route === 'tec_portal.invoice_print') {
+    \Drupal::messenger()->deleteAll();
+    $variables['attributes']['class'][] = 'tec-proforma-print';
+    $number = \Drupal::routeMatch()->getParameter('number');
+    $invoice = \Drupal\tec_portal\Controller\InvoicePrintController::loadIssued($number);
+    $variables['head_title'] = ['title' => TaxInvoice::fileTitle($invoice)];
   }
 }

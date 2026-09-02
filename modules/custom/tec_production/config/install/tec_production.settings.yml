@@ -11,10 +11,14 @@ purchase_tile_nid: 0
 po_control_tile_nid: 0
 supplier_orders_tile_nid: 0
 shipments_tile_nid: 0
+invoices_tile_nid: 0
 # Thailand's standard rate, as a percentage. Here rather than on each supplier
 # card so that the day it changes it is changed once. Which suppliers charge it
 # is a separate question, answered per contact -- see src/Vat.php.
 vat_rate: 7
+# Last 036x on the Google Sheet the morning this ERP takes over. Next Issue
+# invoice is this plus one (361 → 0362). 0 is a test book starting at 0001.
+invoice_last_number: 0
 legal_name: 'Acta Non Verba Co., LTD.'
 tax_id: ''
 phone: '+66 (0) 910 699 203'

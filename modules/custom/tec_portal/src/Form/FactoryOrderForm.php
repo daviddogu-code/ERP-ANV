@@ -7,7 +7,10 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\tec_portal\Shipment;
+use Drupal\tec_portal\InvoiceList;
+use Drupal\tec_portal\PortalOrder;
+use Drupal\tec_portal\TaxInvoice;
+use Drupal\tec_production\SalesStatus;
 
 /**
  * One sales order on /o/order/{id}: same Open grid as /my, for the factory.
@@ -28,16 +31,19 @@ class FactoryOrderForm extends OrderForm {
     $form = parent::buildForm($form, $form_state, $tec_order);
     $id = (int) ($form_state->get('order_id') ?: 0);
     $order = $id ? $this->entityTypeManager->getStorage('tec_order')->load($id) : NULL;
-    $company = $order ? $this->companyOf($order) : NULL;
-    if ($company && Shipment::typesExist() && isset($form['meta'])) {
-      $form['meta']['shipment'] = [
+    if ($order && PortalOrder::hasProforma($order) && TaxInvoice::typesExist() && isset($form['meta'])) {
+      $form['meta']['deposit'] = [
         '#type' => 'link',
-        '#title' => $this->t('New shipment'),
-        '#url' => Url::fromRoute('tec_portal.shipment_new', ['tec_crm' => $company->id()]),
+        '#title' => $this->t('Record deposit'),
+        '#url' => Url::fromRoute('tec_portal.deposit', ['tec_order' => $order->id()]),
         '#attributes' => [
           'class' => ['button', 'tec-portal__proforma'],
+          'target' => '_blank',
+          'rel' => 'noopener noreferrer',
         ],
       ];
+      $form['deposits'] = (new InvoiceList())->orderPage($order);
+      $form['deposits']['#weight'] = 50;
     }
     return $form;
   }
@@ -57,6 +63,13 @@ class FactoryOrderForm extends OrderForm {
     }
     $result->addCacheableDependency($tec_order);
     return $result->andIf($tec_order->access('view', $account, TRUE));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function statusElement($order): array {
+    return SalesStatus::pill(SalesStatus::of($order));
   }
 
   /**

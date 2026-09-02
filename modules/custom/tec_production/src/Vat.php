@@ -158,6 +158,25 @@ final class Vat {
   }
 
   /**
+   * Split a bank amount that already includes VAT.
+   *
+   * A deposit is typed as what arrived (54,570), not the 51,000 base the
+   * sheet used to show. Net is gross / (1 + rate/100); VAT is the rest, so
+   * the two always add back to the bank figure. Export (rate 0) is all net.
+   *
+   * @return array{net: float, rate: float, vat: float, gross: float}
+   */
+  public static function fromGross(float $gross, float $rate): array {
+    $gross = round($gross, 2);
+    if ($rate <= 0) {
+      return ['net' => $gross, 'rate' => $rate, 'vat' => 0.0, 'gross' => $gross];
+    }
+    $net = round($gross / (1 + $rate / 100), 2);
+    $vat = round($gross - $net, 2);
+    return ['net' => $net, 'rate' => $rate, 'vat' => $vat, 'gross' => $gross];
+  }
+
+  /**
    * The money lines at the foot of an order.
    *
    * Returns net, rate, vat and gross, or NULL if the order is not one this

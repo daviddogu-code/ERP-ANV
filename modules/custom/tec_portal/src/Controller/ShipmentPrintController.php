@@ -5,13 +5,17 @@ namespace Drupal\tec_portal\Controller;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\tec_portal\Shipment;
 use Drupal\tec_portal\ShipmentPrint;
+use Drupal\tec_portal\TaxInvoice;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
- * Printed packing list and invoice at /o/ship/{id}/pl|inv/print.
+ * Printed packing list, and a redirect from the old live invoice URL.
  *
- * Factory only. Same access idea as /o/order, not the portal proforma.
+ * Factory only. Issue invoice on the shipment is what creates the 036x.
+ * Print does not issue a number.
  */
 class ShipmentPrintController extends ControllerBase {
 
@@ -39,8 +43,16 @@ class ShipmentPrintController extends ControllerBase {
     return ShipmentPrint::packing($tec_shipment);
   }
 
-  public function invoice($tec_shipment): array {
-    return ShipmentPrint::invoice($tec_shipment);
+  /**
+   * Old live invoice URL: open the issued 036x, or send them back to Issue.
+   */
+  public function invoice($tec_shipment): RedirectResponse {
+    $issued = TaxInvoice::typesExist() ? TaxInvoice::ofShipment($tec_shipment) : NULL;
+    if ($issued) {
+      return new RedirectResponse(Url::fromUri('internal:' . TaxInvoice::printPath($issued))->toString());
+    }
+    $this->messenger()->addWarning($this->t('Issue Tax invoice / receipt on the shipment first. Print does not create a tax invoice.'));
+    return new RedirectResponse(Url::fromUri('internal:' . Shipment::viewPath($tec_shipment))->toString());
   }
 
   public function packingTitle($tec_shipment): string {
@@ -48,7 +60,8 @@ class ShipmentPrintController extends ControllerBase {
   }
 
   public function invoiceTitle($tec_shipment): string {
-    return Shipment::fileTitle($tec_shipment, 'invoice');
+    $issued = TaxInvoice::typesExist() ? TaxInvoice::ofShipment($tec_shipment) : NULL;
+    return $issued ? TaxInvoice::fileTitle($issued) : Shipment::fileTitle($tec_shipment, 'invoice');
   }
 
 }

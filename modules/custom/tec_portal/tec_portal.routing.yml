@@ -151,3 +151,60 @@ tec_portal.shipment_invoice:
     parameters:
       tec_shipment:
         type: 'entity:tec_shipment'
+
+tec_portal.deposit:
+  path: '/o/order/{tec_order}/deposit'
+  defaults:
+    _form: '\Drupal\tec_portal\Form\DepositForm'
+    _title_callback: '\Drupal\tec_portal\Form\DepositForm::title'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Form\DepositForm::access'
+    tec_order: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+    parameters:
+      tec_order:
+        type: 'entity:tec_order'
+
+tec_portal.deposit_edit:
+  path: '/o/order/{tec_order}/deposit/{tec_invoice}'
+  defaults:
+    _form: '\Drupal\tec_portal\Form\DepositForm'
+    _title_callback: '\Drupal\tec_portal\Form\DepositForm::title'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Form\DepositForm::access'
+    tec_order: \d+
+    tec_invoice: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+    parameters:
+      tec_order:
+        type: 'entity:tec_order'
+      tec_invoice:
+        type: 'entity:tec_invoice'
+
+tec_portal.invoice_list:
+  path: '/o/inv'
+  defaults:
+    _controller: '\Drupal\tec_portal\Controller\InvoiceListController::view'
+    _title: 'Invoices'
+    _title_callback: '\Drupal\tec_portal\Controller\InvoiceListController::title'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Controller\InvoiceListController::access'
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+
+tec_portal.invoice_print:
+  path: '/o/inv/{number}/print'
+  defaults:
+    _controller: '\Drupal\tec_portal\Controller\InvoicePrintController::view'
+    _title_callback: '\Drupal\tec_portal\Controller\InvoicePrintController::title'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Controller\InvoicePrintController::access'
+    number: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE

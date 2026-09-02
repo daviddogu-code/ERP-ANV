@@ -121,6 +121,22 @@ class CompanySettingsForm extends ConfigFormBase {
       '#description' => $this->t('Thailand charges 7%. This is the rate, once, for the whole company; sales to Thailand use it, sales elsewhere are 0%, and which suppliers charge it is a separate answer on each contact card, under VAT treatment. Changing it here affects orders raised from now on: an order keeps the rate it was raised under, so nothing already printed and sent moves.'),
     ];
 
+    $form['invoices'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Tax invoices'),
+      '#open' => TRUE,
+      '#weight' => -15,
+      '#description' => $this->t('One running number for every issued tax invoice, deposits and dispatches, Thailand and export. The Google Sheet keeps the live book until the morning you switch.'),
+    ];
+    $form['invoices']['invoice_last_number'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Last tax invoice issued'),
+      '#default_value' => Company::invoiceLastNumber(),
+      '#min' => 0,
+      '#step' => 1,
+      '#description' => $this->t('The next Issue invoice uses this plus one, written as four digits. 361 becomes 0362. Set it to the last number on the sheet the morning you switch. On this test site pick a number that will not collide with the live book.'),
+    ];
+
     $form['bank'] = [
       '#type' => 'details',
       '#title' => $this->t('Bank'),
@@ -217,6 +233,7 @@ class CompanySettingsForm extends ConfigFormBase {
     $settings->set('bank_swift', strtoupper(trim((string) $form_state->getValue('bank_swift'))));
 
     $settings->set('vat_rate', (float) $form_state->getValue('vat_rate'));
+    $settings->set('invoice_last_number', max(0, (int) $form_state->getValue('invoice_last_number')));
 
     // Cast to a plain integer. An empty box means no icon rather than node
     // zero, and both come out of the cast as 0, which is what the redirect

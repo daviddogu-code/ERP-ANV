@@ -11,6 +11,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\tec_portal\CustomerCompany;
 use Drupal\tec_portal\Shipment;
+use Drupal\tec_portal\TaxInvoice;
 use Drupal\tec_production\LineItemDisplay;
 use Drupal\tec_production\SalesStatus;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -89,6 +90,8 @@ class ShipmentForm extends FormBase {
     $form_state->set('shipment_id', (int) $tec_shipment->id());
     $company = Shipment::customer($tec_shipment);
     $rows = Shipment::loadRows(Shipment::customerId($tec_shipment), (int) $tec_shipment->id());
+    $issued = TaxInvoice::ofShipment($tec_shipment);
+    $locked = $issued !== NULL;
 
     $form['#tree'] = TRUE;
     $form['#attributes']['class'][] = 'tec-portal';
@@ -118,29 +121,46 @@ class ShipmentForm extends FormBase {
           'target' => '_blank',
         ],
       ],
-      'invoice' => [
+    ];
+    if ($issued) {
+      $form['meta']['invoice'] = [
         '#type' => 'link',
-        '#title' => $this->t('Print invoice'),
-        '#url' => Url::fromUri('internal:' . Shipment::invoicePath($tec_shipment)),
+        '#title' => $this->t('Print invoice @number', [
+          '@number' => TaxInvoice::formatNumber(TaxInvoice::number($issued)),
+        ]),
+        '#url' => Url::fromUri('internal:' . TaxInvoice::printPath($issued)),
         '#attributes' => [
           'class' => ['button', 'tec-portal__proforma'],
           'target' => '_blank',
+          'rel' => 'noopener noreferrer',
         ],
-      ],
-    ];
+      ];
+    }
 
     $sold = Shipment::soldTo($tec_shipment);
     $ship = Shipment::shipTo($tec_shipment);
-    $form['facts'] = [
-      '#markup' => '<p class="tec-portal__help">'
-        . $this->t('Date @date. Incoterms @incoterms. Sold to @sold. Ship to @ship. Type how many of each line go on this pickup. Remaining is the order minus what is already on other shipments.', [
-          '@date' => Shipment::dateValue($tec_shipment) ?: '—',
-          '@incoterms' => Shipment::incoterms($tec_shipment),
-          '@sold' => $sold ? $sold->label() : '—',
-          '@ship' => $ship ? $ship->label() : '—',
-        ])
-        . '</p>',
-    ];
+    if ($locked) {
+      $form['facts'] = [
+        '#markup' => '<p class="tec-portal__nothing">'
+          . $this->t('Tax invoice @number is issued. Quantities cannot be changed. Print opens that paper. A mistake is a credit note later, not a rewrite.', [
+            '@number' => TaxInvoice::formatNumber(TaxInvoice::number($issued)),
+          ])
+          . '</p>',
+        '#allowed_tags' => ['p'],
+      ];
+    }
+    else {
+      $form['facts'] = [
+        '#markup' => '<p class="tec-portal__help">'
+          . $this->t('Date @date. Incoterms @incoterms. Sold to @sold. Ship to @ship. Type how many of each line go on this pickup. Remaining is the order minus what is already on other shipments. Save quantities as often as you need. Issue Tax invoice / receipt when this load is right: that spends the next tax-invoice number and freezes the paper.', [
+            '@date' => Shipment::dateValue($tec_shipment) ?: '—',
+            '@incoterms' => Shipment::incoterms($tec_shipment),
+            '@sold' => $sold ? $sold->label() : '—',
+            '@ship' => $ship ? $ship->label() : '—',
+          ])
+          . '</p>',
+      ];
+    }
 
     $form['shown'] = [
       '#type' => 'container',
@@ -240,33 +260,51 @@ class ShipmentForm extends FormBase {
           '#plain_text' => number_format($row['remaining'], 0),
           '#wrapper_attributes' => ['class' => ['tec-portal__num']],
         ],
-        'qty' => [
-          '#type' => 'number',
-          '#title' => $this->t('Quantity this shipment'),
-          '#title_display' => 'invisible',
-          '#min' => 0,
-          '#max' => $row['remaining'],
-          '#step' => 1,
-          '#default_value' => $here,
-          '#attributes' => ['class' => ['tec-portal__qty-box']],
-          '#wrapper_attributes' => ['class' => ['tec-portal__qty', 'tec-portal__num']],
-        ],
+        'qty' => $locked
+          ? [
+            '#plain_text' => number_format($here, 0),
+            '#wrapper_attributes' => ['class' => ['tec-portal__num']],
+          ]
+          : [
+            '#type' => 'number',
+            '#title' => $this->t('Quantity this shipment'),
+            '#title_display' => 'invisible',
+            '#min' => 0,
+            '#max' => $row['remaining'],
+            '#step' => 1,
+            '#default_value' => $here,
+            '#attributes' => ['class' => ['tec-portal__qty-box']],
+            '#wrapper_attributes' => ['class' => ['tec-portal__qty', 'tec-portal__num']],
+          ],
       ];
     }
     $form_state->set('allowed_lines', $allowed);
+    $form_state->set('shipment_locked', $locked);
 
-    if ($rows) {
+    if ($rows && !$locked) {
       $form['actions'] = ['#type' => 'actions'];
       $form['actions']['submit'] = [
         '#type' => 'submit',
         '#value' => $this->t('Save quantities'),
         '#button_type' => 'primary',
       ];
+      $form['actions']['issue'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Issue Tax invoice / receipt'),
+        '#submit' => ['::submitIssue'],
+        '#attributes' => [
+          'formtarget' => '_blank',
+          'onclick' => 'if (!confirm("Issue the Tax invoice / receipt for this dispatch? The number cannot be reused and quantities cannot be changed afterwards.")) { return false; } window.setTimeout(function () { window.location.reload(); }, 2000);',
+        ],
+      ];
     }
     return $form;
   }
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    if ($form_state->get('shipment_locked')) {
+      return;
+    }
     $allowed = $form_state->get('allowed_lines') ?: [];
     $values = $form_state->getValue('lines') ?: [];
     foreach ($allowed as $lid => $info) {
@@ -283,10 +321,52 @@ class ShipmentForm extends FormBase {
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $shipment = $this->persistQuantities($form_state);
+    if (!$shipment) {
+      return;
+    }
+    $this->messenger()->addStatus($this->t('Quantities saved. Packing list uses these lines. Issue Tax invoice / receipt when this load is right.'));
+    $this->stayOnShipment($form_state, (int) $shipment->id());
+  }
+
+  /**
+   * Save quantities, then spend the next 036x for this dispatch.
+   */
+  public function submitIssue(array &$form, FormStateInterface $form_state) {
+    $shipment = $this->persistQuantities($form_state);
+    if (!$shipment) {
+      return;
+    }
+    try {
+      $invoice = TaxInvoice::issueForShipment($shipment);
+      $path = TaxInvoice::printPath($invoice);
+      if ($path !== '') {
+        $form_state->setIgnoreDestination();
+        $form_state->setRedirectUrl(Url::fromUri('internal:' . $path));
+        return;
+      }
+    }
+    catch (\InvalidArgumentException $e) {
+      $this->messenger()->addError($e->getMessage());
+    }
+    catch (\RuntimeException $e) {
+      $this->messenger()->addError($e->getMessage());
+    }
+    $this->stayOnShipment($form_state, (int) $shipment->id());
+  }
+
+  /**
+   * Write ship-item quantities. Does not issue a tax invoice.
+   */
+  private function persistQuantities(FormStateInterface $form_state): ?EntityInterface {
     $id = (int) $form_state->get('shipment_id');
     $shipment = $this->entityTypeManager->getStorage(Shipment::TYPE)->load($id);
     if (!Shipment::isShipment($shipment)) {
-      return;
+      return NULL;
+    }
+    if (TaxInvoice::shipmentIsLocked($shipment)) {
+      $this->messenger()->addWarning($this->t('This dispatch already has a tax invoice. Quantities cannot be changed.'));
+      return $shipment;
     }
     $allowed = $form_state->get('allowed_lines') ?: [];
     $values = $form_state->getValue('lines') ?: [];
@@ -329,7 +409,10 @@ class ShipmentForm extends FormBase {
     if (Shipment::isShipment($shipment)) {
       Shipment::refreshTitle($shipment);
     }
-    $this->messenger()->addStatus($this->t('Quantities saved. Packing list and invoice use the same lines.'));
+    return $shipment;
+  }
+
+  private function stayOnShipment(FormStateInterface $form_state, int $id): void {
     $form_state->setIgnoreDestination();
     $form_state->setRedirect('tec_portal.shipment', ['tec_shipment' => $id]);
   }
