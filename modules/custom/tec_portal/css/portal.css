@@ -128,6 +128,31 @@
   font-weight: 700;
 }
 
+/* Other charges: red number, not the catalogue-link blue. */
+.tec-portal__order-no--charges,
+a.tec-portal__order-no--charges,
+a.tec-portal__order-no--charges:link,
+a.tec-portal__order-no--charges:visited,
+a.tec-portal__order-no--charges:hover,
+a.tec-portal__order-no--charges:focus,
+.view-tec-orders-orders a.tec-portal__order-no--charges {
+  color: #c1121f;
+}
+
+.tec-portal__charges-tag {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid #c1121f;
+  border-radius: 11px;
+  color: #c1121f;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 .tec-portal__order-cell {
   display: flex;
   align-items: center;
@@ -451,6 +476,50 @@ a.button.tec-portal__place {
   max-width: 90rem;
 }
 
-.tec-ship-list .tec-portal__table {
-  max-width: none;
+.tec-portal--place .tec-portal__table--charges .tec-portal__col-name {
+  width: auto;
 }
+
+.tec-portal--place .tec-portal__table--charges .tec-portal__col-qty {
+  width: 5.75rem;
+}
+
+.tec-portal--place .tec-portal__table--charges .tec-portal__col-price {
+  width: 7.5rem;
+}
+
+.tec-portal--place .tec-portal__table--charges .tec-portal__col-total {
+  width: 8.5rem;
+}
+
+.tec-portal__table--charges td.tec-portal__charge-desc-cell .form-item,
+.tec-portal__table--charges td.tec-portal__charge-desc-cell .js-form-item,
+.tec-portal__table--charges td.tec-portal__charge-desc-cell .form-group {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.tec-portal__charge-desc-cell .tec-portal__charge-desc {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+.tec-portal--place td.tec-portal__charge-price-cell .form-item,
+.tec-portal--place td.tec-portal__charge-price-cell .js-form-item,
+.tec-portal--place td.tec-portal__charge-price-cell .form-group {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.tec-portal__table--charges .tec-portal__col-price input,
+.tec-portal__table--charges .tec-portal__col-qty input {
+  width: 6.5rem;
+  max-width: 100%;
+  text-align: right;
+}
+

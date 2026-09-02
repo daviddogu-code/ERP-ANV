@@ -29,6 +29,11 @@
   }
 
   function priceOf(row, qty) {
+    const priceInput = row.querySelector('.tec-portal__charge-price');
+    if (priceInput) {
+      const typed = parseFloat(priceInput.value);
+      return isNaN(typed) ? 0 : typed;
+    }
     const stamped = parseFloat(qty.getAttribute('data-price') || row.getAttribute('data-price'));
     if (!isNaN(stamped)) {
       return stamped;
@@ -39,7 +44,7 @@
   }
 
   function quantityOf(row) {
-    const qty = row.querySelector('.tec-portal__qty input, input[type="number"]');
+    const qty = row.querySelector('.tec-portal__charge-qty, .tec-portal__qty input, input[type="number"]');
     if (qty) {
       return parseFloat(qty.value) || 0;
     }

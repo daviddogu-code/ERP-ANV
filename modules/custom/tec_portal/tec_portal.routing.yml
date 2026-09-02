@@ -50,6 +50,21 @@ tec_portal.factory_place:
       tec_crm:
         type: 'entity:tec_crm'
 
+tec_portal.other_charges:
+  path: '/customer/{tec_crm}/charge/new'
+  defaults:
+    _form: '\Drupal\tec_portal\Form\OtherChargesForm'
+    _title: 'Other charges'
+  requirements:
+    _custom_access: '\Drupal\tec_portal\Form\OtherChargesForm::access'
+    tec_crm: \d+
+  options:
+    _admin_route: FALSE
+    no_cache: TRUE
+    parameters:
+      tec_crm:
+        type: 'entity:tec_crm'
+
 tec_portal.factory_order:
   path: '/o/order/{tec_order}'
   defaults:

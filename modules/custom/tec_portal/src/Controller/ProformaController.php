@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\tec_portal\OtherCharges;
 use Drupal\tec_portal\PortalOrder;
 use Drupal\tec_portal\Proforma;
 
@@ -28,6 +29,9 @@ class ProformaController extends ControllerBase {
       || $tec_order->getEntityTypeId() !== 'tec_order'
       || $tec_order->bundle() !== 'tec_sales_order'
       || !PortalOrder::hasProforma($tec_order)) {
+      return AccessResult::forbidden()->addCacheContexts(['user.roles', 'user']);
+    }
+    if ($companies->isPortalCustomer($account) && OtherCharges::isOrder($tec_order)) {
       return AccessResult::forbidden()->addCacheContexts(['user.roles', 'user']);
     }
     $result->addCacheableDependency($tec_order);

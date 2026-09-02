@@ -538,6 +538,9 @@ class ProductionQueueForm extends FormBase {
 
     $rows = [];
     foreach ($storage->loadMultiple($ids) as $order) {
+      if ($order->hasField('field_tec_other_charges') && (bool) $order->get('field_tec_other_charges')->value) {
+        continue;
+      }
       $status = SalesStatus::of($order);
       $total = 0.0;
       $cats = [];

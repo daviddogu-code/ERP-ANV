@@ -102,6 +102,46 @@ trait PortalLineTable {
   }
 
   /**
+   * Four-column foot for Other charges: Description | Qty | Price | Total.
+   */
+  protected function chargeVatFooter(float $qty, float $net, ?float $rate): array {
+    if ($rate === NULL) {
+      return [$this->chargeTotalsFooter($this->t('Total'), $net, $qty, 'tec-portal__sum-amount')];
+    }
+    $vat = Vat::on($net, $rate);
+    $gross = round($net + $vat, 2);
+    return [
+      $this->chargeTotalsFooter($this->t('Subtotal'), $net, $qty, 'tec-portal__sum-net'),
+      $this->chargeTotalsFooter($this->t('VAT @rate%', ['@rate' => Vat::formatRate($rate)]), $vat, NULL, 'tec-portal__sum-vat'),
+      $this->chargeTotalsFooter($this->t('Total'), $gross, NULL, 'tec-portal__sum-gross', TRUE),
+    ];
+  }
+
+  /**
+   * One Other charges footer row.
+   */
+  protected function chargeTotalsFooter($label, float $amount, ?float $qty, string $amount_class, bool $total = FALSE): array {
+    $num = ['tec-portal__num'];
+    return [
+      'class' => $total ? ['tec-portal__vat-row', 'tec-portal__vat-row--total'] : ['tec-portal__vat-row'],
+      'data' => [
+        ['data' => $label, 'class' => ['tec-portal__col-name', 'tec-portal__foot-label']],
+        [
+          'data' => $qty === NULL
+            ? ''
+            : ['#markup' => '<span class="tec-portal__sum-qty">' . Html::escape(number_format($qty, 0)) . '</span>'],
+          'class' => array_merge($num, ['tec-portal__col-qty']),
+        ],
+        ['data' => '', 'class' => array_merge($num, ['tec-portal__col-price'])],
+        [
+          'data' => ['#markup' => '<span class="' . Html::escape($amount_class) . '">' . Html::escape($this->money($amount)) . '</span>'],
+          'class' => array_merge($num, ['tec-portal__col-total']),
+        ],
+      ],
+    ];
+  }
+
+  /**
    * VAT % for a live grid, from the customer's country. NULL if none yet.
    */
   protected function vatRateFromContact(?EntityInterface $company): ?float {

@@ -10,6 +10,7 @@ use Drupal\Core\Url;
 use Drupal\tec_portal\Catalogue;
 use Drupal\tec_portal\CustomerCompany;
 use Drupal\tec_portal\OrderLineGrid;
+use Drupal\tec_portal\OtherCharges;
 use Drupal\tec_portal\PortalLineTable;
 use Drupal\tec_portal\PortalOrder;
 use Drupal\tec_production\Vat;
@@ -27,6 +28,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class OrderForm extends FormBase {
 
   use PortalLineTable;
+  use OtherChargesLines;
 
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
@@ -69,6 +71,11 @@ class OrderForm extends FormBase {
 
     $form['back'] = $this->backLink($tec_order);
 
+    $charges = OtherCharges::isOrder($tec_order);
+    $number_classes = ['tec-portal__order-no'];
+    if ($charges) {
+      $number_classes[] = 'tec-portal__order-no--charges';
+    }
     $form['meta'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['tec-portal__meta']],
@@ -76,10 +83,18 @@ class OrderForm extends FormBase {
         '#type' => 'html_tag',
         '#tag' => 'strong',
         '#value' => (string) $tec_order->label(),
-        '#attributes' => ['class' => ['tec-portal__order-no']],
+        '#attributes' => ['class' => $number_classes],
       ],
-      'status' => $this->statusElement($tec_order),
     ];
+    if ($charges) {
+      $form['meta']['kind'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#value' => $this->t('Other charges'),
+        '#attributes' => ['class' => ['tec-portal__charges-tag']],
+      ];
+    }
+    $form['meta']['status'] = $this->statusElement($tec_order);
     if (PortalOrder::hasProforma($tec_order)) {
       $form['meta']['proforma'] = [
         '#type' => 'link',
@@ -91,6 +106,13 @@ class OrderForm extends FormBase {
           'title' => $this->t('Print Proforma'),
         ],
       ];
+    }
+
+    if ($charges) {
+      if (!$this->companies->isFactory($this->currentUser())) {
+        throw new NotFoundHttpException();
+      }
+      return $this->buildChargeOrderForm($form, $form_state, $tec_order, $open);
     }
 
     if ($open) {
@@ -159,19 +181,37 @@ class OrderForm extends FormBase {
    * Saves quantities and stays on the order.
    */
   public function submitSave(array &$form, FormStateInterface $form_state) {
-    $order = $this->applyQuantities($form_state);
+    $order = $this->isChargeSubmit($form_state)
+      ? $this->applyChargeLines($form_state)
+      : $this->applyQuantities($form_state);
     if (!$order) {
       return;
     }
-    $this->messenger()->addStatus($this->t('Quantities saved.'));
+    $this->messenger()->addStatus($this->isChargeSubmit($form_state)
+      ? $this->t('Lines saved.')
+      : $this->t('Quantities saved.'));
     $this->redirectToOrder($form_state, $order);
+  }
+
+  /**
+   * Adds a blank Other charges row. Does not write the order yet.
+   */
+  public function submitAddLine(array &$form, FormStateInterface $form_state) {
+    $form_state->set('charge_blanks', ((int) $form_state->get('charge_blanks')) + 1);
+    $form_state->setRebuild();
   }
 
   /**
    * Saves quantities, drops zeros, then seals the order.
    */
   public function submitConfirm(array &$form, FormStateInterface $form_state) {
-    $order = $this->applyQuantities($form_state);
+    if ($this->isChargeSubmit($form_state) && !$this->completeChargeRows($form_state)) {
+      $this->messenger()->addWarning($this->t('Nothing to confirm: add a description, a quantity and a price.'));
+      return;
+    }
+    $order = $this->isChargeSubmit($form_state)
+      ? $this->applyChargeLines($form_state)
+      : $this->applyQuantities($form_state);
     if (!$order) {
       return;
     }
@@ -180,7 +220,9 @@ class OrderForm extends FormBase {
       $pieces += $this->qtyOf($line);
     }
     if ($pieces < 1) {
-      $this->messenger()->addWarning($this->t('Nothing to confirm: every quantity is 0.'));
+      $this->messenger()->addWarning($this->isChargeSubmit($form_state)
+        ? $this->t('Nothing to confirm: add a description, a quantity and a price.')
+        : $this->t('Nothing to confirm: every quantity is 0.'));
       return;
     }
     $company = $this->companyOf($order);
@@ -204,6 +246,120 @@ class OrderForm extends FormBase {
   }
 
   /**
+   * Whether this submit is the Other charges table, not the catalogue grid.
+   */
+  protected function isChargeSubmit(FormStateInterface $form_state): bool {
+    $order = $this->entityTypeManager->getStorage('tec_order')->load($form_state->get('order_id'));
+    return $order && OtherCharges::isOrder($order);
+  }
+
+  /**
+   * Upserts typed Other charges lines. Empty rows are dropped.
+   */
+  protected function applyChargeLines(FormStateInterface $form_state) {
+    $order = $this->entityTypeManager->getStorage('tec_order')->load($form_state->get('order_id'));
+    if (!$order || $order->bundle() !== 'tec_sales_order' || !OtherCharges::isOrder($order)) {
+      $this->messenger()->addError($this->t('This order is gone.'));
+      return NULL;
+    }
+    $account = $this->currentUser();
+    if (!$this->mayEditOpen($account, $order)) {
+      $this->messenger()->addWarning($this->t('This order can no longer be changed.'));
+      return NULL;
+    }
+
+    $posted = $this->completeChargeRows($form_state);
+    $have = [];
+    foreach ($this->linesOf($order) as $line) {
+      $have[(int) $line->id()] = $line;
+    }
+    $keep = [];
+    $created = [];
+    $uid = (int) $account->id();
+    $storage = $this->entityTypeManager->getStorage('tec_line_item');
+    foreach ($posted as $row) {
+      $existing = ($row['id'] && isset($have[$row['id']])) ? $have[$row['id']] : NULL;
+      if ($existing) {
+        OtherCharges::writeLine($existing, $row['description'], $row['qty'], $row['price']);
+        $keep[] = (int) $existing->id();
+      }
+      else {
+        $line = OtherCharges::makeLine($storage, $row['description'], $row['qty'], $row['price'], $uid);
+        $line->save();
+        $keep[] = (int) $line->id();
+        $created[] = $line;
+      }
+    }
+    foreach ($have as $lid => $line) {
+      if (!in_array($lid, $keep, TRUE)) {
+        $line->delete();
+      }
+    }
+    OtherCharges::mark($order);
+    $order->set('field_tec_line_items', array_values(array_unique($keep)));
+    $order->save();
+    foreach ($created as $line) {
+      $line->set('field_tec_order', $order->id());
+      $line->save();
+    }
+    return $this->entityTypeManager->getStorage('tec_order')->loadUnchanged($order->id()) ?: $order;
+  }
+
+  /**
+   * Other charges while Open: typed lines. After Confirm: the locked table.
+   */
+  protected function buildChargeOrderForm(array $form, FormStateInterface $form_state, $order, bool $open): array {
+    $company = $this->companyOf($order);
+    if ($open) {
+      if ($form_state->get('charge_blanks') === NULL) {
+        $form_state->set('charge_blanks', 1);
+      }
+      $form['help'] = [
+        '#markup' => '<div class="tec-portal__help">'
+          . $this->t('Description, quantity and price. Confirming marks the order Pending payment. The customer pays 100% before work starts. This does not go on a shipment.')
+          . '</div>',
+      ];
+      $rate = $this->vatRateFromOrder($order) ?? $this->vatRateFromContact($company);
+      $this->attachVatSettings($form, $rate);
+      $form['lines'] = $this->chargeLinesTable($this->linesOf($order), (int) $form_state->get('charge_blanks'), $rate);
+      $form['actions'] = ['#type' => 'actions'];
+      $form['actions']['save'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Save lines'),
+        '#submit' => ['::submitSave'],
+      ];
+      $form['actions']['add'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Add line'),
+        '#submit' => ['::submitAddLine'],
+        '#limit_validation_errors' => [],
+      ];
+      $form['actions']['confirm'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Confirm order'),
+        '#button_type' => 'primary',
+        '#submit' => ['::submitConfirm'],
+        '#attributes' => ['class' => ['tec-portal__confirm']],
+      ];
+      return $form;
+    }
+
+    $waiting_pay = PortalOrder::statusOf($order) === PortalOrder::PENDING_DEPOSIT;
+    $form['locked'] = [
+      '#markup' => '<div class="tec-portal__nothing">'
+        . ($waiting_pay
+          ? $this->t('This order can no longer be changed. Issue the tax invoice <strong>after payment is received</strong>. This does not go on a shipment.')
+          : $this->t('This order can no longer be changed. This does not go on a shipment.'))
+        . '</div>',
+      '#allowed_tags' => ['div', 'strong'],
+    ];
+    $rate = $this->vatRateFromOrder($order);
+    $this->attachVatSettings($form, $rate);
+    $form['lines'] = OrderLineGrid::create($this->entityTypeManager)->table($order);
+    return $form;
+  }
+
+  /**
    * Upserts catalogue sizes onto the open order. Quantity 0 removes the line.
    */
   protected function applyQuantities(FormStateInterface $form_state) {
@@ -211,6 +367,9 @@ class OrderForm extends FormBase {
     if (!$order || $order->bundle() !== 'tec_sales_order') {
       $this->messenger()->addError($this->t('This order is gone.'));
       return NULL;
+    }
+    if (OtherCharges::isOrder($order)) {
+      return $this->applyChargeLines($form_state);
     }
     $account = $this->currentUser();
     if (!$this->mayEditOpen($account, $order)) {

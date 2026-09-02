@@ -5,6 +5,7 @@ namespace Drupal\tec_portal\EventSubscriber;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\tec_portal\CustomerCompany;
+use Drupal\tec_portal\OtherCharges;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -75,6 +76,10 @@ final class PortalRedirectSubscriber implements EventSubscriberInterface {
       return Url::fromRoute('tec_portal.home')->toString();
     }
     if (preg_match('#^/tec_order/(\d+)#', $path, $m) || preg_match('#^/o/order/(\d+)#', $path, $m)) {
+      $order = \Drupal::entityTypeManager()->getStorage('tec_order')->load((int) $m[1]);
+      if ($order && OtherCharges::isOrder($order)) {
+        return Url::fromRoute('tec_portal.home')->toString();
+      }
       return Url::fromRoute('tec_portal.order', ['tec_order' => $m[1]])->toString();
     }
     foreach (['/customer/', '/tec_crm/', '/tec_product/', '/tec_line_item/', '/tec_inventory/'] as $prefix) {

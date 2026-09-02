@@ -544,7 +544,7 @@ final class Shipment {
     $source_ids = [];
     foreach ($lines as $line) {
       $ordered = self::orderedQty($line);
-      if ($ordered < 1) {
+      if ($ordered < 1 || OtherCharges::isLine($line)) {
         continue;
       }
       $source_ids[] = (int) $line->id();
@@ -559,7 +559,7 @@ final class Shipment {
           continue;
         }
         $ordered = self::orderedQty($line);
-        if ($ordered < 1) {
+        if ($ordered < 1 || OtherCharges::isLine($line)) {
           continue;
         }
         $lid = (int) $line->id();
@@ -744,6 +744,9 @@ final class Shipment {
     }
     $orders = [];
     foreach ($storage->loadMultiple($ids) as $order) {
+      if (OtherCharges::isOrder($order)) {
+        continue;
+      }
       if (PortalOrder::hasProforma($order) && SalesStatus::of($order) !== SalesStatus::CLOSED) {
         $orders[] = $order;
       }

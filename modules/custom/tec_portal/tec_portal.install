@@ -59,6 +59,7 @@ function tec_portal_install(): void {
   tec_portal_update_8014();
   tec_portal_update_8015();
   tec_portal_update_8016();
+  tec_portal_update_8017();
 }
 
 /**
@@ -948,6 +949,36 @@ function tec_portal_update_8016(): void {
   \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
   _tec_portal_grant_invoice_permissions();
   \Drupal::service('router.builder')->rebuild();
+}
+
+/**
+ * Marker on sales orders that are Other charges, not catalogue pairs.
+ *
+ * Typed lines, 100% before work, no shipment, not on /my. Revert: clear the
+ * field on those orders then delete the field.
+ */
+function tec_portal_update_8017(): void {
+  _tec_portal_ensure_field_storage('tec_order', 'field_tec_other_charges', 'boolean');
+  _tec_portal_ensure_field('tec_order', 'tec_sales_order', 'field_tec_other_charges', 'Other charges', [
+    'description' => 'Stickers, labels, development. Not a catalogue order. Not a shipment.',
+    'settings' => [
+      'on_label' => 'Other charges',
+      'off_label' => 'Catalogue',
+    ],
+  ]);
+  $displays = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+  $form = $displays->load('tec_order.tec_sales_order.default');
+  if ($form && $form->getComponent('field_tec_other_charges')) {
+    $form->removeComponent('field_tec_other_charges');
+    $form->save();
+  }
+  $views = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+  $view = $views->load('tec_order.tec_sales_order.default');
+  if ($view && $view->getComponent('field_tec_other_charges')) {
+    $view->removeComponent('field_tec_other_charges');
+    $view->save();
+  }
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
 }
 
 /**

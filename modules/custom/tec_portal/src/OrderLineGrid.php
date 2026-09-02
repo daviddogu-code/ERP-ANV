@@ -7,6 +7,7 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\tec_portal\OtherCharges;
 use Drupal\tec_production\LineItemDisplay;
 
 /**
@@ -78,6 +79,10 @@ final class OrderLineGrid {
       $sum_amount += $this->totalOf($line, $qty, $this->priceOf($line));
     }
 
+    if (OtherCharges::isOrder($order)) {
+      return $this->chargeTable($order, $visible, $sum_qty, $sum_amount, $print);
+    }
+
     $table = [
       '#type' => 'table',
       '#header' => $print ? $this->printLineTableHeader() : $this->lineTableHeader(),
@@ -126,6 +131,59 @@ final class OrderLineGrid {
       ];
     }
 
+    return $table;
+  }
+
+  /**
+   * Description | Qty | Price | Total. No colour, size or photo.
+   *
+   * @param object[] $visible
+   */
+  protected function chargeTable($order, array $visible, float $sum_qty, float $sum_amount, bool $print): array {
+    $num = ['tec-portal__num'];
+    $table = [
+      '#type' => 'table',
+      '#header' => [
+        'description' => ['data' => $this->t('Description'), 'class' => ['tec-portal__col-name']],
+        'qty' => ['data' => $this->t('Qty'), 'class' => array_merge($num, ['tec-portal__col-qty'])],
+        'price' => ['data' => $this->t('Price'), 'class' => array_merge($num, ['tec-portal__col-price'])],
+        'item_total' => ['data' => $print ? $this->t('Total') : $this->t('Item total'), 'class' => array_merge($num, ['tec-portal__col-total'])],
+      ],
+      '#empty' => $this->t('This order has no lines.'),
+      '#attributes' => ['class' => ['tec-portal__table', 'tec-portal__table--charges']],
+      '#prefix' => '<div class="tec-portal__group">',
+      '#suffix' => '</div>',
+    ];
+    if (!$visible) {
+      return $table;
+    }
+    $table['#footer'] = $this->chargeVatFooter($sum_qty, $sum_amount, $this->vatRateFromOrder($order));
+    foreach ($visible as $line) {
+      $lid = (int) $line->id();
+      $line_qty = $this->qtyOf($line);
+      $price = $this->priceOf($line);
+      $total = $this->totalOf($line, $line_qty, $price);
+      $table[$lid] = [
+        '#attributes' => [
+          'data-price' => number_format($price, 2, '.', ''),
+          'data-qty' => (string) (int) $line_qty,
+        ],
+        'description' => ['#plain_text' => (string) $line->label()],
+        'qty' => [
+          '#plain_text' => number_format($line_qty, 0),
+          '#wrapper_attributes' => ['class' => ['tec-portal__num', 'tec-portal__col-qty']],
+        ],
+        'price' => [
+          '#markup' => Html::escape($this->money($price)),
+          '#wrapper_attributes' => ['class' => ['tec-portal__num', 'tec-portal__col-price']],
+        ],
+        'item_total' => [
+          '#markup' => '<span class="tec-portal__item-total">' . Html::escape($this->money($total)) . '</span>',
+          '#wrapper_attributes' => ['class' => ['tec-portal__num', 'tec-portal__col-total']],
+          '#allowed_tags' => ['span'],
+        ],
+      ];
+    }
     return $table;
   }
 

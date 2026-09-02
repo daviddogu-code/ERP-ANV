@@ -9,6 +9,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\tec_portal\CustomerCompany;
+use Drupal\tec_portal\OtherCharges;
 use Drupal\tec_portal\PortalOrder;
 use Drupal\tec_production\Vat;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -86,7 +87,7 @@ class MyController extends ControllerBase {
 
     $build['place'] = [
       '#type' => 'link',
-      '#title' => $this->t('Place an order'),
+      '#title' => $this->t('New order'),
       '#url' => Url::fromRoute('tec_portal.place'),
       '#attributes' => ['class' => ['button', 'button--primary', 'tec-portal__place']],
     ];
@@ -182,6 +183,9 @@ class MyController extends ControllerBase {
       throw new AccessDeniedHttpException();
     }
     if ($tec_order->bundle() !== 'tec_sales_order' || !$tec_order->access('view', $account)) {
+      throw new NotFoundHttpException();
+    }
+    if (OtherCharges::isOrder($tec_order)) {
       throw new NotFoundHttpException();
     }
 

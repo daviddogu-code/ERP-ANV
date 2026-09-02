@@ -185,11 +185,17 @@ final class InvoiceList {
     if (!$order) {
       return ['#plain_text' => $ref !== '' ? $ref : '—'];
     }
-    return [
+    $charges = OtherCharges::isOrder($order);
+    $link = [
       '#type' => 'link',
       '#title' => $ref !== '' ? $ref : (string) $order->label(),
       '#url' => Url::fromRoute('tec_portal.factory_order', ['tec_order' => $order->id()]),
     ];
+    if ($charges) {
+      $link['#attributes']['class'][] = 'tec-portal__order-no';
+      $link['#attributes']['class'][] = 'tec-portal__order-no--charges';
+    }
+    return $link;
   }
 
   private function entityLink(?EntityInterface $entity): array {
