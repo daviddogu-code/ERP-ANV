@@ -4,7 +4,7 @@
  * @file
  * Devuelve las piezas de la portada de marcas al orden que les toca.
  *
- * El guion que rehizo la portada copio las piezas del molde de colores con sus
+ * El guion que rehizo la portada copio las piezas del pattern de colores con sus
  * pesos, pero las metio en la seccion con Section::appendComponent(), y ese
  * metodo empieza por reescribir el peso:
  *
@@ -39,15 +39,15 @@ echo str_repeat('=', 82) . "\n\n";
 
 $almacen = \Drupal::entityTypeManager()->getStorage('node');
 $nodo = $almacen->load(4);
-$molde = $almacen->load(9);
+$pattern = $almacen->load(9);
 
-if (!$nodo || !$molde) {
+if (!$nodo || !$pattern) {
   echo " Falta el nodo 4 o el nodo 9. Sin los dos no hay nada que comparar.\n\n";
   return;
 }
 
 /**
- * El papel que hace una pieza, para emparejarla con la del molde.
+ * El papel que hace una pieza, para emparejarla con la del pattern.
  *
  * El titulo y el cuerpo se llaman igual en las dos portadas, pero el bloque de
  * la vista no: uno es tec_colors y el otro tec_brands. Emparejar por el papel y
@@ -58,16 +58,16 @@ $papel = static function (string $id): string {
 };
 
 // ---------------------------------------------------------------------------
-// 1. Que orden manda el molde.
+// 1. Que orden manda el pattern.
 // ---------------------------------------------------------------------------
-echo "1. Los pesos del molde (nodo 9, colores)\n\n";
+echo "1. Los pesos del pattern (nodo 9, colores)\n\n";
 
-$pesosDelMolde = [];
-foreach ($molde->get('layout_builder__layout') as $trozo) {
+$pesosDelPattern = [];
+foreach ($pattern->get('layout_builder__layout') as $trozo) {
   $seccion = $trozo->section;
   foreach ($seccion->getComponentsByRegion($seccion->getDefaultRegion()) as $componente) {
     $suPapel = $papel($componente->get('configuration')['id']);
-    $pesosDelMolde[$suPapel] = $componente->getWeight();
+    $pesosDelPattern[$suPapel] = $componente->getWeight();
     printf("   peso %-3s %s\n", $componente->getWeight(), $suPapel);
   }
 }
@@ -89,15 +89,15 @@ foreach ($nodo->get('layout_builder__layout') as $trozo) {
     $suPapel = $papel($componente->get('configuration')['id']);
     $ahora = $componente->getWeight();
 
-    if (!array_key_exists($suPapel, $pesosDelMolde)) {
-      // Una pieza que el molde no tiene: no se toca, porque no hay con que
+    if (!array_key_exists($suPapel, $pesosDelPattern)) {
+      // Una pieza que el pattern no tiene: no se toca, porque no hay con que
       // comparar y adivinarle un peso seria inventar.
       $sinPareja[] = $suPapel;
-      printf("   %-42s %-8s %-8s %s\n", $suPapel, $ahora, '?', 'no esta en el molde, se deja igual');
+      printf("   %-42s %-8s %-8s %s\n", $suPapel, $ahora, '?', 'no esta en el pattern, se deja igual');
       continue;
     }
 
-    $deberia = $pesosDelMolde[$suPapel];
+    $deberia = $pesosDelPattern[$suPapel];
     printf(
       "   %-42s %-8s %-8s %s\n",
       $suPapel,
@@ -128,11 +128,11 @@ foreach ($nodo->get('layout_builder__layout') as $trozo) {
 
 echo "\n";
 if ($sinPareja) {
-  printf("   Piezas sin pareja en el molde: %s\n", implode(', ', $sinPareja));
+  printf("   Piezas sin pareja en el pattern: %s\n", implode(', ', $sinPareja));
 }
 
 if ($cambios === 0) {
-  echo "   No hay nada que corregir: los pesos ya coinciden con el molde.\n\n";
+  echo "   No hay nada que corregir: los pesos ya coinciden con el pattern.\n\n";
   echo str_repeat('=', 82) . "\n\n";
   return;
 }
@@ -148,7 +148,7 @@ if (!$deVerdad) {
 
 $nodo->set('layout_builder__layout', $valoresNuevos);
 $nodo->setNewRevision(TRUE);
-$nodo->setRevisionLogMessage('Se devuelven los pesos del molde de colores: appendComponent() los habia reescrito al rehacer la portada y el titulo habia quedado debajo de la rejilla.');
+$nodo->setRevisionLogMessage('Se devuelven los pesos del pattern de colores: appendComponent() los habia reescrito al rehacer la portada y el titulo habia quedado debajo de la rejilla.');
 $nodo->setRevisionCreationTime(\Drupal::time()->getRequestTime());
 $nodo->setRevisionUserId(1);
 $nodo->save();

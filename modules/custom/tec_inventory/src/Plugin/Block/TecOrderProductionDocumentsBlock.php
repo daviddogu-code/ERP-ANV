@@ -10,6 +10,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\file\FileInterface;
 use Drupal\image\Entity\ImageStyle;
+use Drupal\tec_inventory\PatternRecipe;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -414,14 +415,17 @@ class TecOrderProductionDocumentsBlock extends BlockBase implements ContainerFac
 
       foreach ($group['size_ids'] as $size_id) {
         $size_var = $storage->load($size_id);
-        if (!$size_var || !$size_var->hasField('field_tec_bom')) {
+        if (!$size_var) {
           continue;
         }
         $cache_tags = Cache::mergeTags($cache_tags, $size_var->getCacheTags());
+        $pattern = PatternRecipe::patternOf($size_var);
+        if ($pattern) {
+          $cache_tags = Cache::mergeTags($cache_tags, $pattern->getCacheTags());
+        }
 
-        foreach ($size_var->get('field_tec_bom')->referencedEntities() as $bom) {
-          $cache_tags = Cache::mergeTags($cache_tags, $bom->getCacheTags());
-          $material = $bom->hasField('field_tec_inventory') ? $bom->get('field_tec_inventory')->entity : NULL;
+        foreach ($this->recipeMaterials($size_var) as $entry) {
+          $material = $entry['material'];
           if (!$material || !$this->materialIsSheetUnit($material)) {
             continue;
           }
@@ -431,12 +435,9 @@ class TecOrderProductionDocumentsBlock extends BlockBase implements ContainerFac
             continue;
           }
 
-          $input = $bom->hasField('field_tec_quantity_input') && !$bom->get('field_tec_quantity_input')->isEmpty()
-            ? (string) $bom->get('field_tec_quantity_input')->value
-            : '';
-          $requires = $this->parseRequiresInput($input);
-          if ($requires === NULL && $bom->hasField('field_tec_quantity') && !$bom->get('field_tec_quantity')->isEmpty()) {
-            $requires = (float) $bom->get('field_tec_quantity')->value;
+          $requires = $this->parseRequiresInput($entry['qty']);
+          if ($requires === NULL && $entry['parsed'] !== NULL) {
+            $requires = $entry['parsed'];
           }
           if ($requires === NULL || $requires == 0.0) {
             continue;
@@ -469,6 +470,44 @@ class TecOrderProductionDocumentsBlock extends BlockBase implements ContainerFac
       'tables' => $tables,
       'cache_tags' => $cache_tags,
     ];
+  }
+
+  /**
+   * Catalogue recipe materials for one size: pattern if wired, else the size BoM.
+   *
+   * @return array<int, array{material: ?\Drupal\Core\Entity\EntityInterface, qty: string, parsed: ?float}>
+   */
+  protected function recipeMaterials(EntityInterface $size_var): array {
+    if (PatternRecipe::hasPattern($size_var)) {
+      $out = [];
+      foreach (PatternRecipe::linesOfSize($size_var) as $row) {
+        $out[] = [
+          'material' => $row['material'],
+          'qty' => $row['qty'],
+          'parsed' => $row['parsed'],
+        ];
+      }
+      return $out;
+    }
+    if (!$size_var->hasField('field_tec_bom')) {
+      return [];
+    }
+    $out = [];
+    foreach ($size_var->get('field_tec_bom')->referencedEntities() as $bom) {
+      $input = $bom->hasField('field_tec_quantity_input') && !$bom->get('field_tec_quantity_input')->isEmpty()
+        ? (string) $bom->get('field_tec_quantity_input')->value
+        : '';
+      $parsed = NULL;
+      if ($bom->hasField('field_tec_quantity') && !$bom->get('field_tec_quantity')->isEmpty()) {
+        $parsed = (float) $bom->get('field_tec_quantity')->value;
+      }
+      $out[] = [
+        'material' => $bom->hasField('field_tec_inventory') ? $bom->get('field_tec_inventory')->entity : NULL,
+        'qty' => $input,
+        'parsed' => $parsed,
+      ];
+    }
+    return $out;
   }
 
   /**

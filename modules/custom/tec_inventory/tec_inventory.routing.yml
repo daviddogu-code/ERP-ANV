@@ -1,0 +1,91 @@
+entity.tec_pattern.collection:
+  path: '/pattern'
+  defaults:
+    _form: '\Drupal\tec_inventory\Form\PatternListForm'
+    _title: 'Patterns'
+  requirements:
+    _permission: 'view tec patterns'
+
+# Static path, registered before /pattern/{code}, so "organize" is never a pattern.
+entity.tec_pattern.organize:
+  path: '/pattern/organize'
+  defaults:
+    _form: '\Drupal\tec_inventory\Form\PatternListForm'
+    _title: 'Organize Patterns'
+  requirements:
+    _permission: 'edit tec patterns'
+
+entity.tec_pattern.add_form:
+  path: '/pattern/new'
+  defaults:
+    _form: '\Drupal\tec_inventory\Form\PatternForm'
+    _title: 'New pattern'
+  requirements:
+    _permission: 'edit tec patterns'
+
+entity.tec_pattern.canonical:
+  path: '/pattern/{tec_pattern}'
+  defaults:
+    _controller: '\Drupal\tec_inventory\Controller\PatternController::view'
+    _title_callback: '\Drupal\tec_inventory\Controller\PatternController::title'
+  requirements:
+    _entity_access: 'tec_pattern.view'
+    tec_pattern: '[A-Za-z0-9][A-Za-z0-9._-]{0,31}'
+  options:
+    parameters:
+      tec_pattern:
+        type: tec_pattern_code
+
+entity.tec_pattern.edit_form:
+  path: '/pattern/{tec_pattern}/edit'
+  defaults:
+    _form: '\Drupal\tec_inventory\Form\PatternForm'
+    _title: 'Edit pattern'
+  requirements:
+    _entity_access: 'tec_pattern.update'
+    tec_pattern: '[A-Za-z0-9][A-Za-z0-9._-]{0,31}'
+  options:
+    parameters:
+      tec_pattern:
+        type: tec_pattern_code
+
+entity.tec_pattern.delete_form:
+  path: '/pattern/{tec_pattern}/delete'
+  defaults:
+    _entity_form: 'tec_pattern.delete'
+    _title: 'Delete pattern'
+  requirements:
+    _entity_access: 'tec_pattern.delete'
+    tec_pattern: '[A-Za-z0-9][A-Za-z0-9._-]{0,31}'
+  options:
+    parameters:
+      tec_pattern:
+        type: tec_pattern_code
+
+tec_inventory.color_extras:
+  path: '/tec_product/{tec_product}/extras'
+  defaults:
+    _controller: '\Drupal\tec_inventory\Controller\ColorExtrasController::save'
+  methods: [POST]
+  requirements:
+    _entity_access: 'tec_product.update'
+    _csrf_request_header_token: 'TRUE'
+    tec_product: \d+
+  options:
+    parameters:
+      tec_product:
+        type: entity:tec_product
+
+tec_inventory.sku_autocomplete:
+  path: '/tec-inventory/sku-autocomplete'
+  defaults:
+    _controller: '\Drupal\tec_inventory\Controller\ColorExtrasController::skuAutocomplete'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+tec_inventory.sku_meta:
+  path: '/tec-inventory/sku-meta'
+  defaults:
+    _controller: '\Drupal\tec_inventory\Controller\ColorExtrasController::skuMeta'
+  requirements:
+    _user_is_logged_in: 'TRUE'

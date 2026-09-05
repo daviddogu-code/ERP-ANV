@@ -26,19 +26,19 @@
  * Tres detalles del clonado que no son evidentes:
  *
  * - La relacion con el cliente se queda puesta ademas de la nueva con la marca.
- *   Alguna columna del molde puede colgar de ella, y como es una union por la
+ *   Alguna columna del pattern puede colgar de ella, y como es una union por la
  *   izquierda no estorba a los productos que no tengan cliente.
- * - El molde lleva tres enlaces escritos a mano con `raw_arguments.id` dando por
+ * - El pattern lleva tres enlaces escritos a mano con `raw_arguments.id` dando por
  *   hecho que el argumento es un cliente. Aqui el argumento es un termino, asi
  *   que los tres pasan a `raw_arguments.tid` y apuntan a la ficha de la marca.
- * - El boton de crear producto del molde lleva `?target_id=`, y eso NO es
+ * - El boton de crear producto del pattern lleva `?target_id=`, y eso NO es
  *   decoracion: el campo de cliente del producto tiene el modulo epp puesto con
  *   `[current-page:query:target_id]`, o sea que rellena el cliente con lo que
  *   venga en ese parametro. Pasarle el numero de una marca escribiria una marca
  *   en la casilla del cliente. Por eso el boton de aqui va sin el.
  *
  * El orden del catalogo queda por nombre, y **eso ya no es lo que hay**: era el
- * paso siguiente del modelo y se dio el 19 de agosto de 2026. El molde ordenaba
+ * paso siguiente del modelo y se dio el 19 de agosto de 2026. El pattern ordenaba
  * por el peso de «Organize products», que estaba guardado por cliente y en una
  * pantalla nueva no ordenaba nada; hoy el orden es de la marca, un campo del
  * producto, y lo escribe la receta que convierte esta pantalla en una lista de
@@ -89,7 +89,7 @@ $productos = $gestor->getStorage('view')->load('tec_products');
 $pantallas = $productos->get('display');
 
 if (!isset($pantallas['block_4'])) {
-  print "  No esta block_4, que es el molde. No sigo.\n\n";
+  print "  No esta block_4, que es el pattern. No sigo.\n\n";
   return;
 }
 
@@ -107,7 +107,7 @@ $opciones['title'] = 'Products';
 unset($opciones['block_description']);
 
 // La marca por la que entra. La relacion del cliente se queda: alguna columna
-// del molde puede colgar de ella y sobra sin molestar.
+// del pattern puede colgar de ella y sobra sin molestar.
 $opciones['relationships']['field_tec_brand'] = [
   'id' => 'field_tec_brand',
   'table' => 'tec_product__field_tec_brand',

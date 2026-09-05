@@ -4,7 +4,7 @@
 > Escrito en español porque el lector principal es el dueño del proyecto.
 > Las otras notas de `docs/` están en inglés y son documentación técnica; esta no.
 >
-> Última actualización: 2026-08-31.
+> Última actualización: 2026-09-05.
 
 ## Cómo usar este archivo
 
@@ -24,9 +24,10 @@ por error algo que estaba puesto a propósito.
 
 ## Quién opera y adónde va el trabajo
 
-Fijado el 28 de agosto de 2026. **Nunca se ha usado el ERP en el negocio.** Corre en Google
-Sheets. El ERP está publicado; las pantallas copian esas hojas. Caduca el plan de agosto de
-«Lukpla solo revisa y luego entran tres empleados» (secciones 1 y 3, tachadas).
+Fijado el 28 de agosto de 2026. **El 31 de agosto arrancó el dual run:** Lukpla (con Noi)
+usa el ERP **y** las Google Sheets a la vez. El ERP está publicado; las pantallas copian
+esas hojas. Caduca el plan de agosto de «Lukpla solo revisa y luego entran tres empleados»
+(secciones 1 y 3, tachadas).
 
 ### Quién es quién
 
@@ -87,9 +88,11 @@ cerrados por David.
 
 ### Cómo se opera ahora, y el destino
 
-- **Nunca se ha usado el ERP en el negocio.** Corre en **Google Sheets**.
-- **Fase de prueba:** ERP **y** sheets **a la vez**. Se ve qué falla o falta, se pule. Cuando
-  aguante, **se cierra Drive**.
+- **Dual run, arrancado el 31 de agosto de 2026:** ERP **y** sheets **a la vez**. Se ve qué
+  falla o falta, se pule. Cuando aguante, **se cierra Drive**.
+- Lo que Lukpla ve lo manda en **un grupo de LINE**. David (o el agente) lo arregla ahí.
+  Así se arregló el 31 de agosto el Download de las facturas. No hace falta una hoja de
+  bugs: el chat de LINE es el canal, y el arreglo queda en git y en el backlog.
 - **Sueño:** el máximo de ese trabajo en ERP + Lukpla + planta + agentes; David fuera de la
   operación. **Realista:** no es el 100 % de cada cosa; es un **% alto en muchos sitios**, y
   eso en conjunto es enorme.
@@ -133,9 +136,9 @@ sistema. El % que se come es el de esos procesos, no un chat genérico.
 
 ### Cómo testea Lukpla (David fuera del medio)
 
-- No hay un chat de tres en Cursor. Lo útil: **~1 h a la semana** ella comparte pantalla,
-  David tiene Cursor, se corrige en la llamada; entre medias **captura + 4 líneas** (pantalla,
-  sheet, qué esperaba, qué salió).
+- Manda lo que ve en **un grupo de LINE**. David lo va arreglando. Así se hizo el
+  Download de las facturas el 31 de agosto. No hay un chat de tres en Cursor ni una
+  hoja de bugs: el grupo es el canal.
 - Empezar por **una** hoja de las que ellas tocan cada día, no por las doce.
 
 ---
@@ -243,15 +246,15 @@ Fase 0, el saneado de Composer, la preparación del último tramo y el salto a D
 
 El ERP ya está publicado en `https://erp.anvfightgear.com` desde el 12 de agosto.
 
-- **Lukpla testa el ERP en paralelo con las Google Sheets** (con Noi). Dual run hasta que el
-  ERP aguante; entonces se cierra Drive. Detalle y plantilla de bugs en
+- ~~**Lukpla testa el ERP en paralelo con las Google Sheets** (con Noi).~~ **Arrancado el 31
+  de agosto de 2026.** Dual run hasta que el ERP aguante; entonces se cierra Drive. Lo que
+  ve lo manda en un grupo de LINE; David lo arregla. Detalle en
   [Quién opera](#quién-opera-y-adónde-va-el-trabajo).
 
 ~~**La revisión de Lukpla queda aparcada** por decisión del dueño el 13 de agosto: se le dirá que
 de momento no entre, para poder trabajar sin la restricción de no romperle nada.~~ **Caducado el
 28 de agosto de 2026.** Ya no es una revisión aplazada: Lukpla entra a **usar y testear** (ERP +
-sheets a la vez). El encargo concreto y “dónde apunta lo que vea” siguen teniendo sentido, pero
-como dual run, no como visita de inspección. Lo que había preparado para cuando se retomara:
+sheets a la vez). El dual run arrancó el 31 de agosto. Lo que había preparado para cuando se retomara:
 
 - ~~**Crear la cuenta de Lukpla.**~~ Hecha, con rol *supervisor*, directamente en el servidor. Y
   **desde el 15 de agosto existe también en local**, con las de `coo` y `manager`, así que deja de
@@ -260,17 +263,43 @@ como dual run, no como visita de inspección. Lo que había preparado para cuand
 - ~~**Llevar al servidor la limpieza de módulos del 13 de agosto**~~ Cubierto por el despliegue del
   20 de agosto. Si se importa configuración desde local a un servidor que ya tenga datos de
   prueba de Lukpla, volver a pasar `drush config:status` antes de cualquier `cim`.
-- **Preparar dónde apunta lo que vea**, aunque sea una hoja de cálculo compartida. Por chat
-  se evapora en tres días.
+- ~~**Preparar dónde apunta lo que vea.**~~ **Grupo de LINE**, confirmado el 31 de agosto de
+  2026. Ella manda lo que ve; David lo arregla. Así se hizo el Download de las facturas.
+  Una hoja de cálculo no hace falta: el arreglo queda en git y en este backlog.
 - **Darle un encargo concreto**, empezando por **una** sheet de las que tocan cada día, en vez
   de un "míralo a ver qué te parece".
-- **Confirmar si se maneja en inglés**, que es el idioma en el que está el ERP entero. Y no es una
-  pregunta de cortesía: el tailandés que hay configurado **no traduce nada del ERP**, solo cuatro
-  palabras del menú de administración de Drupal. Está explicado en el apartado de idiomas de la
-  sección 3. Si ella no se maneja en inglés, es ella misma quien tendría que escribir las
-  traducciones.
+- ~~**Confirmar si se maneja en inglés.**~~ **Sí**, confirmado el 31 de agosto de 2026. El dual
+  run de Lukpla va en el inglés del ERP. El andamio tailandés no traduce el ERP; no hace falta
+  para ella. El día que un operario de planta tenga usuario, eso es otro asunto (sección 3).
 
 ## 2. Esta semana
+
+- **Patterns: cabos de código y datos en producción.** El código está en local y en
+  Singapur (5 de septiembre). El catálogo de producción está **vacío**: hay que crear
+  los patterns y enlazar cada producto. El 1947 de local no viajó; no se volcó la base.
+
+  Un pattern es el corte (055_Semi). El producto es ese corte para una marca. Verdes =
+  SKU + qty en el pattern (se leen en vivo). Amarillos = tipo + qty en el pattern; el
+  SKU se elige en el color (Fill Pattern). Extras = por talla y por color. El producto
+  no inventa una talla que el pattern no tenga. Los pedidos congelan el BoM.
+
+  Lo que falta de código:
+
+  1. **Borrar extras.** No hay botón. Hoy se vacía el SKU en todas las tallas de ese
+     color y la línea desaparece.
+  2. **Talla nueva en el pattern → productos ya hechos.** `ensureSizes()` solo corre
+     al guardar un color, no al guardar el pattern. No borrar tallas en esa misma
+     tarea.
+  3. **Quitar talla del pattern.** Las tarjetas de talla quedan huérfanas; `wired()`
+     falla y la pantalla no dice nada.
+  4. **Duplicate product con pattern.** ECA parcheado en `11007` (copia el pattern
+     nuevo, huecos y extras). **No comprobado.** Sigue copiando también el campo de
+     Oscar (`field_tec_pattern`).
+  5. **La URL de `+ Size`** (`/admin/content/tec_product/add/tec_size_variation?color_id=…`)
+     sigue existiendo. El botón está escondido en productos con pattern.
+  6. **Retirar el vocabulario de Oscar** (`tec_patterns` / `field_tec_pattern`) cuando
+     Duplicate copie solo el pattern nuevo. Orden: quitar el paso de ECA → campo →
+     vistas → vocabulario → permisos. No antes: duplicar producto es una función viva.
 
 - **Guardar los diez códigos de recuperación de Namecheap** fuera del móvil, en Drive o
   impresos. Namecheap no permite dos métodos de 2FA a la vez, así que si se pierde el
@@ -306,17 +335,11 @@ como dual run, no como visita de inspección. Lo que había preparado para cuand
   «¿esta línea cuenta?» viva junto a `Purchasing::outstanding()` y que las tres pantallas la
   consulten.
 
-- **Terminar el modelo de marcas y clientes. El corte está hecho: el 19 de agosto el producto soltó al
-  cliente y el campo se borró.** Están contadas abajo, en Hecho, las cinco cosas de ese día: el catálogo de
-  la marca, las cuatro asperezas de su formulario, la lista de marcas en la ficha del cliente con su dato
-  mudado, el pedido de un clic saliendo ya de la marca, y el corte entero con sus recableados. La
-  observación del dueño que lo puso todo en marcha: *una empresa puede comprar varias marcas, y la misma
-  marca la pueden comprar dos clientes distintos.*
-
-  **Lo que queda es una cosa:** el **catálogo en formato de líneas de pedido con el precio editable**, que
-  es la pantalla más grande. El orden de las proformas se hizo la noche del 19 de agosto, y salió con
-  cuatro niveles en vez de dos —marca, producto, color y talla—, porque al mirarlo de cerca resultó que
-  tres de los cuatro ya existían y nadie los usaba. Está contado abajo, en Hecho.
+- ~~**Terminar el modelo de marcas y clientes.**~~ **Hecho el 19 de agosto de 2026**, incluido el
+  catálogo con precio editable. Se había quedado en esta lista como si faltara la pantalla grande;
+  esa pantalla **ya está**: ficha de la marca, `/taxonomy/term/{id}`, una fila por talla. Se llega
+  desde `/b`. El corte del cliente, las cinco cosas de ese día y el rediseño deshecho (solo se
+  acortó la casilla del precio) están en Hecho.
 
   **Y el precio de venta no está donde se supondría:** vive en la talla
   (`tec_product.tec_size_variation.field_tec_price`, etiquetado «Sales price»), no en el producto ni en el
@@ -379,8 +402,9 @@ con las sheets**. Quién es quién y qué pasa con un supervisor futuro está en
 certificado. El detalle está abajo, en Hecho.
 
 El resto de esta lista es trabajo técnico que **sigue haciendo falta** (correo sobre todo), no
-el relato de quién entra. Casi todo no requiere decisiones del dueño, salvo los tres puntos de
-correo.
+el relato de quién entra. El plan de correo se reescribió la **noche del 31 de agosto** (Hecho):
+nada de `erp@` ni de grupos para el cliente. Lo que queda es Workspace (dueño) y luego SMTP
+en el servidor.
 
 - **Programar el cron.** ~~**Lo único que queda es pegar una línea en el servidor el día del
   despliegue**~~ **Hecho el 20 de agosto de 2026:** `/etc/cron.d/erp-cron` cada 15 minutos como
@@ -395,24 +419,42 @@ correo.
   descarga nada; y la de los ficheros huérfanos tampoco bloqueaba, porque con
   `make_unused_managed_files_temporary` en `false` `file_cron` no los tocaba; se han borrado
   igualmente ese mismo día, por limpieza y no por el cron.
-- **Crear el buzón `erp@anvfightgear.com`** en Google Workspace, como alias que reenvía al
-  dueño y no como cuenta de pago nueva. Es la dirección de **sistema** desde la que el ERP
-  autentica el SMTP (acordado el 2026-08-12). La cara que ve el cliente en un pedido es
-  `orders@`, no esta.
-- **Crear los grupos `info@anvfightgear.com` y `orders@anvfightgear.com`.** Decisión del
-  28 de agosto (noche), en Hecho. No son usuarios nuevos ni alias de `admin@`. Miembros:
-  `admin@` (David) y `artitaya@` (Lukpla). Gente de fuera puede publicar. Cada uno envía
-  *como* el grupo. `info@` es la web / SEO; `orders@` es pedidos, proformas y el portal.
-- **Configurar el envío de correo a través del servidor de Google.** No es opcional:
-  DigitalOcean bloquea el envío directo en las cuentas nuevas. El módulo `smtp` ya está
-  instalado, solo hay que rellenar servidor, usuario y contraseña. El From de las
-  proformas será `orders@` cuando el portal las mande.
-- **Activar DKIM y DMARC en `anvfightgear.com`.** Hoy solo existe SPF. DKIM se genera en el
-  panel de Google Workspace y se pega en Namecheap → Advanced DNS; DMARC es un registro TXT
-  escrito a mano.
+- ~~**Crear el buzón `erp@anvfightgear.com`.**~~ **No.** Caducado el 31 de agosto de 2026.
+  El ERP no autentica como un buzón fantasma: entra SMTP como `orders@`. El correo del sitio
+  pasa a `info@`. `erp@` no se crea.
+- ~~**Crear los grupos `info@` y `orders@`.**~~ Decisión del 28 de agosto, **caducada el 31**.
+  Se llegaron a crear esa misma tarde y **se tiran**: un grupo no es un buzón. No hay
+  historial de clientes que migrar. Relato en Hecho, 31 de agosto (noche).
+- **Correo de función: usuarios, no grupos** (31 de agosto, noche). Cuatro Gmail:
 
-  SMTP, DKIM y `erp@` van juntos: con uno o dos hechos, las recuperaciones de contraseña
-  siguen sin llegar. Los grupos `info@` y `orders@` se pueden crear ya, sin esperar al SMTP.
+  | Dirección | Qué es | Quién la abre |
+  |---|---|---|
+  | `admin@anvfightgear.com` | David | Solo él |
+  | `artitaya@anvfightgear.com` | Lukpla | Solo ella |
+  | `orders@anvfightgear.com` | Clientes, diseños, aduanas, ex-works, proforma del ERP | Los dos (delegación). Hoy es `coo@` |
+  | `info@anvfightgear.com` | Web, SEO, contraseña y altas del ERP | Los dos (delegación). Usuario **nuevo** |
+
+  1. Borrar los grupos `info@` y `orders@` para liberar las direcciones.
+  2. Renombrar el usuario `coo@` → `orders@`. Dejar `coo@` de alias (aduanas y clientes
+     viejos). Contraseña nueva; quitar teléfono y recuperación del supervisor. Nombre que
+     ve el cliente: **Acta Non Verba**.
+  3. Crear el usuario `info@` (un asiento más). Delegar `orders@` e `info@` a `admin@` y
+     `artitaya@` (Gmail → Conceder acceso). Nadie trabaja con la contraseña del supervisor.
+  4. **SMTP** por el relay de Google (`smtp-relay.gmail.com`, puerto 587, TLS). Allowed
+     senders: *Only addresses in my domains*. IP del droplet: `188.166.255.1`. El ERP entra
+     como `orders@` (contraseña de aplicación, en `settings.php` del servidor, no en git).
+     El campo From del módulo SMTP se deja **vacío**. Proforma (cuando se construya): From /
+     Reply-To `orders@`. Contraseña, cuenta creada por un admin, cuenta activada: From
+     `info@`. Hoy el ERP **no manda la proforma** (solo se imprime). Drupal sí mandará los
+     mails de cuenta en cuanto haya SMTP. Correo del sitio: cambiar `erp@` por `info@`.
+     DigitalOcean puede tener cerrado el 587: si el test no sale, ticket para abrir SMTP
+     hacia Google.
+  5. **DKIM** (Google Admin → Namecheap) y **DMARC** `p=none`. SPF no se toca si ya incluye
+     Google.
+
+  Lo que sale del ERP, y nada más: familia **login** (`info@`) y, cuando exista el envío,
+  **proforma** (`orders@`). Una conexión SMTP, dos From. No hace falta que el ERP «entre»
+  como `info@`.
 
 - ~~**Repasar las cuentas de usuario.**~~ **Hecho por el dueño el 15 de agosto de 2026**, a mano y
   desde el navegador. Quedan cinco cuentas contando el anónimo: `david`, que es la del dueño con rol
@@ -481,6 +523,8 @@ en tailandés", porque no la tiene, y quien se lo crea se lleva el chasco el pri
 versión en tailandés, es el **andamio** para poder hacerla, y el andamio no cuesta nada: el trabajo de
 cron no se dispara —tiene la comprobación en "nunca"— y los 143 ficheros viajan en cada despliegue
 pero no hacen nada mientras nadie escriba `/th/`.
+
+**Lukpla testa en inglés** (31 de agosto de 2026). El dual run no espera a una traducción.
 
 **El día que haga falta, el trabajo de verdad no es técnico.** Se instala `config_translation` y
 **Lukpla misma puede teclear el tailandés** desde el navegador, pantalla por pantalla, sin que haga
@@ -1139,35 +1183,21 @@ por una celda que no existe. Un barrido del ERP entero dice que no queda ningún
   retirarla habría dejado el catálogo sin poder nacer. Lo que faltaba era la puerta, no la función.
   Ya está devuelta.
 
-- **Decidir qué se hace con Patrones.** Aquí sí queda la decisión, y solo esta. El vocabulario
-  `tec_patterns` sigue vacío con sus campos, dos vistas (`tec_patterns`,
-  `tec_pattern_elements`), sus formularios y los permisos en tres roles. Su portada se borró hace
-  tiempo, igual que la de Marcas, así que hoy no hay pantalla ni icono.
+- ~~**Decidir qué se hace con Patrones.**~~ **Decidido el 5 de septiembre de 2026.** El
+  corte de fábrica es la entidad `tec_pattern` (`/pattern`), no el vocabulario de Oscar.
+  El producto apunta con `field_tec_factory_pattern`. En la UI se dice **Pattern**, nunca
+  mould / molde / mold. Relato en Hecho, 5 de septiembre.
 
-  **La diferencia con Marcas es que `field_tec_pattern` no es obligatorio**, o sea que el producto
-  se crea sin él y retirarlo no bloquea nada. Pero tampoco corre prisa.
+  El vocabulario `tec_patterns` y el campo `field_tec_pattern` **siguen**, vacíos y
+  escondidos en el formulario del producto. Duplicate product (`process_llpx4tp` y el
+  clon `process_icpsbgv`) todavía copia `field_tec_pattern`. **No se borra hasta que
+  duplicar copie solo el pattern nuevo.** Entonces: quitar ese paso de ECA → campo →
+  vistas `tec_patterns` / `tec_pattern_elements` → vocabulario → permisos.
 
-  **Dos cosas cambiaron el 15 de agosto, al retirar `tec_gui`, y hay que leerlas antes de decidir.**
-  Patrones tenía un campo, `field_tec_pattern_boms`, que apuntaba a `tec_gui`, o sea al tipo de
-  entidad muerto. Ese campo se fue con la retirada, porque ECK, al borrar un tipo de entidad,
-  arrastra todos los campos de referencia que apuntan a él. No se perdió nada: estaba vacío, y no
-  podía dejar de estarlo porque su destino no existía.
-
-  Lo que sí hay que saber es la consecuencia. La vista `tec_pattern_elements` no tenía más campo
-  que ese, así que **Drupal la dejó desactivada** al quedarse sin nada que mostrar. Y su bloque
-  **sigue incrustado** en la ficha de un término de patrón, en el modo de vista `default` de
-  `taxonomy_term.tec_patterns`. Hoy no molesta a nadie porque hay **cero términos de patrones**,
-  pero el día que se cree uno y se pinte en ese modo, ese bloque apunta a una vista apagada. Si
-  Patrones vuelve, esto se arregla antes: o se saca el bloque de la ficha, o se le devuelve a la
-  vista un campo que mostrar. Si Patrones se retira, se va con el resto y da igual.
-
-  **Si algún día se retira, no se puede borrar del tirón.** Los dos procesos de duplicar
-  producto —`process_llpx4tp` y `process_icpsbgv`, "TEC Product: Duplicate product" y su
-  clon— copian `field_tec_brand` y `field_tec_pattern` al duplicar. Si se borra el campo sin
-  desmontar antes esos dos procesos, **se rompe el duplicado de productos**, que es una función
-  viva y de las que más se usan. El orden es: primero quitar ese paso de los dos procesos, y
-  después el campo, las vistas y el vocabulario. Es un cambio de configuración, o sea que viaja
-  por Git y se puede revisar antes de aplicar.
+  Lo que ya se sabía del 15 de agosto no cambia el orden: al retirar `tec_gui` se fue
+  `field_tec_pattern_boms`; la vista `tec_pattern_elements` quedó desactivada y su
+  bloque sigue incrustado en la ficha de un término. Hoy hay cero términos, así que no
+  molesta. El día que se retire el vocabulario, se va con el resto.
 
 - ~~Decidir qué se hace con 315 ficheros huérfanos.~~ **Hecho el 14 de agosto**, y con dos
   correcciones a lo que decía aquí. Ver la entrada del día en Hecho.
@@ -1222,9 +1252,9 @@ por una celda que no existe. Un barrido del ERP entero dice que no queda ningún
 - ~~**Dar de baja el servidor de Nueva York.**~~ Hecho el 28 de agosto de 2026 (ver sección 1).
 - ~~**Borrar el snapshot `actafight.com-1755603370919`** (38,68 GB)~~ Hecho el mismo día, junto
   con la destrucción del droplet.
-- **Borrar de Drive la carpeta `PRE-limpieza`** cuando exista la copia nueva y el servidor
-  lleve unos días funcionando. Así deja de haber dos juegos de copias y desaparece el último
-  sitio donde queda la clave de OpenAI del programador anterior.
+- ~~**Borrar de Drive la carpeta `PRE-limpieza`.**~~ **Hecho el 2 de septiembre de 2026.**
+  El dueño la eliminó de Drive (y de la papelera). Ya no hay dos juegos de copias ni esa
+  copia de la clave de OpenAI del programador anterior.
 
 ## 5. Con fecha en el calendario
 
@@ -1343,48 +1373,134 @@ Sin prisa y sin orden fijo entre ellas.
 
   **No entra** en el packing list ni en el envío: ahí no va esta estimación ni el +1.
 
-- **Packing list**
+- **Envío, packing, factura y cargos (modelo del 31 de agosto de 2026, noche). No
+  construir ahora.** Tarea aplazada a propósito: el dueño está saturado y el Excel sigue
+  cubriendo el loading. **No se factura el pedido.** Si se imprime una factura desde
+  `tec_order` (un pedido = un papel), el mundo real la desmiente a la semana. Por eso las
+  facturas de venta **no se han hecho todavía**; no era un print que faltaba, era el modelo.
 
-  Documento que se envía al cliente **cuando acaba la producción**: cajas y productos **reales**
-  que han salido, no la estimación del punto anterior. Hoy es un Google Sheet a mano (ejemplo
-  mirado: *Packing list Order Custom Fighter 25-001*, hoja Final: 148 cajas, 1.902 piezas,
-  2.528 kg neto / 2.810 bruto, 27,035 m³, EXW, origen Tailandia). La hoja Remaining es lo que
-  **no cupo en este contenedor** y se queda en fábrica hasta el siguiente envío; no es un
-  apéndice del mismo packing.
+  #### Si solo se lee esto
 
-  **No se copia ese Excel.** Es un tablero de empaque disfrazado de documento (celdas
-  combinadas, una fila por caja aunque sean iguales, *Code* = color, comentarios *Missing 1
-  pair* / *Waiting to fill*, número de packing vacío, Sold to clonado en Ship to). De Odoo/SAP
-  se copian **tres ideas**, no el almacén: el packing es un **envío** (no el pedido); packing
-  list **sin precios** y factura **con precios** son dos papeles; las cajas son hijas del
-  envío. No pistolas, handling units ni SSCC.
+  Tres sitios:
 
-  **De lo de ahora sí vale:** cajas mezcladas (caja 2: Black XL + Light Blue L; caja 140: 10 oz
-  + 8 oz) — el resumen por SKU solo **miente** si se pierde una caja; 1 saco = 1 caja; cartón
-  `47×60×65` → 0,1833 m³ y bruto ≈ neto + ~2 kg; pares vs units; membrete EXW / origen /
-  sold-to / ship-to; totales del envío. **No vale** como pantalla: 18 filas idénticas de caja
-  llena, el PDF como checklist de planta, teclear el nombre 148 veces.
+  1. **Pedido** — un encargo. Confirm → **proforma**. Depósito **de ese** encargo, con
+     importe. Precio e IVA congelados (ya).
+  2. **Línea** — pares (producto, color, talla) **o** cargo (texto + precio: pegatinas,
+     desarrollo de patrón, packaging especial). El cargo no es catálogo, no hay BoM, no hay
+     caja.
+  3. **Envío** — este contenedor / esta recogida EXW. De **aquí** salen el **packing list**
+     (sin precios) y la **factura** (con precios, IVA, cargos, menos depósitos). Un SWIFT de
+     saldo.
 
-  **Qué construir, cuando toque:**
+  El pedido es la **promesa**. El envío es lo **hecho**. Odoo y SAP facturan la entrega, no
+  el pedido. Aquí la entrega es el envío, porque sois fábrica EXW y un contenedor, no un
+  almacén con doce albaranes al día.
 
-  1. Entidad **envío** colgando del pedido de venta. Lo que no cabe sigue en el pedido y sale
-     en el envío 2 (vuestro Remaining). La cola ya reserva el hueco: Completed = packing list
-     + factura; Ready for collection = el forwarder puede recoger (EXW).
-  2. **Papel** al estilo de la proforma, sin precios. Resumen por producto / color / talla **de
-     este envío** + totales (cajas, piezas, NW, GW, CBM). Sold to y Ship to de verdad (pueden
-     no ser el mismo).
-  3. **Cajas** hijas del envío. Peso, medida y CBM son de la **caja**, no de cada línea. Las
-     cajas llenas iguales no necesitan una fila cada una en el papel comercial; las
-     **mezcladas** sí se detallan (contenido por caja). Un segundo print caja a caja, o solo
-     las mix, si el forwarder lo pide.
-  4. *Missing 1 pair* no va en el PDF del cliente: es planta / production log / lo que no
-     salió en este envío.
+  #### Por qué el 1:1 pedido–factura no vale
 
-  El CBM y las cajas de **este** documento son los reales del empaque, no el Approx. CBM del
-  Place an order.
+  Pasa de verdad:
 
-- **Facturas**, con IVA y sin IVA. Hermano del packing list (mismo momento Completed, mismos
-  datos, **con** precios). No hace falta Odoo para eso.
+  - El cliente confirma, paga el depósito, a la semana **añade productos**. Se hace **otra
+    proforma**. Quiere las **dos** en el **mismo** contenedor y **una** factura (un
+    transfer internacional; no uno de pegatinas).
+  - Un pedido **no cabe**: Remaining, **dos** contenedores, dos packing, **dos** facturas
+    (cada una lo que salió). Ya está escrito en el CBM y en las sheets.
+  - Hay que cobrar cosas **que no son producto**: pegatinas, product development, packaging
+    especial. Casi siempre **una vez**. El cliente **no** quiere un segundo SWIFT de 200 €.
+    Van en la **misma** proforma de ese encargo y en la **factura del contenedor**.
+
+  Lo contrario también: dos encargos, un barco. El Excel mezcla las tres cosas en una hoja.
+  El ERP las separa y el envío las vuelve a juntar **solo para esa salida**.
+
+  #### Qué hace Odoo / SAP (lo que se copia)
+
+  Regla: política de factura = **lo entregado**, no lo pedido.
+
+  - Pedido + print de proforma. Anticipo con **importe**; la factura final lo resta.
+  - Entrega parcial → **backorder** = Remaining. Otra entrega, otra factura.
+  - Varias entregas del mismo cliente → **factura colectiva** (Odoo: juntar albaranes;
+    SAP VF04). Ahí caben dos proformas y un contenedor.
+  - Cargos = producto **servicio** (sin stock). No van al albarán; sí a la factura.
+  - SAP tiene **shipment** (camión/contenedor) que agrupa entregas; el packing sale de ahí.
+    Odoo de serie **no** tiene el contenedor: por eso muchas fábricas siguen con Excel de
+    loading. ANV no instala Odoo; construye **un** objeto envío que es picking + shipment.
+
+  No se copian pistolas, handling units, SSCC ni 400 módulos.
+
+  #### Cómo queda en ANV
+
+  **Pedido (`tec_order` de venta), ya existe.** Confirm sella. Proforma = el print PHP de
+  ahora (`/o/pf/{id}/print`). Añadir pares después = **pedido nuevo**, proforma nueva, otro
+  número. No reabrir ni reescribir el 26-001 (el cliente ya lo archivó). El envío junta
+  26-001 y 26-002.
+
+  Depósito: hoy hay un sello (`field_tec_accounting_verified_on`). Para la factura hace
+  falta **cuánto** (fecha, importe, a qué pedido). Si pagaron “más o menos el 30 %”, la
+  factura enseña la cuenta.
+
+  **Cargos, en el pedido.** Tres tipos bastan: product development, stickers/artwork,
+  special packaging. En la línea, descripción libre (“Pegatinas logo Rise, 5.000 uds”).
+  Precio congelado, igual que el guante. **Historial** = el pedido; la próxima vez se
+  propone el último cobrado a ese cliente por ese tipo, para no inventar el precio. No
+  viven en `/b` ni en Place an order (eso lo apunta fábrica/David al cerrar). El re-order
+  del portal **no** los copia. Si el cargo es único (un patrón), no se vuelve a facturar;
+  el dato sigue ahí. Si se repite (otra tanda de stickers), **línea nueva**.
+
+  Van a la **proforma de ese encargo** (si no, el depósito no los cubre). Van a la
+  **factura del primer envío** que saque mercancía de ese pedido (regla simple; el 90 %).
+  **No** van al packing list (no hay bulto). **No** una factura suelta de stickers. Si el
+  logo llega **después** de cobrada la proforma: anexo/proforma nueva con la diferencia, o
+  el extra en el saldo del embarque si aún no está el 100 %. Nunca un SWIFT minúsculo.
+
+  Aduanas: el desarrollo **mejor no** hinche el precio unitario de los pares. Si un día
+  hace falta un papel solo de mercancía para el forwarder, es un **print del mismo envío
+  sin NRE**, no otro cobro. Pegatinas **en** el producto pueden ir en el valor de la
+  mercancía.
+
+  **Envío (nuevo).** Cliente, fecha, EXW. Líneas con la **cantidad de este barco**,
+  cogidas de **uno o varios** pedidos del mismo cliente. Lo pedido menos lo ya enviado =
+  Remaining. Sold to y Ship to de verdad (pueden no ser el mismo).
+
+  Dos papeles, al **cerrar el envío** (no al Completed del pedido en la cola):
+
+  | Papel | Qué lleva |
+  |---|---|
+  | Packing list | Cajas, piezas, NW, GW, CBM **real** de este barco. Sin precios. Sin cargos. |
+  | Factura | Los mismos pares, **con** precios congelados, IVA (TH 7 % / resto 0 %, el ya estampado). Cargos. Menos depósitos de los pedidos de este envío. Un total. |
+
+  Un envío = una lógica de IVA. No mezclar pedido Tailandia y export en el mismo
+  contenedor/factura. Con IVA y sin IVA = el mismo papel; cambia el pie.
+
+  La cola: Completed = “ya se puede meter en un envío”, no “imprime la factura de este
+  pedido”. Ready for collection = el forwarder puede recoger **este** envío.
+
+  **Packing (detalle que se mantiene del Excel, no la hoja).** Hoy: *Packing list Order
+  Custom Fighter 25-001* a mano. No se copia el Excel (celdas combinadas, una fila por
+  caja aunque sean iguales, *Code* = color, comentarios *Missing 1 pair*, Sold to clonado
+  en Ship to). Sí: cajas mezcladas (hay que detallarlas); 1 saco = 1 caja; cartón
+  `47×60×65` → 0,1833 m³; bruto ≈ neto + ~2 kg; pares vs units; membrete EXW / origen.
+  No: 18 filas idénticas de caja llena en el PDF del cliente; el PDF como checklist de
+  planta. *Missing 1 pair* es planta / production log, no el papel comercial. Cajas hijas
+  del envío; peso y CBM son de la **caja**. El Approx. CBM del Place an order **no** entra
+  aquí.
+
+  #### Qué no se hace
+
+  Facturar `tec_order`. Fusionar pedidos. Producto fantasma en el catálogo. Factura de
+  cargos suelta. Que el portal arme el envío (es el día del loading, fábrica). Avance
+  automático a Completed cuando Remaining = 0 (sigue desconectado, decisión previa).
+  Copiar Odoo/SAP entero.
+
+  #### Orden el día que se construya (no ahora)
+
+  1. Entidad envío + cantidades de este barco + packing list.
+  2. Factura de ese envío (IVA ya existe).
+  3. Cobros con importe, restados en el pie.
+  4. Cargos en el pedido → proforma y factura.
+  5. Mail de proforma al confirmar (otro pendiente; no bloquea lo de arriba).
+
+  Hasta el paso 1+2, una “factura” en el ERP mentiría igual que el 1:1. El Excel de
+  loading sigue siendo válido **hasta entonces**.
 - **Web pública de `anvfightgear.com`**, de presentación de la fábrica OEM. **La estructura, el
   argumentario y el análisis de la competencia ya están escritos en
   [`docs/web-anvfightgear.md`](web-anvfightgear.md)**, listos para pasárselos a otra ventana de
@@ -1396,7 +1512,8 @@ Sin prisa y sin orden fijo entre ellas.
   **cero cuentas Customer**). Alta: [`docs/sop-give-a-customer-a-portal-login.md`](sop-give-a-customer-a-portal-login.md).
   El 30, en local, fábrica Place/Confirm igualó a `/my` (`/customer/{id}/order/new` → `/o/order/{id}`).
   Eso y el IVA **ya están en el servidor** (31 de agosto). Falta la **proforma automática por correo**
-  y el **SOP de cierre de venta**. Requisitos originales en [`docs/customer-portal.md`](customer-portal.md).
+  y el **SOP de cierre de venta**. Packing, factura de venta y cargos: modelo escrito el 31
+  de agosto (noche), **sin construir**. Requisitos originales en [`docs/customer-portal.md`](customer-portal.md).
 - **Agentes.** Atención al cliente en los grupos de WhatsApp y en el correo. Pedidos
   automáticos a proveedores locales por los grupos de LINE.
 
@@ -2084,6 +2201,107 @@ Nada de esto corre prisa, pero conviene que esté escrito para que no se descubr
 
 ## Hecho
 
+### 2026-09-05 — Factory Pattern: el corte es una entidad, no el vocabulario de Oscar
+
+Un pattern es el corte de fábrica. En código y pantallas se dice **Pattern**, nunca
+mould / molde / mold. El producto es ese corte para una marca. 055_Semi es el mismo
+corte para todos los clientes; el nombre comercial vive en el producto.
+
+Verdes = SKU + qty en el pattern, se leen en vivo en la ficha del producto. Amarillos =
+tipo + qty en el pattern; el SKU se elige en el color (Fill Pattern). Extras (stickers)
+= por talla y por color. El producto no inventa una talla que el pattern no tenga.
+Cambiar qty o SKU verde en el pattern actualiza los productos al momento. Los pedidos
+ya hechos congelan el BoM.
+
+Pantallas: `/pattern` (lista, columna Products) y `/pattern/{código}` (ficha, productos
+encima de las tallas). Alta de producto: `/p` → Product → editar colores → Fill Pattern
+→ `/tec_product/{id}`. Extras se guardan solos (`POST /tec_product/{color}/extras`).
+No hay botón de borrar extra: se vacía el SKU en todas las tallas de ese color.
+
+En productos con pattern se esconden + Size, Duplicate size y Duplicate variation.
+Quedan + Variation y Duplicate product. `ensureSizes()` corre al guardar un color, no
+al guardar el pattern.
+
+Oscar `tec_patterns` / `field_tec_pattern` sigue vacío y escondido. Duplicate todavía
+copia ese campo; se retira cuando duplicar copie el pattern nuevo (`field_tec_factory_pattern`).
+
+**Singapur, 5 de septiembre:** código de `tec_inventory` + icono HOME (nid 20). Esquema
+**11007–11009** (el 11006 ya estaba). `/pattern` responde 200. Catálogo **vacío**: no se
+volcó la base local. Script: `scripts/poner-patterns-en-servidor.sh`.
+
+Pruebas: `scripts/el-patron.php`, `scripts/el-producto-del-patron.php`. La de humo
+(`comprobacion.php`) mira la entidad, las rutas, los permisos y el icono.
+
+### 2026-09-02 — Carpeta PRE-limpieza, fuera de Drive
+
+El dueño borró en Google Drive la carpeta `2026-08-12 PRE-limpieza - NO usar para
+desplegar` (los zips de la mañana del 12 de agosto, con la clave de OpenAI) y la
+sacó de la papelera. Nueva York ya no existe; las copias vivas son GitHub y las
+diarias de `erp-anv-sgp1`.
+
+### 2026-08-31 (noche) — Factura de venta: el modelo, no el código
+
+No se construye. El dueño saturado; se deja escrito para no reabrir el debate. Las
+facturas de venta no se habían hecho porque un print del pedido **no** aguanta el mundo
+real (segunda proforma a la semana, mismo contenedor, una factura; Remaining a otro
+barco; pegatinas y desarrollo en el mismo SWIFT).
+
+Se factura el **envío**, no el pedido. Relato entero en la sección 6, «Envío, packing,
+factura y cargos». Excel de loading hasta que exista esa pieza.
+
+### 2026-08-31 (noche) — Correo: usuarios `orders@` e `info@`, no grupos ni `erp@`
+
+Los grupos no sirven para ANV. Un grupo no tiene Gmail: es una lista. `orders@` es un
+mostrador (hoy vive en `coo@`): pedidos por mail, productos y diseños nuevos, agentes de
+aduanas, recogidas EXW, ~15 clientes y más adelante más. Ahí hace falta **una bandeja**,
+leídos compartidos, etiquetas. Amazon usa grupos para listas internas, no para eso.
+
+Se tiran los grupos creados esta tarde (`info@`, `orders@`; no hay historial que mover).
+No se crea `erp@` (acordado el 12 de agosto como buzón de sistema: caduca). El correo del
+sitio pasa a `info@`.
+
+Plan: `coo@` se **renombra** a `orders@` y `coo@` queda de alias. Usuario nuevo `info@`
+(un asiento). Las dos se **delegan** a `admin@` (David) y `artitaya@` (Lukpla). Nombre de
+cara al cliente: **Acta Non Verba**. Contraseña nueva en la cuenta del supervisor; quitar
+su teléfono y recuperación.
+
+El ERP, cuando mande, entra SMTP **una vez** como `orders@` (relay de Google) y pone el
+From que toque: proforma → `orders@`; contraseña y altas de cuenta → `info@`. Hoy solo
+existe la impresión de la proforma; el envío es trabajo de la sección 6. Módulos nuestros
+no mandan ningún otro correo. Relato vivo y pasos en la sección 3.
+
+Caduca la entrada del 28 de agosto (noche) «Correo de función: grupos».
+
+### 2026-08-31 — /p y el catálogo de la marca: rotos desde las 14:46, ya vueltos
+
+Al desinstalar `draggableviews` Drupal se llevó la vista `tec_products` entera:
+en la config **activa** todavía lo nombraba como dependencia, aunque el YAML de
+disco ya no. Sin esa vista no hay lista en `/p` ni catálogo en
+`/taxonomy/term/{id}`. Los productos no se tocaron (Rise Fight Gear sigue
+teniendo las nueve tallas). Vista, campo del catálogo y entity browser
+repuestos desde `config/sync` en local y en el servidor. El guardián ahora
+pregunta si la vista existe; la prueba de humo ya no da por buena una página
+con el bloque gris. Script: `scripts/devolver-la-vista-de-productos.php`.
+
+### 2026-08-31 — El catálogo editable de la marca ya estaba
+
+Vive en la ficha de cada marca, `/taxonomy/term/{id}`, y se llega desde `/b`.
+Una fila por talla, precio editable, casilla al 40% del ancho. Hecho el 19 de
+agosto; seguía en la lista de esta semana por no tacharlo.
+
+### 2026-08-31 — Dual run arrancado; lo que ve Lukpla va por LINE
+
+Lukpla (con Noi) usa ya el ERP y las Google Sheets a la vez. Lo que falla lo
+manda en un grupo de LINE; David lo arregla. Así se hizo hoy el Download de
+las facturas. No hay hoja de bugs. Dual run hasta que el ERP aguante; entonces
+se cierra Drive.
+
+### 2026-08-31 — Lukpla testa en inglés
+
+El ERP está en inglés y el tailandés configurado no traduce las pantallas
+nuestras. Lukpla se maneja en inglés; el dual run no espera a una traducción.
+Un operario de planta con usuario sería otro asunto.
+
 ### 2026-08-31 — Git en Windows ya no finge 180 cambios vacíos
 
 Laragon trae `core.autocrlf=true` en el git global. Drupal pide LF. El
@@ -2350,6 +2568,9 @@ Pendiente de portal: correo de proforma al confirmar. Place de fábrica e IVA: e
 el 31 de agosto.
 
 ### 2026-08-28 (noche) — Correo de función: grupos, no alias ni asientos nuevos
+
+**Caducado el 31 de agosto de 2026 (noche).** Los grupos no son un buzón de trabajo. Ver
+la entrada de esa noche y la sección 3. El texto de abajo es el plan que se tiró.
 
 El cliente no debe escribir a un Gmail personal. Las direcciones de trabajo son de **función**
 y se montan como **grupo de Google Workspace**, no como usuario de pago ni como alias de una
@@ -3417,15 +3638,15 @@ enseñar sus colores, un campo *viewfield* con el valor puesto de fábrica y esc
 así que no hay una casilla nueva que nadie deba rellenar.
 
 **Tres trampas del clonado que no se ven leyendo el original.** La primera, la relación con el cliente
-se ha quedado puesta además de la nueva con la marca, porque alguna columna del molde cuelga de ella y
-quitarla habría vaciado columnas. La segunda, el molde lleva tres enlaces escritos a mano con
+se ha quedado puesta además de la nueva con la marca, porque alguna columna del pattern cuelga de ella y
+quitarla habría vaciado columnas. La segunda, el pattern lleva tres enlaces escritos a mano con
 `raw_arguments.id` dando por hecho que el argumento es un cliente. La tercera es la que podía hacer
-daño: el botón *+ Product* del molde pasa `?target_id=`, y eso **no es decoración**. El campo de cliente
+daño: el botón *+ Product* del pattern pasa `?target_id=`, y eso **no es decoración**. El campo de cliente
 del producto tiene el módulo `epp` puesto con `[current-page:query:target_id]`, o sea que rellena el
 cliente con lo que venga en ese parámetro. Copiarlo tal cual habría escrito el número de una marca en
 la casilla del cliente. El botón de la pantalla nueva va sin él.
 
-**El orden del catálogo es por nombre, y es una decisión provisional.** El molde ordena por el peso que
+**El orden del catálogo es por nombre, y es una decisión provisional.** El pattern ordena por el peso que
 se arrastra en *Organize products*, y ese peso está guardado por cliente: en una pantalla nueva no hay
 ninguna fila, así que ordenar por él no ordenaría nada. Dar a la marca su propio orden —que el dueño ya
 dijo que lo decide él y no el cliente— es el paso siguiente del modelo, el que está apuntado arriba en

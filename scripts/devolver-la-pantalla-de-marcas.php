@@ -14,7 +14,7 @@
  * enlaces, igual que productos nombra /node/1 y colores /node/9, asi que
  * recuperando el numero los cuatro enlaces vuelven a valer sin tocar rutas.
  *
- * Se copia el molde de colores, que es el caso gemelo (un vocabulario con una
+ * Se copia el pattern de colores, que es el caso gemelo (un vocabulario con una
  * vista en cuadricula dentro de una portada), para que esta quede indistinguible
  * de las que ya funcionan.
  *
@@ -94,24 +94,24 @@ if ($almacenDeNodos->load(4)) {
   return;
 }
 
-$molde = $almacenDeNodos->load(9);
-$seccionMolde = $molde->get('layout_builder__layout')->first()->section;
+$pattern = $almacenDeNodos->load(9);
+$seccionPattern = $pattern->get('layout_builder__layout')->first()->section;
 
-// Se copian los ajustes de cada pieza del molde y solo se cambia el bloque de la
+// Se copian los ajustes de cada pieza del pattern y solo se cambia el bloque de la
 // vista, que es lo unico que distingue una portada de otra. Asi los titulos y los
 // cuerpos salen con el mismo formato que en el resto del ERP, y los pesos, que son
 // los que mandan el orden en pantalla, vienen dados.
 //
 // CUIDADO CON appendComponent(). La primera version de este guion armaba la
 // seccion vacia y metia las piezas una a una con $seccion->appendComponent(),
-// poniendoles antes el peso del molde con setWeight(). No sirve de nada: lo
+// poniendoles antes el peso del pattern con setWeight(). No sirve de nada: lo
 // primero que hace ese metodo es reescribir el peso.
 //
 //     public function appendComponent(SectionComponent $component) {
 //       $component->setWeight($this->getNextHighestWeight($component->getRegion()));
 //
 // O sea que el peso copiado se tiraba y cada pieza se quedaba con el numero que
-// le tocaba por orden de llegada. Como el molde devuelve las piezas en el orden
+// le tocaba por orden de llegada. Como el pattern devuelve las piezas en el orden
 // en que estan guardadas y no en el que se pintan, el bucle recorrio cuerpo,
 // vista y titulo, y la portada nacio con el titulo de ultimo: la rejilla de
 // marcas arriba y "Brands" debajo de las tarjetas.
@@ -122,7 +122,7 @@ $seccionMolde = $molde->get('layout_builder__layout')->first()->section;
 // mandando sobre el resultado, y esta trampa ya se ha pagado una vez.
 $piezas = [];
 
-foreach ($seccionMolde->getComponents() as $componente) {
+foreach ($seccionPattern->getComponents() as $componente) {
   $configuracion = $componente->get('configuration');
   if ($configuracion['id'] === 'views_block:tec_colors-block_1') {
     $configuracion['id'] = 'views_block:tec_brands-block_1';
@@ -144,17 +144,17 @@ foreach ($seccionMolde->getComponents() as $componente) {
   );
 }
 
-// Los ajustes de terceros van tambien. El molde de colores no tiene ninguno, asi
+// Los ajustes de terceros van tambien. El pattern de colores no tiene ninguno, asi
 // que hoy da igual, pero el dia que se copie una portada que si los tenga se
 // perderian sin que nadie lo notase hasta ver la pantalla.
 $deTerceros = [];
-foreach ($seccionMolde->getThirdPartyProviders() as $proveedor) {
-  $deTerceros[$proveedor] = $seccionMolde->getThirdPartySettings($proveedor);
+foreach ($seccionPattern->getThirdPartyProviders() as $proveedor) {
+  $deTerceros[$proveedor] = $seccionPattern->getThirdPartySettings($proveedor);
 }
 
 $seccion = new Section(
-  $seccionMolde->getLayoutId(),
-  $seccionMolde->getLayoutSettings(),
+  $seccionPattern->getLayoutId(),
+  $seccionPattern->getLayoutSettings(),
   $piezas,
   $deTerceros
 );

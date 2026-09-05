@@ -1,0 +1,108 @@
+/**
+ * @file
+ * Extra rows inside the size BoM tables on the product ficha.
+ * Green / yellow / blue fills live in pattern.css so they also show to viewers.
+ */
+
+tr.tec-ficha-extra-add-row td {
+  border-top: none;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tec-ficha-extra-add-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.tec-ficha-extra-add {
+  display: inline-block;
+  margin: 0;
+}
+
+.tec-ficha-extra-status {
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.tec-ficha-extra-status.is-ok {
+  color: #0f5132;
+}
+
+.tec-ficha-extra-status.is-error {
+  color: #842029;
+}
+
+.tec-ficha-extra td,
+.tec-ficha-extra-add-row td {
+  vertical-align: middle;
+}
+
+.tec-ficha-extra-sku-cell {
+  white-space: normal;
+}
+
+.tec-ficha-extra-sku {
+  position: relative;
+}
+
+.tec-ficha-extra-sku button.tec-ficha-extra-sku-name,
+.tec-ficha-extra-sku button.tec-ficha-extra-sku-name:hover,
+.tec-ficha-extra-sku button.tec-ficha-extra-sku-name:focus,
+.tec-ficha-extra-sku button.tec-ficha-extra-sku-name:active {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  cursor: pointer;
+}
+
+.tec-ficha-extra-sku.is-editing .tec-ficha-extra-sku-name {
+  display: none;
+}
+
+.tec-ficha-extra-sku.is-picked .tec-ficha-extra-sku-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.tec-ficha-extra .tec-ficha-extra-sku-input {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.tec-ficha-extra .tec-ficha-extra-qty-input {
+  display: block;
+  width: 100%;
+  max-width: 4.5rem;
+  margin-left: auto;
+  box-sizing: border-box;
+  text-align: right;
+}
+
+.tec-ficha-extra-cost {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

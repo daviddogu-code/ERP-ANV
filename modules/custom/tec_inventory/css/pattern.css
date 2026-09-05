@@ -1,0 +1,367 @@
+/**
+ * @file
+ * Pattern recipe: one BoM card per size, same look as a product size card.
+ */
+
+.tec-pattern-help {
+  margin: 0 0 1rem;
+  color: #4b5563;
+}
+
+.tec-pattern-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1.5rem;
+  margin: 0 0 1rem;
+}
+
+.tec-pattern-heading__name {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.tec-pattern-heading__meta {
+  text-align: right;
+}
+
+.tec-pattern-heading__type,
+.tec-pattern-heading__material {
+  font-size: 1.25rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tec-pattern-canonical .block-page-title-block,
+.tec-pattern-canonical h1.page-title {
+  display: none;
+}
+
+.tec-pattern-products {
+  margin: 0 0 1.5rem;
+}
+
+.tec-pattern-products .field__label {
+  margin-bottom: 0.35rem;
+}
+
+.tec-pattern-products__list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.tec-pattern-products__brand {
+  color: #4b5563;
+}
+
+.tec-pattern-products__brand::after {
+  content: " \2014\0020";
+}
+
+.tec-pattern-ficha {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.tec-pattern-ficha__photo {
+  flex: 0 0 220px;
+  max-width: 220px;
+}
+
+.tec-pattern-ficha__photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tec-pattern-ficha__main {
+  min-width: 0;
+  flex: 1;
+}
+
+.tec-pattern-actions {
+  margin: 0 0 1rem;
+}
+
+.tec-pattern-actions .btn-default {
+  margin-left: 0.5rem;
+}
+
+.tec-pattern-sizes {
+  margin: 0 0 1rem;
+}
+
+.tec-size-card {
+  border: 1px solid #a0a0a0;
+  padding: 10px;
+  margin-right: 20px;
+  margin-top: 10px;
+  width: 261px;
+  background: #fff;
+}
+
+.tec-size-card--form {
+  width: auto;
+  min-width: 22rem;
+}
+
+.tec-size-card__title {
+  margin: 0 0 0.35rem;
+}
+
+.tec-size-card .field__label {
+  margin-bottom: 0.25rem;
+}
+
+.tec-size-card__bom {
+  margin-bottom: 0.25rem;
+}
+
+.tec-size-card__bom th,
+.tec-size-card__bom td {
+  vertical-align: middle;
+}
+
+.tec-size-card__form-table {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.tec-size-card__form-head,
+.tec-size-card__form-row {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(8rem, 1fr) 5.5rem auto;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.3rem 0.45rem;
+}
+
+.tec-size-card__form-head {
+  background: #efefef;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.tec-size-card__form-row {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.tec-size-card__form-row:last-child {
+  border-bottom: 0;
+}
+
+.tec-size-card--form .tec-size-card__form-row--material,
+.tec-size-card--form .tec-size-card__form-row--material select {
+  background-color: #d4edda;
+}
+
+.tec-size-card--form .tec-size-card__form-row--type,
+.tec-size-card--form .tec-size-card__form-row--type select {
+  background-color: #fff3cd;
+}
+
+.tec-size-card .form-item {
+  margin: 0;
+}
+
+.tec-pattern-recipe__qty {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  width: 5.5rem;
+}
+
+.tec-pattern-list td {
+  vertical-align: middle;
+}
+
+/* Thumbnail column: 40x40 whether the row has a photo or not, so every
+   line is the same height. Empty cells keep an invisible slot the size
+   of the image. */
+.tec-pattern-list th.tec-pattern-list__img,
+.tec-pattern-list td.tec-pattern-list__img {
+  width: 56px;
+}
+
+.tec-pattern-list .tec-pattern-list__thumb,
+.tec-pattern-list .spv-popup-link {
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+
+.tec-pattern-list .spv-popup-link img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.tec-pattern-list .spv-popup-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Same tabledrag handle fix as the brand catalogue and the production queue. */
+#tec-pattern-list .draggable a.tabledrag-handle {
+  float: none;
+  display: inline-block;
+  vertical-align: middle;
+  height: auto;
+  margin: 0 0.4rem 0 0;
+  overflow: visible;
+}
+
+#tec-pattern-list a.tabledrag-handle .handle {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  background-position: center;
+}
+
+#tec-pattern-list tr.drag td {
+  background: #fffbdd;
+}
+
+.tec-pattern-list-form > .form-actions {
+  margin-top: 1rem;
+}
+
+.tec-pattern-recipe-wrap {
+  margin: 0 0 1rem;
+}
+
+/* Save is first in the DOM (Enter key) but stays at the bottom of the form. */
+form.tec-pattern-form {
+  display: flex;
+  flex-direction: column;
+}
+
+form.tec-pattern-form > .form-actions {
+  order: 99;
+}
+
+form.tec-pattern-form > .form-actions .tec-pattern-save:disabled {
+  pointer-events: none;
+}
+
+/* DXPR paints odd BoM cells with `.table.table-striped > tbody > tr:nth-of-type(odd) > *`.
+   Match that cell target, beat its specificity, and pin the fill with !important. */
+table.table.tec-size-card__bom > tbody > tr.tec-recipe--green > *,
+table.table.tec-size-card__bom > tbody > tr.tec-recipe--material > *,
+table.table.tec-size-card__bom.table-striped > tbody > tr.tec-recipe--green > *,
+table.table.tec-size-card__bom.table-striped > tbody > tr.tec-recipe--material > * {
+  --tec-recipe-fill: #d4edda;
+  --bs-table-accent-bg: #d4edda;
+  --bs-table-bg-type: #d4edda;
+  --bs-table-bg-state: #d4edda;
+  background: #d4edda !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 9999px #d4edda !important;
+}
+
+table.table.tec-size-card__bom > tbody > tr.tec-recipe--yellow > *,
+table.table.tec-size-card__bom > tbody > tr.tec-recipe--type > *,
+table.table.tec-size-card__bom.table-striped > tbody > tr.tec-recipe--yellow > *,
+table.table.tec-size-card__bom.table-striped > tbody > tr.tec-recipe--type > * {
+  --tec-recipe-fill: #fff3cd;
+  --bs-table-accent-bg: #fff3cd;
+  --bs-table-bg-type: #fff3cd;
+  --bs-table-bg-state: #fff3cd;
+  background: #fff3cd !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 9999px #fff3cd !important;
+}
+
+table.table.tec-size-card__bom > tbody > tr.tec-recipe--blue > *,
+table.table.tec-size-card__bom > tbody > tr.tec-recipe--extra > *,
+table.table.tec-size-card__bom.table-striped > tbody > tr.tec-recipe--blue > *,
+table.table.tec-size-card__bom.table-striped > tbody > tr.tec-recipe--extra > * {
+  --tec-recipe-fill: #cfe2ff;
+  --bs-table-accent-bg: #cfe2ff;
+  --bs-table-bg-type: #cfe2ff;
+  --bs-table-bg-state: #cfe2ff;
+  background: #cfe2ff !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 9999px #cfe2ff !important;
+}
+
+.tec-recipe-pattern {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.tec-recipe-extra {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.tec-recipe-extra .form-item {
+  margin-bottom: 0;
+}
+
+.tec-recipe-extra__add {
+  margin-top: 0.25rem;
+}
+
+.tec-size-extras > .fieldset-wrapper,
+.tec-size-extras > .fieldset__wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+.tec-size-extras .fieldset__description,
+.tec-size-extras > .fieldset-wrapper > .description,
+.tec-size-extras > .fieldset__wrapper > .description {
+  flex: 1 0 100%;
+}
+
+.tec-size-extras .tec-size-extra-card {
+  flex: 0 0 17.5rem;
+  width: 17.5rem;
+  max-width: 17.5rem;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  box-sizing: border-box;
+}
+
+.tec-size-extra-card__title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.tec-size-extra-card .form-autocomplete {
+  max-width: 100%;
+}
+
+fieldset.tec-pattern-holes .form-item,
+#edit-tec-pattern-holes .form-item {
+  max-width: 28rem;
+}
+
+.field--name-field-tec-create-size:empty {
+  display: none;
+}
+
+/* Patterned ficha: sizes come from the pattern. Keep + Variation. */
+body.tec-patterned-product .field--name-field-tec-create-size,
+body.tec-patterned-product img[title="Duplicate size"],
+body.tec-patterned-product img[title="Duplicate variation"] {
+  display: none !important;
+}
+

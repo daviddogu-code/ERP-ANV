@@ -5,18 +5,185 @@
  * TEC Inventory helpers.
  */
 
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\flag\FlagInterface;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\tec_inventory\OrderBom;
+use Drupal\tec_inventory\PatternRecipe;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
+use Drupal\views\Plugin\views\query\Sql;
+use Drupal\views\ViewExecutable;
+
+/**
+ * Implements hook_page_attachments().
+ *
+ * Product size cards need the same full-width row and window-bottom scrollbar
+ * as /o/queue. Pattern screens attach this via the pattern library.
+ */
+function tec_inventory_page_attachments(array &$attachments) {
+  if (\Drupal::routeMatch()->getRouteName() === 'entity.tec_product.canonical') {
+    $attachments['#attached']['library'][] = 'tec_inventory/size_cards';
+    $attachments['#attached']['library'][] = 'tec_inventory/pattern';
+  }
+}
+
+/**
+ * Implements hook_preprocess_html().
+ */
+function tec_inventory_preprocess_html(array &$variables): void {
+  $route = \Drupal::routeMatch()->getRouteName();
+  if ($route === 'entity.tec_pattern.canonical') {
+    $variables['attributes']['class'][] = 'tec-pattern-canonical';
+  }
+  if ($route !== 'entity.tec_product.canonical') {
+    return;
+  }
+  $product = \Drupal::routeMatch()->getParameter('tec_product');
+  if ($product instanceof EntityInterface && PatternRecipe::hasPattern($product)) {
+    $variables['attributes']['class'][] = 'tec-patterned-product';
+  }
+}
+
+/**
+ * Implements hook_preprocess_field().
+ *
+ * Size cards get the scrollbar row class. Patterned colours hide + Size.
+ */
+function tec_inventory_preprocess_field(array &$variables): void {
+  $name = $variables['field_name'] ?? '';
+  if ($name === 'field_tec_size_variations') {
+    // Bootstrap's field.html.twig hardcodes <div class="field__items"> and never
+    // prints content_attributes, so the class has to live on the field wrapper.
+    $variables['attributes']['class'][] = 'tec-size-cards-field';
+    return;
+  }
+  if ($name !== 'field_tec_create_size') {
+    return;
+  }
+  $entity = $variables['element']['#object'] ?? NULL;
+  if (!$entity instanceof FieldableEntityInterface || !PatternRecipe::hasPattern($entity)) {
+    return;
+  }
+  $variables['items'] = [];
+}
+
+/**
+ * Implements hook_views_query_alter().
+ *
+ * The Products landing list (/p) sorts by brand and type. Shells with no
+ * Product name have neither, so MySQL puts them on top as blank rows.
+ */
+function tec_inventory_views_query_alter(ViewExecutable $view, QueryPluginBase $query): void {
+  if ($view->id() !== 'tec_products' || $view->current_display !== 'block_1') {
+    return;
+  }
+  if (!$query instanceof Sql) {
+    return;
+  }
+  $alias = $query->ensureTable('tec_product__field_product_name');
+  if (!$alias) {
+    return;
+  }
+  $query->addWhere(1, $alias . '.field_product_name_value', '', '<>');
+}
+
+/**
+ * Implements hook_views_pre_render().
+ *
+ * Create size embed is a Views rewrite, so Layout Builder never sees the
+ * field #access from hook_entity_view. Empty the embed when the colour
+ * hangs from a pattern.
+ */
+function tec_inventory_views_pre_render(ViewExecutable $view): void {
+  if ($view->id() !== 'tec_product_elements' || $view->current_display !== 'embed_5') {
+    return;
+  }
+  $id = (int) ($view->args[0] ?? 0);
+  if ($id <= 0) {
+    return;
+  }
+  $entity = \Drupal::entityTypeManager()->getStorage('tec_product')->load($id);
+  if (!$entity instanceof EntityInterface || !PatternRecipe::hasPattern($entity)) {
+    return;
+  }
+  $view->result = [];
+  $view->total_rows = 0;
+  $product = PatternRecipe::productOf($entity);
+  $view->element['#cache']['tags'] = array_merge(
+    $view->element['#cache']['tags'] ?? [],
+    $entity->getCacheTags(),
+    $product ? $product->getCacheTags() : []
+  );
+}
+
+/**
+ * Implements hook_entity_field_access().
+ *
+ * Layout Builder FieldBlock consults field access, not hook_entity_view.
+ */
+function tec_inventory_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL) {
+  if ($operation !== 'view') {
+    return AccessResult::neutral();
+  }
+  if ($field_definition->getName() !== 'field_tec_create_size' || $field_definition->getTargetEntityTypeId() !== 'tec_product') {
+    return AccessResult::neutral();
+  }
+  if (!$items) {
+    return AccessResult::neutral();
+  }
+  return _tec_inventory_forbidden_when_patterned($items->getEntity());
+}
+
+/**
+ * Implements hook_flag_action_access().
+ *
+ * Duplicate size / Duplicate variation are flags. Duplicate product stays.
+ */
+function tec_inventory_flag_action_access($action, FlagInterface $flag, AccountInterface $account, ?EntityInterface $flaggable = NULL) {
+  if (!in_array($flag->id(), ['tec_product_duplicate_size', 'tec_product_duplicate_color'], TRUE)) {
+    return AccessResult::neutral();
+  }
+  if (!$flaggable) {
+    return AccessResult::neutral();
+  }
+  return _tec_inventory_forbidden_when_patterned($flaggable);
+}
+
+/**
+ * Forbidden when this catalogue row hangs from a factory pattern.
+ */
+function _tec_inventory_forbidden_when_patterned(EntityInterface $entity): AccessResult {
+  $result = AccessResult::forbiddenIf(PatternRecipe::hasPattern($entity));
+  $result->addCacheableDependency($entity);
+  $product = PatternRecipe::productOf($entity);
+  if ($product) {
+    $result->addCacheableDependency($product);
+  }
+  return $result;
+}
 
 /**
  * Implements hook_entity_presave().
  *
- * Evaluate BoM "Production requires" formulas locally (e.g. 1/12 → 0.0833…)
+ * A sales line snapshot is planned here, while the previous size and quantity
+ * are still on the entity. Nested saves from ECA clear that afterwards.
+ *
+ * BoM "Production requires" formulas are evaluated locally (e.g. 1/12 → 0.0833…)
  * instead of calling OpenAI via AI Interpolator during IEF AJAX create.
  */
 function tec_inventory_entity_presave(EntityInterface $entity) {
+  OrderBom::remember($entity);
+
   if (
     !$entity instanceof FieldableEntityInterface
     || $entity->getEntityTypeId() !== 'tec_inventory'
@@ -34,6 +201,26 @@ function tec_inventory_entity_presave(EntityInterface $entity) {
   }
 
   _tec_inventory_apply_quantity_formula($entity);
+}
+
+/**
+ * Implements hook_entity_insert().
+ *
+ * A new sales line gets a photo of its size BoM. ECA still sets title, sales
+ * total and the lock; it no longer writes the line BoM.
+ */
+function tec_inventory_entity_insert(EntityInterface $entity) {
+  OrderBom::sync($entity);
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * Quantity changes rescale the frozen per-piece required. A new size takes a
+ * new photo from today's catalogue.
+ */
+function tec_inventory_entity_update(EntityInterface $entity) {
+  OrderBom::sync($entity);
 }
 
 /**
@@ -95,6 +282,7 @@ function tec_inventory_tec_product_predelete(EntityInterface $entity) {
   if (!$entity instanceof FieldableEntityInterface) {
     return;
   }
+  _tec_inventory_invalidate_pattern_products($entity);
   _tec_inventory_borrandose((int) $entity->id(), TRUE);
 
   $cascada = [
@@ -214,6 +402,10 @@ function _tec_inventory_hijos_de(FieldableEntityInterface $entity, string $lista
  */
 function tec_inventory_tec_product_insert(EntityInterface $entity) {
   _tec_inventory_tie_children_back($entity);
+  _tec_inventory_invalidate_pattern_products($entity);
+  if ($entity instanceof FieldableEntityInterface && $entity->bundle() === 'tec_color_variation') {
+    PatternRecipe::ensureSizes($entity);
+  }
 }
 
 /**
@@ -221,6 +413,34 @@ function tec_inventory_tec_product_insert(EntityInterface $entity) {
  */
 function tec_inventory_tec_product_update(EntityInterface $entity) {
   _tec_inventory_tie_children_back($entity);
+  _tec_inventory_invalidate_pattern_products($entity, $entity->original ?? NULL);
+  if ($entity instanceof FieldableEntityInterface && $entity->bundle() === 'tec_color_variation') {
+    PatternRecipe::ensureSizes($entity);
+  }
+}
+
+/**
+ * Pattern list and pattern ficha cache the products that hang from a pattern.
+ */
+function _tec_inventory_invalidate_pattern_products(EntityInterface $entity, ?EntityInterface $previous = NULL): void {
+  if (!$entity instanceof FieldableEntityInterface || $entity->bundle() !== 'tec_product') {
+    return;
+  }
+  if (!$entity->hasField(PatternRecipe::PATTERN_FIELD)) {
+    return;
+  }
+  $ids = [];
+  $now = (int) $entity->get(PatternRecipe::PATTERN_FIELD)->target_id;
+  if ($now > 0) {
+    $ids[] = $now;
+  }
+  if ($previous instanceof FieldableEntityInterface && $previous->hasField(PatternRecipe::PATTERN_FIELD)) {
+    $old = (int) $previous->get(PatternRecipe::PATTERN_FIELD)->target_id;
+    if ($old > 0) {
+      $ids[] = $old;
+    }
+  }
+  PatternRecipe::invalidateProductLists($ids);
 }
 
 /**
@@ -463,13 +683,16 @@ function _tec_inventory_who_lists(int $child, string $field): ?int {
  * Apply the formula while building the inline entity.
  */
 function tec_inventory_inline_entity_form_entity_form_alter(array &$entity_form, FormStateInterface &$form_state) {
-  if (($entity_form['#entity_type'] ?? '') !== 'tec_inventory') {
+  if (($entity_form['#entity_type'] ?? '') === 'tec_inventory' && ($entity_form['#bundle'] ?? '') === 'tec_bom_item') {
+    $entity_form['#entity_builders'][] = 'tec_inventory_bom_item_entity_builder';
     return;
   }
-  if (($entity_form['#bundle'] ?? '') !== 'tec_bom_item') {
-    return;
+  if (($entity_form['#entity_type'] ?? '') === 'tec_product') {
+    $entity = $entity_form['#entity'] ?? NULL;
+    if ($entity instanceof FieldableEntityInterface) {
+      _tec_inventory_alter_catalogue_form($entity_form, $form_state, $entity);
+    }
   }
-  $entity_form['#entity_builders'][] = 'tec_inventory_bom_item_entity_builder';
 }
 
 /**
@@ -587,11 +810,18 @@ const TEC_INVENTORY_USAGES_SHOWN = 10;
  * break them for no gain: a script is not somebody clicking Delete by mistake.
  */
 function tec_inventory_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  $form_object = $form_state->getFormObject();
+  if ($form_object instanceof EntityFormInterface) {
+    $entity = $form_object->getEntity();
+    if ($entity instanceof FieldableEntityInterface && $entity->getEntityTypeId() === 'tec_product') {
+      _tec_inventory_alter_catalogue_form($form, $form_state, $entity);
+    }
+  }
+
   if ($form_id !== 'taxonomy_term_tec_inventory_delete_form') {
     return;
   }
 
-  $form_object = $form_state->getFormObject();
   if (!$form_object instanceof EntityFormInterface) {
     return;
   }
@@ -900,3 +1130,440 @@ function tec_inventory_theme($existing, $type, $theme, $path) {
     ],
   ];
 }
+
+/**
+ * Implements hook_entity_view().
+ *
+ * A size on a pattern shows the assembled recipe, not the (empty) size BoM view.
+ */
+function tec_inventory_entity_view(array &$build, EntityInterface $entity, $display, $view_mode): void {
+  if ($entity->getEntityTypeId() !== 'tec_product') {
+    return;
+  }
+  if (PatternRecipe::hasPattern($entity)) {
+    // Empty arrays, not unset: Layout Builder copies these into ExtraFieldBlock
+    // placeholders. An empty extra field lets the block abort instead of
+    // leaving the "Placeholder for…" markup.
+    $build['flag_tec_product_duplicate_size'] = [];
+    $build['flag_tec_product_duplicate_color'] = [];
+    if (isset($build['field_tec_create_size'])) {
+      $build['field_tec_create_size']['#access'] = FALSE;
+    }
+  }
+  if ($entity->bundle() === 'tec_color_variation') {
+    return;
+  }
+  if ($entity->bundle() !== 'tec_size_variation') {
+    return;
+  }
+  if (!PatternRecipe::hasPattern($entity)) {
+    return;
+  }
+  $editable = $entity->access('update');
+  $recipe = PatternRecipe::tableBuild($entity, FALSE, !$editable);
+  $build['#cache']['contexts'][] = 'user.permissions';
+  if (isset($build['field_tec_view_bill_of_materials'])) {
+    foreach (Element::children($build['field_tec_view_bill_of_materials']) as $delta) {
+      unset($build['field_tec_view_bill_of_materials'][$delta]);
+    }
+    $build['field_tec_view_bill_of_materials'][0] = $recipe;
+  }
+  else {
+    $build['field_tec_view_bill_of_materials'] = $recipe;
+  }
+  $build['#attached']['library'][] = 'tec_inventory/pattern';
+}
+
+/**
+ * Hide Oscar's empty Pattern field; add pattern holes on the colour; lock sizes.
+ */
+function _tec_inventory_alter_catalogue_form(array &$form, FormStateInterface $form_state, FieldableEntityInterface $entity): void {
+  $form['#attached']['library'][] = 'tec_inventory/pattern';
+  if (!empty($form['field_tec_pattern'])) {
+    $form['field_tec_pattern']['#access'] = FALSE;
+  }
+  if ($entity->bundle() === 'tec_product') {
+    _tec_inventory_alter_product_form($form, $form_state, $entity);
+    return;
+  }
+  if ($entity->bundle() === 'tec_color_variation') {
+    _tec_inventory_alter_color_holes_form($form, $form_state, $entity);
+    return;
+  }
+  if ($entity->bundle() === 'tec_size_variation') {
+    _tec_inventory_alter_size_recipe_form($form, $form_state, $entity);
+  }
+}
+
+/**
+ * Product add is name/type/pattern only. Edit is where colours and photos go.
+ *
+ * Save on add ignores ?destination= and opens this product's edit. Save on
+ * edit ignores it too and opens the ficha. Cancel can still use destination.
+ */
+function _tec_inventory_alter_product_form(array &$form, FormStateInterface $form_state, FieldableEntityInterface $entity): void {
+  if (!empty($form['field_tec_create_color'])) {
+    $form['field_tec_create_color']['#access'] = FALSE;
+  }
+  if (!empty($form['field_tec_color_embed_vm'])) {
+    $form['field_tec_color_embed_vm']['#access'] = FALSE;
+  }
+  if ($entity->isNew() && !empty($form['field_tec_color_variations'])) {
+    $form['field_tec_color_variations']['#access'] = FALSE;
+  }
+  elseif (!$entity->isNew() && PatternRecipe::hasPattern($entity) && !empty($form['field_tec_color_variations'])) {
+    $form['field_tec_color_variations']['#description'] = t('Add each colour with its photo. Fill Pattern here. Sizes of this pattern are created when you save. Extras are added on the product.');
+  }
+
+  if ($form_state->get('tec_product_is_new') === NULL) {
+    $form_state->set('tec_product_is_new', $entity->isNew());
+  }
+  if ($form_state->get('tec_product_return') === NULL) {
+    $dest = \Drupal::request()->query->get('destination');
+    if (is_string($dest) && str_starts_with($dest, '/') && !str_starts_with($dest, '//')) {
+      $form_state->set('tec_product_return', $dest);
+    }
+  }
+  foreach (['submit', 'publish'] as $key) {
+    if (empty($form['actions'][$key]) || !is_array($form['actions'][$key])) {
+      continue;
+    }
+    $form['actions'][$key]['#submit'][] = 'tec_inventory_product_after_save';
+  }
+}
+
+/**
+ * New product → its edit. Existing product → its ficha.
+ */
+function tec_inventory_product_after_save(array &$form, FormStateInterface $form_state): void {
+  $object = $form_state->getFormObject();
+  if (!$object instanceof EntityFormInterface) {
+    return;
+  }
+  $entity = $object->getEntity();
+  if (!$entity instanceof FieldableEntityInterface || $entity->bundle() !== 'tec_product' || !$entity->id()) {
+    return;
+  }
+  $form_state->setIgnoreDestination(TRUE);
+  if ($form_state->get('tec_product_is_new')) {
+    $options = [];
+    $return = $form_state->get('tec_product_return');
+    if (is_string($return) && $return !== '') {
+      $options['query']['destination'] = $return;
+    }
+    $form_state->setRedirectUrl($entity->toUrl('edit-form', $options));
+    return;
+  }
+  $form_state->setRedirectUrl($entity->toUrl());
+}
+
+/**
+ * Product of this colour/size, including when the parent is still the IEF host.
+ */
+function _tec_inventory_form_product(FormStateInterface $form_state, FieldableEntityInterface $entity): ?FieldableEntityInterface {
+  $found = PatternRecipe::productOf($entity);
+  if ($found) {
+    return $found;
+  }
+  if ($entity->hasField('field_tec_product') && !$entity->get('field_tec_product')->isEmpty()) {
+    $product = $entity->get('field_tec_product')->entity;
+    if ($product instanceof FieldableEntityInterface && $product->bundle() === 'tec_product') {
+      return $product;
+    }
+  }
+  $qid = (int) \Drupal::request()->query->get('product_id');
+  if ($qid > 0) {
+    $product = \Drupal::entityTypeManager()->getStorage('tec_product')->load($qid);
+    if ($product instanceof FieldableEntityInterface && $product->bundle() === 'tec_product') {
+      return $product;
+    }
+  }
+  $object = $form_state->getFormObject();
+  if (!$object instanceof EntityFormInterface) {
+    return NULL;
+  }
+  $host = $object->getEntity();
+  if (!$host instanceof FieldableEntityInterface || $host->getEntityTypeId() !== 'tec_product') {
+    return NULL;
+  }
+  if ($host->bundle() === 'tec_product') {
+    return $host;
+  }
+  return PatternRecipe::productOf($host);
+}
+
+/**
+ * Colour of this size, including when the parent is still the IEF host.
+ */
+function _tec_inventory_form_color(FormStateInterface $form_state, FieldableEntityInterface $size): ?FieldableEntityInterface {
+  $found = PatternRecipe::colorOf($size);
+  if ($found) {
+    return $found;
+  }
+  $object = $form_state->getFormObject();
+  if (!$object instanceof EntityFormInterface) {
+    return NULL;
+  }
+  $host = $object->getEntity();
+  if ($host instanceof FieldableEntityInterface && $host->bundle() === 'tec_color_variation') {
+    return $host;
+  }
+  return NULL;
+}
+
+function _tec_inventory_alter_color_holes_form(array &$form, FormStateInterface $form_state, FieldableEntityInterface $entity): void {
+  $product = _tec_inventory_form_product($form_state, $entity);
+  $pattern = $product ? PatternRecipe::patternOf($product) : NULL;
+  if (!$pattern) {
+    return;
+  }
+
+  if ($form_state->get('tec_color_is_new') === NULL) {
+    $form_state->set('tec_color_is_new', $entity->isNew());
+  }
+
+  if (!empty($form['field_tec_size_variations'])) {
+    $form['field_tec_size_variations']['#access'] = FALSE;
+  }
+  if (!empty($form['field_tec_create_size'])) {
+    $form['field_tec_create_size']['#access'] = FALSE;
+  }
+
+  $types = PatternRecipe::yellowTypes($pattern);
+  $holes = PatternRecipe::holesOf($entity);
+  $form['tec_pattern_holes'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Fill Pattern'),
+    '#description' => t('Yellow cells on @code are types. Pick the SKU this colour uses. Quantity stays on the pattern.', [
+      '@code' => $pattern->code(),
+    ]),
+    '#tree' => TRUE,
+    '#weight' => 20,
+  ];
+  foreach ($types as $tid) {
+    $type = Term::load($tid);
+    $options = PatternRecipe::skusOfType($tid);
+    $form['tec_pattern_holes'][$tid] = [
+      '#type' => 'select',
+      '#title' => $type ? $type->label() : '#' . $tid,
+      '#options' => ['' => t('- Select -')] + $options,
+      '#default_value' => isset($holes[$tid]) ? (string) $holes[$tid] : '',
+      '#required' => TRUE,
+    ];
+  }
+  if (!$types) {
+    $form['tec_pattern_holes']['empty'] = [
+      '#markup' => '<p>' . t('This pattern has no yellow types. Greens already have a SKU on the pattern.') . '</p>',
+    ];
+  }
+
+  if ($entity->isNew()) {
+    $form['tec_size_extras'] = [
+      '#markup' => '<p class="tec-pattern-help">' . t('Sizes of this pattern are created when you save. Extras are added on the product.') . '</p>',
+      '#weight' => 21,
+    ];
+  }
+  else {
+    PatternRecipe::ensureSizes($entity);
+  }
+
+  $form['#entity_builders'][] = 'tec_inventory_color_recipe_builder';
+  foreach (['submit', 'publish'] as $key) {
+    if (empty($form['actions'][$key]) || !is_array($form['actions'][$key])) {
+      continue;
+    }
+    $form['actions'][$key]['#submit'][] = 'tec_inventory_color_pattern_after_save';
+  }
+}
+
+function _tec_inventory_extra_tid($raw): int {
+  if (is_array($raw)) {
+    $raw = $raw[0]['target_id'] ?? ($raw['target_id'] ?? 0);
+  }
+  if (is_numeric($raw)) {
+    return (int) $raw;
+  }
+  if (is_string($raw) && $raw !== '') {
+    $extracted = \Drupal\Core\Entity\Element\EntityAutocomplete::extractEntityIdFromAutocompleteInput($raw);
+    return $extracted ? (int) $extracted : 0;
+  }
+  return 0;
+}
+
+function tec_inventory_color_pattern_after_save(array &$form, FormStateInterface $form_state): void {
+  $object = $form_state->getFormObject();
+  if (!$object instanceof EntityFormInterface) {
+    return;
+  }
+  $entity = $object->getEntity();
+  if (!$entity instanceof FieldableEntityInterface || $entity->bundle() !== 'tec_color_variation') {
+    return;
+  }
+  PatternRecipe::ensureSizes($entity);
+  if (!$form_state->get('tec_color_is_new')) {
+    return;
+  }
+  if (!PatternRecipe::hasPattern($entity)) {
+    return;
+  }
+  $product = PatternRecipe::productOf($entity);
+  $pid = $product ? (int) $product->id() : 0;
+  $cid = (int) $entity->id();
+  if ($cid <= 0) {
+    return;
+  }
+  $form_state->setIgnoreDestination(TRUE);
+  if ($pid > 0) {
+    $form_state->setRedirectUrl(Url::fromUri('internal:/tec_product/' . $pid, [
+      'fragment' => (string) $cid,
+    ]));
+  }
+}
+
+function tec_inventory_color_recipe_builder($entity_type, FieldableEntityInterface $entity, array &$form, FormStateInterface $form_state): void {
+  if ($entity->bundle() !== 'tec_color_variation') {
+    return;
+  }
+  $holes_values = $form_state->getValue('tec_pattern_holes');
+  if ($holes_values === NULL && !empty($form['tec_pattern_holes']['#parents'])) {
+    $holes_values = NestedArray::getValue($form_state->getValues(), $form['tec_pattern_holes']['#parents']);
+  }
+  $holes = [];
+  foreach ($holes_values ?: [] as $type_id => $sku_id) {
+    if (!is_numeric($type_id)) {
+      continue;
+    }
+    $holes[(int) $type_id] = (int) $sku_id;
+  }
+  PatternRecipe::setHoles($entity, $holes);
+
+  $by_size = $form_state->getValue('tec_size_extras');
+  if ($by_size === NULL && !empty($form['tec_size_extras']['#parents'])) {
+    $by_size = NestedArray::getValue($form_state->getValues(), $form['tec_size_extras']['#parents']);
+  }
+  if (!is_array($by_size)) {
+    return;
+  }
+  $storage = \Drupal::entityTypeManager()->getStorage('tec_product');
+  foreach ($by_size as $size_id => $rows) {
+    if (!is_numeric((string) $size_id) || !is_array($rows)) {
+      continue;
+    }
+    $size = $storage->load((int) $size_id);
+    if (!$size instanceof FieldableEntityInterface || $size->bundle() !== 'tec_size_variation') {
+      continue;
+    }
+    $extras = [];
+    foreach ($rows as $key => $row) {
+      if (!is_numeric((string) $key) || !is_array($row)) {
+        continue;
+      }
+      $extras[] = [
+        'target_id' => _tec_inventory_extra_tid($row['target_id'] ?? 0),
+        'qty' => trim((string) ($row['qty'] ?? '')),
+      ];
+    }
+    PatternRecipe::setExtras($size, $extras);
+    $size->save();
+  }
+  PatternRecipe::setExtras($entity, []);
+}
+
+function _tec_inventory_alter_size_recipe_form(array &$form, FormStateInterface $form_state, FieldableEntityInterface $entity): void {
+  $product = _tec_inventory_form_product($form_state, $entity);
+  $pattern = $product ? PatternRecipe::patternOf($product) : NULL;
+  if (!$pattern) {
+    return;
+  }
+
+  $allowed = $pattern->sizeIds();
+  $color = _tec_inventory_form_color($form_state, $entity);
+  $used = $color ? PatternRecipe::usedSizeTermIds($color, (int) $entity->id()) : [];
+  $keep = array_values(array_diff($allowed, $used));
+  $current = PatternRecipe::sizeTermId($entity);
+  if ($current > 0) {
+    $keep[] = $current;
+  }
+  _tec_inventory_restrict_size_options($form, $keep);
+
+  if (!empty($form['field_tec_bom'])) {
+    $form['field_tec_bom']['#access'] = FALSE;
+  }
+
+  if ($current > 0) {
+    $form['tec_pattern_recipe'] = PatternRecipe::tableBuild($entity);
+    $form['tec_pattern_recipe']['#weight'] = 2;
+  }
+  else {
+    $form['tec_pattern_recipe'] = [
+      '#markup' => '<p class="tec-pattern-help">' . t('Bill of materials comes from pattern @code. Greens are not edited here.', [
+        '@code' => $pattern->code(),
+      ]) . '</p>',
+      '#weight' => 2,
+    ];
+  }
+
+  $form['#tec_pattern_size_ids'] = $allowed;
+  $form['#tec_pattern_used_ids'] = $used;
+  $form['#validate'][] = 'tec_inventory_size_pattern_validate';
+}
+
+function _tec_inventory_restrict_size_options(array &$form, array $keep): void {
+  if (empty($form['field_tec_size'])) {
+    return;
+  }
+  $allowed = array_flip(array_map('intval', $keep));
+  $filter = static function (array &$el) use (&$filter, $allowed): void {
+    if (isset($el['#options']) && is_array($el['#options'])) {
+      $el['#options'] = array_filter($el['#options'], static function ($label, $key) use ($allowed) {
+        if ($key === '' || $key === '_none' || $key === NULL) {
+          return TRUE;
+        }
+        return isset($allowed[(int) $key]);
+      }, ARRAY_FILTER_USE_BOTH);
+    }
+    foreach ($el as $k => &$child) {
+      if (is_string($k) && $k !== '' && $k[0] !== '#' && is_array($child)) {
+        $filter($child);
+      }
+    }
+  };
+  $filter($form['field_tec_size']);
+}
+
+function tec_inventory_size_pattern_validate(array &$form, FormStateInterface $form_state): void {
+  $allowed = $form['#tec_pattern_size_ids'] ?? [];
+  if (!$allowed) {
+    return;
+  }
+  $sid = _tec_inventory_submitted_size_tid($form_state);
+  if ($sid <= 0) {
+    return;
+  }
+  if (!in_array($sid, array_map('intval', $allowed), TRUE)) {
+    $form_state->setErrorByName('field_tec_size', t('This pattern is not cut in that size.'));
+    return;
+  }
+  $used = $form['#tec_pattern_used_ids'] ?? [];
+  if (in_array($sid, array_map('intval', $used), TRUE)) {
+    $form_state->setErrorByName('field_tec_size', t('This colour already has that size.'));
+  }
+}
+
+function _tec_inventory_submitted_size_tid(FormStateInterface $form_state): int {
+  $v = $form_state->getValue('field_tec_size');
+  if (is_numeric($v)) {
+    return (int) $v;
+  }
+  if (!is_array($v)) {
+    return 0;
+  }
+  if (isset($v[0]['target_id'])) {
+    return (int) $v[0]['target_id'];
+  }
+  if (isset($v['target_id'])) {
+    return (int) $v['target_id'];
+  }
+  return 0;
+}
+

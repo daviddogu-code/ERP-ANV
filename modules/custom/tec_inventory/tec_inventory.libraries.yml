@@ -12,3 +12,39 @@ material_cost:
   css:
     theme:
       css/material-cost.css: {}
+
+size_cards:
+  css:
+    theme:
+      css/size-cards.css: { weight: 50 }
+  js:
+    js/size-cards.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+pattern:
+  css:
+    theme:
+      css/pattern.css: { weight: 200 }
+  js:
+    js/pattern.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - core/drupal.ajax
+    - tec_inventory/size_cards
+
+ficha_extras:
+  css:
+    theme:
+      css/ficha-extras.css: { weight: 201 }
+  js:
+    js/ficha-extras.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - core/drupal.autocomplete
+    - tec_inventory/pattern

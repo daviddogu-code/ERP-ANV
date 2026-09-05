@@ -10,7 +10,7 @@
  * puede ser la que falta: la plantilla de la seccion, sus ajustes, los ajustes
  * de terceros, el modo de vista de cada pieza y el peso.
  *
- * Se compara contra el nodo 9 (colores) porque es el molde del que se copio: si
+ * Se compara contra el nodo 9 (colores) porque es el pattern del que se copio: si
  * una diferencia no aparece aqui, no es una diferencia que explique el fallo.
  *
  * Y se comparan tambien los dos HTML. Los pesos explicarian el orden, pero no
@@ -47,7 +47,7 @@ $diseno = static function (int $nid): array {
     $partes['seccion ' . $indice . ' plantilla'] = $seccion->getLayoutId();
     $partes['seccion ' . $indice . ' ajustes'] = json_encode($seccion->getLayoutSettings(), JSON_UNESCAPED_SLASHES);
     // Los ajustes de terceros no se copiaron en el guion que rehizo la portada,
-    // asi que hay que mirarlos: si el molde llevaba alguno, falta.
+    // asi que hay que mirarlos: si el pattern llevaba alguno, falta.
     $deTerceros = [];
     foreach ($seccion->getThirdPartyProviders() as $proveedor) {
       $deTerceros[$proveedor] = $seccion->getThirdPartySettings($proveedor);
@@ -73,7 +73,7 @@ foreach ($marcas as $clave => $valor) {
   printf("    %-34s %s\n", $clave, mb_strimwidth($valor, 0, 240, '...'));
 }
 echo "\n";
-printf("  COLORES (nodo 9), el molde\n");
+printf("  COLORES (nodo 9), el pattern\n");
 foreach ($colores as $clave => $valor) {
   printf("    %-34s %s\n", $clave, mb_strimwidth($valor, 0, 240, '...'));
 }

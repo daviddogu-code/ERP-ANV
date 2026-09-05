@@ -69,6 +69,9 @@ final class MaterialCost {
     if ($size->getEntityTypeId() !== 'tec_product' || $size->bundle() !== 'tec_size_variation') {
       return NULL;
     }
+    if (PatternRecipe::hasPattern($size)) {
+      return PatternRecipe::costOfSize($size);
+    }
     if (!$size->hasField(self::BOM_FIELD)) {
       return NULL;
     }

@@ -5,7 +5,9 @@
  * Actualizaciones de base de datos del modulo tec_inventory.
  */
 
+use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\user\Entity\Role;
 
 /**
  * Sube Consumption Cost a doce cifras con seis decimales.
@@ -102,3 +104,644 @@ function tec_inventory_update_11001(): string {
   return 'Consumption Cost pasa a 12 cifras con 6 decimales. Filas devueltas: '
     . implode(', ', array_map(fn($tabla, $filas) => "$tabla: $filas", array_keys($cuantas), $cuantas)) . '.';
 }
+
+/**
+ * Sales-line BoM snapshot: freeze per-piece required and consumption cost.
+ *
+ * ECA stops writing line BoM. PHP explodes a photo; order screens read it.
+ * Existing snapshots are backfilled with today's figures (history was never stored).
+ */
+function tec_inventory_update_11002(): string {
+  _tec_inventory_ensure_decimal_storage('field_tec_quantity_per', 10, 4);
+  _tec_inventory_ensure_decimal_storage('field_tec_consumption_cost', 12, 6);
+  _tec_inventory_ensure_field('tec_line_item_bom_item', 'field_tec_quantity_per', 'Required per piece', 'decimal', [
+    'description' => 'Frozen when the order line is exploded. The catalogue BoM can change; this does not.',
+  ]);
+  _tec_inventory_ensure_field('tec_line_item_bom_item', 'field_tec_consumption_cost', 'Consumption cost', 'decimal', [
+    'description' => 'Frozen when the order line is exploded. The material master can change; this does not.',
+    'settings' => ['min' => NULL, 'max' => NULL, 'prefix' => '฿ ', 'suffix' => ''],
+  ]);
+  _tec_inventory_ensure_field('tec_line_item_bom_item', 'field_tec_quantity_input', 'Production requires', 'string', [
+    'description' => 'The typed per-piece required, frozen with the order line.',
+  ]);
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+
+  _tec_inventory_order_photo_stop_eca_bom();
+  _tec_inventory_order_photo_patch_views();
+  _tec_inventory_order_photo_hide_on_displays();
+
+  $n = \Drupal\tec_inventory\OrderBom::backfillExisting();
+  return "Foto del BoM de linea: campos, ECA sin copia, vistas. Snapshots rellenados: $n.";
+}
+
+/**
+ * Decimal field storage on tec_inventory, public, matching the other TEC fields.
+ */
+function _tec_inventory_ensure_decimal_storage(string $name, int $precision, int $scale): void {
+  if (FieldStorageConfig::loadByName('tec_inventory', $name)) {
+    return;
+  }
+  FieldStorageConfig::create([
+    'field_name' => $name,
+    'entity_type' => 'tec_inventory',
+    'type' => 'decimal',
+    'cardinality' => 1,
+    'translatable' => TRUE,
+    'settings' => [
+      'precision' => $precision,
+      'scale' => $scale,
+    ],
+    'third_party_settings' => [
+      'field_permissions' => ['permission_type' => 'public'],
+    ],
+  ])->save();
+}
+
+/**
+ * Field instance on a tec_inventory bundle.
+ */
+function _tec_inventory_ensure_field(string $bundle, string $name, string $label, string $type, array $extra = []): void {
+  if (FieldConfig::loadByName('tec_inventory', $bundle, $name)) {
+    return;
+  }
+  $base = [
+    'field_name' => $name,
+    'entity_type' => 'tec_inventory',
+    'bundle' => $bundle,
+    'label' => $label,
+    'required' => FALSE,
+    'translatable' => FALSE,
+  ];
+  if ($type === 'decimal' && empty($extra['settings'])) {
+    $base['settings'] = ['min' => NULL, 'max' => NULL, 'prefix' => '', 'suffix' => ''];
+  }
+  FieldConfig::create($extra + $base)->save();
+}
+
+/**
+ * ECA still sets title, sales total and the lock. It must not write line BoM.
+ */
+function _tec_inventory_order_photo_stop_eca_bom(): void {
+  $eca = \Drupal::configFactory()->getEditable('eca.eca.process_lvy385w');
+  if ($eca->isNew()) {
+    return;
+  }
+  $gateways = $eca->get('gateways') ?: [];
+  if (isset($gateways['Gateway_1qwb3me'])) {
+    $gateways['Gateway_1qwb3me']['successors'] = [
+      ['id' => 'Activity_16izt9c', 'condition' => ''],
+    ];
+  }
+  if (isset($gateways['Gateway_0clrznw'])) {
+    $gateways['Gateway_0clrznw']['successors'] = [
+      ['id' => 'Gateway_04r5fis', 'condition' => ''],
+    ];
+  }
+  if (isset($gateways['Gateway_04r5fis'])) {
+    $gateways['Gateway_04r5fis']['successors'] = [];
+  }
+  $eca->set('gateways', $gateways);
+  $eca->save();
+}
+
+/**
+ * Production requires and Cost on the order come from the snapshot, not the catalogue.
+ */
+function _tec_inventory_order_photo_patch_views(): void {
+  foreach (['tec_order_material_calculation_terms', 'tec_order_material_calculation_summary'] as $vid) {
+    $config = \Drupal::configFactory()->getEditable('views.view.' . $vid);
+    if ($config->isNew()) {
+      continue;
+    }
+    $dirty = FALSE;
+    foreach (['default', 'block_1'] as $display) {
+      $rel = $config->get("display.$display.display_options.fields.field_tec_quantity_input_1.relationship");
+      if ($rel && $rel !== 'reverse__tec_inventory__field_tec_inventory') {
+        $config->set("display.$display.display_options.fields.field_tec_quantity_input_1.relationship", 'reverse__tec_inventory__field_tec_inventory');
+        $dirty = TRUE;
+      }
+      $fields = $config->get("display.$display.display_options.fields") ?: [];
+      if (isset($fields['field_views_simple_math_field_5']['fieldset_one']['formula'])
+        && ($fields['field_views_simple_math_field_5']['label'] ?? '') === 'Cost') {
+        $fields['field_tec_consumption_cost'] = [
+          'id' => 'field_tec_consumption_cost',
+          'table' => 'tec_inventory__field_tec_consumption_cost',
+          'field' => 'field_tec_consumption_cost',
+          'relationship' => 'reverse__tec_inventory__field_tec_inventory',
+          'group_type' => 'group',
+          'admin_label' => '',
+          'plugin_id' => 'field',
+          'label' => '',
+          'exclude' => TRUE,
+          'click_sort_column' => 'value',
+          'type' => 'number_decimal',
+          'settings' => [
+            'thousand_separator' => '',
+            'decimal_separator' => '.',
+            'scale' => 6,
+            'prefix_suffix' => FALSE,
+          ],
+        ];
+        $fields['field_views_simple_math_field_5']['fieldset_one']['data_field']['field_tec_consumption_cost'] = 'field_tec_consumption_cost';
+        $fields['field_views_simple_math_field_5']['fieldset_one']['formula'] = '@field_tec_quantity * @field_tec_consumption_cost';
+        $config->set("display.$display.display_options.fields", $fields);
+        $dirty = TRUE;
+      }
+    }
+    if ($dirty) {
+      $config->save();
+    }
+  }
+}
+
+/**
+ * Snapshot extras stay off the line-item BoM form and view.
+ */
+function _tec_inventory_order_photo_hide_on_displays(): void {
+  $names = [
+    'field_tec_quantity_per',
+    'field_tec_consumption_cost',
+    'field_tec_quantity_input',
+  ];
+  foreach (['entity_form_display', 'entity_view_display'] as $type) {
+    $display = \Drupal::entityTypeManager()->getStorage($type)->load('tec_inventory.tec_line_item_bom_item.default');
+    if (!$display) {
+      continue;
+    }
+    $changed = FALSE;
+    foreach ($names as $name) {
+      if ($display->getComponent($name)) {
+        $display->removeComponent($name);
+        $changed = TRUE;
+      }
+    }
+    if ($changed) {
+      $display->save();
+    }
+  }
+}
+
+/**
+ * Factory pattern entity: /pattern/055, recipe of SKUs and material types.
+ *
+ * Products still explode from each size BoM. Wiring a product to a pattern is
+ * a later step. The old empty Patterns vocabulary is left alone.
+ */
+function tec_inventory_update_11003(): string {
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  $installed = $manager->getEntityType('tec_pattern') ? TRUE : FALSE;
+  if (!$installed) {
+    $manager->installEntityType(
+      \Drupal::entityTypeManager()->getDefinition('tec_pattern')
+    );
+  }
+
+  $granted = [];
+  foreach (['tec_manager', 'tec_executive', 'tec_supervisor'] as $rid) {
+    $role = Role::load($rid);
+    if (!$role) {
+      continue;
+    }
+    $dirty = FALSE;
+    foreach (['view tec patterns', 'edit tec patterns'] as $perm) {
+      if (!$role->hasPermission($perm)) {
+        $role->grantPermission($perm);
+        $dirty = TRUE;
+      }
+    }
+    if ($dirty) {
+      $role->save();
+      $granted[] = $rid;
+    }
+  }
+
+  $parts = [];
+  $parts[] = $installed ? 'tec_pattern ya estaba instalado' : 'instalado tec_pattern';
+  $parts[] = $granted ? ('permisos en ' . implode(', ', $granted)) : 'permisos ya estaban';
+  return implode('. ', $parts) . '.';
+}
+
+/**
+ * Pattern photo and the same Product material list as a catalogue product.
+ */
+function tec_inventory_update_11004(): string {
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = \Drupal::entityTypeManager()->getDefinition('tec_pattern');
+  if (!$entity_type) {
+    return 'tec_pattern no esta instalado.';
+  }
+  $defs = \Drupal\tec_inventory\Entity\Pattern::baseFieldDefinitions($entity_type);
+  $added = [];
+  foreach (['product_material', 'image'] as $name) {
+    if (!$manager->getFieldStorageDefinition($name, 'tec_pattern')) {
+      $manager->installFieldStorageDefinition($name, 'tec_pattern', 'tec_inventory', $defs[$name]);
+      $added[] = $name;
+    }
+  }
+  return $added ? ('campos ' . implode(', ', $added)) : 'product_material e image ya estaban';
+}
+
+/**
+ * Pattern Product type: the same taxonomy a catalogue product uses.
+ */
+function tec_inventory_update_11005(): string {
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = \Drupal::entityTypeManager()->getDefinition('tec_pattern');
+  if (!$entity_type) {
+    return 'tec_pattern no esta instalado.';
+  }
+  if ($manager->getFieldStorageDefinition('product_type', 'tec_pattern')) {
+    return 'product_type ya estaba';
+  }
+  $defs = \Drupal\tec_inventory\Entity\Pattern::baseFieldDefinitions($entity_type);
+  $manager->installFieldStorageDefinition('product_type', 'tec_pattern', 'tec_inventory', $defs['product_type']);
+  return 'campo product_type';
+}
+
+/**
+ * Factory order of patterns: a weight, dragged on /pattern.
+ *
+ * Existing rows keep today's code order so the screen does not jump the day
+ * the handle appears. New patterns from then on go to the end.
+ */
+function tec_inventory_update_11006(): string {
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = \Drupal::entityTypeManager()->getDefinition('tec_pattern');
+  if (!$entity_type) {
+    return 'tec_pattern no esta instalado.';
+  }
+  $added = !$manager->getFieldStorageDefinition('weight', 'tec_pattern');
+  if ($added) {
+    $defs = \Drupal\tec_inventory\Entity\Pattern::baseFieldDefinitions($entity_type);
+    $manager->installFieldStorageDefinition('weight', 'tec_pattern', 'tec_inventory', $defs['weight']);
+  }
+
+  $ids = \Drupal::entityTypeManager()->getStorage('tec_pattern')->getQuery()
+    ->accessCheck(FALSE)
+    ->sort('code')
+    ->execute();
+  $place = 0;
+  $bd = \Drupal::database();
+  foreach ($ids as $id) {
+    $place++;
+    $bd->update('tec_pattern')->fields(['weight' => $place])->condition('id', $id)->execute();
+  }
+  \Drupal\Core\Cache\Cache::invalidateTags($entity_type->getListCacheTags());
+  $campo = $added ? 'campo weight, ' : 'weight ya estaba, ';
+  return $campo . $place . ' patrones numerados por codigo';
+}
+
+/**
+ * Product hangs from a factory pattern: pattern pointer, colour holes and extras.
+ *
+ * Oscar's field_tec_pattern (empty vocabulary) stays on the entity unused.
+ * Legacy products with no pattern still explode each size BoM.
+ */
+function tec_inventory_update_11007(): string {
+  _tec_inventory_ensure_ref_storage('tec_product', 'field_tec_factory_pattern', 'tec_pattern');
+  _tec_inventory_ensure_text_storage('tec_product', 'field_tec_pattern_holes');
+  _tec_inventory_ensure_text_storage('tec_product', 'field_tec_pattern_extras');
+
+  _tec_inventory_ensure_bundle_field('tec_product', 'tec_product', 'field_tec_factory_pattern', 'Pattern', [
+    'description' => 'Factory pattern. 055 is the same cut for every customer. Leave empty to keep this product\'s own size BoM.',
+    'settings' => [
+      'handler' => 'default:tec_pattern',
+      'handler_settings' => [
+        'target_bundles' => NULL,
+        'sort' => ['field' => 'weight', 'direction' => 'ASC'],
+        'auto_create' => FALSE,
+      ],
+    ],
+  ]);
+  _tec_inventory_ensure_bundle_field('tec_product', 'tec_color_variation', 'field_tec_pattern_holes', 'Pattern holes', [
+    'description' => 'JSON map of material type id to inventory SKU id. Edited as a table on the colour form.',
+  ]);
+  _tec_inventory_ensure_bundle_field('tec_product', 'tec_color_variation', 'field_tec_pattern_extras', 'Pattern extras', [
+    'description' => 'JSON list of extra SKUs (tags, stickers) for this colour. Qty is per piece.',
+  ]);
+
+  $forms = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+  $product_form = $forms->load('tec_product.tec_product.default');
+  if ($product_form) {
+    $product_form->removeComponent('field_tec_pattern');
+    $product_form->setComponent('field_tec_factory_pattern', [
+      'type' => 'options_select',
+      'weight' => 2,
+      'region' => 'content',
+      'settings' => [],
+    ]);
+    $left = $product_form->getThirdPartySetting('field_group', 'group_left');
+    if (is_array($left) && isset($left['children'])) {
+      $kids = [];
+      foreach ($left['children'] as $child) {
+        $kids[] = $child === 'field_tec_pattern' ? 'field_tec_factory_pattern' : $child;
+      }
+      if (!in_array('field_tec_factory_pattern', $kids, TRUE)) {
+        $kids[] = 'field_tec_factory_pattern';
+      }
+      $left['children'] = array_values($kids);
+      $product_form->setThirdPartySetting('field_group', 'group_left', $left);
+    }
+    $product_form->save();
+  }
+
+  $color_form = $forms->load('tec_product.tec_color_variation.default');
+  if ($color_form) {
+    $color_form->removeComponent('field_tec_pattern_holes');
+    $color_form->removeComponent('field_tec_pattern_extras');
+    $color_form->save();
+  }
+
+  $views = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+  foreach (['tec_product.tec_color_variation.default', 'tec_product.tec_color_variation.product_view'] as $vid) {
+    $view = $views->load($vid);
+    if ($view) {
+      $view->removeComponent('field_tec_pattern_holes');
+      $view->removeComponent('field_tec_pattern_extras');
+      $view->save();
+    }
+  }
+
+  _tec_inventory_patch_duplicate_eca();
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+  return 'producto apunta al pattern: campo, agujeros en el color, extras, duplicar copia el pattern.';
+}
+
+/**
+ * Extras live on each size. Creating a colour of a pattern fills its sizes.
+ */
+function tec_inventory_update_11008(): string {
+  _tec_inventory_ensure_bundle_field('tec_product', 'tec_size_variation', 'field_tec_pattern_extras', 'Pattern extras', [
+    'description' => 'JSON list of extra SKUs (tags, stickers) for this size. Qty is per piece.',
+  ]);
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+
+  $forms = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+  $size_form = $forms->load('tec_product.tec_size_variation.default');
+  if ($size_form) {
+    $size_form->removeComponent('field_tec_pattern_extras');
+    $size_form->save();
+  }
+  $views = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+  foreach ([
+    'tec_product.tec_size_variation.default',
+    'tec_product.tec_size_variation.product_view',
+  ] as $vid) {
+    $view = $views->load($vid);
+    if ($view) {
+      $view->removeComponent('field_tec_pattern_extras');
+      $view->save();
+    }
+  }
+
+  $copied = 0;
+  $storage = \Drupal::entityTypeManager()->getStorage('tec_product');
+  $color_ids = $storage->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', 'tec_color_variation')
+    ->exists('field_tec_pattern_extras')
+    ->execute();
+  foreach ($storage->loadMultiple($color_ids) as $color) {
+    $extras = \Drupal\tec_inventory\PatternRecipe::extrasOf($color);
+    if (!$extras) {
+      continue;
+    }
+    $sizes = $color->hasField('field_tec_size_variations')
+      ? $color->get('field_tec_size_variations')->referencedEntities()
+      : [];
+    if (!$sizes) {
+      continue;
+    }
+    $ok = TRUE;
+    foreach ($sizes as $size) {
+      if (!$size->hasField('field_tec_pattern_extras')) {
+        $ok = FALSE;
+        break;
+      }
+      if (!$size->get('field_tec_pattern_extras')->isEmpty()) {
+        continue;
+      }
+      \Drupal\tec_inventory\PatternRecipe::setExtras($size, $extras);
+      $size->save();
+      $copied++;
+    }
+    if (!$ok) {
+      continue;
+    }
+    \Drupal\tec_inventory\PatternRecipe::setExtras($color, []);
+    $color->save();
+  }
+
+  _tec_inventory_patch_size_extras_eca();
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+  return 'extras en cada talla: campo, copia desde el color, duplicar copia el extra.';
+}
+
+/**
+ * Pattern field help uses the word pattern.
+ */
+function tec_inventory_update_11009(): string {
+  $field = FieldConfig::loadByName('tec_product', 'tec_product', 'field_tec_factory_pattern');
+  if ($field) {
+    $field->set('description', 'Factory pattern. 055 is the same cut for every customer. Leave empty to keep this product\'s own size BoM.');
+    $field->save();
+  }
+  return 'descripcion del campo Pattern: factory pattern.';
+}
+
+/**
+ * Duplicate a size also copies its extras JSON.
+ */
+function _tec_inventory_patch_size_extras_eca(): void {
+  $eca = \Drupal::configFactory()->getEditable('eca.eca.process_llpx4tp');
+  if ($eca->isNew()) {
+    return;
+  }
+  $actions = $eca->get('actions') ?: [];
+  if (isset($actions['Activity_tecsxtra'])) {
+    return;
+  }
+  $actions['Activity_tecsxtra'] = [
+    'plugin' => 'eca_set_field_value',
+    'label' => 'Set pattern extras on the size',
+    'configuration' => [
+      'field_name' => 'field_tec_pattern_extras',
+      'field_value' => '[size:field_tec_pattern_extras]',
+      'method' => 'set:clear',
+      'strip_tags' => FALSE,
+      'trim' => FALSE,
+      'save_entity' => TRUE,
+      'object' => 'sizeCreated',
+    ],
+    'successors' => [
+      ['id' => 'Activity_05l0s0n', 'condition' => ''],
+    ],
+  ];
+  if (isset($actions['Activity_1hq0my9']['successors'])) {
+    $actions['Activity_1hq0my9']['successors'] = [
+      ['id' => 'Activity_tecsxtra', 'condition' => ''],
+    ];
+  }
+  $eca->set('actions', $actions);
+  $deps = $eca->get('dependencies') ?: [];
+  $dep = 'field.field.tec_product.tec_size_variation.field_tec_pattern_extras';
+  if (!in_array($dep, $deps['config'] ?? [], TRUE)) {
+    $deps['config'][] = $dep;
+  }
+  $eca->set('dependencies', $deps);
+  $eca->save();
+}
+
+/**
+ * Entity-reference storage, public, matching the other TEC fields.
+ */
+function _tec_inventory_ensure_ref_storage(string $entity_type, string $name, string $target_type): void {
+  if (FieldStorageConfig::loadByName($entity_type, $name)) {
+    return;
+  }
+  FieldStorageConfig::create([
+    'field_name' => $name,
+    'entity_type' => $entity_type,
+    'type' => 'entity_reference',
+    'cardinality' => 1,
+    'translatable' => TRUE,
+    'settings' => ['target_type' => $target_type],
+    'third_party_settings' => [
+      'field_permissions' => ['permission_type' => 'public'],
+    ],
+  ])->save();
+}
+
+/**
+ * Long text storage for JSON maps.
+ */
+function _tec_inventory_ensure_text_storage(string $entity_type, string $name): void {
+  if (FieldStorageConfig::loadByName($entity_type, $name)) {
+    return;
+  }
+  FieldStorageConfig::create([
+    'field_name' => $name,
+    'entity_type' => $entity_type,
+    'type' => 'string_long',
+    'cardinality' => 1,
+    'translatable' => TRUE,
+    'settings' => ['case_sensitive' => FALSE],
+    'third_party_settings' => [
+      'field_permissions' => ['permission_type' => 'public'],
+    ],
+  ])->save();
+}
+
+/**
+ * Field instance on a tec_product bundle.
+ */
+function _tec_inventory_ensure_bundle_field(string $entity_type, string $bundle, string $name, string $label, array $extra = []): void {
+  if (FieldConfig::loadByName($entity_type, $bundle, $name)) {
+    return;
+  }
+  FieldConfig::create($extra + [
+    'field_name' => $name,
+    'entity_type' => $entity_type,
+    'bundle' => $bundle,
+    'label' => $label,
+    'required' => FALSE,
+    'translatable' => FALSE,
+  ])->save();
+}
+
+/**
+ * Duplicate product also copies the pattern pointer and the colour holes.
+ *
+ * Oscar's taxonomy Pattern copy stays. The new activities sit in the existing
+ * chain so a model re-export does not have to happen the same day.
+ */
+function _tec_inventory_patch_duplicate_eca(): void {
+  $eca = \Drupal::configFactory()->getEditable('eca.eca.process_llpx4tp');
+  if ($eca->isNew()) {
+    return;
+  }
+  $actions = $eca->get('actions') ?: [];
+
+  if (!isset($actions['Activity_tecfpat'])) {
+    $actions['Activity_tecfpat'] = [
+      'plugin' => 'eca_set_field_value',
+      'label' => 'Set the factory pattern',
+      'configuration' => [
+        'field_name' => 'field_tec_factory_pattern',
+        'field_value' => '[entity:field_tec_factory_pattern]',
+        'method' => 'set:clear',
+        'strip_tags' => FALSE,
+        'trim' => FALSE,
+        'save_entity' => TRUE,
+        'object' => 'productCreated',
+      ],
+      'successors' => [
+        ['id' => 'Activity_15lotr4', 'condition' => ''],
+      ],
+    ];
+    if (isset($actions['Activity_0xxh98h']['successors'])) {
+      $actions['Activity_0xxh98h']['successors'] = [
+        ['id' => 'Activity_tecfpat', 'condition' => ''],
+      ];
+    }
+  }
+
+  if (!isset($actions['Activity_techole'])) {
+    $actions['Activity_tecxtra'] = [
+      'plugin' => 'eca_set_field_value',
+      'label' => 'Set pattern extras',
+      'configuration' => [
+        'field_name' => 'field_tec_pattern_extras',
+        'field_value' => '[color:field_tec_pattern_extras]',
+        'method' => 'set:clear',
+        'strip_tags' => FALSE,
+        'trim' => FALSE,
+        'save_entity' => TRUE,
+        'object' => 'colorCreated',
+      ],
+      'successors' => [
+        ['id' => 'Activity_1yvrfqq', 'condition' => ''],
+      ],
+    ];
+    $actions['Activity_techole'] = [
+      'plugin' => 'eca_set_field_value',
+      'label' => 'Set pattern holes',
+      'configuration' => [
+        'field_name' => 'field_tec_pattern_holes',
+        'field_value' => '[color:field_tec_pattern_holes]',
+        'method' => 'set:clear',
+        'strip_tags' => FALSE,
+        'trim' => FALSE,
+        'save_entity' => TRUE,
+        'object' => 'colorCreated',
+      ],
+      'successors' => [
+        ['id' => 'Activity_tecxtra', 'condition' => ''],
+      ],
+    ];
+    if (isset($actions['Activity_06jugyf']['successors'])) {
+      $actions['Activity_06jugyf']['successors'] = [
+        ['id' => 'Activity_techole', 'condition' => ''],
+      ];
+    }
+  }
+
+  $eca->set('actions', $actions);
+  $deps = $eca->get('dependencies') ?: [];
+  foreach ([
+    'field.field.tec_product.tec_product.field_tec_factory_pattern',
+    'field.field.tec_product.tec_color_variation.field_tec_pattern_holes',
+    'field.field.tec_product.tec_color_variation.field_tec_pattern_extras',
+  ] as $dep) {
+    if (!in_array($dep, $deps['config'] ?? [], TRUE)) {
+      $deps['config'][] = $dep;
+    }
+  }
+  $eca->set('dependencies', $deps);
+  $eca->save();
+}
+

@@ -1,0 +1,5 @@
+services:
+  tec_inventory.pattern_code_converter:
+    class: Drupal\tec_inventory\Routing\PatternCodeConverter
+    tags:
+      - { name: paramconverter }

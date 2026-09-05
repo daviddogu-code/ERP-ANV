@@ -1,0 +1,7 @@
+view tec patterns:
+  title: 'View patterns'
+  description: 'See the factory patterns and their recipes. Not the old empty Patterns vocabulary.'
+
+edit tec patterns:
+  title: 'Edit patterns'
+  description: 'Create, edit and delete factory patterns. Products still explode from each size BoM until they are wired to a pattern.'

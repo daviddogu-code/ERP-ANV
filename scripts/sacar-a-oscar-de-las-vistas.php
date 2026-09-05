@@ -404,31 +404,31 @@ foreach ($plan as $vista => $displays) {
         echo "    ya estaba          $nuevo\n";
         continue;
       }
-      $molde = NULL;
+      $pattern = NULL;
       if (isset($como['copiar_de'])) {
-        $molde = $todos[$como['copiar_de']]['display_options']['fields'][$nuevo] ?? NULL;
-        if ($molde === NULL) {
+        $pattern = $todos[$como['copiar_de']]['display_options']['fields'][$nuevo] ?? NULL;
+        if ($pattern === NULL) {
           $problemas[] = "$vista/$display: no hay $nuevo en " . $como['copiar_de'] . ' para copiarlo.';
           continue;
         }
       }
       else {
-        $molde = $campos[$como['copiar']] ?? NULL;
-        if ($molde === NULL) {
+        $pattern = $campos[$como['copiar']] ?? NULL;
+        if ($pattern === NULL) {
           $problemas[] = "$vista/$display: no hay " . $como['copiar'] . " para copiar y hacer $nuevo.";
           continue;
         }
         // Se copia otro campo, asi que hay que apuntarle al bueno.
-        $molde['table'] = 'taxonomy_term__' . $nuevo;
-        $molde['field'] = $nuevo;
-        $molde['alter']['alter_text'] = FALSE;
-        $molde['alter']['text'] = '';
+        $pattern['table'] = 'taxonomy_term__' . $nuevo;
+        $pattern['field'] = $nuevo;
+        $pattern['alter']['alter_text'] = FALSE;
+        $pattern['alter']['text'] = '';
       }
-      $molde['id'] = $nuevo;
-      $molde['exclude'] = TRUE;
+      $pattern['id'] = $nuevo;
+      $pattern['exclude'] = TRUE;
       if (isset($como['label'])) {
-        $molde['label'] = $como['label'];
-        $molde['exclude'] = FALSE;
+        $pattern['label'] = $como['label'];
+        $pattern['exclude'] = FALSE;
       }
 
       // Se mete en el sitio de otra para no descolocar las columnas.
@@ -436,16 +436,16 @@ foreach ($plan as $vista => $displays) {
         $rehecho = [];
         foreach ($campos as $id => $campo) {
           if ($id === $como['en_lugar_de']) {
-            $rehecho[$nuevo] = $molde;
+            $rehecho[$nuevo] = $pattern;
           }
           $rehecho[$id] = $campo;
         }
         $campos = $rehecho;
       }
       else {
-        $campos[$nuevo] = $molde;
+        $campos[$nuevo] = $pattern;
       }
-      echo "    anadida            $nuevo" . (empty($molde['exclude']) ? '  << se dibuja' : '') . "\n";
+      echo "    anadida            $nuevo" . (empty($pattern['exclude']) ? '  << se dibuja' : '') . "\n";
     }
 
     // 2. Columnas que cambian.

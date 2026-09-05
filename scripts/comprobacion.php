@@ -44,6 +44,7 @@ const REFERENCIA_TIPOS = [
   'tec_order' => ['tec_draft_order', 'tec_purchase_order', 'tec_sales_order'],
   'tec_crm' => ['tec_contact_organization', 'tec_contact_person'],
   'tec_production_entry' => ['tec_production_entry'],
+  'tec_pattern' => ['tec_pattern'],
   // Envio, 31 ago 2026: tipos ECK nuevos. Cero campos en tec_order ni en las
   // lineas de venta. Remaining es pedido menos lo ya enviado en tec_ship_item.
   'tec_shipment' => ['tec_shipment'],
@@ -179,7 +180,7 @@ const REFERENCIA_VARIOS = [
   // 1 de septiembre, al anadir el de Shipments: /o/ship existia pero no habia
   // manera de llegar desde /start. Diecisiete desde el 2, al anadir el de
   // Invoices: /o/inv existia pero no habia manera de llegar desde /start.
-  'nodos' => 17,
+  'nodos' => 18,
   // Fueron seis unas horas: se pusieron cuatro para que los iconos de la cola, el
   // registro, el informe y el stock llevaran a su pantalla. Vuelven a ser dos
   // porque el arreglo bueno llego el mismo dia: el enlace sale ahora del campo
@@ -769,19 +770,10 @@ $cv = $etm->getStorage('tec_product')->loadUnchanged($cv->id());
 comprobar($resultados, 'color: titulo automatico', $cv->label() !== '' && $cv->label() !== NULL,
   "'" . $cv->label() . "'");
 
-// 3.6 - process_lvy385w. Dos cosas que se averiguaron a base de sonda la noche
-// del 14 de agosto, y que conviene no volver a averiguar:
-//
-// La linea tiene que colgar de una talla. El proceso solo escucha el evento de
-// actualizar, y todo lo que calcula gira alrededor del BoM de la talla:
-// una linea con precio y cantidad y nada mas no es un caso real, y el proceso
-// la deja en paz, con el total vacio. Por eso se reutiliza la talla del 3.3,
-// que ya tiene un BoM colgado.
-//
-// Y al guardar, el proceso crea por su cuenta un elemento de BoM de
-// linea y lo engancha. Nadie lo pide y no aparece en ningun sitio, asi que hay
-// que ir a buscarlo para borrarlo: si se queda, la siguiente comprobacion
-// encuentra contenido donde deberia haber cero y falla sin motivo aparente.
+// 3.6 - total de venta (ECA) y foto del BoM (PHP). La linea tiene que colgar
+// de una talla con BoM. Al guardar, PHP explota una copia; ECA recalcula el
+// total de venta. La copia se borra aqui para que la siguiente comprobacion
+// no encuentre inventario de mas.
 $linea = $etm->getStorage('tec_line_item')->create([
   'type' => 'tec_sales_order_line_item',
   'title' => $marca . ' linea',
@@ -3028,6 +3020,70 @@ comprobar($resultados, 'EPP rellena field_tec_product desde product_id',
 comprobar($resultados, 'EPP rellena field_tec_color_variation desde color_id',
   ($configColorTalla->get('third_party_settings.epp.value') ?? '') === '[current-page:query:color_id]',
   (string) ($configColorTalla->get('third_party_settings.epp.value') ?? 'vacio'));
+
+// -----------------------------------------------------------------------------
+titulo('28. El patron es codigo de fabrica, no el vocabulario de Oscar');
+
+// El pattern 055 es una entidad con URL /pattern/055. El vocabulario tec_patterns
+// se deja vacio: retirarlo es otro paso, porque duplicar producto todavia copia
+// field_tec_pattern. Los pedidos siguen explotando el BoM de cada talla.
+$tipoPatron = \Drupal::entityTypeManager()->hasDefinition('tec_pattern');
+$tablaPatron = \Drupal::database()->schema()->tableExists('tec_pattern');
+comprobar($resultados, 'la entidad tec_pattern esta instalada',
+  $tipoPatron && $tablaPatron,
+  ($tipoPatron ? 'definida' : 'sin definir') . ', tabla ' . ($tablaPatron ? 'si' : 'no'));
+
+$rutaPatron = '';
+$rutaNueva = '';
+try {
+  $rutaPatron = \Drupal::service('router.route_provider')->getRouteByName('entity.tec_pattern.canonical')->getPath();
+  $rutaNueva = \Drupal::service('router.route_provider')->getRouteByName('entity.tec_pattern.add_form')->getPath();
+}
+catch (\Throwable $e) {
+  $rutaPatron = $e->getMessage();
+}
+comprobar($resultados, 'la ficha se abre por el codigo, no por el id',
+  $rutaPatron === '/pattern/{tec_pattern}',
+  $rutaPatron);
+comprobar($resultados, 'crear un patron es /pattern/new',
+  $rutaNueva === '/pattern/new',
+  $rutaNueva);
+
+comprobar($resultados, 'los pedidos siguen explotando el BoM de la talla',
+  \Drupal\tec_inventory\OrderBom::SIZE_BOM_FIELD === 'field_tec_bom'
+  && \Drupal\tec_inventory\MaterialCost::BOM_FIELD === 'field_tec_bom',
+  \Drupal\tec_inventory\OrderBom::SIZE_BOM_FIELD . ' / ' . \Drupal\tec_inventory\MaterialCost::BOM_FIELD);
+
+$oscarPatron = \Drupal::config('field.field.tec_product.tec_product.field_tec_pattern');
+comprobar($resultados, 'el campo de Oscar en el producto sigue ahi (aun no se retira)',
+  !$oscarPatron->isNew(),
+  $oscarPatron->isNew() ? 'falta field_tec_pattern' : 'sigue');
+
+$rolFabrica = TRUE;
+foreach (['tec_manager', 'tec_executive', 'tec_supervisor'] as $rid) {
+  $rol = \Drupal\user\Entity\Role::load($rid);
+  $rolFabrica = $rolFabrica && $rol
+    && $rol->hasPermission('view tec patterns')
+    && $rol->hasPermission('edit tec patterns');
+}
+comprobar($resultados, 'manager, executive y supervisor ven y editan patrones',
+  $rolFabrica,
+  'falta view/edit tec patterns');
+
+$cliente = \Drupal\user\Entity\Role::load('tec_customer');
+comprobar($resultados, 'el cliente no edita patrones',
+  $cliente && !$cliente->hasPermission('edit tec patterns'),
+  !$cliente ? 'sin rol' : ($cliente->hasPermission('edit tec patterns') ? 'tiene el permiso' : 'sin permiso'));
+
+$iconoPatron = (int) \Drupal::entityTypeManager()->getStorage('node')->getQuery()
+  ->accessCheck(FALSE)
+  ->condition('type', 'tec_landing_page')
+  ->condition('field_tec_target.uri', 'internal:/pattern')
+  ->count()
+  ->execute();
+comprobar($resultados, 'la portada tiene un icono que abre /pattern',
+  $iconoPatron === 1,
+  (string) $iconoPatron);
 
 // -----------------------------------------------------------------------------
 // Resumen.

@@ -1,0 +1,8 @@
+# Beside Products in the main menu. Tabs do not work in this theme: DXPR
+# lifts them out of the flow, so the create/edit buttons live on the page.
+entity.tec_pattern.collection:
+  title: 'Patterns'
+  description: 'Factory patterns. 055 is the same cut for every customer.'
+  route_name: entity.tec_pattern.collection
+  menu_name: main
+  weight: 4

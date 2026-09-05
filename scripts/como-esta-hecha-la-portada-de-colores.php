@@ -2,7 +2,7 @@
 
 /**
  * @file
- * El molde de una portada que funciona, para rehacer la de marcas igual.
+ * El pattern de una portada que funciona, para rehacer la de marcas igual.
  *
  * Colores es el caso gemelo de marcas: un vocabulario de taxonomia con una
  * vista en cuadricula metida en un nodo portada. Si copiamos su estructura pieza

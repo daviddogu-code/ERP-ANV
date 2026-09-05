@@ -39,9 +39,9 @@ if (isset($campos['field_tec_quantity_received'])) {
 else {
   // Se copia la estructura de la cantidad, que es un campo del mismo tipo y ya
   // esta en esta pantalla, en vez de escribir las treinta claves a mano.
-  $molde = $campos['field_tec_quantity'];
+  $pattern = $campos['field_tec_quantity'];
 
-  $recibido = $molde;
+  $recibido = $pattern;
   $recibido['id'] = 'field_tec_quantity_received';
   $recibido['table'] = 'tec_line_item__field_tec_quantity_received';
   $recibido['field'] = 'field_tec_quantity_received';
@@ -50,7 +50,7 @@ else {
   $recibido['exclude'] = FALSE;
   $recibido['empty_zero'] = FALSE;
 
-  $cerrada = $molde;
+  $cerrada = $pattern;
   $cerrada['id'] = 'field_tec_no_more_expected';
   $cerrada['table'] = 'tec_line_item__field_tec_no_more_expected';
   $cerrada['field'] = 'field_tec_no_more_expected';

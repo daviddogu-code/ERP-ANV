@@ -1,0 +1,90 @@
+/**
+ * @file
+ * Size BoM cards in one row, with a Google Sheets-style scrollbar at the
+ * bottom of the window. Used on the product page and on pattern view/edit.
+ *
+ * DXPR caps .container at 1580px and hides page overflow. /o/queue already
+ * drops that cap; these screens do the same so the cards can sit in a row.
+ */
+
+.html.path-tec-product .main-container.container,
+.html.path-tec-product .dxpr-theme-boxed-container,
+.html.path-pattern .main-container.container,
+.html.path-pattern .dxpr-theme-boxed-container {
+  max-width: none;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* Asset injector on /tec_product/* repeats the 1580px cap on every .container
+   and zeroes its padding, so the title sat against the Gin sidebar. Keep the
+   cap off; put the gutter back on the page box only. */
+.html.path-tec-product .container {
+  max-width: none;
+}
+
+/* The colour column is 85% of the row. Without min-width:0 a flex item will
+   not shrink below its cards, so they wrap or get clipped by html overflow. */
+.path-tec-product .field--name-field-tec-color-variations .col-lg-9 {
+  min-width: 0;
+}
+
+/* One row of cards. Native scrollbar is hidden; JS drives the bar at the
+   bottom of the window. */
+.tec-size-cards,
+.tec-size-cards-field .field__items,
+.field--name-field-tec-size-variations .field__items {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: max-content;
+  max-width: 100%;
+  scrollbar-width: none;
+}
+
+.tec-size-cards::-webkit-scrollbar,
+.tec-size-cards-field .field__items::-webkit-scrollbar,
+.field--name-field-tec-size-variations .field__items::-webkit-scrollbar {
+  display: none;
+}
+
+.tec-size-cards > .field__item,
+.tec-size-cards > .tec-size-card,
+.field--name-field-tec-size-variations .field__item {
+  flex: 0 0 auto;
+}
+
+/* Product cards are already 261px via Oscar's injector. Keep them in the row. */
+.path-tec-product .field--name-field-tec-size-variations .field__item {
+  display: block;
+}
+
+/* Nested table scrollbars under each BoM are what this row scrollbar replaces. */
+.path-tec-product .field--name-field-tec-size-variations table,
+.tec-size-card table {
+  max-width: 100%;
+  overflow: visible;
+}
+
+.path-tec-product .field--name-field-tec-size-variations td {
+  vertical-align: middle;
+}
+
+.tec-size-cards__hscroll {
+  position: fixed;
+  bottom: 0;
+  height: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #f1f1f1;
+  border-top: 1px solid #c8c8c8;
+  z-index: 501;
+  display: none;
+}
+
+.tec-size-cards__hscroll-inner {
+  height: 1px;
+}
